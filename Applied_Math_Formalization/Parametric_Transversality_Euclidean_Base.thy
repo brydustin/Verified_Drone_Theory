@@ -396,7 +396,9 @@ lemma regular_zero_set_projection_local_chart_2d:
   assumes "open V" "open \<Omega>"
     and pM: "p \<in> M"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
-  shows "\<exists>U u0 \<phi> g.
+  shows "\<exists>(U::(real^'m::{finite,wellorder}) set) (u0::real^'m::{finite,wellorder})
+            (\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))
+            (g::((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> real^'m::{finite,wellorder}).
             open U \<and> u0 \<in> U \<and> \<phi> u0 = p \<and>
             \<phi> differentiable_on U \<and>
             \<phi> ` U \<subseteq> M \<and>
@@ -427,7 +429,9 @@ lemma countable_chart_cover_of_levelset_2d:
            M \<subseteq> (\<Union>i. charts i ` (U i))"
 proof -
   have loc:
-    "\<And>p. p \<in> M \<Longrightarrow> \<exists>U u0 \<phi> g.
+    "\<And>p. p \<in> M \<Longrightarrow> \<exists>(U::(real^'m::{finite,wellorder}) set) (u0::real^'m::{finite,wellorder})
+            (\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))
+            (g::((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> real^'m::{finite,wellorder}).
       open U \<and> u0 \<in> U \<and> \<phi> u0 = p \<and> \<phi> differentiable_on U \<and> \<phi> ` U \<subseteq> M \<and>
       openin (top_of_set M) (\<phi> ` U) \<and> homeomorphism U (\<phi> ` U) \<phi> g"
   proof -
@@ -435,7 +439,9 @@ proof -
     assume pM: "p \<in> M"
     have pM': "p \<in> {q \<in> V\<times>\<Omega>. G q = 0}"
       using pM by (simp add: M_def)
-    show "\<exists>U u0 \<phi> g.
+    show "\<exists>(U::(real^'m::{finite,wellorder}) set) (u0::real^'m::{finite,wellorder})
+            (\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))
+            (g::((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> real^'m::{finite,wellorder}).
       open U \<and> u0 \<in> U \<and> \<phi> u0 = p \<and> \<phi> differentiable_on U \<and> \<phi> ` U \<subseteq> M \<and>
       openin (top_of_set M) (\<phi> ` U) \<and> homeomorphism U (\<phi> ` U) \<phi> g"
       using M_def assms(2,3) pM reg0 regular_zero_set_projection_local_chart_2d[of V \<Omega> p G] by blast

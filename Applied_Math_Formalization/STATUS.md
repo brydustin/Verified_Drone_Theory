@@ -68,8 +68,19 @@ Proven supporting infrastructure (not in the 11): negligible→meager engine
 The Euclidean transversality pipeline lives in
 `Parametric_Transversality_Euclidean_Base.thy`: `countable_chart_cover_of_levelset_2d`
 ✅ and `negligible_critical_values_from_charts` ✅ are proven; the keystone
-`regular_zero_set_projection_local_chart_2d` (regular value ⇒ local smooth chart, i.e.
-the implicit function theorem) and the Sard/critical-set plumbing remain `sorry`.
+`regular_zero_set_projection_local_chart_2d` (regular value ⇒ local smooth chart) and
+the Sard/critical-set plumbing remain `sorry`.
+
+Note on the keystone: its `shows` existential is now **type-pinned to `real^'m`**
+(chart domain), as is `loc` inside `countable_chart_cover` — without this the
+chart-domain type generalizes to a schematic variable and the lemma is unprovable
+(invariance of domain). Proving it is the genuine **regular-value theorem**: HOL-Analysis
+has no implicit-function / submanifold theorem, so it must be built from
+`inverse_function_theorem` (Derivative.thy) by augmenting `G` to a square map
+`F z = (π z, G z)` with `π : (real^'m × real^2) →L real^'m` chosen so `(π, DG p)` is
+bijective (`π` an iso on `ker (DG p)`, via `subspace_isomorphism` /
+`orthogonal_subspace_decomp_exists`), then extracting the chart `φ u = g (u, 0)` from
+the local diffeomorphism. This is a substantial multi-step proof, not a type fix.
 
 ---
 
