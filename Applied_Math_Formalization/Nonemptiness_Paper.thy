@@ -364,7 +364,7 @@ proof -
 
   (* Implemented later by reducing to the Euclidean pipeline theorem
      @{thm parametric_transversality_negligible_stub} and then using the
-     negligible→meager lemmas in this file. *)
+     negligible\<rightarrow>meager lemmas in this file. *)
   show ?thesis
     sorry
 qed
@@ -601,13 +601,34 @@ theorem prop_regnonzero:
 section \<open>Closeout\<close>
 
 text \<open>
-  TeX Theorem~(Odd-N nonemptiness). This should become a short composition proof:
-  combine the four meagerness results, then apply
-  \<open>nonemptiness_from_meager_branches\<close>.
+  TeX Theorem~(Odd-\<open>N\<close> nonemptiness), \<open>thm:final\<close>. The Baire closeout: given a
+  nonempty open feasible working set \<open>V \<subseteq> Fset\<close> and the four branch meagerness
+  facts (Props \<open>prop:regzero\<close>, \<open>prop:foldzero\<close>, \<open>prop:foldnonzero\<close>,
+  \<open>prop:regnonzero\<close>) plus soundness of \<open>X0\<close>, the robust feasible set is nonempty.
+
+  This is the genuine closeout, discharged by the fully-proved combinator
+  \<open>nonemptiness_from_meager_branches\<close> (\<open>Nonemptiness_Spine\<close>). The four
+  meagerness facts remain explicit hypotheses here: they are the deep branch
+  results, still to be established for the concrete array-factor bad sets (Props
+  \<open>prop_regzero\<close>/\<open>prop_foldzero\<close> are proved modulo the transversality stubs;
+  \<open>prop_foldnonzero\<close>/\<open>prop_regnonzero\<close> remain). Once all four are proved
+  unconditionally for the concrete sets, instantiating this theorem yields the
+  odd-\<open>N\<close> nonemptiness theorem with no remaining hypotheses.
 \<close>
 
 theorem thm_final:
-  shows True
-  sorry
+  fixes Fset V :: "((real^2)^'n) set"
+    and X0 :: "real \<Rightarrow> ((real^2)^'n) set"
+    and Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero :: "((real^2)^'n) set"
+  assumes V_open: "open V" and V_nonempty: "V \<noteq> {}" and V_subset_Fset: "V \<subseteq> Fset"
+    and meager_reg_nonzero:  "meager (Breg_nonzero \<inter> V)"
+    and meager_reg_zero:     "meager (Breg_zero \<inter> V)"
+    and meager_fold_zero:    "meager (Bfold_zero \<inter> V)"
+    and meager_fold_nonzero: "meager (Bfold_nonzero \<inter> V)"
+    and X0_sound:
+      "\<And>x. x \<in> V - bad_union Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero
+            \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
+  shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
+  by (rule nonemptiness_from_meager_branches[OF assms])
 
 end

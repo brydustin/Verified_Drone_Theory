@@ -56,7 +56,7 @@ as `nonemptiness_from_meager_branches` in `Nonemptiness_Spine.thy` — not yet w
 | `lem_Efinite`        | `lem:Efinite`        | ⬚ | placeholder |
 | `prop_foldnonzero`   | `prop:foldnonzero`   | ⬚ | placeholder |
 | `prop_regnonzero`    | `prop:regnonzero`    | ⬚ | placeholder; real content = the whole appendix |
-| `thm_final`          | `thm:final`          | ⬚ | placeholder; real logic proven as `nonemptiness_from_meager_branches` (Spine), unwired |
+| `thm_final`          | `thm:final`          | ◐ | **wired (proven, conditional)**: the Baire closeout, conditional on the four branch meagerness facts + feasibility + `X0` soundness, via `nonemptiness_from_meager_branches`. Becomes unconditional once the four branches are proved for the concrete array-factor sets. |
 
 Proven supporting infrastructure (not in the 11): negligible→meager engine
 (`meager_nowhere_dense`, `nowhere_dense_closed_negligible`,
@@ -100,7 +100,7 @@ status per the legend; "—" means no counterpart and none planned as a named ob
 | 1144 | `prop:dimZ`          | On `W_surj`: `Z_reg` (H≢0 piece) is a smooth codim-3 submanifold (dim ≤ 2N−1); the H≡0 stratum has dim ≤ 2N−3. | ✗ |
 | 1197 | `lem:smooth-chart-meager` | A smooth map from open `U⊂ℝ^m` to `ℝ^n` with `m<n` has meager image (measure-zero cube cover). | ✗ (negligible→meager half proven separately) |
 | 1239 | `prop:regnonzero`    | `B_{reg,≠0} ⊆ π_V(Z_reg) ∪ π_V(H≡0 stratum) ∪ B_{CaseB,≠0} ∪ B_{H0,res}`. | ⬚ `prop_regnonzero` |
-| 1342 | `thm:final`          | **Flagship.** Odd `N≥7` + secant/spacing hyps ⟹ ∃`ξ>0`, `F_zero` nonempty (Baire over the 4 meager branches). | ⬚ `thm_final` (logic proven as `nonemptiness_from_meager_branches`) |
+| 1342 | `thm:final`          | **Flagship.** Odd `N≥7` + secant/spacing hyps ⟹ ∃`ξ>0`, `F_zero` nonempty (Baire over the 4 meager branches). | ◐ `thm_final` (closeout proven, conditional on the 4 branch facts; via `nonemptiness_from_meager_branches`) |
 
 ### Appendix A — Moment coordinates / triple-side minors (L1462–1770)
 
@@ -244,9 +244,10 @@ L4804, L5188, L5431 complete the 102 count.
 
 ## Recommended sequencing (cheap → deep)
 
-1. Wire `thm_final` to `nonemptiness_from_meager_branches` + close the Baire-glue
-   sorries (`final_nonemptiness_from_bad_union`, `nonemptiness_from_branches`) →
-   end-to-end skeleton conditional on the 4 branch facts.
+1. ~~Wire `thm_final` to `nonemptiness_from_meager_branches`~~ **DONE** — `thm_final`
+   is now the proven Baire closeout, conditional on the 4 branch facts. (The Baire
+   glue `final_nonemptiness_from_bad_union` / `bad_union_meagerness` /
+   `nonemptiness_from_branches` was already sorry-free.)
 2. Transcribe the `shows True` placeholders (`lem_Efinite`, `prop_foldnonzero`,
    `prop_regnonzero`) into their real statements.
 3. Finish the transversality pipeline (IFT chart + Sard) → closes `prop_regzero`,
