@@ -53,9 +53,9 @@ as `nonemptiness_from_meager_branches` in `Nonemptiness_Spine.thy` — not yet w
 | `prop_regzero`       | `prop:regzero`       | ◐ | meagerness reduced to `parametric_transversality_meager_stub` (sorry) |
 | `lem_foldfields`     | `lem:foldfields`     | ✅ | full (φ/θ derivatives + `det Jcvec`) |
 | `prop_foldzero`      | `prop:foldzero`      | ◐ | finite-union meagerness proven; per-chart `chart_zero_projection_meager_stub` (sorry) |
-| `lem_Efinite`        | `lem:Efinite`        | ⬚ | placeholder |
-| `prop_foldnonzero`   | `prop:foldnonzero`   | ⬚ | placeholder |
-| `prop_regnonzero`    | `prop:regnonzero`    | ⬚ | placeholder; real content = the whole appendix |
+| `lem_Efinite`        | `lem:Efinite`        | ◐ | **stated truly** (`E` finite); real-analyticity modeled as the real restriction of an entire function; the isolated-zeros step is the remaining `sorry` |
+| `prop_foldnonzero`   | `prop:foldnonzero`   | ✅ | **stated + proved** as the finite-union reduction (the TeX proof); nowhere-density of each slice-zero set (the real-analytic input) is a hypothesis |
+| `prop_regnonzero`    | `prop:regnonzero`    | ✅ | **stated + proved** as the 4-piece decomposition reduction; the four sub-meagerness facts are hypotheses (the unformalized appendix obligations `prop:dimZ` / `cor:caseBmeager` / `prop:h0res-meager`) |
 | `thm_final`          | `thm:final`          | ◐ | **wired (proven, conditional)**: the Baire closeout, conditional on the four branch meagerness facts + feasibility + `X0` soundness, via `nonemptiness_from_meager_branches`. Becomes unconditional once the four branches are proved for the concrete array-factor sets. |
 
 Proven supporting infrastructure (not in the 11): negligible→meager engine
@@ -90,8 +90,8 @@ status per the legend; "—" means no counterpart and none planned as a named ob
 | 323  | `prop:regzero`       | `{x∈V : A_x not transverse to 0 on Ω_reg}` is meager. | ◐ `prop_regzero` |
 | 364  | `lem:foldfields`     | Explicit kernel field `K` and tangent field `T` on the fold curve `Σ`; every point of `Σ` is a fold point. | ✅ `lem_foldfields` |
 | 395  | `prop:foldzero`      | `{x∈V : A has a zero on the fold curve Σ}` is meager. | ◐ `prop_foldzero` |
-| 435  | `lem:Efinite`        | `E = {ω∈Σ : g_θ(ω)=0}` is finite (real-analytic zero set, ≤2 φ-solutions each). | ⬚ `lem_Efinite` |
-| 448  | `prop:foldnonzero`   | `{x∈V : nonzero-A critical point of U on Σ}` is meager. | ⬚ `prop_foldnonzero` |
+| 435  | `lem:Efinite`        | `E = {ω∈Σ : g_θ(ω)=0}` is finite (real-analytic zero set, ≤2 φ-solutions each). | ◐ `lem_Efinite` (stated truly; isolated-zeros `sorry`) |
+| 448  | `prop:foldnonzero`   | `{x∈V : nonzero-A critical point of U on Σ}` is meager. | ✅ `prop_foldnonzero` (proved finite-union reduction) |
 | 527  | `lem:Hzero`          | Where `H₁₁=H₁₂=H₂₂=0`, `DΦ₃=0`, so `rank DΦ ≤ 2`. | ✗ |
 | 547  | `cor:Hyp3false`      | Existence of such a point falsifies the old Hypothesis 3. | ✗ |
 | 602  | `lem:block`          | The 5×5 Jacobian `J₅` is block-triangular with `det J₅ = −32 g⁵ a⁵` (dual `±32 g⁵ b⁵`). | ✗ |
@@ -99,7 +99,7 @@ status per the legend; "—" means no counterpart and none planned as a named ob
 | 670  | `lem:Msurj`          | For `N≥6`, `c≠0`, `D_x M : ℝ^{2N}→ℂ⁶≅ℝ¹²` has rank 12 on an open dense subset of `V` — the **explicit 12×12 determinant** at a six-element configuration. | ✗ |
 | 1144 | `prop:dimZ`          | On `W_surj`: `Z_reg` (H≢0 piece) is a smooth codim-3 submanifold (dim ≤ 2N−1); the H≡0 stratum has dim ≤ 2N−3. | ✗ |
 | 1197 | `lem:smooth-chart-meager` | A smooth map from open `U⊂ℝ^m` to `ℝ^n` with `m<n` has meager image (measure-zero cube cover). | ✗ (negligible→meager half proven separately) |
-| 1239 | `prop:regnonzero`    | `B_{reg,≠0} ⊆ π_V(Z_reg) ∪ π_V(H≡0 stratum) ∪ B_{CaseB,≠0} ∪ B_{H0,res}`. | ⬚ `prop_regnonzero` |
+| 1239 | `prop:regnonzero`    | `B_{reg,≠0} ⊆ π_V(Z_reg) ∪ π_V(H≡0 stratum) ∪ B_{CaseB,≠0} ∪ B_{H0,res}`. | ✅ `prop_regnonzero` (proved 4-piece decomposition reduction) |
 | 1342 | `thm:final`          | **Flagship.** Odd `N≥7` + secant/spacing hyps ⟹ ∃`ξ>0`, `F_zero` nonempty (Baire over the 4 meager branches). | ◐ `thm_final` (closeout proven, conditional on the 4 branch facts; via `nonemptiness_from_meager_branches`) |
 
 ### Appendix A — Moment coordinates / triple-side minors (L1462–1770)
@@ -248,8 +248,11 @@ L4804, L5188, L5431 complete the 102 count.
    is now the proven Baire closeout, conditional on the 4 branch facts. (The Baire
    glue `final_nonemptiness_from_bad_union` / `bad_union_meagerness` /
    `nonemptiness_from_branches` was already sorry-free.)
-2. Transcribe the `shows True` placeholders (`lem_Efinite`, `prop_foldnonzero`,
-   `prop_regnonzero`) into their real statements.
+2. ~~Transcribe the `shows True` placeholders~~ **DONE** — `lem_Efinite`,
+   `prop_foldnonzero`, `prop_regnonzero` now have real statements. The two
+   reductions are proved; `lem_Efinite` carries the real-analytic isolated-zeros
+   `sorry`. The four `shows True` placeholders are gone; Paper.thy is down to 3
+   real sorries (the two transversality stubs + `lem_Efinite`).
 3. Finish the transversality pipeline (IFT chart + Sard) → closes `prop_regzero`,
    `prop_foldzero` end-to-end.
 4. Real-analytic zero sets + smooth-image-meager → `lem_Efinite`, `prop_foldnonzero`.

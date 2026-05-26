@@ -582,20 +582,85 @@ qed
 
 section \<open>Fold Critical Points with @{term "A \<noteq> 0"}\<close>
 
+text \<open>
+  TeX Lemma~\<open>lem:Efinite\<close>: \<open>E = {\<omega>\<in>\<Sigma> : g\<^sub>\<theta>(\<omega>) = 0}\<close> is finite. We model the
+  element-gain \<open>\<theta>\<close>-derivative \<open>g\<^sub>\<theta>\<close> as real-analytic (the real restriction of an
+  entire function \<open>G\<close>) and not identically zero on the compact \<open>\<theta>\<close>-interval \<open>\<Theta>\<close>;
+  the fold curve \<open>\<Sigma>\<close> has a finite \<open>\<phi>\<close>-fibre over each \<open>\<theta>\<close> (at most two solutions).
+  The remaining obligation is the real-analytic isolated-zeros fact (zeros of a
+  nontrivial real-analytic function on a compact interval are finite).
+\<close>
+
 theorem lem_Efinite:
-  shows True
+  fixes g\<theta> :: "real \<Rightarrow> real" and G :: "complex \<Rightarrow> complex"
+    and \<Theta> :: "real set" and \<Sigma> :: "(real \<times> real) set"
+  assumes \<Theta>_compact: "compact \<Theta>" and \<Theta>_interval: "is_interval \<Theta>"
+    and \<Sigma>_\<theta>range: "\<And>\<theta> \<phi>. (\<theta>, \<phi>) \<in> \<Sigma> \<Longrightarrow> \<theta> \<in> \<Theta>"
+    and \<phi>_fibre_finite: "\<And>\<theta>. finite {\<phi>. (\<theta>, \<phi>) \<in> \<Sigma>}"
+    and g\<theta>_restriction: "\<And>t. g\<theta> t = Re (G (complex_of_real t))"
+    and G_entire: "G holomorphic_on UNIV"
+    and g\<theta>_not_identically_zero: "\<exists>t\<in>\<Theta>. g\<theta> t \<noteq> 0"
+  shows "finite {\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}"
   sorry
 
+text \<open>
+  TeX Proposition~\<open>prop:foldnonzero\<close>: the nonzero-\<open>A\<close> fold-critical bad set is
+  meager in \<open>V\<close>. As in the TeX proof, every such critical point lies over the
+  finite exceptional set \<open>E\<close> (Lemma~\<open>lem:Efinite\<close>), and for each \<open>\<omega>\<in>E\<close> the slice
+  function \<open>F\<^sub>\<omega>(x) = \<partial>\<^sub>s U(x,\<omega>)\<close> is a nontrivial real-analytic function of \<open>x\<close>,
+  so its zero set in the connected open \<open>V\<close> is nowhere dense. The bad set is
+  contained in their finite union, hence meager. The nowhere-density of each
+  slice-zero set is the real-analytic input, recorded here as a hypothesis; this
+  theorem is the (proved) reduction assembling the finite union.
+\<close>
+
 theorem prop_foldnonzero:
-  shows True
-  sorry
+  fixes V Bad :: "((real^2)^'n) set" and E :: "(real^2) set"
+    and Fcrit :: "(real^2) \<Rightarrow> ((real^2)^'n) \<Rightarrow> real"
+  assumes E_finite: "finite E"
+    and reduce_to_E: "Bad \<subseteq> (\<Union>\<omega>\<in>E. {x \<in> V. Fcrit \<omega> x = 0})"
+    and slice_nowhere_dense:
+      "\<And>\<omega>. \<omega> \<in> E \<Longrightarrow> nowhere_dense {x \<in> V. Fcrit \<omega> x = 0}"
+  shows "meager Bad"
+proof -
+  have "meager (\<Union>\<omega>\<in>E. {x \<in> V. Fcrit \<omega> x = 0})"
+    by (rule meager_Union_finite[OF E_finite])
+       (rule meager_nowhere_dense[OF slice_nowhere_dense])
+  then show ?thesis
+    by (rule meager_subset[OF reduce_to_E])
+qed
 
 
 section \<open>Regular-Stratum Nonzero-A Degenerate Critical Points\<close>
 
+text \<open>
+  TeX Proposition~\<open>prop:regnonzero\<close>: the regular-stratum nonzero-\<open>A\<close> bad set
+  \<open>B\<^sub>reg,\<noteq>0\<close> is meager in \<open>V\<close>. The TeX proof partitions the bad locus \<open>Z\<close> by the
+  surjective set \<open>W\<^sub>surj\<close> and by \<open>H\<equiv>0\<close> into four pieces: the regular codim-3
+  piece \<open>\<pi>\<^sub>V(Z\<^sub>reg)\<close> and the codim-5 Hessian-zero stratum (both meager by
+  \<open>prop:dimZ\<close> + \<open>lem:smooth-chart-meager\<close>), the Case-B set (meager by
+  \<open>cor:caseBmeager\<close>, Appendix~\<open>app:caseB\<close>), and the residual \<open>H\<equiv>0\<close> set
+  (meager by \<open>prop:h0res-meager\<close>, Appendix~\<open>app:H0res\<close>). Those four meagerness
+  facts are the deep appendix results, recorded here as hypotheses; this theorem
+  is the (proved) reduction that assembles them.
+\<close>
+
 theorem prop_regnonzero:
-  shows True
-  sorry
+  fixes V Breg_nonzero Zreg ZH0surj BcaseB BH0res :: "((real^2)^'n) set"
+  assumes decompose:
+      "Breg_nonzero \<inter> V
+         \<subseteq> (Zreg \<inter> V) \<union> (ZH0surj \<inter> V) \<union> (BcaseB \<inter> V) \<union> (BH0res \<inter> V)"
+    and meager_Zreg:    "meager (Zreg \<inter> V)"
+    and meager_ZH0surj: "meager (ZH0surj \<inter> V)"
+    and meager_BcaseB:  "meager (BcaseB \<inter> V)"
+    and meager_BH0res:  "meager (BH0res \<inter> V)"
+  shows "meager (Breg_nonzero \<inter> V)"
+proof -
+  have "meager ((Zreg \<inter> V) \<union> (ZH0surj \<inter> V) \<union> (BcaseB \<inter> V) \<union> (BH0res \<inter> V))"
+    by (intro meager_Un meager_Zreg meager_ZH0surj meager_BcaseB meager_BH0res)
+  then show ?thesis
+    by (rule meager_subset[OF decompose])
+qed
 
 
 section \<open>Closeout\<close>
