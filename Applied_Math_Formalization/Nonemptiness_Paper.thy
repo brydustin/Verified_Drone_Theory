@@ -328,69 +328,233 @@ where
   "transverse0_on f S \<longleftrightarrow>
      (\<forall>x\<in>S. f x = 0 \<longrightarrow> (\<exists>f'. (f has_derivative f') (at x within S) \<and> surj f'))"
 
+lemma surj_comp:
+  assumes "surj f" and "surj g"
+  shows "surj (g \<circ> f)"
+  using assms unfolding surj_def
+  by (metis comp_apply) 
+
+lemma has_derivative_cplx_r2_within:
+  fixes z :: complex
+  shows "(cplx_r2 has_derivative cplx_r2) (at z within S)"
+  by (simp add: has_derivative_at_withinI has_derivative_cplx_r2)
+
+definition r2_cplx :: "real^2 \<Rightarrow> complex" where
+  "r2_cplx v = Complex (v $ 1) (v $ 2)"
+
+lemma r2_cplx_cplx_r2 [simp]: "r2_cplx (cplx_r2 z) = z"
+  unfolding r2_cplx_def cplx_r2_def
+  by (simp add: complex_eq_iff vec_eq_iff forall_2)
+
+lemma cplx_r2_r2_cplx [simp]: "cplx_r2 (r2_cplx v) = v"
+  unfolding r2_cplx_def cplx_r2_def
+  by (simp add: vec_eq_iff forall_2)
+
+lemma bounded_linear_r2_cplx: "bounded_linear r2_cplx"
+  unfolding r2_cplx_def
+  by (intro bounded_linearI')
+     (simp_all add: vec_eq_iff forall_2 complex_eq_iff)
+
+lemma has_derivative_r2_cplx [derivative_intros]:
+  fixes v :: "real^2"
+  shows "(r2_cplx has_derivative r2_cplx) (at v)"
+  by (simp only: bounded_linear_r2_cplx bounded_linear_imp_has_derivative)
+
+lemma surj_r2_cplx: "surj r2_cplx"
+  by (metis UNIV_eq_I r2_cplx_cplx_r2 rangeI)
+
+lemma regular_value_on_cplx_r2_comp:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  assumes joint_trans:
+      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
+        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+  shows "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V\<times>\<Omega>reg) 0"
+proof (rule regular_value_onI)
+  fix z
+  assume zS: "z \<in> V \<times> \<Omega>reg"
+  assume hz: "(\<lambda>z. cplx_r2 (A z)) z = 0"
+  then have Az0: "A z = 0"
+    by (simp only: cplx_r2_0_iff)
+  from joint_trans zS Az0 obtain F where
+    derA: "((\<lambda>z. A z) has_derivative F) (at z within V \<times> \<Omega>reg)"
+    and surjF: "surj F"
+    by blast
+  have derc: "(cplx_r2 has_derivative cplx_r2) (at (A z) within UNIV)"
+    by (simp add: has_derivative_cplx_r2)
+  have derG:
+      "((\<lambda>z. cplx_r2 (A z)) has_derivative (cplx_r2 \<circ> F)) (at z within V \<times> \<Omega>reg)"
+    using has_derivative_compose[OF derA derc]
+    by (simp add: o_def)
+  have "surj (cplx_r2 \<circ> F)"
+    by (rule surj_comp[OF surjF surj_cplx_r2])
+  then show "\<exists>f'. ((\<lambda>z. cplx_r2 (A z)) has_derivative f') (at z within V \<times> \<Omega>reg) \<and> surj f'"
+    using derG by blast
+qed
+
+lemma transverse0_on_cplx_r2_iff:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  shows "transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg \<longleftrightarrow>
+         transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg"
+  unfolding transverse0_on_def
+proof
+  assume H: "\<forall>\<omega>\<in>\<Omega>reg.
+      cplx_r2 (A (x, \<omega>)) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  show "\<forall>\<omega>\<in>\<Omega>reg.
+      A (x, \<omega>) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. A (x, \<omega>)) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  proof (intro ballI impI)
+    fix \<omega> :: "real^2"
+    assume w: "\<omega> \<in> \<Omega>reg"
+    assume Az0: "A (x, \<omega>) = 0"
+    have "cplx_r2 (A (x, \<omega>)) = 0"
+      using Az0 by (simp only: cplx_r2_0_iff)
+	    then obtain f' where der:
+	        "((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg)"
+	      and surj_f': "surj f'"
+	      using H w by blast
+            have der_r2: "(r2_cplx has_derivative r2_cplx) (at (cplx_r2 (A (x, \<omega>))) within UNIV)"
+              by (simp add: has_derivative_at_withinI has_derivative_r2_cplx)
+            have derA:
+                "((\<lambda>\<omega>. A (x, \<omega>)) has_derivative (r2_cplx \<circ> f')) (at \<omega> within \<Omega>reg)"
+              using has_derivative_compose[OF der der_r2]
+              by (simp add: o_def)
+            have surjF: "surj (r2_cplx \<circ> f')"
+              by (rule surj_comp[OF surj_f' surj_r2_cplx])
+	    show "\<exists>f'. ((\<lambda>\<omega>. A (x, \<omega>)) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f'"
+	      using derA surjF by blast
+	  qed
+next
+  assume H: "\<forall>\<omega>\<in>\<Omega>reg.
+      A (x, \<omega>) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. A (x, \<omega>)) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  show "\<forall>\<omega>\<in>\<Omega>reg.
+      cplx_r2 (A (x, \<omega>)) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  proof (intro ballI impI)
+    fix \<omega> :: "real^2"
+    assume w: "\<omega> \<in> \<Omega>reg"
+    assume hz: "cplx_r2 (A (x, \<omega>)) = 0"
+    then have Az0: "A (x, \<omega>) = 0"
+      by (simp only: cplx_r2_0_iff)
+    from H w Az0 obtain F where derA:
+        "((\<lambda>\<omega>. A (x, \<omega>)) has_derivative F) (at \<omega> within \<Omega>reg)"
+      and surjF: "surj F"
+      by blast
+    have derc: "(cplx_r2 has_derivative cplx_r2) (at (A (x, \<omega>)) within UNIV)"
+      by (simp add: has_derivative_cplx_r2)
+    have derG:
+        "((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative (cplx_r2 \<circ> F)) (at \<omega> within \<Omega>reg)"
+      using has_derivative_compose[OF derA derc] by (simp add: o_def)
+    have "surj (cplx_r2 \<circ> F)"
+      by (rule surj_comp[OF surjF surj_cplx_r2])
+    then show "\<exists>f'. ((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f'"
+      using derG by blast
+  qed
+qed
+
+
 text \<open>
-  Parametric transversality is the missing analytic engine behind TeX
-  Proposition~(Generic regular-stratum zeros are regular). We record it as one lemma
-  so that later work can focus on proving it properly (likely via Sard on the
-  projection from the joint zero set).
+  The Euclidean chart pipeline in \<open>Parametric_Transversality_Euclidean_Base\<close>
+  is typed for a \<^emph>\<open>single-level\<close> parameter space \<open>real^'m\<close>, and records the
+  rank defect as \<open>rank (matrix \<dots>) < CARD('m)\<close> --- which only type-checks for
+  \<open>real^'m\<close> (the entries must form a \<^class>\<open>field\<close>). Here the parameter space is the
+  product \<open>(real^2)^'n\<close>, so we record the two pipeline obligations at that type, with
+  the rank defect expressed coordinate-free as \<open>\<not> surj\<close>. These are the genuine
+  (still-open) analytic obligations for the antenna parameter space; they will be
+  discharged from the general regular-value theorem.
 \<close>
 
-lemma parametric_transversality_meager_stub:
+lemma charts_core_Nn:
+  fixes V :: "((real^2)^'n) set" and \<Omega> :: "(real^2) set"
+    and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
+  assumes "open V" "V \<noteq> {}" "open \<Omega>"
+    and "regular_value_on G (V\<times>\<Omega>) 0"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+             (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
+           \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+  sorry
+
+lemma negligible_proj_charts_Nn:
+  fixes charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+    and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+    and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+  assumes "\<And>i x. x \<in> Crit i \<Longrightarrow>
+            ((fst \<circ> charts i) has_derivative blinfun_apply (D i x)) (at x within Crit i)"
+    and "\<And>i x. x \<in> Crit i \<Longrightarrow> \<not> surj (blinfun_apply (D i x))"
+  shows "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+  sorry
+
+lemma parametric_transversality_negligible_complex:
   fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
     and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
   assumes "open V" and "V \<noteq> {}"
     and "open \<Omega>reg"
-    and A_smooth: "(\<forall>z\<in>V\<times>\<Omega>reg. A differentiable at z)"
     and joint_trans:
       "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
         (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
-  shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
+  shows "negligible {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
 proof -
-  text \<open>
-    This lemma is intended to be proved by the reusable Euclidean pipeline:
+  have reg0: "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V \<times> \<Omega>reg) 0"
+    using regular_value_on_cplx_r2_comp[OF joint_trans] .
+  have eq_bad:
+      "{x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}
+       =
+       {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D) (at \<omega> within \<Omega>reg) \<and> surj D))}"
+    unfolding transverse0_on_def by auto
+  have bad_negligible:
+    "negligible {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D)
+                       (at \<omega> within \<Omega>reg) \<and> surj D))}"
+  proof -
+    let ?G = "\<lambda>z. cplx_r2 (A z)"
 
-    1. Replace the complex equation \<open>A = 0\<close> by a real 2-vector equation
-       \<open>G = (Re \<circ> A, Im \<circ> A)\<close>.
-    2. From @{term joint_trans} conclude: \<open>0\<close> is a regular value of \<open>G\<close> on \<open>V\<times>\<Omega>reg\<close>.
-    3. Use the (implicit-function-theorem based) regular value theorem to obtain a
-       codim-2 embedded submanifold structure on the joint zero set
-       \<open>M = {(x,\<omega>)\<in>V\<times>\<Omega>reg. G(x,\<omega>) = 0}\<close>, covered by countably many smooth charts.
-    4. Show: failure of transversality of the slice \<open>\<omega> \<mapsto> A(x,\<omega>)\<close> occurs exactly at
-       parameters \<open>x\<close> that are critical values of the projection \<open>\<pi> : M \<to> V\<close>.
-    5. Apply Sard in each chart (via @{thm baby_Sard}) to obtain that the critical
-       value set is Lebesgue-negligible in \<open>((real^2)^'n)\<close>.
-    6. Convert negligible-to-meager using the lemmas below.
-  \<close>
+    obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+       and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+       and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+      where cover:
+      "{x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. ?G (x,\<omega>) = 0 \<and>
+          (\<not> (\<exists>D\<omega>. ((\<lambda>u. ?G (x,u)) has_derivative D\<omega>)
+                    (at \<omega> within \<Omega>reg) \<and> surj D\<omega>))}
+       \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow>
+          ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x)))
+            (at x within Crit i)"
+      and rank:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0]
+      by blast
 
-  (* Implemented later by reducing to the Euclidean pipeline theorem
-     @{thm parametric_transversality_negligible_stub} and then using the
-     negligible\<rightarrow>meager lemmas in this file. *)
-  show ?thesis
-    sorry
+    have negligible_cover:
+      "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+    proof (rule negligible_proj_charts_Nn)
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow>
+        ((fst \<circ> charts i) has_derivative blinfun_apply (D i x))
+          (at x within Crit i)"
+        using der by blast
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow> \<not> surj (blinfun_apply (D i x))"
+        using rank by blast
+    qed
+
+    show ?thesis
+      using negligible_cover cover negligible_subset by blast
+  qed
+  then have "negligible {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}"
+    by (simp add: eq_bad)
+  then show ?thesis
+    by (simp only: transverse0_on_cplx_r2_iff)
 qed
-
-text \<open>
-  Proof idea (to replace the \<open>sorry\<close>): let \<open>G(x,\<omega>) = (Re (A(x,\<omega>)), Im (A(x,\<omega>)))\<close>.
-  The assumption @{term joint_trans} says \<open>0\<close> is a regular value of \<open>G\<close>, hence the joint
-  zero set \<open>M = {(x,\<omega>)\<in>V\<times>\<Omega>reg. G(x,\<omega>) = 0}\<close> is a codimension-2 submanifold of
-  \<open>V\<times>\<Omega>reg\<close>. For a fixed parameter \<open>x\<close>, failure of @{term "transverse0_on (\<lambda>\<omega>. A(x,\<omega>)) \<Omega>reg"}
-  means there is a point \<open>(x,\<omega>)\<in>M\<close> where the derivative in the \<open>\<omega>\<close>-direction is not surjective.
-  Standard parametric transversality identifies such \<open>x\<close> as critical values of the projection
-  \<open>\<pi> : M \<to> V\<close>. One can then show the critical value set is Lebesgue-negligible using
-  @{thm baby_Sard} (after representing \<open>M\<close> in local charts), and hence meager via the
-  negligible-to-meager lemmas below.
-\<close>
-
-theorem prop_regzero:
-  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
-    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
-  assumes "open V" and "V \<noteq> {}" and "open \<Omega>reg"
-    and A_smooth: "(\<forall>z\<in>V\<times>\<Omega>reg. A differentiable at z)"
-    and joint_trans:
-      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
-        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
-  shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
-  by (rule parametric_transversality_meager_stub[OF assms(1-3) A_smooth joint_trans])
 
 
 section \<open>Negligible Sets Are Meager (meagerness engine for the bad-set branches)\<close>
@@ -443,6 +607,99 @@ proof -
   then show ?thesis
     using assms(1) by (rule meager_subset[rotated])
 qed
+
+text \<open>
+  Meager version of the regular-stratum transversality bad set (the rung that
+  \<open>prop_regzero\<close> consumes). The chart cover from @{thm charts_core_Nn} is a
+  countable union of \<^emph>\<open>closed\<close> Lebesgue-negligible pieces, so the bad set is
+  meager by @{thm meager_negligible_closed_cover}.
+\<close>
+
+lemma parametric_transversality_meager_complex:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  assumes "open V" and "V \<noteq> {}"
+    and "open \<Omega>reg"
+    and joint_trans:
+      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
+        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+  shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
+proof -
+  have reg0: "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V \<times> \<Omega>reg) 0"
+    using regular_value_on_cplx_r2_comp[OF joint_trans] .
+  have eq_bad:
+      "{x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}
+       =
+       {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D) (at \<omega> within \<Omega>reg) \<and> surj D))}"
+    unfolding transverse0_on_def by auto
+  have bad_meager:
+    "meager {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D)
+                       (at \<omega> within \<Omega>reg) \<and> surj D))}"
+  proof -
+    let ?G = "\<lambda>z. cplx_r2 (A z)"
+
+    obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+       and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+       and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+      where cover:
+      "{x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. ?G (x,\<omega>) = 0 \<and>
+          (\<not> (\<exists>D\<omega>. ((\<lambda>u. ?G (x,u)) has_derivative D\<omega>)
+                    (at \<omega> within \<Omega>reg) \<and> surj D\<omega>))}
+       \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow>
+          ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x)))
+            (at x within Crit i)"
+      and rank:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      and clsd:
+      "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0]
+      by blast
+
+    have negligible_cover:
+      "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+    proof (rule negligible_proj_charts_Nn)
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow>
+        ((fst \<circ> charts i) has_derivative blinfun_apply (D i x))
+          (at x within Crit i)"
+        using der by blast
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow> \<not> surj (blinfun_apply (D i x))"
+        using rank by blast
+    qed
+
+    show ?thesis
+    proof (rule meager_negligible_closed_cover
+                  [where K = "\<lambda>i. (fst \<circ> charts i) ` (Crit i)"])
+      show "{x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. ?G (x,\<omega>) = 0 \<and>
+              (\<not> (\<exists>D\<omega>. ((\<lambda>u. ?G (x,u)) has_derivative D\<omega>)
+                        (at \<omega> within \<Omega>reg) \<and> surj D\<omega>))}
+            \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+        by (rule cover)
+      show "\<And>i. closed ((fst \<circ> charts i) ` (Crit i))"
+        using clsd by blast
+      show "\<And>i. negligible ((fst \<circ> charts i) ` (Crit i))"
+        using negligible_cover by (auto intro: negligible_subset)
+    qed
+  qed
+  then have "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}"
+    by (simp add: eq_bad)
+  then show ?thesis
+    by (simp only: transverse0_on_cplx_r2_iff)
+qed
+
+theorem prop_regzero:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  assumes "open V" and "V \<noteq> {}" and "open \<Omega>reg"
+    and A_smooth: "(\<forall>z\<in>V\<times>\<Omega>reg. A differentiable at z)"
+    and joint_trans:
+      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
+        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+  shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
+  by (rule parametric_transversality_meager_complex[OF assms(1-3) joint_trans])
 
 
 section \<open>The Singular Curve Is a Fold\<close>
@@ -695,5 +952,27 @@ theorem thm_final:
             \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
   shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
   by (rule nonemptiness_from_meager_branches[OF assms])
+
+text \<open>
+  Existence-only alternative closeout: if each bad branch is Lebesgue-negligible
+  in the nonempty open working set \<open>V\<close>, then the good set is nonempty (no Baire
+  category needed).  This is weaker than the intended meager/genericity story,
+  but it is often sufficient to obtain nonemptiness of the robust feasible set.
+\<close>
+
+theorem thm_final_negligible:
+  fixes Fset V :: "((real^2)^'n) set"
+    and X0 :: "real \<Rightarrow> ((real^2)^'n) set"
+    and Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero :: "((real^2)^'n) set"
+  assumes V_open: "open V" and V_nonempty: "V \<noteq> {}" and V_subset_Fset: "V \<subseteq> Fset"
+    and neg_reg_nonzero:  "negligible (Breg_nonzero \<inter> V)"
+    and neg_reg_zero:     "negligible (Breg_zero \<inter> V)"
+    and neg_fold_zero:    "negligible (Bfold_zero \<inter> V)"
+    and neg_fold_nonzero: "negligible (Bfold_nonzero \<inter> V)"
+    and X0_sound:
+      "\<And>x. x \<in> V - bad_union Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero
+            \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
+  shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
+  by (rule nonemptiness_from_negligible_branches[OF assms])
 
 end
