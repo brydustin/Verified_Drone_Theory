@@ -1057,6 +1057,41 @@ proof (rule regular_value_onI)
     using derG by blast
 qed
 
+text \<open>
+  \<open>C\<^sup>1\<close>-lifting: if \<open>A\<close> is continuously Fr\<a>chet-differentiable on \<open>S\<close> (a continuous
+  blinfun derivative), so is \<open>cplx_r2 \<circ> A\<close>, since \<open>cplx_r2\<close> is bounded-linear. This
+  is exactly the smoothness input {thm charts_core_Nn} needs (the chart construction
+  rests on the inverse function theorem, hence on \<open>C\<^sup>1\<close>, not merely a surjective
+  derivative at the zeros).
+\<close>
+
+lemma C1_cplx_r2_comp:
+  fixes A :: "'a::euclidean_space \<Rightarrow> complex" and S :: "'a set"
+  assumes "\<exists>A'. (\<forall>z\<in>S. (A has_derivative blinfun_apply (A' z)) (at z)) \<and> continuous_on S A'"
+  shows "\<exists>G'. (\<forall>z\<in>S. ((\<lambda>z. cplx_r2 (A z)) has_derivative blinfun_apply (G' z)) (at z))
+                \<and> continuous_on S G'"
+proof -
+  obtain A' :: "'a \<Rightarrow> ('a \<Rightarrow>\<^sub>L complex)"
+    where A'd: "\<And>z. z\<in>S \<Longrightarrow> (A has_derivative blinfun_apply (A' z)) (at z)"
+      and A'c: "continuous_on S A'"
+    using assms by blast
+  define cr2 :: "complex \<Rightarrow>\<^sub>L (real^2)" where "cr2 = Blinfun cplx_r2"
+  have cr2_apply: "blinfun_apply cr2 = cplx_r2"
+    unfolding cr2_def by (rule bounded_linear_Blinfun_apply[OF bounded_linear_cplx_r2])
+  define G' where "G' = (\<lambda>z. cr2 o\<^sub>L A' z)"
+  have apply_eq: "blinfun_apply (G' z) = (\<lambda>h. cplx_r2 (blinfun_apply (A' z) h))" for z
+    using G'_def cr2_apply by fastforce
+  have der: "((\<lambda>z. cplx_r2 (A z)) has_derivative blinfun_apply (G' z)) (at z)"
+    if z: "z \<in> S" for z
+    using bounded_linear.has_derivative[OF bounded_linear_cplx_r2 A'd[OF z]]
+    by (simp add: apply_eq)
+  have cont: "continuous_on S G'"
+    unfolding G'_def
+    using bounded_bilinear.bounded_linear_right[OF bounded_bilinear_blinfun_compose]
+          A'c bounded_linear.continuous_on by blast
+  show ?thesis using der cont by blast
+qed
+
 lemma transverse0_on_cplx_r2_iff:
   fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
     and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
