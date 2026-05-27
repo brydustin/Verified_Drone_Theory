@@ -1214,6 +1214,44 @@ next
   thus "fst ` {p. Dx (fst p) + Dw (snd p) = 0} = UNIV" by auto
 qed
 
+text \<open>
+  Specialisation to a chart derivative. If \<open>D\<phi>\<close> is a linear parametrisation of the
+  kernel of a surjective \<open>L = DG\<close> (\<open>range D\<phi> = ker L\<close>, as delivered by
+  @{thm regular_value_local_chart}), then the \<open>x\<close>-factor projection \<open>fst \<circ> D\<phi>\<close> is
+  surjective \<^emph>\<open>iff\<close> the \<open>\<omega>\<close>-partial \<open>b \<mapsto> L(0,b)\<close> is. This is the bridge from the
+  chart's regularity for the projection to non-degeneracy of \<open>D\<^sub>\<omega> G\<close>.
+\<close>
+
+lemma chart_proj_surj_iff:
+  fixes L :: "('a::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'b"
+    and D\<phi> :: "'a \<Rightarrow> ('a \<times> 'b)"
+  assumes linL: "linear L" and surjL: "surj L"
+    and rngD: "range D\<phi> = {w. L w = 0}"
+  shows "surj (\<lambda>h. fst (D\<phi> h)) \<longleftrightarrow> surj (\<lambda>b. L (0, b))"
+proof -
+  have split: "L (a, 0) + L (0, b) = L (a, b)" for a b
+    by (metis add.commute add_0 add_Pair linL linear_add)
+  have joint: "surj (\<lambda>p. L (fst p, 0) + L (0, snd p))"
+  proof -
+    have "(\<lambda>p. L (fst p, 0) + L (0, snd p)) = L"
+      by (rule ext, metis split prod.collapse)
+    thus ?thesis
+      using surjL by presburger
+  qed
+  have lin_embed: "linear (\<lambda>b::'b. ((0::'a), b))"
+    by (rule linearI) (auto simp: zero_prod_def)
+  have linw: "linear (\<lambda>b. L (0, b))"
+    using linear_compose[OF lin_embed linL] by (simp add: o_def)
+  have key: "(fst ` {p. L (fst p, 0) + L (0, snd p) = 0} = UNIV) \<longleftrightarrow> surj (\<lambda>b. L (0,b))"
+    by (rule proj_kernel_full_iff_partial_surj[OF linw joint])
+  have setEq: "{p. L (fst p, 0) + L (0, snd p) = 0} = {w. L w = 0}"
+    using split by auto 
+  have rangeEq: "range (\<lambda>h. fst (D\<phi> h)) = fst ` {w. L w = 0}"
+    by (metis image_image rngD)
+  show ?thesis
+    using key by (simp only: setEq flip: rangeEq)
+qed
+
 lemma charts_core_Nn:
   fixes V :: "((real^2)^'n) set" and \<Omega> :: "(real^2) set"
     and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
