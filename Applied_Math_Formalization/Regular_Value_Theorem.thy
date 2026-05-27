@@ -285,12 +285,16 @@ theorem regular_value_local_chart:
     and derG: "\<And>z. z \<in> W \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
     and contG': "continuous_on W G'"
     and regp: "surj (blinfun_apply (G' p))"
-  shows "\<exists>(U::'c set) (u0::'c) (\<phi>::'c \<Rightarrow> ('c \<times> 'b)) (g::('c \<times> 'b) \<Rightarrow> 'c).
+  shows "\<exists>(U::'c set) (u0::'c) (\<phi>::'c \<Rightarrow> ('c \<times> 'b)) (g::('c \<times> 'b) \<Rightarrow> 'c)
+            (D\<phi>::'c \<Rightarrow> ('c \<Rightarrow>\<^sub>L ('c \<times> 'b))).
             open U \<and> u0 \<in> U \<and> \<phi> u0 = p \<and>
             \<phi> differentiable_on U \<and>
             \<phi> ` U \<subseteq> {q \<in> W. G q = 0} \<and>
             openin (top_of_set {q \<in> W. G q = 0}) (\<phi> ` U) \<and>
-            homeomorphism U (\<phi> ` U) \<phi> g"
+            homeomorphism U (\<phi> ` U) \<phi> g \<and>
+            (\<forall>u\<in>U. (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)) \<and>
+            (\<forall>u\<in>U. range (blinfun_apply (D\<phi> u))
+                     = {w. blinfun_apply (G' (\<phi> u)) w = 0})"
 proof -
   text \<open>The derivative at \<open>p\<close>, as a (surjective) linear map.\<close>
   define L where "L = blinfun_apply (G' p)"
@@ -657,10 +661,81 @@ proof -
     unfolding homeomorphism_def
     by (metis \<phi>\<pi> \<pi>\<phi> \<pi>_image_subset cont\<phi> cont\<pi> image_eqI subsetI subset_antisym)
 
+  text \<open>The chart derivative, exposed as a blinfun, with its range computed as
+        \<open>ker (DG)\<close> at the chart point.\<close>
+  define D\<phi> :: "'c \<Rightarrow> ('c \<Rightarrow>\<^sub>L ('c \<times> 'b))"
+    where "D\<phi> = (\<lambda>u. Blinfun (\<lambda>h. gg' (u, 0) (h, 0)))"
+
+  have bl_D\<phi>: "bounded_linear (\<lambda>h. gg' (u, 0) (h, 0))" if uU: "u \<in> U" for u
+  proof -
+    have uv: "(u, (0::'b)) \<in> V" using uU unfolding U_def by simp
+    have linFd: "linear (blinfun_apply (Fd (gg (u,0))))"
+      by (simp add: blinfun.bounded_linear_right bounded_linear.linear)
+    have injFd: "inj (blinfun_apply (Fd (gg (u,0))))"
+      using bij_chain[OF uv] by (simp add: bij_def)
+    have "bounded_linear (inv (blinfun_apply (Fd (gg (u,0)))))"
+      using eucl.inj_linear_imp_inv_linear[OF linFd injFd]
+      by (simp add: linear_conv_bounded_linear)
+    then have blgg': "bounded_linear (gg' (u, 0))"
+      using gg'_eq[OF uv] by simp
+    show ?thesis
+      using bounded_linear_compose[OF blgg' bl_embed] by (simp add: o_def)
+  qed
+
+  have D\<phi>_apply: "blinfun_apply (D\<phi> u) = (\<lambda>h. gg' (u, 0) (h, 0))" if uU: "u \<in> U" for u
+    unfolding D\<phi>_def by (rule bounded_linear_Blinfun_apply[OF bl_D\<phi>[OF uU]])
+
+  have der_\<phi>: "(\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)" if uU: "u \<in> U" for u
+  proof -
+    have uv: "(u, (0::'b)) \<in> V" using uU unfolding U_def by simp
+    have d_embed: "((\<lambda>u::'c. (u, (0::'b))) has_derivative (\<lambda>h. (h, 0))) (at u)"
+      using bounded_linear_imp_has_derivative[OF bl_embed] .
+    have d_gg: "(gg has_derivative gg' (u, 0)) (at (u, 0))"
+      using gg_der[OF uv] .
+    have "((gg \<circ> (\<lambda>u::'c. (u, (0::'b)))) has_derivative (\<lambda>h. gg' (u, 0) (h, 0))) (at u)"
+      using has_derivative_compose[OF d_embed d_gg] by (simp add: o_def)
+    then show ?thesis
+      unfolding \<phi>_def o_def by (simp add: D\<phi>_apply[OF uU])
+  qed
+
+  have rng_\<phi>: "range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+    if uU: "u \<in> U" for u
+  proof -
+    have uv: "(u, (0::'b)) \<in> V" using uU unfolding U_def by simp
+    have z\<phi>: "gg (u, 0) = \<phi> u" unfolding \<phi>_def by simp
+    have bijFz: "bij (blinfun_apply (Fd (\<phi> u)))"
+      using bij_chain[OF uv] by (simp add: z\<phi>)
+    have gg'z: "gg' (u, 0) = inv (blinfun_apply (Fd (\<phi> u)))"
+      using gg'_eq[OF uv] by (simp add: z\<phi>)
+    have Fdz: "blinfun_apply (Fd (\<phi> u)) v = (\<pi> v, blinfun_apply (G' (\<phi> u)) v)" for v
+      by (simp add: Fd_eq)
+    have Dap: "blinfun_apply (D\<phi> u) h = inv (blinfun_apply (Fd (\<phi> u))) (h, 0)" for h
+      by (simp add: D\<phi>_apply[OF uU] gg'z)
+    show ?thesis
+    proof (intro set_eqI iffI)
+      fix w assume "w \<in> range (blinfun_apply (D\<phi> u))"
+      then obtain h where w: "w = inv (blinfun_apply (Fd (\<phi> u))) (h, 0)"
+        using Dap by auto
+      have "blinfun_apply (Fd (\<phi> u)) w = (h, 0)"
+        using w bijFz by (simp add: bij_is_surj surj_f_inv_f)
+      then have "blinfun_apply (G' (\<phi> u)) w = 0" by (simp add: Fdz)
+      then show "w \<in> {w. blinfun_apply (G' (\<phi> u)) w = 0}" by simp
+    next
+      fix w assume "w \<in> {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+      then have w0: "blinfun_apply (G' (\<phi> u)) w = 0" by simp
+      have "blinfun_apply (Fd (\<phi> u)) w = (\<pi> w, 0)" by (simp add: Fdz w0)
+      then have "inv (blinfun_apply (Fd (\<phi> u))) (\<pi> w, 0) = w"
+        using bijFz by (metis bij_is_inj inv_f_f)
+      then have "blinfun_apply (D\<phi> u) (\<pi> w) = w" by (simp add: Dap)
+      then show "w \<in> range (blinfun_apply (D\<phi> u))" by (metis rangeI)
+    qed
+  qed
+
   show ?thesis
     unfolding M_def[symmetric]
-    using openU u0U \<phi>u0 diff\<phi> \<phi>_subset_M openin_\<phi>U homeo_chart
-    by (intro exI[where x=U] exI[where x=u0] exI[where x=\<phi>] exI[where x=\<pi>], simp)    
+    using openU u0U \<phi>u0 diff\<phi> \<phi>_subset_M openin_\<phi>U homeo_chart der_\<phi> rng_\<phi>
+    by (intro exI[where x=U] exI[where x=u0] exI[where x=\<phi>] exI[where x=\<pi>]
+              exI[where x=D\<phi>], simp)
 qed
 
 end
