@@ -1043,6 +1043,32 @@ text \<open>
   is the (proved) reduction that assembles them.
 \<close>
 
+text \<open>
+  TeX Lemma~\<open>lem:Msurj\<close> (Surjectivity of \<open>D\<^sub>x M\<close>). For \<open>N = CARD('n) \<ge> 6\<close> and
+  \<open>c \<noteq> 0\<close>, the parameter-derivative of the moment map
+  \<open>M(\<cdot>,c) : \<real>\<^sup>2\<^sup>N \<rightarrow> \<complex>\<^sup>6 \<cong> \<real>\<^sup>1\<^sup>2\<close> (the six moments
+  \<open>A, M\<^sub>1, M\<^sub>2, M\<^sub>1\<^sub>1, M\<^sub>1\<^sub>2, M\<^sub>2\<^sub>2\<close>) is surjective on an open dense subset of \<open>V\<close>.
+  The omitted proof is the explicit \<open>12 \<times> 12\<close> real Jacobian minor at the
+  six-element configuration, yielding the big determinant
+  \<open>det J = -5\<pi>\<^sup>8 / (3\<kappa>\<^sup>2) \<noteq> 0\<close>, followed by a lower-semicontinuity upgrade
+  of pointwise surjectivity to an open dense set. This feeds the \<open>ZH0surj\<close>
+  piece of \<open>prop_regnonzero\<close>. The conclusion is guarded by a \<open>big_det\<close>
+  hypothesis (existence of one regular base point), so the recorded obligation
+  is the open-dense propagation, not an (otherwise false) absolute surjectivity
+  claim. TODO: model the six moments concretely and discharge.
+\<close>
+
+lemma Dx_moment_map_surjective:
+  fixes V :: "((real^2)^'n) set"
+    and \<M> :: "(real^2)^'n \<Rightarrow> complex^6"
+    and D\<M> :: "(real^2)^'n \<Rightarrow> ((real^2)^'n \<Rightarrow> complex^6)"
+  assumes "open V" and "V \<noteq> {}"
+    and N_ge_6: "6 \<le> CARD('n)"
+    and deriv: "\<And>x. x \<in> V \<Longrightarrow> (\<M> has_derivative D\<M> x) (at x within V)"
+    and big_det: "\<exists>x\<^sub>0\<in>V. surj (D\<M> x\<^sub>0)"
+  shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U \<and> (\<forall>x\<in>U. surj (D\<M> x))"
+  sorry
+
 theorem prop_regnonzero:
   fixes V Breg_nonzero Zreg ZH0surj BcaseB BH0res :: "((real^2)^'n) set"
   assumes decompose:
