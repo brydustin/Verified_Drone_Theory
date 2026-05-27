@@ -1472,7 +1472,83 @@ proof -
   qed
 qed
 
+text \<open>
+  Compactness of a critical piece. On a closed ball where \<open>\<phi>\<close> is continuous and lands
+  in \<open>W\<close> (where \<open>G'\<close> is continuous), the set of points whose \<open>\<omega>\<close>-partial \<open>b \<mapsto> DG(0,b)\<close>
+  (a self-map of \<open>real^2\<close>) is \<^emph>\<open>not\<close> surjective is the zero set of \<open>x \<mapsto> det\<close> of a
+  continuous matrix field, hence closed in the ball, hence compact.
+\<close>
 
+lemma crit_piece_compact:
+  fixes \<phi> :: "'c::euclidean_space \<Rightarrow> ('c \<times> (real^2))"
+    and G' :: "('c \<times> (real^2)) \<Rightarrow> (('c \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+    and W :: "('c \<times> (real^2)) set"
+  assumes contG': "continuous_on W G'"
+    and cont\<phi>: "continuous_on (cball u0 r) \<phi>"
+    and \<phi>W: "\<And>x. x \<in> cball u0 r \<Longrightarrow> \<phi> x \<in> W"
+  shows "compact {x \<in> cball u0 r. \<not> surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))}"
+proof -
+  define M :: "'c \<Rightarrow> (real^2^2)"
+    where "M x = matrix (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))" for x
+
+  have lin: "linear (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))" for x
+  proof -
+    have e: "linear (\<lambda>b::real^2. ((0::'c), b))"
+      by (rule linearI) (auto simp: zero_prod_def)
+    show ?thesis
+      using linear_compose[OF e blinfun.bounded_linear_right[THEN bounded_linear.linear]]
+      by (simp add: o_def)
+  qed
+  have mvm: "(\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) = (*v) (M x)" for x
+    using lin[of x] by (simp add: M_def matrix_vector_mul(2))
+
+  have surj_iff: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> det (M x) \<noteq> 0" for x
+  proof -
+    have s1: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> rank (M x) = CARD(2)"
+      by (metis mvm full_rank_surjective)
+    have s2: "rank (M x) = CARD(2) \<longleftrightarrow> det (M x) \<noteq> 0"
+      by (metis det_eq_0_rank min.idem nat_less_le rank_bound)
+    show ?thesis using s1 s2 by blast
+  qed
+
+  have contGphi: "continuous_on (cball u0 r) (\<lambda>x. G' (\<phi> x))"
+    by (rule continuous_on_compose2[OF contG' cont\<phi>]) (use \<phi>W in auto)
+  have entry_cont:
+      "continuous_on (cball u0 r) (\<lambda>x. (blinfun_apply (G' (\<phi> x)) (0, c)) $ i)" for c i
+    by (rule bounded_linear.continuous_on[OF bounded_linear_vec_nth
+          bounded_bilinear.continuous_on
+            [OF bounded_bilinear_blinfun_apply contGphi continuous_on_const]])
+
+  have detM: "det (M x) =
+        blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 1 * blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 2
+      - blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 1 * blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 2"
+    for x
+    by (simp add: det_2 M_def matrix_def)
+  have det_cont: "continuous_on (cball u0 r) (\<lambda>x. det (M x))"
+  proof -
+    have "continuous_on (cball u0 r)
+            (\<lambda>x. blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 1
+                   * blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 2
+               - blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 1
+                   * blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 2)"
+      by (intro continuous_intros entry_cont)
+    thus ?thesis by (simp add: detM)
+  qed
+
+  have setEq: "{x \<in> cball u0 r. \<not> surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))}
+               = {x \<in> cball u0 r. det (M x) = 0}"
+    using surj_iff by auto
+  have "closedin (top_of_set (cball u0 r)) {x \<in> cball u0 r. det (M x) = 0}"
+    by (rule continuous_closedin_preimage_constant[OF det_cont])
+  hence cl: "closed {x \<in> cball u0 r. det (M x) = 0}"
+    using closedin_closed_trans closed_cball by blast
+  have sub: "{x \<in> cball u0 r. det (M x) = 0} \<subseteq> cball u0 r" by blast
+  have bd: "bounded {x \<in> cball u0 r. det (M x) = 0}"
+    using bounded_subset[OF bounded_cball sub] .
+  have cmp: "compact {x \<in> cball u0 r. det (M x) = 0}"
+    using cl bd by (simp add: compact_eq_bounded_closed)
+  show ?thesis unfolding setEq by (rule cmp)
+qed
 
 lemma charts_core_Nn:
   fixes V :: "((real^2)^'n) set" and \<Omega> :: "(real^2) set"
