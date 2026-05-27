@@ -1,6 +1,7 @@
 theory Parametric_Transversality_Euclidean_Base
   imports
     "HOL-Analysis.Change_Of_Vars"
+    Regular_Value_Theorem
     Nonemptiness_Scaffold
 begin
 
@@ -325,27 +326,13 @@ text \<open>
 (* bad parameters are contained in critical values of the projection *)
            (* the critical-value set is negligible by baby_Sard on each chart *)
 
-lemma regular_zero_set_projection_charts_stub:
-  fixes V :: "(real^'m::{finite,wellorder}) set"
-    and \<Omega> :: "(real^'n::{finite,wellorder}) set"
-    and G :: "((real^'m::{finite,wellorder}) \<times> (real^'n::{finite,wellorder})) \<Rightarrow> (real^'k::{finite,wellorder})"
-  assumes "open V" "V \<noteq> {}" "open \<Omega>"
-    and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
-  shows "\<exists>(charts :: nat \<Rightarrow> (real^'m::{finite,wellorder})
-                       \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^'n::{finite,wellorder})))
-            (Crit :: nat \<Rightarrow> (real^'m::{finite,wellorder}) set)
-            (D :: nat \<Rightarrow> (real^'m::{finite,wellorder})
-                       \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L (real^'m::{finite,wellorder}))).
-
-           {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
-               (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
-             \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
-           (\<forall>i x. x \<in> Crit i \<longrightarrow>
-              ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
-           (\<forall>i x. x \<in> Crit i \<longrightarrow>
-              rank (matrix (blinfun_apply (D i x))) < CARD('m)) \<and>
-           (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
-  sorry
+text \<open>
+  NOTE: The fully general version (arbitrary frequency dimension \<open>'n\<close> and codomain
+  dimension \<open>'k\<close>) is intentionally deferred.  The nonemptiness paper only needs
+  the concrete Euclidean case \<open>\<Omega> \<subseteq> \<real>^2\<close> and codomain \<open>\<real>^2\<close> (coming from a
+  complex equation split into real/imag parts).  That case is developed below as
+  {thm regular_zero_set_projection_charts_stub_2d}.
+\<close>
 
 text \<open>
   Specialized form of the missing chart lemma for the concrete situation used in
@@ -693,32 +680,101 @@ proof -
     qed
 qed
 
-lemma projection_critical_sets_closed_upgrade_2d:
+text \<open>
+  NOTE: A naive "closed upgrade" lemma of the form
+
+    \<open>\<Union>i f i ` Crit0 i \<subseteq> \<Union>i f i ` Crit i\<close> with each \<open>f i ` Crit i\<close> closed
+
+  is not available in general, and attempts to force it by taking closures are
+  dangerous: closures can destroy negligibility (e.g. \<open>\<Q>\<close> is negligible but its
+  closure is \<open>\<real>\<close>).  For the negligibility pipeline we do not need closedness.
+  A correct closed-cover upgrade (when needed later for meagerness arguments) must
+  be proven with additional structure; see
+  {thm projection_critical_images_closed_cover_2d}.
+\<close>
+
+text \<open>
+  A robust substitute for the previous lemma (which is generally false without
+  extra structure): if we are allowed to re-index (split each critical set into
+  bounded pieces) and we assume continuity of the projection map, then we can
+  cover the critical images by a countable family of *closed* sets.
+
+  This is the standard "compact exhaustion" trick: intersect with balls to get
+  bounded pieces, take their closures (compact in Euclidean space), then use
+  continuity to ensure the images are compact hence closed.
+\<close>
+
+lemma projection_critical_images_closed_cover_2d:
   fixes charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec)))"
     and Crit0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
-  shows "\<exists>(Crit :: nat \<Rightarrow> (real^'m::{finite,wellorder}) set).
-          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))) \<and>
-          (\<Union>i. (fst \<circ> charts i) ` (Crit0 i)) \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
-          (\<forall>i. Crit0 i \<subseteq> Crit i)"
-  sorry
+  assumes cont: "\<And>i. continuous_on UNIV (fst \<circ> charts i)"
+  shows "\<exists>(charts' :: nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec))))
+            (Crit' :: nat \<Rightarrow> (real^'m::{finite,wellorder}) set).
+           (\<forall>j. charts' j = charts (fst (prod_decode j))) \<and>
+           (\<forall>j. Crit' j = closure (Crit0 (fst (prod_decode j)) \<inter> cball 0 (real (snd (prod_decode j))))) \<and>
+           (\<forall>j. closed ((fst \<circ> charts' j) ` (Crit' j))) \<and>
+           (\<Union>i. (fst \<circ> charts i) ` (Crit0 i)) \<subseteq> (\<Union>j. (fst \<circ> charts' j) ` (Crit' j))"
+proof -
+  define charts' where "charts' j = charts (fst (prod_decode j))" for j
+  define Crit' where Crit:
+    "Crit' j = closure (Crit0 (fst (prod_decode j)) \<inter> cball 0 (real (snd (prod_decode j))))"
+    for j
 
-lemma projection_critical_sets_extend_derivative_rank_2d:
-  fixes charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec)))"
-    and Crit0 Crit :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
-    and D0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder})
-                 \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L (real^'m::{finite,wellorder}))"
-  assumes "\<forall>i. Crit0 i \<subseteq> Crit i"
-    and der0:
-      "\<forall>i x. x \<in> Crit0 i \<longrightarrow>
-        ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)"
-    and rk0:
-      "\<forall>i x. x \<in> Crit0 i \<longrightarrow>
-        rank (matrix (blinfun_apply (D0 i x))) < CARD('m)"
-  shows "(\<forall>i x. x \<in> Crit i \<longrightarrow>
-            ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit i)) \<and>
-         (\<forall>i x. x \<in> Crit i \<longrightarrow>
-            rank (matrix (blinfun_apply (D0 i x))) < CARD('m))"
-  sorry
+  have closed_img: "closed ((fst \<circ> charts' j) ` Crit' j)" for j
+  proof -
+    have cpt: "compact (Crit' j)"
+    proof -
+      have bnd:
+          "bounded (Crit0 (fst (prod_decode j)) \<inter> cball 0 (real (snd (prod_decode j))))"
+        by (intro bounded_Int bounded_cball, auto)
+      show ?thesis
+        by (simp add: Crit bnd)
+    qed
+    have contj: "continuous_on (Crit' j) (fst \<circ> charts' j)"
+      unfolding charts'_def using cont[of "fst (prod_decode j)"]
+      continuous_on_subset by blast
+    have "compact ((fst \<circ> charts' j) ` Crit' j)"
+      using compact_continuous_image contj cpt by blast
+    then show ?thesis
+      by (simp add: compact_imp_closed)
+  qed
+
+  have cover:
+    "(\<Union>i. (fst \<circ> charts i) ` Crit0 i) \<subseteq> (\<Union>j. (fst \<circ> charts' j) ` Crit' j)"
+  proof
+    fix y
+    assume "y \<in> (\<Union>i. (fst \<circ> charts i) ` Crit0 i)"
+    then obtain i x where x: "x \<in> Crit0 i" and y: "y = (fst \<circ> charts i) x"
+      by blast
+    obtain n :: nat where n: "x \<in> cball 0 (real n)"
+      by (meson mem_cball_0 real_arch_simple)
+    let ?j = "prod_encode (i, n)"
+    have dec: "prod_decode ?j = (i, n)"
+      by simp
+    have "y \<in> (fst \<circ> charts' ?j) ` Crit' ?j"
+    proof -
+      have xin: "x \<in> Crit0 i \<inter> cball 0 (real n)"
+        using x n by simp
+      have xin': "x \<in> Crit' ?j"
+        using Crit closure_subset xin by fastforce
+      have "(fst \<circ> charts' ?j) x = y"
+        unfolding charts'_def y dec by simp
+      then show ?thesis
+        using xin' by blast
+    qed
+    then show "y \<in> (\<Union>j. (fst \<circ> charts' j) ` Crit' j)"
+      by blast
+  qed
+
+  show ?thesis
+    using Crit charts'_def closed_img cover by blast
+qed
+
+text \<open>
+  NOTE: One cannot, in general, extend a within-set derivative statement from a
+  set \<open>Crit0\<close> to a larger set \<open>Crit\<close> (the filter becomes less restrictive, and
+  derivatives are only monotone under *shrinking* the within-set).
+\<close>
 
 lemma regular_zero_set_projection_charts_stub_2d:
   fixes V :: "(real^'m::{finite,wellorder}) set"
@@ -736,8 +792,7 @@ lemma regular_zero_set_projection_charts_stub_2d:
            (\<forall>i x. x \<in> Crit i \<longrightarrow>
               ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
            (\<forall>i x. x \<in> Crit i \<longrightarrow>
-              rank (matrix (blinfun_apply (D i x))) < CARD('m)) \<and>
-           (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+              rank (matrix (blinfun_apply (D i x))) < CARD('m))"
 proof -
   text \<open>
     We split the missing geometric step into three lemmas:
@@ -781,33 +836,8 @@ proof -
         rank (matrix (blinfun_apply (D0 i x))) < CARD('m)"
     by blast
 
-  have "\<exists>(Crit :: nat \<Rightarrow> (real^'m::{finite,wellorder}) set).
-          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))) \<and>
-          (\<Union>i. (fst \<circ> charts i) ` (Crit0 i)) \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
-          (\<forall>i. Crit0 i \<subseteq> Crit i)"
-    using projection_critical_sets_closed_upgrade_2d[of charts Crit0] by blast
-  then obtain Crit where
-    cl: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
-    and cover: "(\<Union>i. (fst \<circ> charts i) ` (Crit0 i)) \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
-    and Crit_mono: "\<forall>i. Crit0 i \<subseteq> Crit i"
-    by auto
-
-  have sub: "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
-                (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
-              \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
-    using sub0 cover by auto
-
-  have der_rk:
-      "(\<forall>i x. x \<in> Crit i \<longrightarrow>
-          ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit i)) \<and>
-       (\<forall>i x. x \<in> Crit i \<longrightarrow>
-          rank (matrix (blinfun_apply (D0 i x))) < CARD('m))"
-    using Crit_mono der0 rk0 projection_critical_sets_extend_derivative_rank_2d                    
-    by (metis projection_critical_sets_extend_derivative_rank_2d) 
-
   show ?thesis
-    by (intro exI[of _ charts] exI[of _ Crit] exI[of _ D0])
-       (use sub der_rk cl in auto)
+    by (intro exI[of _ charts] exI[of _ Crit0] exI[of _ D0], use sub0 der0 rk0 in auto)
 qed
 
 text \<open>
@@ -865,9 +895,8 @@ text \<open>
 
 theorem parametric_transversality_negligible_stub:
   fixes V :: "(real^'m::{finite,wellorder}) set"
-    and \<Omega> :: "(real^'n::{finite,wellorder}) set"
-    and G :: "((real^'m::{finite,wellorder}) \<times> (real^'n::{finite,wellorder}))
-                \<Rightarrow> (real^'k::{finite,wellorder})"
+    and \<Omega> :: "(real^2) set"
+    and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
   assumes "open V" "V \<noteq> {}"
     and "open \<Omega>"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
@@ -875,7 +904,7 @@ theorem parametric_transversality_negligible_stub:
                  (\<not> (\<exists>D. ((\<lambda>u. G (x,u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D))}"
 proof -
   obtain charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder})
-                            \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^'n::{finite,wellorder}))"
+                            \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec))"
      and Crit :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
      and D :: "nat \<Rightarrow> (real^'m::{finite,wellorder})
                        \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L (real^'m::{finite,wellorder}))"
@@ -886,10 +915,9 @@ proof -
     and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
               ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
     and rk: "\<forall>i x. x \<in> Crit i \<longrightarrow> rank (matrix (blinfun_apply (D i x))) < CARD('m)"
-    using regular_zero_set_projection_charts_stub[OF assms] by blast
+    using regular_zero_set_projection_charts_stub_2d[OF assms] by blast
   have "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
-    by (rule negligible_critical_values_from_charts)
-       (use der rk in auto)
+    by (rule negligible_critical_values_from_charts, use der rk in auto)
   then show ?thesis
     using negligible_subset sub by blast
 qed
@@ -944,54 +972,13 @@ qed
 
 theorem parametric_transversality_meager_euclidean_stub:
   fixes V :: "(real^'m::{finite,wellorder}) set"
-    and \<Omega> :: "(real^'n::{finite,wellorder}) set"
-    and G :: "((real^'m::{finite,wellorder}) \<times> (real^'n::{finite,wellorder}))
-                \<Rightarrow> (real^'k::{finite,wellorder})"
+    and \<Omega> :: "(real^2) set"
+    and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
   assumes "open V" "V \<noteq> {}"
     and "open \<Omega>"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
   shows "meager {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
                  (\<not> (\<exists>D. ((\<lambda>u. G (x,u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D))}"
-proof -
-  obtain charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder})
-                            \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^'n::{finite,wellorder}))"
-     and Crit :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
-     and D :: "nat \<Rightarrow> (real^'m::{finite,wellorder})
-                       \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L (real^'m::{finite,wellorder}))"
-   where
-    sub: "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
-             (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
-           \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
-    and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
-              ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
-    and rk: "\<forall>i x. x \<in> Crit i \<longrightarrow> rank (matrix (blinfun_apply (D i x))) < CARD('m)"
-    and cl: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
-    using regular_zero_set_projection_charts_stub[OF assms] by blast
-  have neg: "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
-    by (rule negligible_critical_values_from_charts) (use der rk in auto)
-  show ?thesis
-  proof (rule meager_negligible_closed_cover[where K = "\<lambda>i. (fst \<circ> charts i) ` (Crit i)"])
-    show "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
-             (\<not> (\<exists>D. ((\<lambda>u. G (x,u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D))}
-           \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
-      by (rule sub)
-    show "\<And>i. closed ((fst \<circ> charts i) ` (Crit i))"
-      using cl by simp
-    show "\<And>i. negligible ((fst \<circ> charts i) ` (Crit i))"
-    proof -
-      fix i
-      have "negligible ((fst \<circ> charts i) ` (Crit i))"
-      proof (rule baby_Sard[where f = "fst \<circ> charts i" and S = "Crit i" and f' = "\<lambda>x. D i x"])
-        show "CARD('m) \<le> CARD('m)"
-          by simp
-        show "\<And>x. x \<in> Crit i \<Longrightarrow> ((fst \<circ> charts i) has_derivative blinfun_apply (D i x)) (at x within Crit i)"
-          using der by simp
-        show "\<And>x. x \<in> Crit i \<Longrightarrow> rank (matrix (blinfun_apply (D i x))) < CARD('m)"
-          using rk by simp
-      qed
-      then show "negligible ((fst \<circ> charts i) ` (Crit i))" .
-    qed
-  qed
-qed
+  sorry
 
 end

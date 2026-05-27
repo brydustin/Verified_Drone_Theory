@@ -311,19 +311,29 @@ proof -
   text \<open>The augmented square map \<open>F\<close> and its (blinfun) derivative \<open>Fd\<close>.\<close>
   define F where "F = (\<lambda>z::'c\<times>'b. (\<pi> z, G z))"
   define Fd where "Fd = (\<lambda>z. Blinfun (\<lambda>v. (\<pi> v, blinfun_apply (G' z) v)))"
+
   have bl_pair: "bounded_linear (\<lambda>v. (\<pi> v, blinfun_apply (G' z) v))" for z
     by (intro bounded_linear_Pair bl\<pi> blinfun.bounded_linear_right)
-  have Fd_eq: "blinfun_apply (Fd z) = (\<lambda>v. (\<pi> v, blinfun_apply (G' z) v))" for z
-    unfolding Fd_def by (rule bounded_linear_Blinfun_apply[OF bl_pair])
+
+  have Fd_eq:
+      "blinfun_apply (Fd z) = (\<lambda>v. (\<pi> v, blinfun_apply (G' z) v))"
+    for z
+    unfolding Fd_def
+    by (rule bounded_linear_Blinfun_apply[OF bl_pair])
 
   have derF: "(F has_derivative blinfun_apply (Fd z)) (at z)" if z: "z \<in> W" for z
   proof -
     have d\<pi>: "(\<pi> has_derivative \<pi>) (at z)"
       using bl\<pi> by (rule bounded_linear_imp_has_derivative)
+
     have dG: "(G has_derivative blinfun_apply (G' z)) (at z)"
       using z by (rule derG)
-    have "((\<lambda>w. (\<pi> w, G w)) has_derivative (\<lambda>h. (\<pi> h, blinfun_apply (G' z) h))) (at z)"
+
+    have "((\<lambda>w. (\<pi> w, G w))
+            has_derivative
+          (\<lambda>h. (\<pi> h, blinfun_apply (G' z) h))) (at z)"
       by (rule has_derivative_Pair[OF d\<pi> dG])
+
     then show ?thesis
       by (simp add: F_def Fd_eq)
   qed
@@ -331,8 +341,326 @@ proof -
   have bij_Fdp: "bij (blinfun_apply (Fd p))"
     using bijB by (simp add: Fd_eq L_def)
 
+  text \<open>Continuity of \<open>Fd\<close>.\<close>
+  define lift :: "(('c\<times>'b) \<Rightarrow>\<^sub>L 'b) \<Rightarrow> (('c\<times>'b) \<Rightarrow>\<^sub>L ('c\<times>'b))"
+    where "lift = (\<lambda>b. Blinfun (\<lambda>v. ((0::'c), blinfun_apply b v)))"
+
+  have bl_lift_pair:
+      "bounded_linear (\<lambda>v::'c\<times>'b. ((0::'c), blinfun_apply b v))"
+    for b :: "('c\<times>'b) \<Rightarrow>\<^sub>L 'b"
+    by (intro bounded_linear_Pair bounded_linear_zero blinfun.bounded_linear_right)
+
+  have lift_apply:
+      "blinfun_apply (lift b) =
+       (\<lambda>v::'c\<times>'b. ((0::'c), blinfun_apply b v))"
+    for b :: "('c\<times>'b) \<Rightarrow>\<^sub>L 'b"
+    unfolding lift_def
+    by (rule bounded_linear_Blinfun_apply[OF bl_lift_pair])
+
+  have bl_lift: "bounded_linear lift"
+  proof (rule bounded_linear_intro[where K=1])
+    fix b1 b2 :: "('c\<times>'b) \<Rightarrow>\<^sub>L 'b"
+    show "lift (b1 + b2) = lift b1 + lift b2"
+      by (rule blinfun_eqI) (simp add: lift_apply blinfun.add_left)
+  next
+    fix r :: real and b :: "('c\<times>'b) \<Rightarrow>\<^sub>L 'b"
+    show "lift (r *\<^sub>R b) = r *\<^sub>R lift b"
+      by (rule blinfun_eqI) (simp add: lift_apply blinfun.scaleR_left)
+  next
+    fix b :: "('c\<times>'b) \<Rightarrow>\<^sub>L 'b"
+    have bound:
+        "norm (blinfun_apply (lift b) v) \<le> norm b * norm v"
+      for v
+    proof -
+      have "norm (blinfun_apply (lift b) v)
+              = norm (blinfun_apply b v)"
+        by (simp add: lift_apply norm_Pair)
+      also have "\<dots> \<le> norm b * norm v"
+        by (rule norm_blinfun)
+      finally show ?thesis .
+    qed
+    then show "norm (lift b) \<le> norm b * 1"
+      by (simp add: norm_blinfun_bound)
+  qed
+
+  define c\<pi> :: "('c\<times>'b) \<Rightarrow>\<^sub>L ('c\<times>'b)"
+    where "c\<pi> = Blinfun (\<lambda>v. (\<pi> v, (0::'b)))"
+
+  have bl_c\<pi>_pair: "bounded_linear (\<lambda>v. (\<pi> v, (0::'b)))"
+    by (intro bounded_linear_Pair bl\<pi> bounded_linear_zero)
+
+  have c\<pi>_apply:
+      "blinfun_apply c\<pi> = (\<lambda>v. (\<pi> v, 0))"
+    unfolding c\<pi>_def
+    by (rule bounded_linear_Blinfun_apply[OF bl_c\<pi>_pair])
+
+  have Fd_fun: "Fd = (\<lambda>z. c\<pi> + lift (G' z))"
+    by (rule ext, rule blinfun_eqI)
+       (simp add: Fd_eq c\<pi>_apply lift_apply blinfun.add_left)
+
+  have contFd: "continuous_on W Fd"
+    unfolding Fd_fun
+    by (intro continuous_on_add continuous_on_const
+              bounded_linear.continuous_on[OF bl_lift] contG')
+
+  text \<open>Invertibility of the derivative at \<open>p\<close>.\<close>
+  have linFdp: "linear (blinfun_apply (Fd p))"
+    using blinfun.bounded_linear_right by (rule bounded_linear.linear)
+
+  have injFdp: "inj (blinfun_apply (Fd p))"
+    using bij_Fdp by (simp add: bij_def)
+
+  have bl_inv: "bounded_linear (inv (blinfun_apply (Fd p)))"
+    using eucl.inj_linear_imp_inv_linear[OF linFdp injFdp]
+    by (simp add: linear_conv_bounded_linear)
+
+  define invf where "invf = Blinfun (inv (blinfun_apply (Fd p)))"
+
+  have invf_apply:
+      "blinfun_apply invf = inv (blinfun_apply (Fd p))"
+    unfolding invf_def
+    by (rule bounded_linear_Blinfun_apply[OF bl_inv])
+
+  have invf_eq: "invf o\<^sub>L Fd p = id_blinfun"
+  proof (rule blinfun_eqI)
+    fix v
+    have "blinfun_apply (invf o\<^sub>L Fd p) v
+            = inv (blinfun_apply (Fd p)) (blinfun_apply (Fd p) v)"
+      by (simp only: invf_apply blinfun_apply_blinfun_compose)
+    also have "\<dots> = v"
+      using injFdp by (simp add: inv_f_f)
+    finally show
+      "blinfun_apply (invf o\<^sub>L Fd p) v =
+       blinfun_apply id_blinfun v"
+      by simp
+  qed
+
+  text \<open>Inverse function theorem: local diffeomorphism \<open>F : U' \<rightarrow> V\<close>.\<close>
+  obtain U' V gg gg'
+    where U'open: "open U'"
+      and U'W: "U' \<subseteq> W"
+      and pU': "p \<in> U'"
+      and Vopen: "open V"
+      and FpV: "F p \<in> V"
+      and homUV: "homeomorphism U' V F gg"
+      and gg_der: "\<And>y. y \<in> V \<Longrightarrow> (gg has_derivative gg' y) (at y)"
+      and gg'_eq: "\<And>y. y \<in> V \<Longrightarrow> gg' y = inv (blinfun_apply (Fd (gg y)))"
+      and bij_chain: "\<And>y. y \<in> V \<Longrightarrow> bij (blinfun_apply (Fd (gg y)))"
+    by (rule inverse_function_theorem[OF Wopen derF contFd pW invf_eq], auto)
+
+  text \<open>Now restrict the inverse chart to the zero slice \<open>'c \<times> {0}\<close>.\<close>
+  define M where "M = {q \<in> W. G q = 0}"
+  define U where "U = {u::'c. (u, (0::'b)) \<in> V}"
+  define u0 where "u0 = \<pi> p"
+  define \<phi> where "\<phi> = (\<lambda>u::'c. gg (u, (0::'b)))"
+
+  have hom_contF: "continuous_on U' F"
+    and hom_FU': "F ` U' \<subseteq> V"
+    and hom_contgg: "continuous_on V gg"
+    and hom_ggV: "gg ` V \<subseteq> U'"
+    and hom_ggF: "\<And>x. x \<in> U' \<Longrightarrow> gg (F x) = x"
+    and hom_Fgg: "\<And>y. y \<in> V \<Longrightarrow> F (gg y) = y"
+    using homUV
+    unfolding homeomorphism_def
+    by auto
+
+  have openU: "open U"
+  proof -
+    have "open ((\<lambda>u::'c. (u, (0::'b))) -` V)"
+      using Vopen
+      by (intro open_vimage continuous_intros)
+    then show ?thesis
+      by (simp add: U_def vimage_def)
+  qed
+
+  have u0U: "u0 \<in> U"
+  proof -
+    have "F p = (\<pi> p, 0)"
+      using Gp0 unfolding F_def by simp
+    then have "(\<pi> p, 0) \<in> V"
+      using FpV by simp
+    then show ?thesis
+      unfolding U_def u0_def by simp
+  qed
+
+  have \<phi>u0: "\<phi> u0 = p"
+  proof -
+    have "F p = (\<pi> p, 0)"
+      using Gp0 unfolding F_def by simp
+    then have "gg (\<pi> p, 0) = p"
+      using hom_ggF[OF pU'] by simp
+    then show ?thesis
+      unfolding \<phi>_def u0_def by simp
+  qed
+
+  have bl_embed: "bounded_linear (\<lambda>h::'c. (h, (0::'b)))"
+    by (intro bounded_linear_Pair bounded_linear_ident bounded_linear_zero)
+
+  have diff\<phi>: "\<phi> differentiable_on U"
+  proof (unfold differentiable_on_def, intro ballI impI)
+    fix u :: 'c
+    assume uU: "u \<in> U"
+    have uv: "(u, (0::'b)) \<in> V"
+      using uU unfolding U_def by simp
+
+    have d_embed:
+        "((\<lambda>u::'c. (u, (0::'b))) has_derivative (\<lambda>h. (h, 0))) (at u)"
+      using bounded_linear_imp_has_derivative[OF bl_embed] .
+
+    have d_gg:
+        "(gg has_derivative gg' (u, 0)) (at (u, 0))"
+      using gg_der[OF uv] .
+
+    have d_comp:
+        "((gg \<circ> (\<lambda>u::'c. (u, (0::'b)))) has_derivative (\<lambda>h. gg' (u, 0) (h, 0))) (at u)"
+      using has_derivative_compose[OF d_embed d_gg]
+      by (simp add: o_def)
+
+    have "(gg \<circ> (\<lambda>u::'c. (u, (0::'b)))) differentiable at u"
+      unfolding differentiable_def using d_comp by blast
+    then show "\<phi> differentiable at u within U"
+      unfolding \<phi>_def o_def
+      using differentiable_at_withinI
+      by blast
+  qed
+
+  have cont\<phi>: "continuous_on U \<phi>"
+    using diff\<phi> differentiable_imp_continuous_on by blast
+
+  have \<phi>_subset_M: "\<phi> ` U \<subseteq> M"
+  proof
+    fix q
+    assume q\<phi>: "q \<in> \<phi> ` U"
+    then obtain u where uU: "u \<in> U" and q: "q = \<phi> u"
+      by blast
+
+    have uv: "(u, (0::'b)) \<in> V"
+      using uU unfolding U_def by simp
+
+    have ggU': "gg (u, 0) \<in> U'"
+      using hom_ggV uv by blast
+
+    have ggW: "gg (u, 0) \<in> W"
+      using ggU' U'W by blast
+
+    have "F (gg (u, 0)) = (u, 0)"
+      using hom_Fgg[OF uv] .
+
+    hence "G (gg (u, 0)) = 0"
+      unfolding F_def by simp
+
+    thus "q \<in> M"
+      using ggW q
+      unfolding M_def \<phi>_def
+      by simp
+  qed
+
+  have image_eq: "\<phi> ` U = U' \<inter> M"
+  proof
+    show "\<phi> ` U \<subseteq> U' \<inter> M"
+    proof
+      fix q
+      assume q\<phi>: "q \<in> \<phi> ` U"
+      then obtain u where uU: "u \<in> U" and q: "q = \<phi> u"
+        by blast
+
+      have uv: "(u, (0::'b)) \<in> V"
+        using uU unfolding U_def by simp
+
+      have "gg (u, 0) \<in> U'"
+        using hom_ggV uv by blast
+
+      moreover have "q \<in> M"
+        using \<phi>_subset_M q\<phi> by blast
+
+      ultimately show "q \<in> U' \<inter> M"
+        using q unfolding \<phi>_def by simp
+    qed
+  next
+    show "U' \<inter> M \<subseteq> \<phi> ` U"
+    proof
+      fix q
+      assume qUM: "q \<in> U' \<inter> M"
+
+      have qU': "q \<in> U'"
+        using qUM by simp
+
+      have Gq0: "G q = 0"
+        using qUM unfolding M_def by simp
+
+      have FqV: "F q \<in> V"
+        using hom_FU' qU' by blast
+
+      have piqV: "(\<pi> q, (0::'b)) \<in> V"
+        using FqV Gq0 unfolding F_def by simp
+
+      have piqU: "\<pi> q \<in> U"
+        using piqV unfolding U_def by simp
+
+      have "gg (F q) = q"
+        using hom_ggF[OF qU'] .
+
+      hence "gg (\<pi> q, 0) = q"
+        using Gq0 unfolding F_def by simp
+
+      hence "\<phi> (\<pi> q) = q"
+        unfolding \<phi>_def by simp
+
+      thus "q \<in> \<phi> ` U"
+        by (metis image_eqI piqU)
+    qed
+  qed
+
+  have openin_\<phi>U: "openin (top_of_set M) (\<phi> ` U)"
+  proof -
+    have "openin (top_of_set M) (M \<inter> U')"
+      unfolding openin_open_eq
+      using U'open
+      by blast
+    moreover have "M \<inter> U' = \<phi> ` U"
+      using image_eq by auto
+    ultimately show ?thesis
+      by simp
+  qed
+
+  have \<pi>\<phi>: "\<pi> (\<phi> u) = u" if uU: "u \<in> U" for u
+  proof -
+    have uv: "(u, (0::'b)) \<in> V"
+      using uU unfolding U_def by simp
+
+    have "F (gg (u, 0)) = (u, 0)"
+      using hom_Fgg[OF uv] .
+
+    thus ?thesis
+      unfolding F_def \<phi>_def by simp
+  qed
+
+  have \<phi>\<pi>: "\<phi> (\<pi> q) = q" if q\<phi>: "q \<in> \<phi> ` U" for q
+  proof -
+    obtain u where uU: "u \<in> U" and q: "q = \<phi> u"
+      using q\<phi> by blast
+
+    have "\<pi> q = u"
+      using \<pi>\<phi>[OF uU] q by simp
+
+    thus ?thesis
+      using q by simp
+  qed
+
+  have \<pi>_image_subset: "\<pi> ` (\<phi> ` U) \<subseteq> U"
+    using \<pi>\<phi> by auto
+
+  have cont\<pi>: "continuous_on (\<phi> ` U) \<pi>"
+    by (simp only: bl\<pi> linear_continuous_on)
+
+  have homeo_chart: "homeomorphism U (\<phi> ` U) \<phi> \<pi>"
+    unfolding homeomorphism_def
+    by (metis \<phi>\<pi> \<pi>\<phi> \<pi>_image_subset cont\<phi> cont\<pi> image_eqI subsetI subset_antisym)
+
   show ?thesis
-    sorry
+    unfolding M_def[symmetric]
+    using openU u0U \<phi>u0 diff\<phi> \<phi>_subset_M openin_\<phi>U homeo_chart
+    by (intro exI[where x=U] exI[where x=u0] exI[where x=\<phi>] exI[where x=\<pi>], simp)    
 qed
 
 end

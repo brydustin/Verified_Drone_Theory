@@ -230,4 +230,20 @@ theorem nonemptiness_from_meager_branches:
   by (rule nonemptiness_from_branches[OF V_open V_nonempty V_subset_Fset
         meager_reg_nonzero meager_reg_zero meager_fold_zero meager_fold_nonzero X0_sound])
 
+theorem nonemptiness_from_negligible_branches:
+  fixes Fset V :: "((real^2)^'n) set"
+    and X0 :: "real \<Rightarrow> ((real^2)^'n) set"
+    and Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero :: "((real^2)^'n) set"
+  assumes V_open: "open V" and V_nonempty: "V \<noteq> {}" and V_subset_Fset: "V \<subseteq> Fset"
+    and neg_reg_nonzero: "negligible (Breg_nonzero \<inter> V)"
+    and neg_reg_zero:    "negligible (Breg_zero \<inter> V)"
+    and neg_fold_zero:   "negligible (Bfold_zero \<inter> V)"
+    and neg_fold_nonzero:"negligible (Bfold_nonzero \<inter> V)"
+    and X0_sound:
+      "\<And>x. x \<in> V - bad_union Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero
+            \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
+  shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
+  by (rule nonemptiness_from_negligible_branches[OF V_open V_nonempty V_subset_Fset
+        neg_reg_nonzero neg_reg_zero neg_fold_zero neg_fold_nonzero X0_sound])
+
 end

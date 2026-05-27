@@ -284,6 +284,45 @@ proof -
 qed
 
 text \<open>
+  Measure-theoretic variant: for Euclidean configuration spaces, Lebesgue
+  negligibility of the bad set already implies nonemptiness of the good set
+  inside any nonempty open working set \<open>V\<close>.  This is strictly weaker than the
+  Baire/meager closeout (it does not produce comeager conclusions), but it is
+  often enough for a pure existence/nonemptiness result.
+\<close>
+
+theorem final_nonemptiness_from_bad_union_negligible:
+  fixes V Fset :: "'cfg::euclidean_space set"
+    and X0 :: "real \<Rightarrow> 'cfg set"
+    and B :: "'cfg set"
+  assumes V_subset_Fset: "V \<subseteq> Fset"
+    and V_open: "open V"
+    and V_nonempty: "V \<noteq> {}"
+    and bad_negligible: "negligible (B \<inter> V)"
+    and X0_sound: "\<And>x. x \<in> V - B \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
+  shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
+proof -
+  have "V - B \<noteq> {}"
+  proof
+    assume hEmpty: "V - B = {}"
+    then have hSub: "V \<subseteq> B \<inter> V"
+      by auto
+    have "negligible V"
+      by (rule negligible_subset[OF bad_negligible]) (use hSub in auto)
+    then show False
+      using open_not_negligible[OF V_open V_nonempty] by blast
+  qed
+  then obtain x where hx: "x \<in> V - B"
+    by blast
+  then obtain \<xi> where hxi: "\<xi> > 0" and hxX0: "x \<in> X0 \<xi>"
+    using X0_sound by blast
+  have "x \<in> Fzero Fset X0 \<xi>"
+    using hx hxX0 V_subset_Fset unfolding Fzero_def by blast
+  then show ?thesis
+    using hxi by blast
+qed
+
+text \<open>
   Meagerness of the bundled bad set follows from meagerness of the four branches
   by set algebra and \<open>meager_Un\<close>. This is now a genuine theorem with no
   \<^theory_text>\<open>sorry\<close>: it takes the four branch facts as explicit hypotheses.
@@ -304,6 +343,22 @@ proof -
   then show ?thesis
     by (simp add: eq)
 qed
+
+theorem bad_union_negligible:
+  fixes V B\<^sub>1 B\<^sub>2 B\<^sub>3 B\<^sub>4 :: "'cfg::euclidean_space set"
+  assumes "negligible (B\<^sub>1 \<inter> V)" and "negligible (B\<^sub>2 \<inter> V)"
+    and "negligible (B\<^sub>3 \<inter> V)" and "negligible (B\<^sub>4 \<inter> V)"
+  shows "negligible (bad_union B\<^sub>1 B\<^sub>2 B\<^sub>3 B\<^sub>4 \<inter> V)"
+proof -
+  have eq: "bad_union B\<^sub>1 B\<^sub>2 B\<^sub>3 B\<^sub>4 \<inter> V =
+              ((B\<^sub>1 \<inter> V) \<union> (B\<^sub>2 \<inter> V)) \<union> ((B\<^sub>3 \<inter> V) \<union> (B\<^sub>4 \<inter> V))"
+    by (auto simp: bad_union_def)
+  have "negligible (((B\<^sub>1 \<inter> V) \<union> (B\<^sub>2 \<inter> V)) \<union> ((B\<^sub>3 \<inter> V) \<union> (B\<^sub>4 \<inter> V)))"
+    by (intro negligible_Un assms)
+  then show ?thesis
+    by (simp add: eq)
+qed
+
 
 text \<open>
   The end-to-end closeout: a nonempty open working set \<open>V \<subseteq> Fset\<close> is not meager
@@ -329,6 +384,24 @@ proof -
     by (rule bad_union_meagerness[OF m\<^sub>1 m\<^sub>2 m\<^sub>3 m\<^sub>4])
   show ?thesis
     by (rule final_nonemptiness_from_bad_union[OF V_subset_Fset hV hB X0_sound])
+qed
+
+theorem nonemptiness_from_negligible_branches:
+  fixes V Fset :: "'cfg::euclidean_space set"
+    and X0 :: "real \<Rightarrow> 'cfg set"
+    and B\<^sub>1 B\<^sub>2 B\<^sub>3 B\<^sub>4 :: "'cfg set"
+  assumes V_open: "open V" and V_nonempty: "V \<noteq> {}"
+    and V_subset_Fset: "V \<subseteq> Fset"
+    and n\<^sub>1: "negligible (B\<^sub>1 \<inter> V)" and n\<^sub>2: "negligible (B\<^sub>2 \<inter> V)"
+    and n\<^sub>3: "negligible (B\<^sub>3 \<inter> V)" and n\<^sub>4: "negligible (B\<^sub>4 \<inter> V)"
+    and X0_sound:
+      "\<And>x. x \<in> V - bad_union B\<^sub>1 B\<^sub>2 B\<^sub>3 B\<^sub>4 \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
+  shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
+proof -
+  have hB: "negligible (bad_union B\<^sub>1 B\<^sub>2 B\<^sub>3 B\<^sub>4 \<inter> V)"
+    by (rule bad_union_negligible[OF n\<^sub>1 n\<^sub>2 n\<^sub>3 n\<^sub>4])
+  show ?thesis
+    by (rule final_nonemptiness_from_bad_union_negligible[OF V_subset_Fset V_open V_nonempty hB X0_sound])
 qed
 
 

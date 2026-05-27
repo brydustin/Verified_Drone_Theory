@@ -4,13 +4,8 @@ session Applied_Math_Base in "Base" = "HOL-Analysis" +
     Munkres_Topology_Local
   theories
     Munkres_Topology_Local.Munkres_Topology
-    (* Keep this session minimal: it is the stable base heap for interactive work. *)
 
 session Applied_Math_Nonemptiness in "." = Applied_Math_Base +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   theories
-    (* Keep this heap minimal: it should stay buildable even while we're
-       actively editing the development theories.  Open those theories in
-       Isabelle/jEdit for interactive checking. *)
-    Nonemptiness_Work_Session
-    (* Do NOT add evolving theories here. *)
+    Nonemptiness_Paper
