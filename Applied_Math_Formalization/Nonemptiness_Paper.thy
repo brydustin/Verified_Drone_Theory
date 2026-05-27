@@ -1186,6 +1186,153 @@ proof (rule lines_entire_slice_nowhere_dense[OF continuous_on_U_cart _ nontriv])
     using rline_entire_U_cart unfolding rline_entire_def by blast
 qed
 
+
+subsection \<open>The Fold-Slice Derivative \<open>\<partial>\<^sub>s U\<close> has Entire Line Restrictions\<close>
+
+text \<open>
+  Two more closure lemmas needed for the slice derivative: complex-of-real
+  \<^emph>\<open>linear forms\<close> (entire line restrictions because the restriction is affine in
+  the line parameter) and complex \<^emph>\<open>conjugation\<close> (entire via Schwarz reflection).
+\<close>
+
+lemma cline_entire_of_real_linear:
+  fixes lf :: "'a::euclidean_space \<Rightarrow> real"
+  assumes "bounded_linear lf"
+  shows "cline_entire (\<lambda>x. complex_of_real (lf x))"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  have aff: "lf (a + t *\<^sub>R v) = lf a + t * lf v" for t::real
+    by (simp add: assms linear_simps(1,5))
+  let ?G = "\<lambda>z. complex_of_real (lf a) + z * complex_of_real (lf v)"
+  have "?G holomorphic_on UNIV" by (intro holomorphic_intros)
+  moreover have "?G (complex_of_real t) = complex_of_real (lf (a + t *\<^sub>R v))" for t::real
+    by (simp add: aff)
+  ultimately show "\<exists>G. G holomorphic_on UNIV
+                       \<and> (\<forall>t::real. G (complex_of_real t) = complex_of_real (lf (a + t *\<^sub>R v)))"
+    by blast
+qed
+
+lemma cline_entire_cnj:
+  assumes "cline_entire g"
+  shows "cline_entire (\<lambda>x. cnj (g x))"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G where G: "G holomorphic_on UNIV"
+      "\<And>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)"
+    using assms unfolding cline_entire_def by blast
+  let ?H = "\<lambda>z. cnj (G (cnj z))"
+  have "?H holomorphic_on UNIV" by (rule holomorphic_cnj_reflect[OF G(1)])
+  moreover have "?H (complex_of_real t) = cnj (g (a + t *\<^sub>R v))" for t::real
+    by (simp add: G(2))
+  ultimately show "\<exists>H. H holomorphic_on UNIV
+                       \<and> (\<forall>t::real. H (complex_of_real t) = cnj (g (a + t *\<^sub>R v)))"
+    by blast
+qed
+
+text \<open>
+  The bare array factor and its fold-slice derivative for a fixed wavevector
+  \<open>c = cvec \<omega>\<close> and its tangent-direction derivative \<open>c' = \<partial>\<^sub>s (cvec \<omega>)\<close>. The
+  derivative array factor \<open>\<partial>\<^sub>s A = \<Sum>\<^sub>n (-\<i>)(c'\<bullet>x\<^sub>n) cis(-(c\<bullet>x\<^sub>n))\<close> is a finite sum
+  of (linear form)\<open>\<cdot>\<close>(\<open>cis\<close> of a linear form), hence \<open>cline_entire\<close>.
+\<close>
+
+lemma cline_entire_af:
+  fixes c :: planar
+  shows "cline_entire (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))"
+proof (rule cline_entire_sum)
+  show "finite (UNIV :: 'n set)" by simp
+next
+  fix n :: 'n
+  have "bounded_linear (\<lambda>x::planar^'n. - (c \<bullet> (x $ n)))"
+    by (rule bounded_linear_minus
+              [OF bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth]])
+  thus "cline_entire (\<lambda>x::planar^'n. cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_cis_linear)
+qed
+
+lemma cline_entire_dsA:
+  fixes c c' :: planar
+  shows "cline_entire
+           (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV.
+              (- \<i>) * complex_of_real (c' \<bullet> (x $ n)) * cis (- (c \<bullet> (x $ n))))"
+proof (rule cline_entire_sum)
+  show "finite (UNIV :: 'n set)" by simp
+next
+  fix n :: 'n
+  have lin1: "bounded_linear (\<lambda>x::planar^'n. c' \<bullet> (x $ n))"
+    by (rule bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth])
+  have lin2: "bounded_linear (\<lambda>x::planar^'n. - (c \<bullet> (x $ n)))"
+    by (rule bounded_linear_minus
+              [OF bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth]])
+  show "cline_entire
+          (\<lambda>x::planar^'n. (- \<i>) * complex_of_real (c' \<bullet> (x $ n)) * cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_mult
+              [OF cline_entire_mult[OF cline_entire_const cline_entire_of_real_linear[OF lin1]]
+                  cline_entire_cis_linear[OF lin2]])
+qed
+
+text \<open>
+  The fold-slice derivative \<open>\<partial>\<^sub>s U\<close> in closed form (chain rule for
+  \<open>U = g\<cdot>|A|\<^sup>2\<close> along the fold curve): with \<open>gv = g \<omega>\<close>, \<open>gv' = \<partial>\<^sub>s (g \<omega>)\<close>,
+  \<open>\<partial>\<^sub>s U = gv'\<cdot>|A|\<^sup>2 + gv\<cdot>2\<real>(\<^bold>\<bar>A\<cdot>\<partial>\<^sub>s A)\<close>. As a function of \<open>x\<close> it is a real
+  combination of the entire-line-restriction building blocks, hence
+  \<open>rline_entire\<close> and globally continuous; its slice-zero set is therefore nowhere
+  dense whenever the slice is nontrivial. This is the array-factor-shaped
+  discharge of the \<open>slice_nowhere_dense\<close> hypothesis of \<open>prop_foldnonzero\<close> for the
+  actual fold-critical slice function.
+\<close>
+
+definition dsU_cart :: "planar \<Rightarrow> planar \<Rightarrow> real \<Rightarrow> real \<Rightarrow> (planar^'n) \<Rightarrow> real" where
+  "dsU_cart c c' gv gv' x =
+     gv' * (cmod (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n)))))\<^sup>2
+   + gv * (2 * Re (cnj (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))
+                   * (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (c' \<bullet> (x $ n))
+                                * cis (- (c \<bullet> (x $ n))))))"
+
+lemma rline_entire_dsU_cart:
+  shows "rline_entire (\<lambda>x::planar^'n. dsU_cart c c' gv gv' x)"
+proof -
+  have A: "cline_entire (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_af)
+  have dsA: "cline_entire
+               (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV.
+                  (- \<i>) * complex_of_real (c' \<bullet> (x $ n)) * cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_dsA)
+  have P: "rline_entire (\<lambda>x::planar^'n. (cmod (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n)))))\<^sup>2)"
+    by (rule rline_entire_cmod_sq[OF A])
+  have Q: "rline_entire
+             (\<lambda>x::planar^'n. Re (cnj (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))
+                   * (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (c' \<bullet> (x $ n))
+                                * cis (- (c \<bullet> (x $ n))))))"
+    by (rule rline_entire_Re[OF cline_entire_mult[OF cline_entire_cnj[OF A] dsA]])
+  have "rline_entire
+          (\<lambda>x::planar^'n.
+             gv' * (cmod (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n)))))\<^sup>2
+           + gv * (2 * Re (cnj (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))
+                   * (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (c' \<bullet> (x $ n))
+                                * cis (- (c \<bullet> (x $ n)))))))"
+    by (intro rline_entire_add rline_entire_scale P Q)
+  thus ?thesis unfolding dsU_cart_def .
+qed
+
+lemma continuous_on_dsU_cart:
+  shows "continuous_on UNIV (\<lambda>x::planar^'n. dsU_cart c c' gv gv' x)"
+  unfolding dsU_cart_def
+  by (intro continuous_intros)
+
+lemma dsU_cart_zero_nowhere_dense:
+  fixes c c' :: planar and gv gv' :: real and V :: "(planar^'n) set"
+  assumes nontriv: "\<exists>x::planar^'n. dsU_cart c c' gv gv' x \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. dsU_cart c c' gv gv' x = 0}"
+proof (rule lines_entire_slice_nowhere_dense[OF continuous_on_dsU_cart _ nontriv])
+  show "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                  \<and> (\<forall>t::real. F (complex_of_real t)
+                              = complex_of_real (dsU_cart c c' gv gv' (a + t *\<^sub>R v)))"
+    using rline_entire_dsU_cart unfolding rline_entire_def by blast
+qed
+
 text \<open>
   Meager version of the regular-stratum transversality bad set (the rung that
   \<open>prop_regzero\<close> consumes). The chart cover from @{thm charts_core_Nn} is a
