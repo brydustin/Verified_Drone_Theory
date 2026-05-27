@@ -1252,6 +1252,56 @@ proof -
     using key by (simp only: setEq flip: rangeEq)
 qed
 
+text \<open>
+  The \<open>\<omega>\<close>-partial (slice) derivative of \<open>G\<close> at \<open>(x,\<omega>)\<close> is \<open>h \<mapsto> DG(0,h)\<close>: restrict
+  \<open>G\<close> to the affine slice \<open>u \<mapsto> (x,u)\<close> and apply the chain rule.
+\<close>
+
+lemma partial_omega_deriv:
+  fixes G :: "('c::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'd::euclidean_space"
+  assumes "(G has_derivative blinfun_apply Gd) (at (x,\<omega>))"
+  shows "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega>)"
+proof -
+  have embed: "((\<lambda>u::'b. (x, u)) has_derivative (\<lambda>h. (0, h))) (at \<omega>)"
+    by (auto intro!: derivative_eq_intros)
+  have "((\<lambda>u. G (x, u)) has_derivative (\<lambda>h. blinfun_apply Gd (0, h))) (at \<omega>)"
+    using has_derivative_compose[OF embed assms] by (simp add: o_def)
+  thus ?thesis.
+qed
+
+text \<open>
+  Consequently, on an open \<open>\<Omega>\<close>, \<open>(\<lambda>u. G(x,u))\<close> has \<^emph>\<open>some\<close> surjective derivative at
+  \<open>\<omega>\<close> iff its (unique) \<open>\<omega>\<close>-partial \<open>h \<mapsto> DG(0,h)\<close> is surjective. This converts the
+  abstract ``bad'' transversality condition into concrete non-degeneracy of \<open>D\<^sub>\<omega> G\<close>.
+\<close>
+
+lemma exists_surj_deriv_iff_partial:
+  fixes G :: "('c::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'd::euclidean_space"
+  assumes \<Omega>: "open \<Omega>" "\<omega> \<in> \<Omega>"
+    and Gd: "(G has_derivative blinfun_apply Gd) (at (x,\<omega>))"
+  shows "(\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>)
+         \<longleftrightarrow> surj (\<lambda>h. blinfun_apply Gd (0,h))"
+proof
+  assume "\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>"
+  then obtain D\<omega> where d: "((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>)"
+    and s: "surj D\<omega>" by blast
+  have part: "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega> within \<Omega>)"
+    using partial_omega_deriv[OF Gd] has_derivative_at_withinI by blast
+  have d_at: "((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega>)"
+    using d \<Omega> by (metis at_within_open)
+  have part_at: "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega>)"
+    using partial_omega_deriv[OF Gd].
+  have "D\<omega> = (\<lambda>h. blinfun_apply Gd (0,h))"
+    using has_derivative_unique[OF d_at part_at].
+  thus "surj (\<lambda>h. blinfun_apply Gd (0,h))" using s by simp
+next
+  assume s: "surj (\<lambda>h. blinfun_apply Gd (0,h))"
+  have "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega> within \<Omega>)"
+    using partial_omega_deriv[OF Gd] has_derivative_at_withinI by blast
+  thus "\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>"
+    using s by blast
+qed
+
 lemma charts_core_Nn:
   fixes V :: "((real^2)^'n) set" and \<Omega> :: "(real^2) set"
     and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
