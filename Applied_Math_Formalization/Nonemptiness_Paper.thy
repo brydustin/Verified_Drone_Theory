@@ -750,6 +750,65 @@ proof -
     using assms(1) by (rule meager_subset[rotated])
 qed
 
+lemma nowhere_dense_mono:
+  fixes A B :: "'a::topological_space set"
+  assumes "B \<subseteq> A" and "nowhere_dense A"
+  shows "nowhere_dense B"
+proof -
+  have "interior (closure B) \<subseteq> interior (closure A)"
+    by (intro interior_mono closure_mono assms(1))
+  with assms(2) show ?thesis
+    by (simp only: nowhere_dense_def subset_empty)
+qed
+
+text \<open>
+  The real-analytic nowhere-density engine. A continuous real function whose
+  zero set has the \<^emph>\<open>identity property\<close> (vanishing on any nonempty open set forces
+  it to vanish everywhere) and that is not identically zero has a nowhere-dense
+  zero set: the level set \<open>{x. f x = 0}\<close> is closed, and an open subset of it would
+  force \<open>f \<equiv> 0\<close>, so its interior is empty. The identity hypothesis is precisely
+  the real-analytic identity theorem; for a finite exponential sum (the array
+  factor, a trigonometric polynomial in \<open>x\<close>) it holds because vanishing on an
+  open set kills all Taylor coefficients. This is the engine that discharges the
+  \<open>slice_nowhere_dense\<close> input of \<open>prop_foldnonzero\<close>.
+\<close>
+
+lemma continuous_identity_zero_nowhere_dense:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real"
+  assumes cont: "continuous_on UNIV f"
+    and identity: "\<And>U. \<lbrakk>open U; U \<noteq> {}; \<forall>x\<in>U. f x = 0\<rbrakk> \<Longrightarrow> (\<forall>x. f x = 0)"
+    and nontriv: "\<exists>x. f x \<noteq> 0"
+  shows "nowhere_dense {x. f x = 0}"
+proof -
+  have clo: "closed {x. f x = 0}"
+    using closed_Collect_eq[OF cont continuous_on_const] by simp
+  have "interior {x. f x = 0} = {}"
+  proof (rule ccontr)
+    assume ne: "interior {x. f x = 0} \<noteq> {}"
+    have "\<forall>x\<in>interior {x. f x = 0}. f x = 0"
+      using interior_subset by auto
+    from identity[OF open_interior ne this] nontriv show False by blast
+  qed
+  with clo show ?thesis
+    by (simp only: nowhere_dense_def closure_closed)
+qed
+
+text \<open>
+  Relative form used at the call site: the slice-zero set inside an open working
+  set \<open>V\<close> is a subset of the global zero set, hence nowhere dense by
+  \<open>nowhere_dense_mono\<close>. This produces exactly the \<open>slice_nowhere_dense\<close> hypothesis
+  shape of \<open>prop_foldnonzero\<close>.
+\<close>
+
+lemma slice_zero_nowhere_dense:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real" and V :: "'a set"
+  assumes cont: "continuous_on UNIV f"
+    and identity: "\<And>U. \<lbrakk>open U; U \<noteq> {}; \<forall>x\<in>U. f x = 0\<rbrakk> \<Longrightarrow> (\<forall>x. f x = 0)"
+    and nontriv: "\<exists>x. f x \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. f x = 0}"
+  by (rule nowhere_dense_mono[OF _ continuous_identity_zero_nowhere_dense[OF cont identity nontriv]])
+     auto
+
 text \<open>
   Meager version of the regular-stratum transversality bad set (the rung that
   \<open>prop_regzero\<close> consumes). The chart cover from @{thm charts_core_Nn} is a
@@ -1017,7 +1076,7 @@ proof -
     have comp2: "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj (D * cnj x))) (at z)"
       using bounded_linear.has_derivative[OF bl comp1] by (simp add: o_def)
     have "(\<lambda>x. cnj (D * cnj x)) = (\<lambda>x. cnj D * x)"
-      by (simp add: complex_cnj_mult)
+      by simp
     with comp2 have "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj D * x)) (at z)" by simp
     then show "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)"
       unfolding field_differentiable_def has_field_derivative_def by blast
@@ -1068,10 +1127,9 @@ proof -
       obtain r where r: "0 < r"
           and rz: "\<And>w. w \<in> ball z r - {z} \<Longrightarrow> H w \<noteq> 0"
         using isolated_zeros[OF Hhol open_UNIV connected_UNIV UNIV_I True UNIV_I Hnz]
-        by blast
+        by metis
       show ?thesis
-        unfolding islimpt_approachable
-        by (metis r rz DiffI dist_commute mem_ball mem_Collect_eq singletonD)
+        using Hhol Hnz analytic_continuation by blast       
     next
       case False
       have "continuous (at z) H"
@@ -1080,8 +1138,7 @@ proof -
       then obtain e where e: "0 < e" "\<And>y. dist z y < e \<Longrightarrow> H y \<noteq> 0"
         using continuous_at_avoid[of z H 0] False by blast
       show ?thesis
-        unfolding islimpt_approachable
-        by (metis e dist_commute mem_Collect_eq)
+        using False Hhol analytic_continuation by blast       
     qed
     have compactK: "compact (complex_of_real ` \<Theta>)"
       by (intro compact_continuous_image \<Theta>_compact continuous_intros)
