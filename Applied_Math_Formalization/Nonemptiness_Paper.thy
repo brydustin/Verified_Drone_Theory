@@ -1219,6 +1219,8 @@ lemma charts_core_Nn:
     and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
   assumes "open V" "V \<noteq> {}" "open \<Omega>"
     and "regular_value_on G (V\<times>\<Omega>) 0"
+    and C1: "\<exists>G'. (\<forall>z\<in>V\<times>\<Omega>. (G has_derivative blinfun_apply (G' z)) (at z))
+                  \<and> continuous_on (V\<times>\<Omega>) G'"
   shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
             (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
             (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
@@ -1390,6 +1392,8 @@ lemma parametric_transversality_negligible_complex:
     and joint_trans:
       "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
         (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+    and A_C1: "\<exists>A'. (\<forall>z\<in>V\<times>\<Omega>reg. (A has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>\<Omega>reg) A'"
   shows "negligible {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
 proof -
   have reg0: "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V \<times> \<Omega>reg) 0"
@@ -1421,7 +1425,8 @@ proof -
             (at x within Crit i)"
       and rank:
       "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
-      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0]
+      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0
+              C1_cplx_r2_comp[OF A_C1]]
       by blast
 
     have negligible_cover:
@@ -2124,6 +2129,8 @@ lemma parametric_transversality_meager_complex:
     and joint_trans:
       "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
         (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+    and A_C1: "\<exists>A'. (\<forall>z\<in>V\<times>\<Omega>reg. (A has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>\<Omega>reg) A'"
   shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
 proof -
   have reg0: "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V \<times> \<Omega>reg) 0"
@@ -2157,7 +2164,8 @@ proof -
       "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
       and clsd:
       "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
-      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0]
+      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0
+              C1_cplx_r2_comp[OF A_C1]]
       by blast
 
     have negligible_cover:
@@ -2195,12 +2203,13 @@ theorem prop_regzero:
   fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
     and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
   assumes "open V" and "V \<noteq> {}" and "open \<Omega>reg"
-    and A_smooth: "(\<forall>z\<in>V\<times>\<Omega>reg. A differentiable at z)"
     and joint_trans:
       "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
         (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+    and A_C1: "\<exists>A'. (\<forall>z\<in>V\<times>\<Omega>reg. (A has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>\<Omega>reg) A'"
   shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
-  by (rule parametric_transversality_meager_complex[OF assms(1-3) joint_trans])
+  by (rule parametric_transversality_meager_complex[OF assms(1-3) joint_trans A_C1])
 
 
 section \<open>The Singular Curve Is a Fold\<close>
