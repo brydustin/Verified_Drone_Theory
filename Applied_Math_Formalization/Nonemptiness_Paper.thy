@@ -810,6 +810,98 @@ lemma slice_zero_nowhere_dense:
      auto
 
 text \<open>
+  The real-analytic identity theorem, supplied by \<^emph>\<open>1-D line restriction\<close>. If
+  every line restriction \<open>t \<mapsto> f (a + t \<cdot> v)\<close> of a real function extends to an
+  entire function of a complex variable, then \<open>f\<close> vanishing on a nonempty open
+  set forces \<open>f \<equiv> 0\<close>: connect any target \<open>y\<close> to a base point \<open>a\<close> in the open set
+  by a line; the entire restriction \<open>F\<close> vanishes on a real neighbourhood of \<open>0\<close>
+  (the part of the line still inside the open set), so by \<open>analytic_continuation\<close>
+  \<open>F \<equiv> 0\<close>, whence \<open>f y = F(1) = 0\<close>. For the array factor (a finite exponential
+  sum) the line restrictions are \<open>cis\<close> of affine arguments, manifestly entire, so
+  this discharges the \<open>identity\<close> hypothesis of the nowhere-density engine.
+\<close>
+
+lemma lines_entire_identity:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real"
+  assumes lines: "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v)))"
+    and Uopen: "open U" and Une: "U \<noteq> {}" and Uzero: "\<forall>x\<in>U. f x = 0"
+  shows "\<forall>y. f y = 0"
+proof
+  fix y
+  obtain a where aU: "a \<in> U" using Une by blast
+  show "f y = 0"
+  proof (cases "y = a")
+    case True thus ?thesis using aU Uzero by blast
+  next
+    case False
+    define v where "v = y - a"
+    have v0: "v \<noteq> 0" using False by (simp add: v_def)
+    obtain F where Fhol: "F holomorphic_on UNIV"
+      and Fval: "\<And>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v))"
+      using lines by blast
+    obtain e where e0: "e > 0" and eball: "ball a e \<subseteq> U"
+      using Uopen aU open_contains_ball by blast
+    define d where "d = e / norm v"
+    have nv0: "norm v > 0" using v0 by simp
+    have d0: "d > 0" using e0 nv0 by (simp add: d_def)
+    have van: "F (complex_of_real t) = 0" if t: "\<bar>t\<bar> < d" for t
+    proof -
+      have "norm (t *\<^sub>R v) = \<bar>t\<bar> * norm v" by simp
+      also have "\<dots> < d * norm v"
+        using t nv0 by (simp add: mult_strict_right_mono)
+      also have "\<dots> = e" using nv0 by (simp add: d_def)
+      finally have "a + t *\<^sub>R v \<in> ball a e" by (simp add: dist_norm)
+      hence "f (a + t *\<^sub>R v) = 0" using eball Uzero by blast
+      thus ?thesis using Fval by simp
+    qed
+    define Z where "Z = complex_of_real ` {t. \<bar>t\<bar> < d}"
+    have lim: "(0::complex) islimpt Z"
+      unfolding islimpt_approachable
+    proof (intro allI impI)
+      fix \<epsilon>::real assume "\<epsilon> > 0"
+      define t where "t = min d \<epsilon> / 2"
+      have tpos: "t > 0" using d0 \<open>\<epsilon> > 0\<close> by (simp add: t_def)
+      have "t < d" using d0 \<open>\<epsilon> > 0\<close> by (simp add: t_def)
+      hence "complex_of_real t \<in> Z" using tpos by (auto simp: Z_def)
+      moreover have "complex_of_real t \<noteq> 0" using tpos by simp
+      moreover have "dist (complex_of_real t) 0 < \<epsilon>"
+        using tpos \<open>\<epsilon> > 0\<close> by (simp add: t_def dist_norm)
+      ultimately show "\<exists>x'\<in>Z. x' \<noteq> 0 \<and> dist x' 0 < \<epsilon>" by blast
+    qed
+    have F1: "F (complex_of_real 1) = 0"
+    proof (rule analytic_continuation[OF Fhol open_UNIV connected_UNIV
+              subset_UNIV UNIV_I lim _ UNIV_I])
+      fix z assume "z \<in> Z"
+      then obtain t where "z = complex_of_real t" "\<bar>t\<bar> < d" by (auto simp: Z_def)
+      thus "F z = 0" using van by simp
+    qed
+    have "complex_of_real (f (a + 1 *\<^sub>R v)) = F (complex_of_real 1)"
+      using Fval[of 1] by simp
+    also have "\<dots> = 0" using F1 by simp
+    finally have "f (a + v) = 0" by simp
+    thus ?thesis by (simp add: v_def)
+  qed
+qed
+
+text \<open>
+  Combining the line-restriction identity theorem with the nowhere-density
+  engine: a continuous, nontrivial \<open>f\<close> with entire line restrictions has a
+  nowhere-dense zero set (relative to any working set \<open>V\<close>). This is the
+  array-factor-shaped discharge of \<open>slice_nowhere_dense\<close>.
+\<close>
+
+lemma lines_entire_slice_nowhere_dense:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real" and V :: "'a set"
+  assumes cont: "continuous_on UNIV f"
+    and lines: "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v)))"
+    and nontriv: "\<exists>x. f x \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. f x = 0}"
+  by (rule slice_zero_nowhere_dense[OF cont _ nontriv])
+     (rule lines_entire_identity[OF lines])
+
+text \<open>
   Meager version of the regular-stratum transversality bad set (the rung that
   \<open>prop_regzero\<close> consumes). The chart cover from @{thm charts_core_Nn} is a
   countable union of \<^emph>\<open>closed\<close> Lebesgue-negligible pieces, so the bad set is
