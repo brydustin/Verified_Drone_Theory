@@ -4,6 +4,7 @@ theory Nonemptiness_Paper
     Nonemptiness_Array_Factor
     Nonemptiness_Feasibility
     Nonemptiness_Spine
+    "HOL-Complex_Analysis.Conformal_Mappings"
 begin
 
 text \<open>
@@ -989,6 +990,42 @@ text \<open>
   nontrivial real-analytic function on a compact interval are finite).
 \<close>
 
+text \<open>
+  Schwarz reflection holomorphicity: if \<open>G\<close> is entire then so is
+  \<open>z \<mapsto> cnj (G (cnj z))\<close>. Real chain rule: \<open>cnj\<close> is \<^const>\<open>bounded_linear\<close>, so
+  composing the field-derivative of \<open>G\<close> at \<open>cnj z\<close> on both sides conjugates
+  it, giving the field derivative \<open>cnj D\<close> at \<open>z\<close>.
+\<close>
+
+lemma holomorphic_cnj_reflect:
+  assumes "G holomorphic_on UNIV"
+  shows "(\<lambda>z. cnj (G (cnj z))) holomorphic_on UNIV"
+proof -
+  have bl: "bounded_linear cnj" by (rule bounded_linear_cnj)
+  have "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)" for z :: complex
+  proof -
+    have "G field_differentiable (at (cnj z))"
+      using assms by (simp add: holomorphic_on_def)
+    then obtain D where D: "(G has_field_derivative D) (at (cnj z))"
+      unfolding field_differentiable_def by blast
+    have cnjd: "(cnj has_derivative cnj) (at z)"
+      using bounded_linear.has_derivative[OF bl has_derivative_ident] by simp
+    have Gd: "(G has_derivative (*) D) (at (cnj z))"
+      by (rule has_field_derivative_imp_has_derivative[OF D])
+    have comp1: "((\<lambda>w. G (cnj w)) has_derivative (\<lambda>x. D * cnj x)) (at z)"
+      using diff_chain_at[OF cnjd Gd] by (simp add: o_def)
+    have comp2: "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj (D * cnj x))) (at z)"
+      using bounded_linear.has_derivative[OF bl comp1] by (simp add: o_def)
+    have "(\<lambda>x. cnj (D * cnj x)) = (\<lambda>x. cnj D * x)"
+      by (simp add: complex_cnj_mult)
+    with comp2 have "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj D * x)) (at z)" by simp
+    then show "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)"
+      unfolding field_differentiable_def has_field_derivative_def by blast
+  qed
+  thus ?thesis
+    by (auto simp: holomorphic_on_def intro: field_differentiable_at_within)
+qed
+
 theorem lem_Efinite:
   fixes g\<theta> :: "real \<Rightarrow> real" and G :: "complex \<Rightarrow> complex"
     and \<Theta> :: "real set" and \<Sigma> :: "(real \<times> real) set"
@@ -1000,14 +1037,64 @@ theorem lem_Efinite:
     and g\<theta>_not_identically_zero: "\<exists>t\<in>\<Theta>. g\<theta> t \<noteq> 0"
   shows "finite {\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}"
 proof -
-  \<comment> \<open>The genuine analytic kernel: zeros of the nontrivial real-analytic
-      \<open>g\<^sub>\<theta> = \<real> \<circ> G\<close> on the compact interval \<open>\<Theta>\<close> are finite. This is the only
-      remaining obligation; the rest of the proof is fibre bookkeeping.
-      (Provable via Schwarz reflection \<open>z \<mapsto> cnj (G (cnj z))\<close> + the holomorphic
-      isolated-zeros theorem (\<open>isolated_zeros\<close>), once
-      \<open>HOL-Complex_Analysis.Conformal_Mappings\<close> is in scope.)\<close>
+  \<comment> \<open>The analytic kernel: zeros of the nontrivial real-analytic
+      \<open>g\<^sub>\<theta> = \<real> \<circ> G\<close> on the compact \<open>\<Theta>\<close> are finite. Build the entire reflection
+      \<open>H z = (G z + cnj (G (cnj z)))/2\<close>, which is \<^emph>\<open>real on the reals\<close> and equals
+      \<open>g\<^sub>\<theta>\<close> there; by \<open>isolated_zeros\<close> its zero set has no limit point, and a
+      no-limit-point subset of the compact \<open>cor ` \<Theta>\<close> is finite.\<close>
   have theta_zeros_finite: "finite {t \<in> \<Theta>. g\<theta> t = 0}"
-    sorry
+  proof -
+    define H where "H = (\<lambda>z. (G z + cnj (G (cnj z))) / 2)"
+    have Href: "(\<lambda>z. cnj (G (cnj z))) holomorphic_on UNIV"
+      by (rule holomorphic_cnj_reflect[OF G_entire])
+    have Hhol: "H holomorphic_on UNIV"
+      unfolding H_def using G_entire Href by (intro holomorphic_intros) auto
+    have Hreal: "H (complex_of_real t) = complex_of_real (g\<theta> t)" for t
+    proof -
+      have "H (complex_of_real t)
+              = (G (complex_of_real t) + cnj (G (complex_of_real t))) / 2"
+        by (simp add: H_def)
+      also have "\<dots> = complex_of_real (Re (G (complex_of_real t)))"
+        by (simp add: complex_add_cnj)
+      finally show ?thesis by (simp add: g\<theta>_restriction)
+    qed
+    obtain t0 where t0: "t0 \<in> \<Theta>" "g\<theta> t0 \<noteq> 0"
+      using g\<theta>_not_identically_zero by blast
+    have Hnz: "H (complex_of_real t0) \<noteq> 0"
+      using t0(2) by (simp add: Hreal)
+    have nolim: "\<not> z islimpt {w. H w = 0}" for z
+    proof (cases "H z = 0")
+      case True
+      obtain r where r: "0 < r"
+          and rz: "\<And>w. w \<in> ball z r - {z} \<Longrightarrow> H w \<noteq> 0"
+        using isolated_zeros[OF Hhol open_UNIV connected_UNIV UNIV_I True UNIV_I Hnz]
+        by blast
+      show ?thesis
+        unfolding islimpt_approachable
+        by (metis r rz DiffI dist_commute mem_ball mem_Collect_eq singletonD)
+    next
+      case False
+      have "continuous (at z) H"
+        using Hhol holomorphic_on_imp_continuous_on[of H UNIV]
+        by (simp add: continuous_on_eq_continuous_at)
+      then obtain e where e: "0 < e" "\<And>y. dist z y < e \<Longrightarrow> H y \<noteq> 0"
+        using continuous_at_avoid[of z H 0] False by blast
+      show ?thesis
+        unfolding islimpt_approachable
+        by (metis e dist_commute mem_Collect_eq)
+    qed
+    have compactK: "compact (complex_of_real ` \<Theta>)"
+      by (intro compact_continuous_image \<Theta>_compact continuous_intros)
+    have "finite ((complex_of_real ` \<Theta>) \<inter> {w. H w = 0})"
+      by (rule finite_not_islimpt_in_compact[OF compactK]) (use nolim in blast)
+    moreover have "complex_of_real ` {t \<in> \<Theta>. g\<theta> t = 0}
+                     \<subseteq> (complex_of_real ` \<Theta>) \<inter> {w. H w = 0}"
+      using Hreal by auto
+    ultimately have "finite (complex_of_real ` {t \<in> \<Theta>. g\<theta> t = 0})"
+      by (rule rev_finite_subset)
+    then show "finite {t \<in> \<Theta>. g\<theta> t = 0}"
+      by (rule finite_imageD) (simp add: inj_on_def)
+  qed
   \<comment> \<open>Each bad \<open>\<omega> = (\<theta>,\<phi>)\<close> has \<open>\<theta> \<in> \<Theta>\<close> with \<open>g\<^sub>\<theta>(\<theta>) = 0\<close>, so it lies in the
       \<open>\<phi>\<close>-fibre over one of finitely many \<open>\<theta>\<close>.\<close>
   have "{\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}
