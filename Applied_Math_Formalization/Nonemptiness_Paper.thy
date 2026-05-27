@@ -1302,6 +1302,178 @@ next
     using s by blast
 qed
 
+text \<open>
+  Per bad zero: package the @{thm regular_value_local_chart} output together with a
+  closed ball \<open>cball u0 r \<subseteq> U\<close>. On that ball the chart \<open>\<phi>\<close> is continuous, lands in
+  the zero set \<open>M\<close>, has the exposed derivative \<open>D\<phi>\<close> with \<open>range = ker (DG)\<close>; and
+  \<open>\<phi> ` ball u0 r\<close> is an openin-\<open>M\<close> neighbourhood of \<open>q\<close> (the input to Lindel\<o>f).
+\<close>
+
+lemma bad_zero_chart:
+  fixes G :: "('c::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'b"
+    and G' :: "('c \<times> 'b) \<Rightarrow> (('c \<times> 'b) \<Rightarrow>\<^sub>L 'b)"
+    and W :: "('c \<times> 'b) set"
+  assumes Wopen: "open W"
+    and derG: "\<And>z. z \<in> W \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on W G'"
+    and reg: "surj (blinfun_apply (G' q))"
+    and qW: "q \<in> W" and Gq: "G q = 0"
+  shows "\<exists>(u0::'c) (r::real) (\<phi>::'c \<Rightarrow> ('c \<times> 'b))
+            (D\<phi>::'c \<Rightarrow> ('c \<Rightarrow>\<^sub>L ('c \<times> 'b))).
+            0 < r \<and> \<phi> u0 = q \<and>
+            (\<forall>u\<in>cball u0 r. \<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+                (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+                range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}) \<and>
+            continuous_on (cball u0 r) \<phi> \<and>
+            q \<in> \<phi> ` ball u0 r \<and>
+            openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` ball u0 r)"
+proof -
+  obtain U  :: "'c set"
+     and u0 :: "'c"
+     and \<phi>  :: "'c \<Rightarrow> ('c \<times> 'b)"
+     and \<psi>  :: "('c \<times> 'b) \<Rightarrow> 'c"
+     and D\<phi> :: "'c \<Rightarrow> ('c \<Rightarrow>\<^sub>L ('c \<times> 'b))"
+    where openU: "open U"
+      and u0U: "u0 \<in> U"
+      and \<phi>u0: "\<phi> u0 = q"
+      and diff\<phi>: "\<phi> differentiable_on U"
+      and \<phi>M: "\<phi> ` U \<subseteq> {z \<in> W. G z = 0}"
+      and openinM: "openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` U)"
+      and homeo: "homeomorphism U (\<phi> ` U) \<phi> \<psi>"
+      and der\<phi>: "\<forall>u\<in>U. (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)"
+      and rng\<phi>: "\<forall>u\<in>U. range (blinfun_apply (D\<phi> u))
+                    = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+    using regular_value_local_chart[OF Wopen qW Gq derG contG' reg]
+    by blast
+
+  obtain \<epsilon> :: real where \<epsilon>pos: "\<epsilon> > 0" and ball\<epsilon>: "ball u0 \<epsilon> \<subseteq> U"
+    using openU u0U
+    by (meson openE)
+
+  define r :: real where "r = \<epsilon> / 2"
+
+  have rpos: "0 < r"
+    using \<epsilon>pos
+    by (simp add: r_def)
+
+  have rlt\<epsilon>: "r < \<epsilon>"
+    using \<epsilon>pos
+    by (simp add: r_def)
+
+  have cball_sub_U: "cball u0 r \<subseteq> U"
+  proof
+    fix u
+    assume u: "u \<in> cball u0 r"
+    then have "dist u0 u \<le> r"
+      by simp
+    also have "r < \<epsilon>"
+      by (rule rlt\<epsilon>)
+    finally have "dist u0 u < \<epsilon>" .
+    then have "u \<in> ball u0 \<epsilon>"
+      by simp
+    then show "u \<in> U"
+      using ball\<epsilon>
+      by blast
+  qed
+
+  have ball_sub_U: "ball u0 r \<subseteq> U"
+    using cball_sub_U
+    by auto
+
+  have cball_props:
+    "\<forall>u\<in>cball u0 r. \<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+        (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+        range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+  proof
+    fix u
+    assume u: "u \<in> cball u0 r"
+    then have uU: "u \<in> U"
+      using cball_sub_U
+      by blast
+
+    have \<phi>uM: "\<phi> u \<in> {z \<in> W. G z = 0}"
+      using \<phi>M uU
+      by blast
+
+    have \<phi>uW: "\<phi> u \<in> W"
+      using \<phi>uM
+      by simp
+
+    have G\<phi>u: "G (\<phi> u) = 0"
+      using \<phi>uM
+      by simp
+
+    have deru: "(\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)"
+      using der\<phi> uU
+      by blast
+
+    have rngu:
+      "range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+      using rng\<phi> uU
+      by blast
+
+    show "\<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+          (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+          range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+      using \<phi>uW G\<phi>u deru rngu
+      by blast
+  qed
+
+  have cont\<phi>U: "continuous_on U \<phi>"
+    using diff\<phi>
+    by (simp add: differentiable_imp_continuous_on)
+
+  have cont_cball: "continuous_on (cball u0 r) \<phi>"
+    using cont\<phi>U cball_sub_U
+    by (rule continuous_on_subset)
+
+  have q_in_image: "q \<in> \<phi> ` ball u0 r"
+  proof -
+    have "u0 \<in> ball u0 r"
+      using rpos
+      by simp
+    then show ?thesis
+      using \<phi>u0
+      by force
+  qed
+
+  have open_ball_U: "openin (top_of_set U) (ball u0 r)"
+  proof -
+    have "open (ball u0 r)"
+      by simp
+    moreover have "ball u0 r = U \<inter> ball u0 r"
+      using ball_sub_U
+      by auto
+    ultimately show ?thesis
+      by (metis openin_open_Int)
+  qed
+
+  have open_image_U:
+    "openin (top_of_set (\<phi> ` U)) (\<phi> ` ball u0 r)"
+    using homeo open_ball_U
+    by (rule homeomorphism_imp_open_map)
+
+  have open_final:
+    "openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` ball u0 r)"
+    using open_image_U openinM
+    by (rule openin_trans)
+
+  show ?thesis
+  proof (intro exI[where x = u0] exI[where x = r] exI[where x = \<phi>] exI[where x = D\<phi>] conjI)
+    show "0 < r" by (rule rpos)
+    show "\<phi> u0 = q" by (rule \<phi>u0)
+    show "\<forall>u\<in>cball u0 r. \<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+            (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+            range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+      by (rule cball_props)
+    show "continuous_on (cball u0 r) \<phi>" by (rule cont_cball)
+    show "q \<in> \<phi> ` ball u0 r" by (rule q_in_image)
+    show "openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` ball u0 r)" by (rule open_final)
+  qed
+qed
+
+
+
 lemma charts_core_Nn:
   fixes V :: "((real^2)^'n) set" and \<Omega> :: "(real^2) set"
     and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
