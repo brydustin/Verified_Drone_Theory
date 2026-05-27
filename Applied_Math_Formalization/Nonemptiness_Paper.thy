@@ -999,7 +999,35 @@ theorem lem_Efinite:
     and G_entire: "G holomorphic_on UNIV"
     and g\<theta>_not_identically_zero: "\<exists>t\<in>\<Theta>. g\<theta> t \<noteq> 0"
   shows "finite {\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}"
-  sorry
+proof -
+  \<comment> \<open>The genuine analytic kernel: zeros of the nontrivial real-analytic
+      \<open>g\<^sub>\<theta> = \<real> \<circ> G\<close> on the compact interval \<open>\<Theta>\<close> are finite. This is the only
+      remaining obligation; the rest of the proof is fibre bookkeeping.
+      (Provable via Schwarz reflection \<open>z \<mapsto> cnj (G (cnj z))\<close> + the holomorphic
+      isolated-zeros theorem (\<open>isolated_zeros\<close>), once
+      \<open>HOL-Complex_Analysis.Conformal_Mappings\<close> is in scope.)\<close>
+  have theta_zeros_finite: "finite {t \<in> \<Theta>. g\<theta> t = 0}"
+    sorry
+  \<comment> \<open>Each bad \<open>\<omega> = (\<theta>,\<phi>)\<close> has \<open>\<theta> \<in> \<Theta>\<close> with \<open>g\<^sub>\<theta>(\<theta>) = 0\<close>, so it lies in the
+      \<open>\<phi>\<close>-fibre over one of finitely many \<open>\<theta>\<close>.\<close>
+  have "{\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}
+          \<subseteq> (\<Union>t \<in> {t \<in> \<Theta>. g\<theta> t = 0}. (\<lambda>\<phi>. (t, \<phi>)) ` {\<phi>. (t, \<phi>) \<in> \<Sigma>})"
+  proof
+    fix \<omega> assume "\<omega> \<in> {\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}"
+    then have \<omega>\<Sigma>: "\<omega> \<in> \<Sigma>" and g0: "g\<theta> (fst \<omega>) = 0" by auto
+    obtain t \<phi> where \<omega>eq: "\<omega> = (t, \<phi>)" by (cases \<omega>)
+    from \<omega>\<Sigma> \<omega>eq have "\<phi> \<in> {\<phi>. (t, \<phi>) \<in> \<Sigma>}" by simp
+    moreover from \<omega>\<Sigma> \<omega>eq \<Sigma>_\<theta>range have "t \<in> \<Theta>" by simp
+    moreover from g0 \<omega>eq have "g\<theta> t = 0" by simp
+    ultimately show "\<omega> \<in> (\<Union>t \<in> {t \<in> \<Theta>. g\<theta> t = 0}. (\<lambda>\<phi>. (t, \<phi>)) ` {\<phi>. (t, \<phi>) \<in> \<Sigma>})"
+      using \<omega>eq by blast
+  qed
+  moreover have "finite (\<Union>t \<in> {t \<in> \<Theta>. g\<theta> t = 0}. (\<lambda>\<phi>. (t, \<phi>)) ` {\<phi>. (t, \<phi>) \<in> \<Sigma>})"
+    by (rule finite_UN_I[OF theta_zeros_finite])
+       (simp add: \<phi>_fibre_finite)
+  ultimately show ?thesis
+    by (rule finite_subset)
+qed
 
 text \<open>
   TeX Proposition~\<open>prop:foldnonzero\<close>: the nonzero-\<open>A\<close> fold-critical bad set is
