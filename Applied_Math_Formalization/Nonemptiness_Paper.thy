@@ -901,6 +901,291 @@ lemma lines_entire_slice_nowhere_dense:
   by (rule slice_zero_nowhere_dense[OF cont _ nontriv])
      (rule lines_entire_identity[OF lines])
 
+
+text \<open>
+  Schwarz reflection holomorphicity: if \<open>G\<close> is entire then so is
+  \<open>z \<mapsto> cnj (G (cnj z))\<close>. Real chain rule: \<open>cnj\<close> is \<^const>\<open>bounded_linear\<close>, so
+  composing the field-derivative of \<open>G\<close> at \<open>cnj z\<close> on both sides conjugates
+  it, giving the field derivative \<open>cnj D\<close> at \<open>z\<close>.
+\<close>
+
+lemma holomorphic_cnj_reflect:
+  assumes "G holomorphic_on UNIV"
+  shows "(\<lambda>z. cnj (G (cnj z))) holomorphic_on UNIV"
+proof -
+  have bl: "bounded_linear cnj" by (rule bounded_linear_cnj)
+  have "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)" for z :: complex
+  proof -
+    have "G field_differentiable (at (cnj z))"
+      using assms by (simp add: holomorphic_on_def)
+    then obtain D where D: "(G has_field_derivative D) (at (cnj z))"
+      unfolding field_differentiable_def by blast
+    have cnjd: "(cnj has_derivative cnj) (at z)"
+      using bounded_linear.has_derivative[OF bl has_derivative_ident] by simp
+    have Gd: "(G has_derivative (*) D) (at (cnj z))"
+      by (rule has_field_derivative_imp_has_derivative[OF D])
+    have comp1: "((\<lambda>w. G (cnj w)) has_derivative (\<lambda>x. D * cnj x)) (at z)"
+      using diff_chain_at[OF cnjd Gd] by (simp add: o_def)
+    have comp2: "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj (D * cnj x))) (at z)"
+      using bounded_linear.has_derivative[OF bl comp1] by (simp add: o_def)
+    have "(\<lambda>x. cnj (D * cnj x)) = (\<lambda>x. cnj D * x)"
+      by simp
+    with comp2 have "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj D * x)) (at z)" by simp
+    then show "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)"
+      unfolding field_differentiable_def has_field_derivative_def by blast
+  qed
+  thus ?thesis
+    by (auto simp: holomorphic_on_def intro: field_differentiable_at_within)
+qed
+
+subsection \<open>Concrete Modeling: the Array Factor has Entire Line Restrictions\<close>
+
+text \<open>
+  An algebra of functions whose line restrictions extend to entire functions of
+  one complex variable. \<open>cline_entire\<close> is the complex-valued predicate,
+  \<open>rline_entire\<close> the real-valued one (matching the \<open>lines\<close> hypothesis of
+  \<open>lines_entire_identity\<close>). The array factor \<open>A_cart\<close> lands in \<open>cline_entire\<close>
+  (a finite sum of \<open>cis\<close> of linear forms), and the power pattern \<open>U_cart\<close>
+  (\<open>= g\<cdot>|A|\<^sup>2\<close>) lands in \<open>rline_entire\<close>, so its slice-zero set is nowhere dense
+  once nontrivial. This turns the analytic \<open>identity\<close> hypothesis into the purely
+  structural fact that each summand is \<open>cis\<close> of an affine function of the line
+  parameter.
+\<close>
+
+definition cline_entire :: "('a::euclidean_space \<Rightarrow> complex) \<Rightarrow> bool" where
+  "cline_entire g \<longleftrightarrow>
+     (\<forall>a v. \<exists>G. G holomorphic_on UNIV
+              \<and> (\<forall>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)))"
+
+definition rline_entire :: "('a::euclidean_space \<Rightarrow> real) \<Rightarrow> bool" where
+  "rline_entire f \<longleftrightarrow>
+     (\<forall>a v. \<exists>F. F holomorphic_on UNIV
+              \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v))))"
+
+lemma cline_entire_const: "cline_entire (\<lambda>x. c)"
+  unfolding cline_entire_def by (intro allI exI[of _ "\<lambda>_. c"]) simp
+
+lemma cline_entire_add:
+  assumes "cline_entire g1" and "cline_entire g2"
+  shows "cline_entire (\<lambda>x. g1 x + g2 x)"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G1 where G1: "G1 holomorphic_on UNIV"
+      "\<And>t::real. G1 (complex_of_real t) = g1 (a + t *\<^sub>R v)"
+    using assms(1) unfolding cline_entire_def by blast
+  obtain G2 where G2: "G2 holomorphic_on UNIV"
+      "\<And>t::real. G2 (complex_of_real t) = g2 (a + t *\<^sub>R v)"
+    using assms(2) unfolding cline_entire_def by blast
+  show "\<exists>G. G holomorphic_on UNIV
+            \<and> (\<forall>t::real. G (complex_of_real t) = g1 (a + t *\<^sub>R v) + g2 (a + t *\<^sub>R v))"
+    by (intro exI[of _ "\<lambda>z. G1 z + G2 z"])
+       (auto simp: G1 G2 intro!: holomorphic_intros)
+qed
+
+lemma cline_entire_mult:
+  assumes "cline_entire g1" and "cline_entire g2"
+  shows "cline_entire (\<lambda>x. g1 x * g2 x)"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G1 where G1: "G1 holomorphic_on UNIV"
+      "\<And>t::real. G1 (complex_of_real t) = g1 (a + t *\<^sub>R v)"
+    using assms(1) unfolding cline_entire_def by blast
+  obtain G2 where G2: "G2 holomorphic_on UNIV"
+      "\<And>t::real. G2 (complex_of_real t) = g2 (a + t *\<^sub>R v)"
+    using assms(2) unfolding cline_entire_def by blast
+  show "\<exists>G. G holomorphic_on UNIV
+            \<and> (\<forall>t::real. G (complex_of_real t) = g1 (a + t *\<^sub>R v) * g2 (a + t *\<^sub>R v))"
+    by (intro exI[of _ "\<lambda>z. G1 z * G2 z"])
+       (auto simp: G1 G2 intro!: holomorphic_intros)
+qed
+
+lemma cline_entire_sum:
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> cline_entire (g i)"
+  shows "cline_entire (\<lambda>x. \<Sum>i\<in>I. g i x)"
+  using assms
+proof (induction I rule: finite_induct)
+  case empty
+  show ?case using cline_entire_const[of 0] by simp
+next
+  case (insert i I)
+  have "cline_entire (\<lambda>x. g i x + (\<Sum>j\<in>I. g j x))"
+    by (rule cline_entire_add) (use insert in auto)
+  thus ?case using insert.hyps by simp
+qed
+
+lemma cline_entire_cis_linear:
+  fixes lf :: "'a::euclidean_space \<Rightarrow> real"
+  assumes "bounded_linear lf"
+  shows "cline_entire (\<lambda>x. cis (lf x))"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  have aff: "lf (a + t *\<^sub>R v) = lf a + t * lf v" for t::real
+    by (simp add: assms linear_simps(1,5))
+  let ?G = "\<lambda>z. exp (\<i> * (complex_of_real (lf a) + z * complex_of_real (lf v)))"
+  have "?G holomorphic_on UNIV" by (intro holomorphic_intros)
+  moreover have "?G (complex_of_real t) = cis (lf (a + t *\<^sub>R v))" for t::real
+    by (simp add: aff cis_conv_exp algebra_simps flip: of_real_mult of_real_add)
+  ultimately show "\<exists>G. G holomorphic_on UNIV
+                       \<and> (\<forall>t::real. G (complex_of_real t) = cis (lf (a + t *\<^sub>R v)))"
+    by blast
+qed
+
+lemma rline_entire_Re:
+  assumes "cline_entire g"
+  shows "rline_entire (\<lambda>x. Re (g x))"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G where G: "G holomorphic_on UNIV"
+      "\<And>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)"
+    using assms unfolding cline_entire_def by blast
+  let ?F = "\<lambda>z. (G z + cnj (G (cnj z))) / 2"
+  have "?F holomorphic_on UNIV"
+    using G(1) holomorphic_cnj_reflect[OF G(1)] by (intro holomorphic_intros) auto
+  moreover have "?F (complex_of_real t) = complex_of_real (Re (g (a + t *\<^sub>R v)))" for t::real
+    by (simp add: G(2) complex_add_cnj)
+  ultimately show "\<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (Re (g (a + t *\<^sub>R v))))"
+    by blast
+qed
+
+lemma rline_entire_Im:
+  assumes "cline_entire g"
+  shows "rline_entire (\<lambda>x. Im (g x))"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G where G: "G holomorphic_on UNIV"
+      "\<And>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)"
+    using assms unfolding cline_entire_def by blast
+  let ?F = "\<lambda>z. (G z - cnj (G (cnj z))) / (2 * \<i>)"
+  have "?F holomorphic_on UNIV"
+    using G(1) holomorphic_cnj_reflect[OF G(1)] by (intro holomorphic_intros) auto
+  moreover have "?F (complex_of_real t) = complex_of_real (Im (g (a + t *\<^sub>R v)))" for t::real
+    by (simp add: G(2) complex_diff_cnj, simp add: mult.commute)
+  ultimately show "\<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (Im (g (a + t *\<^sub>R v))))"
+    by blast
+qed
+
+lemma rline_entire_add:
+  assumes "rline_entire f1" and "rline_entire f2"
+  shows "rline_entire (\<lambda>x. f1 x + f2 x)"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain F1 where F1: "F1 holomorphic_on UNIV"
+      "\<And>t::real. F1 (complex_of_real t) = complex_of_real (f1 (a + t *\<^sub>R v))"
+    using assms(1) unfolding rline_entire_def by blast
+  obtain F2 where F2: "F2 holomorphic_on UNIV"
+      "\<And>t::real. F2 (complex_of_real t) = complex_of_real (f2 (a + t *\<^sub>R v))"
+    using assms(2) unfolding rline_entire_def by blast
+  show "\<exists>F. F holomorphic_on UNIV
+            \<and> (\<forall>t::real. F (complex_of_real t)
+                        = complex_of_real (f1 (a + t *\<^sub>R v) + f2 (a + t *\<^sub>R v)))"
+    by (intro exI[of _ "\<lambda>z. F1 z + F2 z"])
+       (auto simp: F1 F2 intro!: holomorphic_intros)
+qed
+
+lemma rline_entire_mult:
+  assumes "rline_entire f1" and "rline_entire f2"
+  shows "rline_entire (\<lambda>x. f1 x * f2 x)"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain F1 where F1: "F1 holomorphic_on UNIV"
+      "\<And>t::real. F1 (complex_of_real t) = complex_of_real (f1 (a + t *\<^sub>R v))"
+    using assms(1) unfolding rline_entire_def by blast
+  obtain F2 where F2: "F2 holomorphic_on UNIV"
+      "\<And>t::real. F2 (complex_of_real t) = complex_of_real (f2 (a + t *\<^sub>R v))"
+    using assms(2) unfolding rline_entire_def by blast
+  show "\<exists>F. F holomorphic_on UNIV
+            \<and> (\<forall>t::real. F (complex_of_real t)
+                        = complex_of_real (f1 (a + t *\<^sub>R v) * f2 (a + t *\<^sub>R v)))"
+    by (intro exI[of _ "\<lambda>z. F1 z * F2 z"])
+       (auto simp: F1 F2 intro!: holomorphic_intros)
+qed
+
+lemma rline_entire_scale:
+  assumes "rline_entire f"
+  shows "rline_entire (\<lambda>x. c * f x)"
+  using rline_entire_mult[OF rline_entire_Re[OF cline_entire_const[of "complex_of_real c"]] assms]
+  by simp
+
+lemma rline_entire_cmod_sq:
+  assumes "cline_entire g"
+  shows "rline_entire (\<lambda>x. (cmod (g x))\<^sup>2)"
+proof -
+  have eq: "(\<lambda>x. (cmod (g x))\<^sup>2) = (\<lambda>x. Re (g x) * Re (g x) + Im (g x) * Im (g x))"
+    by (rule ext, subst cmod_power2, simp add: power2_eq_square)
+  show ?thesis
+    unfolding eq by (intro rline_entire_add rline_entire_mult rline_entire_Re rline_entire_Im assms)
+qed
+
+text \<open>
+  The array factor is a finite sum of \<open>cis\<close> of linear forms in \<open>x\<close>, hence has
+  entire line restrictions; the power pattern \<open>U = g\<cdot>|A|\<^sup>2\<close> inherits this.
+\<close>
+
+lemma cline_entire_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and \<omega> :: angle
+  shows "cline_entire (\<lambda>x::planar^'n. A_cart cvec x \<omega>)"
+  unfolding A_cart_def
+proof (rule cline_entire_sum)
+  show "finite (UNIV :: 'n set)" by simp
+next
+  fix n :: 'n
+  have "bounded_linear (\<lambda>x::planar^'n. - (cvec \<omega> \<bullet> (x $ n)))"
+    by (rule bounded_linear_minus
+              [OF bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth]])
+  thus "cline_entire (\<lambda>x::planar^'n. cis (- (cvec \<omega> \<bullet> (x $ n))))"
+    by (rule cline_entire_cis_linear)
+qed
+
+lemma rline_entire_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real" and \<omega> :: angle
+  shows "rline_entire (\<lambda>x::planar^'n. U_cart cvec g x \<omega>)"
+  unfolding U_cart_def
+  by (rule rline_entire_scale[OF rline_entire_cmod_sq[OF cline_entire_A_cart]])
+
+text \<open>
+  Continuity of the array factor and the power pattern as functions of \<open>x\<close>
+  (the \<open>lines_entire_slice_nowhere_dense\<close> engine also needs global continuity).
+\<close>
+
+lemma continuous_on_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and \<omega> :: angle
+  shows "continuous_on UNIV (\<lambda>x::planar^'n. A_cart cvec x \<omega>)"
+  unfolding A_cart_def
+  by (intro continuous_intros)
+
+lemma continuous_on_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real" and \<omega> :: angle
+  shows "continuous_on UNIV (\<lambda>x::planar^'n. U_cart cvec g x \<omega>)"
+  unfolding U_cart_def
+  by (intro continuous_intros continuous_on_A_cart)
+
+text \<open>
+  Concrete discharge of \<open>slice_nowhere_dense\<close> for the power pattern: whenever the
+  pattern is not identically zero (the nontriviality input), its zero set inside
+  any working set \<open>V\<close> is nowhere dense.
+\<close>
+
+lemma U_cart_zero_nowhere_dense:
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
+    and \<omega> :: angle and V :: "(planar^'n) set"
+  assumes nontriv: "\<exists>x::planar^'n. U_cart cvec g x \<omega> \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. U_cart cvec g x \<omega> = 0}"
+proof (rule lines_entire_slice_nowhere_dense[OF continuous_on_U_cart _ nontriv])
+  show "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                  \<and> (\<forall>t::real. F (complex_of_real t)
+                              = complex_of_real (U_cart cvec g (a + t *\<^sub>R v) \<omega>))"
+    using rline_entire_U_cart unfolding rline_entire_def by blast
+qed
+
 text \<open>
   Meager version of the regular-stratum transversality bad set (the rung that
   \<open>prop_regzero\<close> consumes). The chart cover from @{thm charts_core_Nn} is a
@@ -1140,42 +1425,6 @@ text \<open>
   The remaining obligation is the real-analytic isolated-zeros fact (zeros of a
   nontrivial real-analytic function on a compact interval are finite).
 \<close>
-
-text \<open>
-  Schwarz reflection holomorphicity: if \<open>G\<close> is entire then so is
-  \<open>z \<mapsto> cnj (G (cnj z))\<close>. Real chain rule: \<open>cnj\<close> is \<^const>\<open>bounded_linear\<close>, so
-  composing the field-derivative of \<open>G\<close> at \<open>cnj z\<close> on both sides conjugates
-  it, giving the field derivative \<open>cnj D\<close> at \<open>z\<close>.
-\<close>
-
-lemma holomorphic_cnj_reflect:
-  assumes "G holomorphic_on UNIV"
-  shows "(\<lambda>z. cnj (G (cnj z))) holomorphic_on UNIV"
-proof -
-  have bl: "bounded_linear cnj" by (rule bounded_linear_cnj)
-  have "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)" for z :: complex
-  proof -
-    have "G field_differentiable (at (cnj z))"
-      using assms by (simp add: holomorphic_on_def)
-    then obtain D where D: "(G has_field_derivative D) (at (cnj z))"
-      unfolding field_differentiable_def by blast
-    have cnjd: "(cnj has_derivative cnj) (at z)"
-      using bounded_linear.has_derivative[OF bl has_derivative_ident] by simp
-    have Gd: "(G has_derivative (*) D) (at (cnj z))"
-      by (rule has_field_derivative_imp_has_derivative[OF D])
-    have comp1: "((\<lambda>w. G (cnj w)) has_derivative (\<lambda>x. D * cnj x)) (at z)"
-      using diff_chain_at[OF cnjd Gd] by (simp add: o_def)
-    have comp2: "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj (D * cnj x))) (at z)"
-      using bounded_linear.has_derivative[OF bl comp1] by (simp add: o_def)
-    have "(\<lambda>x. cnj (D * cnj x)) = (\<lambda>x. cnj D * x)"
-      by simp
-    with comp2 have "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj D * x)) (at z)" by simp
-    then show "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)"
-      unfolding field_differentiable_def has_field_derivative_def by blast
-  qed
-  thus ?thesis
-    by (auto simp: holomorphic_on_def intro: field_differentiable_at_within)
-qed
 
 theorem lem_Efinite:
   fixes g\<theta> :: "real \<Rightarrow> real" and G :: "complex \<Rightarrow> complex"
