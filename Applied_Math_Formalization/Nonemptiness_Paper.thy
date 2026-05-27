@@ -4,6 +4,7 @@ theory Nonemptiness_Paper
     Nonemptiness_Array_Factor
     Nonemptiness_Feasibility
     Nonemptiness_Spine
+    Regular_Value_Theorem
     "HOL-Complex_Analysis.Conformal_Mappings"
 begin
 
@@ -29,10 +30,34 @@ text \<open>
   \<open>cvec\<close> and \<open>array factor\<close> layer in theory Nonemptiness_Array_Factor.
 \<close>
 
-subsection \<open>Concrete Carriers Used in the Proof\<close>
 
 type_synonym angle = "real^2"   (* (theta, phi) as a 2-vector *)
 type_synonym planar = "real^2"
+
+section \<open>Cartesian Array Factor and Steered Derivatives\<close>
+
+text \<open>
+ 
+  The paper's steering-center angle is represented by a fixed parameter
+  @{term \<omega>s}.  If @{term kvec} is the paper's wave-vector map, then the
+  phase vector used below is
+
+    kvec \<omega> - kvec \<omega>s.
+
+  The paper writes the element factor inside the squared modulus,
+
+    | e(\<omega>) * A(x,\<omega>) |^2.
+
+  In this formalization we use
+
+    gain \<omega> = (e \<omega>)^2,
+
+  so that
+
+    |e(\<omega>) * A(x,\<omega>)|^2 = gain \<omega> * |A(x,\<omega>)|^2.
+\<close>
+
+subsection \<open>Amplitude, gain, and objective\<close>
 
 definition A_cart ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> complex"
@@ -42,8 +67,647 @@ where
 definition U_cart ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real"
 where
-  "U_cart cvec g x \<omega> = g \<omega> * (cmod (A_cart cvec x \<omega>))\<^sup>2"
+  "U_cart cvec gain x \<omega> = gain \<omega> * (cmod (A_cart cvec x \<omega>))\<^sup>2"
 
+definition gain_from_element ::
+  "(angle \<Rightarrow> real) \<Rightarrow> angle \<Rightarrow> real"
+where
+  "gain_from_element e \<omega> = (e \<omega>)\<^sup>2"
+
+subsection \<open>Steered wave-vector\<close>
+
+text \<open>
+  The paper's phase term is
+
+    exp(-i * ([k(\<omega>) - k(\<omega>s)] \<sqdot> r'_n(x))).
+
+  Thus the generic @{term cvec} used by @{term A_cart} should be instantiated
+  as @{term "cvec_steered kvec \<omega>s"}.
+\<close>
+
+definition cvec_steered ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> planar"
+where
+  "cvec_steered kvec \<omega>s \<omega> = kvec \<omega> - kvec \<omega>s"
+
+lemma A_cart_steered_expand:
+  "A_cart (cvec_steered kvec \<omega>s) x \<omega> =
+     (\<Sum>n\<in>UNIV. cis (-((kvec \<omega> - kvec \<omega>s) \<bullet> (x $ n))))"
+  unfolding A_cart_def cvec_steered_def
+  by simp
+
+lemma U_cart_paper_expand:
+  "U_cart (cvec_steered kvec \<omega>s) (gain_from_element e) x \<omega> =
+     (e \<omega>)\<^sup>2 *
+       (cmod (\<Sum>n\<in>UNIV. cis (-((kvec \<omega> - kvec \<omega>s) \<bullet> (x $ n)))))\<^sup>2"
+  unfolding U_cart_def A_cart_def cvec_steered_def gain_from_element_def
+  by simp
+
+subsection \<open>Derivatives of the Cartesian amplitude and objective\<close>
+
+text \<open>
+  Since @{typ angle} is @{typ "real^2"}, derivatives with respect to the
+  angle variable are Fréchet derivatives.
+
+  If
+
+    @{term "(cvec has_derivative dc) (at \<omega>)"}
+
+  then @{term dc} is the linear derivative map of @{term cvec} at @{term \<omega>}.
+  Similarly, if
+
+    @{term "(gain has_derivative dgain) (at \<omega>)"}
+
+  then @{term dgain} is the linear derivative map of @{term gain} at @{term \<omega>}.
+\<close>
+
+definition dA_cart ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> planar) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> complex"
+where
+  "dA_cart cvec dc x \<omega> h =
+     (\<Sum>n\<in>UNIV.
+        (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+        * cis (-(cvec \<omega> \<bullet> (x $ n))))"
+
+definition dU_cart ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> planar) \<Rightarrow>
+   (angle \<Rightarrow> real) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow>
+   (planar^'n) \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real"
+where
+  "dU_cart cvec dc gain dgain x \<omega> h =
+     dgain h * (cmod (A_cart cvec x \<omega>))\<^sup>2
+   + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+             * dA_cart cvec dc x \<omega> h))"
+
+lemma has_derivative_cis_neg_inner:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and y    :: planar
+    and \<omega>    :: angle
+  assumes neg_inner_deriv:
+    "((\<lambda>\<omega>. - (cvec \<omega> \<bullet> y))
+       has_derivative
+         (\<lambda>h. - (dc h \<bullet> y)))
+     (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> y)))
+       has_derivative
+         (\<lambda>h. (- (dc h \<bullet> y)) *\<^sub>R
+              (\<i> * cis (-(cvec \<omega> \<bullet> y)))))
+     (at \<omega>)"
+proof -
+  have cis_deriv:
+    "(cis has_derivative
+       (\<lambda>r. r *\<^sub>R (\<i> * cis (-(cvec \<omega> \<bullet> y)))))
+     (at (-(cvec \<omega> \<bullet> y)))"
+    by (auto intro!: derivative_eq_intros)
+
+  have comp:
+    "((cis \<circ> (\<lambda>\<omega>. - (cvec \<omega> \<bullet> y)))
+       has_derivative
+         ((\<lambda>r. r *\<^sub>R (\<i> * cis (-(cvec \<omega> \<bullet> y))))
+            \<circ> (\<lambda>h. - (dc h \<bullet> y))))
+     (at \<omega>)"
+    using neg_inner_deriv cis_deriv diff_chain_at has_derivative_ident
+    by (subst has_derivative_compose, blast, simp_all)
+  then show ?thesis
+    by (simp add: o_def)
+qed
+
+lemma has_derivative_cis_neg_inner_complex:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and y    :: planar
+    and \<omega>    :: angle
+  assumes neg_inner_deriv:
+    "((\<lambda>\<omega>. - (cvec \<omega> \<bullet> y))
+       has_derivative
+         (\<lambda>h. - (dc h \<bullet> y)))
+     (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> y)))
+       has_derivative
+         (\<lambda>h. \<i> * complex_of_real (-(dc h \<bullet> y))
+              * cis (-(cvec \<omega> \<bullet> y))))
+     (at \<omega>)"
+proof -
+  have h:
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> y)))
+       has_derivative
+         (\<lambda>h. (- (dc h \<bullet> y)) *\<^sub>R
+              (\<i> * cis (-(cvec \<omega> \<bullet> y)))))
+     (at \<omega>)"
+    using neg_inner_deriv
+    by (rule has_derivative_cis_neg_inner)
+
+  then show ?thesis
+    by (simp add: scaleR_conv_of_real algebra_simps)
+qed
+
+lemma has_derivative_A_cart_term:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> (x $ n))))
+       has_derivative
+         (\<lambda>h. (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+              * cis (-(cvec \<omega> \<bullet> (x $ n)))))
+     (at \<omega>)"
+proof -
+  let ?y = "x $ n"
+
+  have inner_deriv:
+    "((\<lambda>\<omega>. cvec \<omega> \<bullet> ?y)
+       has_derivative
+         (\<lambda>h. dc h \<bullet> ?y))
+     (at \<omega>)"
+  proof -
+    have inner_at:
+      "((\<lambda>z::planar. z \<bullet> ?y)
+         has_derivative
+           (\<lambda>h. h \<bullet> ?y))
+       (at (cvec \<omega>))"
+      by (auto intro!: derivative_eq_intros)
+
+    have comp:
+      "(((\<lambda>z::planar. z \<bullet> ?y) \<circ> cvec)
+         has_derivative
+           ((\<lambda>h. h \<bullet> ?y) \<circ> dc))
+       (at \<omega>)"
+      using cvec_deriv inner_at diff_chain_at
+      by (subst has_derivative_compose, blast, simp_all)
+
+    then show ?thesis
+      by (simp only: o_def)
+  qed
+
+  have neg_inner_deriv:
+    "((\<lambda>\<omega>. - (cvec \<omega> \<bullet> ?y))
+       has_derivative
+         (\<lambda>h. - (dc h \<bullet> ?y)))
+     (at \<omega>)"
+    using inner_deriv
+    by (auto intro!: derivative_eq_intros)
+
+  have cis_deriv:
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> ?y)))
+       has_derivative
+         (\<lambda>h. \<i> * complex_of_real (-(dc h \<bullet> ?y))
+              * cis (-(cvec \<omega> \<bullet> ?y))))
+     (at \<omega>)"
+    using neg_inner_deriv
+    by (rule has_derivative_cis_neg_inner_complex)
+
+  then show ?thesis
+    by (simp add: algebra_simps)
+qed
+
+lemma has_derivative_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. A_cart cvec x \<omega>) has_derivative dA_cart cvec dc x \<omega>) (at \<omega>)"
+proof -
+  have term_deriv:
+    "\<And>n. ((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> (x $ n))))
+       has_derivative
+         (\<lambda>h. (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+              * cis (-(cvec \<omega> \<bullet> (x $ n)))))
+     (at \<omega>)"
+    using cvec_deriv
+    by (rule has_derivative_A_cart_term)
+
+  have sum_deriv:
+    "((\<lambda>\<omega>. \<Sum>n\<in>UNIV. cis (-(cvec \<omega> \<bullet> (x $ n))))
+       has_derivative
+         (\<lambda>h. \<Sum>n\<in>UNIV.
+              (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+              * cis (-(cvec \<omega> \<bullet> (x $ n)))))
+     (at \<omega>)"
+    by (rule has_derivative_sum, rule term_deriv)
+
+  then show ?thesis
+    unfolding A_cart_def dA_cart_def
+    by simp
+qed
+
+lemma differentiable_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "(\<lambda>\<omega>. A_cart cvec x \<omega>) differentiable (at \<omega>)"
+  using has_derivative_A_cart[OF cvec_deriv]
+  unfolding differentiable_def
+  by blast
+
+lemma has_derivative_cmod_sq_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. (cmod (A_cart cvec x \<omega>))\<^sup>2)
+       has_derivative
+         (\<lambda>h. 2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h)))
+     (at \<omega>)"
+proof -
+  let ?A = "\<lambda>u. A_cart cvec x u"
+  let ?dA = "dA_cart cvec dc x \<omega>"
+
+  have A_deriv:
+    "(?A has_derivative ?dA) (at \<omega>)"
+    using cvec_deriv
+    by (rule has_derivative_A_cart)
+
+  have cmod_sq_id:
+    "\<And>z::complex. (cmod z)\<^sup>2 = Re (cnj z * z)"
+    by (simp add: power2_eq_square, metis cmod_power2 power2_eq_square)
+
+  have cnj_deriv:
+    "((\<lambda>u. cnj (?A u)) has_derivative (\<lambda>h. cnj (?dA h))) (at \<omega>)"
+    using A_deriv
+    by (auto intro!: derivative_eq_intros)
+
+  have prod_deriv:
+    "((\<lambda>u. cnj (?A u) * ?A u)
+       has_derivative
+         (\<lambda>h. cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h))
+     (at \<omega>)"
+    using cnj_deriv A_deriv
+    by (auto intro!: derivative_eq_intros simp add: algebra_simps)
+
+  have Re_at:
+    "(Re has_derivative (\<lambda>z. Re z))
+       (at (cnj (?A \<omega>) * ?A \<omega>))"
+    by (auto intro!: derivative_eq_intros)
+
+  have Re_deriv:
+    "((\<lambda>u. Re (cnj (?A u) * ?A u))
+       has_derivative
+         (\<lambda>h. Re (cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)))
+     (at \<omega>)"
+  proof -
+    have comp:
+      "((Re \<circ> (\<lambda>u. cnj (?A u) * ?A u))
+         has_derivative
+           ((\<lambda>z. Re z) \<circ>
+             (\<lambda>h. cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)))
+       (at \<omega>)"
+      using prod_deriv Re_at
+      by (simp add: diff_chain_at)
+
+    then show ?thesis
+      by (simp add: o_def)
+  qed
+
+  have simp_deriv:
+    "\<And>h. Re (cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)
+        = 2 * Re (cnj (?A \<omega>) * ?dA h)"
+  proof -
+    fix h
+    have "Re (cnj (?dA h) * ?A \<omega>)
+        = Re (cnj (cnj (?A \<omega>) * ?dA h))"
+      by (simp add: algebra_simps)
+    also have "... = Re (cnj (?A \<omega>) * ?dA h)"
+      by simp
+    finally have h1:
+      "Re (cnj (?dA h) * ?A \<omega>)
+       = Re (cnj (?A \<omega>) * ?dA h)" .
+    show "Re (cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)
+        = 2 * Re (cnj (?A \<omega>) * ?dA h)"
+      by (simp add: h1)
+  qed
+
+  have
+    "((\<lambda>u. Re (cnj (?A u) * ?A u))
+       has_derivative
+         (\<lambda>h. 2 * Re (cnj (?A \<omega>) * ?dA h)))
+     (at \<omega>)"
+    using Re_deriv
+    by (simp add: simp_deriv)
+
+  then show ?thesis
+    by (simp add: cmod_sq_id)
+qed
+
+lemma has_derivative_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega>     :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. U_cart cvec gain x \<omega>) has_derivative dU_cart cvec dc gain dgain x \<omega>) (at \<omega>)"
+proof -
+  have amp_deriv:
+    "((\<lambda>\<omega>. (cmod (A_cart cvec x \<omega>))\<^sup>2)
+       has_derivative
+         (\<lambda>h. 2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h)))
+     (at \<omega>)"
+    using cvec_deriv
+    by (rule has_derivative_cmod_sq_A_cart)
+
+  have prod_deriv:
+    "((\<lambda>\<omega>. gain \<omega> * (cmod (A_cart cvec x \<omega>))\<^sup>2)
+       has_derivative
+         (\<lambda>h. dgain h * (cmod (A_cart cvec x \<omega>))\<^sup>2
+            + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h))))
+     (at \<omega>)"
+  proof -
+    have h:
+      "((\<lambda>\<omega>. gain \<omega> * (cmod (A_cart cvec x \<omega>))\<^sup>2)
+         has_derivative
+           (\<lambda>h. gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h))
+              + dgain h * (cmod (A_cart cvec x \<omega>))\<^sup>2))
+       (at \<omega>)"
+      using gain_deriv amp_deriv
+      by (rule has_derivative_mult)
+
+    then show ?thesis
+      by (simp add: algebra_simps)
+  qed
+
+  then show ?thesis
+    unfolding U_cart_def dU_cart_def
+    by simp
+qed
+
+lemma differentiable_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega>     :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "(\<lambda>\<omega>. U_cart cvec gain x \<omega>) differentiable (at \<omega>)"
+  using has_derivative_U_cart[OF cvec_deriv gain_deriv]
+  unfolding differentiable_def
+  by blast
+
+subsection \<open>Derivative of the squared element factor\<close>
+
+lemma has_derivative_gain_from_element:
+  fixes e  :: "angle \<Rightarrow> real"
+    and de :: "angle \<Rightarrow> real"
+    and \<omega>  :: angle
+  assumes e_deriv:
+    "(e has_derivative de) (at \<omega>)"
+  shows
+    "((gain_from_element e) has_derivative (\<lambda>h. 2 * e \<omega> * de h)) (at \<omega>)"
+proof -
+  have h:
+    "((\<lambda>\<omega>. e \<omega> * e \<omega>) has_derivative (\<lambda>h. e \<omega> * de h + de h * e \<omega>)) (at \<omega>)"
+    using e_deriv e_deriv
+    by (rule has_derivative_mult)
+  then show ?thesis
+    unfolding gain_from_element_def
+    by (simp add: power2_eq_square algebra_simps)
+qed
+
+subsection \<open>Steered derivative theorems\<close>
+
+lemma has_derivative_cvec_steered:
+  fixes kvec :: "angle \<Rightarrow> planar"
+    and dk   :: "angle \<Rightarrow> planar"
+    and \<omega> \<omega>s :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  shows
+    "((cvec_steered kvec \<omega>s) has_derivative dk) (at \<omega>)"
+  unfolding cvec_steered_def
+  using kvec_deriv
+  by (auto intro!: derivative_eq_intros)
+
+lemma has_derivative_U_cart_steered:
+  fixes kvec  :: "angle \<Rightarrow> planar"
+    and dk    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega> \<omega>s  :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. U_cart (cvec_steered kvec \<omega>s) gain x \<omega>)
+       has_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk gain dgain x \<omega>)
+     (at \<omega>)"
+proof -
+  have cvec_deriv:
+    "((cvec_steered kvec \<omega>s) has_derivative dk) (at \<omega>)"
+    using kvec_deriv
+    by (rule has_derivative_cvec_steered)
+
+  show ?thesis
+    using cvec_deriv gain_deriv
+    by (rule has_derivative_U_cart)
+qed
+
+lemma has_derivative_U_cart_paper:
+  fixes kvec :: "angle \<Rightarrow> planar"
+    and dk   :: "angle \<Rightarrow> planar"
+    and e    :: "angle \<Rightarrow> real"
+    and de   :: "angle \<Rightarrow> real"
+    and x    :: "planar^'n"
+    and \<omega> \<omega>s :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes e_deriv:
+    "(e has_derivative de) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. U_cart (cvec_steered kvec \<omega>s) (gain_from_element e) x \<omega>)
+       has_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk (gain_from_element e)
+           (\<lambda>h. 2 * e \<omega> * de h) x \<omega>)
+     (at \<omega>)"
+proof -
+  have gain_deriv:
+    "((gain_from_element e) has_derivative (\<lambda>h. 2 * e \<omega> * de h)) (at \<omega>)"
+    using e_deriv
+    by (rule has_derivative_gain_from_element)
+
+  show ?thesis
+    using kvec_deriv gain_deriv
+    by (rule has_derivative_U_cart_steered)
+qed
+
+subsection \<open>Line-direction derivatives\<close>
+
+lemma has_vector_derivative_along_from_has_derivative:
+  fixes F :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_vector"
+    and F' :: "'a \<Rightarrow> 'b"
+    and x h :: 'a
+  assumes F_deriv:
+    "(F has_derivative F') (at x)"
+  shows
+    "((\<lambda>t::real. F (x + t *\<^sub>R h))
+       has_vector_derivative F' h)
+     (at 0)"
+proof -
+  let ?path = "\<lambda>t::real. x + t *\<^sub>R h"
+
+  have path_deriv:
+    "(?path has_derivative (\<lambda>r. r *\<^sub>R h)) (at 0)"
+    by (auto intro!: derivative_eq_intros)
+
+  have comp:
+    "((F \<circ> ?path) has_derivative (F' \<circ> (\<lambda>r. r *\<^sub>R h))) (at 0)"
+    using path_deriv F_deriv
+    by (simp add: diff_chain_at)
+
+  have bl:
+    "bounded_linear F'"
+    using F_deriv
+    unfolding has_derivative_def
+    by simp
+
+  have deriv_eq:
+    "(F' \<circ> (\<lambda>r. r *\<^sub>R h)) = (\<lambda>r. r *\<^sub>R F' h)"
+    by (simp add: bl comp_def linear_simps)
+
+  show ?thesis
+    unfolding has_vector_derivative_def
+  proof -
+    have "(\<lambda>t::real. F (x + t *\<^sub>R h)) = F \<circ> ?path"
+      by auto
+    then show "((\<lambda>t::real. F (x + t *\<^sub>R h))
+        has_derivative (\<lambda>r. r *\<^sub>R F' h)) (at 0)"
+      using comp deriv_eq
+      by argo
+  qed
+qed
+
+lemma has_vector_derivative_A_cart_along:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega> h  :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. A_cart cvec x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative dA_cart cvec dc x \<omega> h)
+     (at 0)"
+  using has_derivative_A_cart[OF cvec_deriv]
+  by (rule has_vector_derivative_along_from_has_derivative)
+
+lemma has_vector_derivative_cmod_sq_A_cart_along:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega> h  :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. (cmod (A_cart cvec x (\<omega> + t *\<^sub>R h)))\<^sup>2)
+       has_vector_derivative
+         2 * Re (cnj (A_cart cvec x \<omega>) * dA_cart cvec dc x \<omega> h))
+     (at 0)"
+  using has_derivative_cmod_sq_A_cart[OF cvec_deriv]
+  by (rule has_vector_derivative_along_from_has_derivative)
+
+lemma has_vector_derivative_U_cart_along:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega> h   :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. U_cart cvec gain x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative dU_cart cvec dc gain dgain x \<omega> h)
+     (at 0)"
+  using has_derivative_U_cart[OF cvec_deriv gain_deriv]
+  by (rule has_vector_derivative_along_from_has_derivative)
+
+lemma has_vector_derivative_U_cart_steered_along:
+  fixes kvec  :: "angle \<Rightarrow> planar"
+    and dk    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega> \<omega>s h :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. U_cart (cvec_steered kvec \<omega>s) gain x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk gain dgain x \<omega> h)
+     (at 0)"
+proof -
+  have cvec_deriv:
+    "((cvec_steered kvec \<omega>s) has_derivative dk) (at \<omega>)"
+    using kvec_deriv
+    by (rule has_derivative_cvec_steered)
+
+  show ?thesis
+    using cvec_deriv gain_deriv
+    by (rule has_vector_derivative_U_cart_along)
+qed
+
+lemma has_vector_derivative_U_cart_paper_along:
+  fixes kvec :: "angle \<Rightarrow> planar"
+    and dk   :: "angle \<Rightarrow> planar"
+    and e    :: "angle \<Rightarrow> real"
+    and de   :: "angle \<Rightarrow> real"
+    and x    :: "planar^'n"
+    and \<omega> \<omega>s h :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes e_deriv:
+    "(e has_derivative de) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. U_cart (cvec_steered kvec \<omega>s) (gain_from_element e) x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk (gain_from_element e)
+           (\<lambda>h. 2 * e \<omega> * de h) x \<omega> h)
+     (at 0)"
+proof -
+  have gain_deriv:
+    "((gain_from_element e) has_derivative (\<lambda>h. 2 * e \<omega> * de h)) (at \<omega>)"
+    using e_deriv
+    by (rule has_derivative_gain_from_element)
+
+  show ?thesis
+    using kvec_deriv gain_deriv
+    by (rule has_vector_derivative_U_cart_steered_along)
+qed
 
 section \<open>Open Feasible Family and Two-Triple Cover\<close>
 
@@ -467,6 +1131,53 @@ text \<open>
   (still-open) analytic obligations for the antenna parameter space; they will be
   discharged from the general regular-value theorem.
 \<close>
+
+text \<open>
+  Algebraic core of the chart construction. At a regular zero \<open>(x,\<omega>)\<close> of \<open>G\<close> the
+  full derivative \<open>DG = [D\<^sub>x G \<bar> D\<^sub>\<omega> G]\<close> is surjective, so the zero set is a manifold
+  whose tangent space is \<open>ker DG\<close>. The projection \<open>\<pi>\<^sub>V\<close> to the \<open>x\<close>-factor, restricted
+  to this tangent space, is surjective (the chart point is \<^emph>\<open>regular\<close> for \<open>\<pi>\<^sub>V\<close>)
+  \<^emph>\<open>iff\<close> the \<open>\<omega>\<close>-partial \<open>D\<^sub>\<omega> G\<close> is surjective. Equivalently: the chart point is
+  \<open>\<pi>\<^sub>V\<close>-\<^emph>\<open>critical\<close> exactly when the \<open>\<omega>\<close>-derivative degenerates --- which is precisely
+  the \<^emph>\<open>bad\<close> set covered by \<open>charts_core_Nn\<close> and fed to
+  \<open>negligible_singular_image_2n\<close>. The proof is pure linear algebra: \<open>\<pi>\<^sub>V (ker DG)\<close>
+  is everything iff \<open>range D\<^sub>x G \<subseteq> range D\<^sub>\<omega> G\<close>, which under joint surjectivity is
+  equivalent to \<open>range D\<^sub>\<omega> G = UNIV\<close>.
+\<close>
+
+lemma proj_kernel_full_iff_partial_surj:
+  fixes Dx :: "'a::euclidean_space \<Rightarrow> 'c::euclidean_space"
+    and Dw :: "'b::euclidean_space \<Rightarrow> 'c"
+  assumes linw: "linear Dw"
+    and joint: "surj (\<lambda>p. Dx (fst p) + Dw (snd p))"
+  shows "(fst ` {p. Dx (fst p) + Dw (snd p) = 0} = UNIV) \<longleftrightarrow> surj Dw"
+proof
+  assume L: "fst ` {p. Dx (fst p) + Dw (snd p) = 0} = UNIV"
+  have "\<exists>y. c = Dw y" for c
+  proof -
+    obtain p where p: "Dx (fst p) + Dw (snd p) = c"
+      by (metis (no_types, lifting) joint surj_def)
+    have "fst p \<in> fst ` {p. Dx (fst p) + Dw (snd p) = 0}" using L by simp
+    then obtain q where q: "fst q = fst p" "Dx (fst q) + Dw (snd q) = 0"
+      by force
+    have "Dx (fst p) + Dw (snd q) = 0" using q by simp
+    hence Dxp: "Dx (fst p) = - Dw (snd q)"
+      by (simp add: eq_neg_iff_add_eq_0)
+    have "c = Dw (snd p) - Dw (snd q)" using p Dxp by simp
+    also have "\<dots> = Dw (snd p - snd q)" using linw by (simp add: linear_diff)
+    finally show ?thesis by blast
+  qed
+  thus "surj Dw" by (auto simp: surj_def)
+next
+  assume R: "surj Dw"
+  have "a \<in> fst ` {p. Dx (fst p) + Dw (snd p) = 0}" for a
+  proof -
+    obtain b where b: "Dw b = - Dx a" using R by (metis surjD)
+    have "Dx (fst (a, b)) + Dw (snd (a, b)) = 0" using b by simp
+    thus ?thesis by (intro image_eqI[where x = "(a, b)"]) auto
+  qed
+  thus "fst ` {p. Dx (fst p) + Dw (snd p) = 0} = UNIV" by auto
+qed
 
 lemma charts_core_Nn:
   fixes V :: "((real^2)^'n) set" and \<Omega> :: "(real^2) set"
@@ -1332,6 +2043,36 @@ proof (rule lines_entire_slice_nowhere_dense[OF continuous_on_dsU_cart _ nontriv
                               = complex_of_real (dsU_cart c c' gv gv' (a + t *\<^sub>R v)))"
     using rline_entire_dsU_cart unfolding rline_entire_def by blast
 qed
+
+text \<open>
+  Bridge to the rigorous Fréchet derivative \<^const>\<open>dU_cart\<close>: for a fixed steering
+  angle \<open>\<omega>\<close> and fold-tangent direction \<open>h\<close>, the directional derivative
+  \<open>\<partial>\<^sub>s U = dU_cart cvec dc gain dgain x \<omega> h\<close> is, as a function of \<open>x\<close>, exactly the
+  closed form \<^const>\<open>dsU_cart\<close> with the wavevector \<open>c = cvec \<omega>\<close>, its steered
+  derivative \<open>c' = dc h\<close>, the gain \<open>gv = gain \<omega>\<close>, and \<open>gv' = dgain h\<close>. Hence the
+  genuine derivative inherits the entire-line-restriction structure, so its
+  slice-zero set is nowhere dense whenever nontrivial --- the fully concrete
+  discharge of \<open>slice_nowhere_dense\<close> for \<open>prop_foldnonzero\<close>.
+\<close>
+
+lemma dU_cart_eq_dsU_cart:
+  "dU_cart cvec dc gain dgain x \<omega> h
+     = dsU_cart (cvec \<omega>) (dc h) (gain \<omega>) (dgain h) x"
+  unfolding dU_cart_def dsU_cart_def A_cart_def dA_cart_def
+  by simp
+
+lemma rline_entire_dU_cart:
+  "rline_entire (\<lambda>x::planar^'n. dU_cart cvec dc gain dgain x \<omega> h)"
+  unfolding dU_cart_eq_dsU_cart by (rule rline_entire_dsU_cart)
+
+lemma dU_cart_zero_nowhere_dense:
+  fixes cvec dc :: "angle \<Rightarrow> planar" and gain dgain :: "angle \<Rightarrow> real"
+    and \<omega> h :: angle and V :: "(planar^'n) set"
+  assumes nontriv: "\<exists>x::planar^'n. dU_cart cvec dc gain dgain x \<omega> h \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. dU_cart cvec dc gain dgain x \<omega> h = 0}"
+  unfolding dU_cart_eq_dsU_cart
+  using nontriv unfolding dU_cart_eq_dsU_cart
+  by (rule dsU_cart_zero_nowhere_dense)
 
 text \<open>
   Meager version of the regular-stratum transversality bad set (the rung that
