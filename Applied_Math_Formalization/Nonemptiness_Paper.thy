@@ -1044,6 +1044,78 @@ text \<open>
 \<close>
 
 text \<open>
+  The explicit \<open>12 \<times> 12\<close> real Jacobian minor \<open>J\<close> of \<open>D\<^sub>x M\<close> at the chosen
+  six-element configuration (TeX Figure~\<open>fig:bigmatrix\<close>), evaluated at
+  \<open>\<kappa> = 1\<close>. Rows are the twelve real moment components
+  \<open>\<real>A, \<I>A, \<real>M\<^sub>1, \<I>M\<^sub>1, \<real>M\<^sub>2, \<I>M\<^sub>2, \<real>M\<^sub>1\<^sub>1, \<I>M\<^sub>1\<^sub>1, \<real>M\<^sub>1\<^sub>2, \<I>M\<^sub>1\<^sub>2, \<real>M\<^sub>2\<^sub>2, \<I>M\<^sub>2\<^sub>2\<close>;
+  the twelve columns are \<open>\<partial>\<^sub>u\<^sub>n M, \<partial>\<^sub>v\<^sub>n M\<close> for \<open>n = 1..6\<close>. (The determinant is
+  transpose-invariant, so the row/column reading is immaterial.)
+\<close>
+
+definition bigJ :: "real^12^12" where
+  "bigJ = vector
+    [ vector [0, 0, - sqrt 3 / 2, 0, - sqrt 3 / 2, 0, 0, 0, sqrt 3 / 2, 0, sqrt 3 / 2, 0],
+      vector [- 1, 0, - 1/2, 0, 1/2, 0, 1, 0, 1/2, 0, - 1/2, 0],
+      vector [1, 0, 1/2 - pi * sqrt 3 / 6, 0, - 1/2 - pi * sqrt 3 / 3, 0,
+              - 1, 0, - 1/2 + 2 * pi * sqrt 3 / 3, 0, 1/2 + 5 * pi * sqrt 3 / 6, 0],
+      vector [0, 0, - sqrt 3 / 2 - pi / 6, 0, - sqrt 3 / 2 + pi / 3, 0,
+              pi, 0, sqrt 3 / 2 + 2 * pi / 3, 0, sqrt 3 / 2 - 5 * pi / 6, 0],
+      vector [0, 1, - sqrt 3, 1/2, 0, - 1/2, 0, - 1, sqrt 3, - 1/2, sqrt 3, 1/2],
+      vector [- 2, 0, - 1, - sqrt 3 / 2, 0, - sqrt 3 / 2, 0, 0, 1, sqrt 3 / 2, - 1, sqrt 3 / 2],
+      vector [0, 0, pi / 3 - pi^2 * sqrt 3 / 18, 0, - 2 * pi / 3 - 2 * pi^2 * sqrt 3 / 9, 0,
+              - 2 * pi, 0, - 4 * pi / 3 + 8 * pi^2 * sqrt 3 / 9, 0,
+              5 * pi / 3 + 25 * pi^2 * sqrt 3 / 18, 0],
+      vector [0, 0, - pi * sqrt 3 / 3 - pi^2 / 18, 0, - 2 * pi * sqrt 3 / 3 + 2 * pi^2 / 9, 0,
+              pi^2, 0, 4 * pi * sqrt 3 / 3 + 8 * pi^2 / 9, 0,
+              5 * pi * sqrt 3 / 3 - 25 * pi^2 / 18, 0],
+      vector [2, 0, 1 - pi * sqrt 3 / 3, pi / 6, 0, - pi / 3, 0, - pi,
+              - 1 + 4 * pi * sqrt 3 / 3, - 2 * pi / 3, 1 + 5 * pi * sqrt 3 / 3, 5 * pi / 6],
+      vector [0, 0, - sqrt 3 - pi / 3, - pi * sqrt 3 / 6, 0, - pi * sqrt 3 / 3, 0, 0,
+              sqrt 3 + 4 * pi / 3, 2 * pi * sqrt 3 / 3, sqrt 3 - 5 * pi / 3, 5 * pi * sqrt 3 / 6],
+      vector [0, 4, - 2 * sqrt 3, 2, 0, 0, 0, 0, 2 * sqrt 3, - 2, 2 * sqrt 3, 2],
+      vector [- 4, 0, - 2, - 2 * sqrt 3, 0, 0, 0, 0, 2, 2 * sqrt 3, - 2, 2 * sqrt 3] ]"
+
+text \<open>
+  TeX Lemma~\<open>lem:Msurj\<close>, determinant core (\<open>det J = -5\<pi>\<^sup>8/3\<close> at \<open>\<kappa> = 1\<close>;
+  the general value is \<open>-5\<pi>\<^sup>8/(3\<kappa>\<^sup>2)\<close>). This is the standalone arithmetic
+  fact: the explicit symbolic determinant evaluation of the configuration
+  matrix \<^const>\<open>bigJ\<close>. Stated without proof; the (omitted) proof is the
+  four-subsubsection cofactor/Vandermonde computation of TeX
+  Section~\<open>sssec:msurj-config\<close>. Being nonzero, it is the engine behind the
+  \<open>big_det\<close> hypothesis of \<open>Dx_moment_map_surjective\<close> below.
+\<close>
+
+lemma bigJ_det: "det bigJ = - (5 * pi^8) / 3"
+  sorry
+
+lemma bigJ_det_nonzero: "det bigJ \<noteq> 0"
+proof -
+  have "pi > 0" by (rule pi_gt_zero)
+  hence "pi^8 > 0" by simp
+  thus ?thesis unfolding bigJ_det by simp
+qed
+
+text \<open>
+  The configuration matrix has full rank, hence the parameter-derivative is
+  surjective \<^emph>\<open>at the base point\<close>. This is the pointwise content of
+  \<open>lem:Msurj\<close> that the determinant delivers: it discharges the \<open>big_det\<close>
+  base-point premise of \<open>Dx_moment_map_surjective\<close> once the concrete moment
+  map's derivative at the six-element configuration is identified with
+  \<^term>\<open>(*v) bigJ\<close>. The open-dense upgrade is a \<^emph>\<open>separate\<close> argument (real-analytic
+  lower semicontinuity of rank), not implied by the single-point determinant.
+\<close>
+
+lemma bigJ_full_rank: "rank bigJ = CARD(12)"
+proof -
+  have "rank bigJ \<noteq> CARD(12) \<Longrightarrow> rank bigJ < CARD(12)"
+    using rank_bound[of bigJ] by simp
+  with bigJ_det_nonzero det_eq_0_rank[of bigJ] show ?thesis by auto
+qed
+
+lemma bigJ_surj: "surj ((*v) bigJ)"
+  using bigJ_full_rank full_rank_surjective[of bigJ] by simp
+
+text \<open>
   TeX Lemma~\<open>lem:Msurj\<close> (Surjectivity of \<open>D\<^sub>x M\<close>). For \<open>N = CARD('n) \<ge> 6\<close> and
   \<open>c \<noteq> 0\<close>, the parameter-derivative of the moment map
   \<open>M(\<cdot>,c) : \<real>\<^sup>2\<^sup>N \<rightarrow> \<complex>\<^sup>6 \<cong> \<real>\<^sup>1\<^sup>2\<close> (the six moments
