@@ -3357,6 +3357,44 @@ text \<open>
   is the (proved) reduction that assembles them.
 \<close>
 
+subsection \<open>Index/sum infrastructure for \<open>5\<close>, \<open>6\<close>, \<open>12\<close>\<close>
+
+text \<open>
+  HOL-Analysis provides \<open>exhaust_n\<close>/\<open>UNIV_n\<close>/\<open>sum_n\<close> for \<open>n \<le> 4\<close>; we extend to
+  \<open>5\<close> and \<open>6\<close> (needed for the \<open>6\<times>6\<close> block determinants below).
+\<close>
+
+lemma exhaust_5:
+  fixes x :: 5
+  shows "x = 1 \<or> x = 2 \<or> x = 3 \<or> x = 4 \<or> x = 5"
+proof (induct x)
+  case (of_int z)
+  then have "z = 0 \<or> z = 1 \<or> z = 2 \<or> z = 3 \<or> z = 4" by fastforce
+  then show ?case by auto
+qed
+
+lemma UNIV_5: "UNIV = {1, 2, 3, 4, 5::5}"
+  using exhaust_5 by auto
+
+lemma sum_5: "sum f (UNIV::5 set) = f 1 + f 2 + f 3 + f 4 + f 5"
+  unfolding UNIV_5 by (simp add: ac_simps)
+
+lemma exhaust_6:
+  fixes x :: 6
+  shows "x = 1 \<or> x = 2 \<or> x = 3 \<or> x = 4 \<or> x = 5 \<or> x = 6"
+proof (induct x)
+  case (of_int z)
+  then have "z = 0 \<or> z = 1 \<or> z = 2 \<or> z = 3 \<or> z = 4 \<or> z = 5" by fastforce
+  then show ?case by auto
+qed
+
+lemma UNIV_6: "UNIV = {1, 2, 3, 4, 5, 6::6}"
+  using exhaust_6 by auto
+
+lemma sum_6: "sum f (UNIV::6 set) = f 1 + f 2 + f 3 + f 4 + f 5 + f 6"
+  unfolding UNIV_6 by (simp add: ac_simps)
+
+
 text \<open>
   The explicit \<open>12 \<times> 12\<close> real Jacobian minor \<open>J\<close> of \<open>D\<^sub>x M\<close> at the chosen
   six-element configuration (TeX Figure~\<open>fig:bigmatrix\<close>), evaluated at
@@ -3365,6 +3403,25 @@ text \<open>
   the twelve columns are \<open>\<partial>\<^sub>u\<^sub>n M, \<partial>\<^sub>v\<^sub>n M\<close> for \<open>n = 1..6\<close>. (The determinant is
   transpose-invariant, so the row/column reading is immaterial.)
 \<close>
+
+subsection \<open>The constant \<open>6\<times>6\<close> block \<open>B\<close>\<close>
+
+text \<open>
+  After pulling out a factor \<open>\<pi>\<^sup>6\<close> from the \<open>A\<close>-block (Determinant.md \<section>5),
+  the residual constant matrix is \<open>B\<close>; we will show \<open><det B = -\<sqrt>3/18\<close>.
+\<close>
+
+definition B :: "real^6^6" where
+  "B = vector
+    [ vector [0,  - sqrt 3 / 2,    - sqrt 3 / 2,     0,  sqrt 3 / 2,      sqrt 3 / 2],
+      vector [-1, -1/2,            1/2,              1,  1/2,             -1/2],
+      vector [0,  - sqrt 3 / 6,    - sqrt 3 / 3,     0,  2 * sqrt 3 / 3,  5 * sqrt 3 / 6],
+      vector [0,  -1/6,            1/3,              1,  2/3,             -5/6],
+      vector [0,  - sqrt 3 / 18,   - 2 * sqrt 3 / 9, 0,  8 * sqrt 3 / 9,  25 * sqrt 3 / 18],
+      vector [0,  -1/18,           2/9,              1,  8/9,             -25/18] ]"
+
+lemma det_B: "det B = - sqrt 3 / 18"
+  sorry
 
 definition bigJ :: "real^12^12" where
   "bigJ = vector
