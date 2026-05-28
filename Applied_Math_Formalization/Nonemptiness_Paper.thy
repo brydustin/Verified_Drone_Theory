@@ -3467,6 +3467,82 @@ lemma M_paper_components [simp]:
   unfolding M_paper_def by simp_all
 
 
+subsection \<open>The canonical six-element base configuration\<close>
+
+text \<open>
+  TeX Section ``Surjectivity of the moment map'' fixes a canonical
+  6-element configuration in \<open>c\<close>-adapted coordinates:
+  \begin{align*}
+    (u_1, v_1) &= (0,           2), &
+    (u_2, v_2) &= (\pi/3\kappa, 2), &
+    (u_3, v_3) &= (2\pi/3\kappa, 0), \\
+    (u_4, v_4) &= (\pi/\kappa,  0), &
+    (u_5, v_5) &= (4\pi/3\kappa, 2), &
+    (u_6, v_6) &= (5\pi/3\kappa, 2),
+  \end{align*}
+  with steering parameter \<open>c = \<kappa> e\<^sub>\<parallel> = (\<kappa>, 0)\<close>. At \<open>\<kappa> = 1\<close> the
+  rescaled coordinates \<open>t_n := \<kappa> u_n = u_n\<close> take the equally-spaced
+  values \<open>0, \<pi>/3, 2\<pi>/3, \<pi>, 4\<pi>/3, 5\<pi>/3\<close> (sixth roots of unity in
+  phase). \<^const>\<open>bigJ\<close> is the \<open>12 \<times> 12\<close> Jacobian \<open>D\<^sub>x M_paper\<close> evaluated at
+  this base point, also at \<open>\<kappa> = 1\<close>.
+\<close>
+
+definition x0_paper :: "planar^6"
+  where "x0_paper = vector
+    [ vector [0,        2],
+      vector [pi/3,     2],
+      vector [2*pi/3,   0],
+      vector [pi,       0],
+      vector [4*pi/3,   2],
+      vector [5*pi/3,   2] ]"
+
+definition c0_paper :: "planar"
+  where "c0_paper = vector [1, 0]"
+
+text \<open>The six base-point coordinates, exposed as simp rules for the
+  later Jacobian identification \<open>D\<^sub>x M_paper(x0_paper, c0_paper) = (*v) bigJ\<close>.\<close>
+
+lemma x0_paper_entries [simp]:
+  "x0_paper $ 1 = vector [0,       2]"
+  "x0_paper $ 2 = vector [pi/3,    2]"
+  "x0_paper $ 3 = vector [2*pi/3,  0]"
+  "x0_paper $ 4 = vector [pi,      0]"
+  "x0_paper $ 5 = vector [4*pi/3,  2]"
+  "x0_paper $ 6 = vector [5*pi/3,  2]"
+  unfolding x0_paper_def by simp_all
+
+lemma c0_paper_entries [simp]:
+  "c0_paper $ 1 = 1"
+  "c0_paper $ 2 = 0"
+  unfolding c0_paper_def by simp_all
+
+text \<open>The \<open>t_n = \<kappa> u_n\<close> values at \<open>\<kappa> = 1\<close>; \<open>cos t_n, sin t_n\<close> reduce to the
+  sixth roots of unity, matching the explicit numeric entries of \<^const>\<open>bigJ\<close>.\<close>
+
+lemma x0_paper_t_values:
+  "(x0_paper $ 1) $ 1 = 0"
+  "(x0_paper $ 2) $ 1 = pi/3"
+  "(x0_paper $ 3) $ 1 = 2*pi/3"
+  "(x0_paper $ 4) $ 1 = pi"
+  "(x0_paper $ 5) $ 1 = 4*pi/3"
+  "(x0_paper $ 6) $ 1 = 5*pi/3"
+  by simp_all
+
+lemma x0_paper_v_values:
+  "(x0_paper $ 1) $ 2 = 2"
+  "(x0_paper $ 2) $ 2 = 2"
+  "(x0_paper $ 3) $ 2 = 0"
+  "(x0_paper $ 4) $ 2 = 0"
+  "(x0_paper $ 5) $ 2 = 2"
+  "(x0_paper $ 6) $ 2 = 2"
+  by simp_all
+
+text \<open>\<open>c = \<kappa> e\<^sub>\<parallel>\<close> with \<open>\<kappa> > 0\<close> requires the steering vector be nonzero.\<close>
+
+lemma c0_paper_nonzero: "c0_paper \<noteq> 0"
+  using c0_paper_entries(1) by fastforce
+
+
 text \<open>
   \<^bold>\<open>Generic analytic scaffolding (not about the moment map specifically).\<close>
   Any \<open>C\<^sup>1\<close> map into \<^typ>\<open>complex^6\<close> on an open set \<open>V \<subseteq> \<real>\<^sup>2\<^sup>N\<close> whose
