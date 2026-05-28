@@ -3635,7 +3635,7 @@ proof -
     unfolding sum_over_permutations_insert[OF f4]
     unfolding sum_over_permutations_insert[OF f5]
     unfolding permutes_sing
-    apply (simp add: sign_swap_id permutation_swap_id sign_compose sign_id swap_id_eq
+    by (simp add: sign_swap_id permutation_swap_id sign_compose swap_id_eq
                   field_simps power2_eq_square)
 qed
 
@@ -3645,6 +3645,175 @@ lemma det_B: "det B = - sqrt 3 / 18"
   using det_B_eq_neg_det_B\<^sub>1 det_B\<^sub>1_eq_det_B\<^sub>2 det_B\<^sub>2_eq_det_B\<^sub>3
         det_B\<^sub>3_eq_det_B\<^sub>4 det_B\<^sub>4_eq_det_B\<^sub>5 det_B\<^sub>5
   by simp
+
+
+subsection \<open>The \<open>6\<times>6\<close> \<open>A\<close>-block: \<open>det A = -\<sqrt>3 \<pi>\<^sup>6/18\<close>\<close>
+
+text \<open>
+  The original \<open>A\<close>-block (Determinant.md \<section>5). Four \<open>det\<close>-preserving row-adds
+  bring it to \<open>A\<^sub>4\<close>, whose rows \<open>3,4,5,6\<close> are \<open>\<pi>, \<pi>, \<pi>\<^sup>2, \<pi>\<^sup>2\<close> times the
+  corresponding rows of \<open>B\<close>; factoring those out gives \<open>det A\<^sub>4 = \<pi>\<^sup>6 \<cdot> det B\<close>.
+\<close>
+
+definition A :: "real^6^6" where
+  "A = vector
+    [ vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [-1, -1/2, 1/2, 1, 1/2, -1/2],
+      vector [1, 1/2 - pi * sqrt 3 / 6, -1/2 - pi * sqrt 3 / 3, -1,
+              -1/2 + 2 * pi * sqrt 3 / 3, 1/2 + 5 * pi * sqrt 3 / 6],
+      vector [0, - sqrt 3 / 2 - pi / 6, - sqrt 3 / 2 + pi / 3, pi,
+              sqrt 3 / 2 + 2 * pi / 3, sqrt 3 / 2 - 5 * pi / 6],
+      vector [0, pi / 3 - pi^2 * sqrt 3 / 18, -2 * pi / 3 - 2 * pi^2 * sqrt 3 / 9,
+              -2 * pi, -4 * pi / 3 + 8 * pi^2 * sqrt 3 / 9,
+              5 * pi / 3 + 25 * pi^2 * sqrt 3 / 18],
+      vector [0, - pi * sqrt 3 / 3 - pi^2 / 18, -2 * pi * sqrt 3 / 3 + 2 * pi^2 / 9,
+              pi^2, 4 * pi * sqrt 3 / 3 + 8 * pi^2 / 9,
+              5 * pi * sqrt 3 / 3 - 25 * pi^2 / 18] ]"
+
+definition A\<^sub>4 :: "real^6^6" where
+  "A\<^sub>4 = vector
+    [ vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [-1, -1/2, 1/2, 1, 1/2, -1/2],
+      vector [0, - pi * sqrt 3 / 6, - pi * sqrt 3 / 3, 0,
+              2 * pi * sqrt 3 / 3, 5 * pi * sqrt 3 / 6],
+      vector [0, - pi / 6, pi / 3, pi, 2 * pi / 3, -5 * pi / 6],
+      vector [0, - (pi^2) * sqrt 3 / 18, - 2 * pi^2 * sqrt 3 / 9, 0,
+              8 * pi^2 * sqrt 3 / 9, 25 * pi^2 * sqrt 3 / 18],
+      vector [0, - (pi^2) / 18, 2 * pi^2 / 9, pi^2, 8 * pi^2 / 9, -25 * pi^2 / 18] ]"
+
+subsubsection \<open>Row-adds: \<open>det A = det A\<^sub>4\<close>\<close>
+
+text \<open>Four \<open>det\<close>-preserving row-adds:
+      \<open>R\<^sub>3 \<leftarrow> R\<^sub>3 + R\<^sub>2\<close>,
+      \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - R\<^sub>1\<close>,
+      \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 + 2 R\<^sub>4\<close> (using the new \<open>R\<^sub>4\<close>),
+      \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - 2 R\<^sub>3\<close> (using the new \<open>R\<^sub>3\<close>).\<close>
+
+lemma det_A_eq_det_A\<^sub>4: "det A = det A\<^sub>4"
+proof -
+  define U\<^sub>1 :: "real^6^6"
+    where "U\<^sub>1 = (\<chi> k. if k = 3 then row 3 A + 1 *s row 2 A else row k A)"
+  define U\<^sub>2 :: "real^6^6"
+    where "U\<^sub>2 = (\<chi> k. if k = 4 then row 4 U\<^sub>1 + (-1) *s row 1 U\<^sub>1 else row k U\<^sub>1)"
+  define U\<^sub>3 :: "real^6^6"
+    where "U\<^sub>3 = (\<chi> k. if k = 5 then row 5 U\<^sub>2 + 2 *s row 4 U\<^sub>2 else row k U\<^sub>2)"
+  define U\<^sub>4 :: "real^6^6"
+    where "U\<^sub>4 = (\<chi> k. if k = 6 then row 6 U\<^sub>3 + (-2) *s row 3 U\<^sub>3 else row k U\<^sub>3)"
+  have d1: "det U\<^sub>1 = det A"
+    unfolding U\<^sub>1_def by (rule det_row_operation) auto
+  have d2: "det U\<^sub>2 = det U\<^sub>1"
+    unfolding U\<^sub>2_def by (rule det_row_operation) auto
+  have d3: "det U\<^sub>3 = det U\<^sub>2"
+    unfolding U\<^sub>3_def by (rule det_row_operation) auto
+  have d4: "det U\<^sub>4 = det U\<^sub>3"
+    unfolding U\<^sub>4_def by (rule det_row_operation) auto
+  have eq: "U\<^sub>4 = A\<^sub>4"
+    unfolding U\<^sub>4_def U\<^sub>3_def U\<^sub>2_def U\<^sub>1_def A_def A\<^sub>4_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps power2_eq_square)
+  show ?thesis using d1 d2 d3 d4 eq by simp
+qed
+
+subsubsection \<open>Row-mults: \<open>det A\<^sub>4 = \<pi>\<^sup>6 \<cdot> det B\<close>\<close>
+
+text \<open>\<open>A\<^sub>4\<close> rows \<open>3,4\<close> are \<open>\<pi>\<close> times the corresponding \<open>B\<close>-rows; rows \<open>5,6\<close> are
+      \<open>\<pi>\<^sup>2\<close> times. Four applications of @{thm det_row_mul} factor out the powers
+      of \<open>\<pi>\<close>; total factor \<open>\<pi> \<cdot> \<pi> \<cdot> \<pi>\<^sup>2 \<cdot> \<pi>\<^sup>2 = \<pi>\<^sup>6\<close>.\<close>
+
+lemma det_A\<^sub>4_eq_pi6_det_B: "det A\<^sub>4 = pi^6 * det B"
+proof -
+  have row1_eq: "row 1 A\<^sub>4 = row 1 B"
+    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def)
+  have row2_eq: "row 2 A\<^sub>4 = row 2 B"
+    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def)
+  have row3_eq: "row 3 A\<^sub>4 = pi *s row 3 B"
+    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
+  have row4_eq: "row 4 A\<^sub>4 = pi *s row 4 B"
+    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
+  have row5_eq: "row 5 A\<^sub>4 = (pi^2) *s row 5 B"
+    unfolding A\<^sub>4_def B_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps power2_eq_square)
+  have row6_eq: "row 6 A\<^sub>4 = (pi^2) *s row 6 B"
+    unfolding A\<^sub>4_def B_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps power2_eq_square)
+
+  define N\<^sub>1 :: "real^6^6"
+    where "N\<^sub>1 = (\<chi> k. if k = 3 then row 3 B else row k A\<^sub>4)"
+  define N\<^sub>2 :: "real^6^6"
+    where "N\<^sub>2 = (\<chi> k. if k = 4 then row 4 B else row k N\<^sub>1)"
+  define N\<^sub>3 :: "real^6^6"
+    where "N\<^sub>3 = (\<chi> k. if k = 5 then row 5 B else row k N\<^sub>2)"
+  define N\<^sub>4 :: "real^6^6"
+    where "N\<^sub>4 = (\<chi> k. if k = 6 then row 6 B else row k N\<^sub>3)"
+
+  text \<open>Step: factor \<open>\<pi>\<close> from row \<open>3\<close>.\<close>
+  have A4_chi3: "A\<^sub>4 = (\<chi> i. if i = 3 then pi *s row 3 B else row i A\<^sub>4)"
+    using row3_eq by (auto simp: vec_eq_iff row_def)
+  have step1: "det A\<^sub>4 = pi * det N\<^sub>1"
+  proof -
+    have "det (\<chi> i. if i = (3::6) then pi *s (\<lambda>_. row 3 B) i else (\<lambda>i. row i A\<^sub>4) i)
+        = pi * det (\<chi> i. if i = 3 then (\<lambda>_. row 3 B) i else (\<lambda>i. row i A\<^sub>4) i)"
+      by (rule det_row_mul)
+    thus ?thesis using A4_chi3 by (simp add: N\<^sub>1_def)
+  qed
+
+  text \<open>Step: factor \<open>\<pi>\<close> from row \<open>4\<close> of \<open>N\<^sub>1\<close>.\<close>
+  have N1_row4: "row 4 N\<^sub>1 = pi *s row 4 B"
+    using row4_eq by (simp add: N\<^sub>1_def row_def vec_eq_iff)
+  have N1_chi4: "N\<^sub>1 = (\<chi> i. if i = 4 then pi *s row 4 B else row i N\<^sub>1)"
+    using N1_row4 by (auto simp: vec_eq_iff row_def)
+  have step2: "det N\<^sub>1 = pi * det N\<^sub>2"
+  proof -
+    have "det (\<chi> i. if i = (4::6) then pi *s (\<lambda>_. row 4 B) i else (\<lambda>i. row i N\<^sub>1) i)
+        = pi * det (\<chi> i. if i = 4 then (\<lambda>_. row 4 B) i else (\<lambda>i. row i N\<^sub>1) i)"
+      by (rule det_row_mul)
+    thus ?thesis using N1_chi4 by (simp add: N\<^sub>2_def)
+  qed
+
+  text \<open>Step: factor \<open>\<pi>\<^sup>2\<close> from row \<open>5\<close> of \<open>N\<^sub>2\<close>.\<close>
+  have N2_row5: "row 5 N\<^sub>2 = (pi^2) *s row 5 B"
+    using row5_eq by (simp add: N\<^sub>2_def N\<^sub>1_def row_def vec_eq_iff)
+  have N2_chi5: "N\<^sub>2 = (\<chi> i. if i = 5 then (pi^2) *s row 5 B else row i N\<^sub>2)"
+    using N2_row5 by (auto simp: vec_eq_iff row_def)
+  have step3: "det N\<^sub>2 = (pi^2) * det N\<^sub>3"
+  proof -
+    have "det (\<chi> i. if i = (5::6) then (pi^2) *s (\<lambda>_. row 5 B) i else (\<lambda>i. row i N\<^sub>2) i)
+        = (pi^2) * det (\<chi> i. if i = 5 then (\<lambda>_. row 5 B) i else (\<lambda>i. row i N\<^sub>2) i)"
+      by (rule det_row_mul)
+    thus ?thesis using N2_chi5 by (simp add: N\<^sub>3_def)
+  qed
+
+  text \<open>Step: factor \<open>\<pi>\<^sup>2\<close> from row \<open>6\<close> of \<open>N\<^sub>3\<close>.\<close>
+  have N3_row6: "row 6 N\<^sub>3 = (pi^2) *s row 6 B"
+    using row6_eq by (simp add: N\<^sub>3_def N\<^sub>2_def N\<^sub>1_def row_def vec_eq_iff)
+  have N3_chi6: "N\<^sub>3 = (\<chi> i. if i = 6 then (pi^2) *s row 6 B else row i N\<^sub>3)"
+    using N3_row6 by (auto simp: vec_eq_iff row_def)
+  have step4: "det N\<^sub>3 = (pi^2) * det N\<^sub>4"
+  proof -
+    have "det (\<chi> i. if i = (6::6) then (pi^2) *s (\<lambda>_. row 6 B) i else (\<lambda>i. row i N\<^sub>3) i)
+        = (pi^2) * det (\<chi> i. if i = 6 then (\<lambda>_. row 6 B) i else (\<lambda>i. row i N\<^sub>3) i)"
+      by (rule det_row_mul)
+    thus ?thesis using N3_chi6 by (simp add: N\<^sub>4_def)
+  qed
+
+  text \<open>\<open>N\<^sub>4 = B\<close>: all six rows now match \<open>B\<close>'s.\<close>
+  have N4_eq_B: "N\<^sub>4 = B"
+    unfolding N\<^sub>4_def N\<^sub>3_def N\<^sub>2_def N\<^sub>1_def vec_eq_iff
+    using row1_eq row2_eq
+    by (auto simp: forall_6 row_def)
+
+  have "det A\<^sub>4 = pi * (pi * ((pi^2) * ((pi^2) * det N\<^sub>4)))"
+    using step1 step2 step3 step4 by simp
+  also have "\<dots> = pi^6 * det B"
+    using N4_eq_B by (simp add: field_simps power2_eq_square power_add,
+        metis (no_types, lifting) numeral_Bit0_eq_double power2_eq_square power3_eq_cube power_mult
+        vector_space_over_itself.scale_scale)
+  finally show ?thesis .
+qed
+
+lemma det_A: "det A = - sqrt 3 * pi^6 / 18"
+  using det_A_eq_det_A\<^sub>4 det_A\<^sub>4_eq_pi6_det_B det_B
+  by simp
+
 
 definition bigJ :: "real^12^12" where
   "bigJ = vector
