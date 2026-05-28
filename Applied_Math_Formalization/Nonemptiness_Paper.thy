@@ -1500,7 +1500,7 @@ proof -
       by (simp add: o_def)
   qed
   have mvm: "(\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) = (*v) (M x)" for x
-    using lin[of x] by (simp add: M_def matrix_vector_mul(2))
+    using lin[of x] by (simp only: M_def matrix_vector_mul(2))
 
   have surj_iff: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> det (M x) \<noteq> 0" for x
   proof -
@@ -1567,7 +1567,258 @@ lemma charts_core_Nn:
             ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
          (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
-  sorry
+proof -
+  have Wopen: "open (V\<times>\<Omega>)" using assms(1,3) open_Times by blast
+  from C1 obtain G'
+    where derG': "\<And>z. z \<in> V\<times>\<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+      and contG': "continuous_on (V\<times>\<Omega>) G'" by blast
+
+  text \<open>At a zero in the open parameter set, the (unique) derivative is the
+        regular-value one, hence surjective.\<close>
+  have surjG': "surj (blinfun_apply (G' q))" if qW: "q \<in> V\<times>\<Omega>" and Gq: "G q = 0" for q
+  proof -
+    from assms(4) qW Gq obtain f'
+      where f': "(G has_derivative f') (at q within V\<times>\<Omega>)" and sf: "surj f'"
+      by (metis regular_value_on_def)
+    have "(G has_derivative f') (at q)" using f' by (simp add: at_within_open[OF qW Wopen])
+    moreover have "(G has_derivative blinfun_apply (G' q)) (at q)" using derG'[OF qW] .
+    ultimately have "f' = blinfun_apply (G' q)" by (rule has_derivative_unique)
+    thus ?thesis using sf by simp
+  qed
+
+  define BZ where
+    "BZ = {q \<in> V\<times>\<Omega>. G q = 0 \<and> \<not> surj (\<lambda>b. blinfun_apply (G' q) (0,b))}"
+
+  text \<open>The abstract bad set is the \<open>x\<close>-projection of the bad zeros.\<close>
+  have Bad_eq:
+    "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
+     = fst ` BZ"
+  proof (intro set_eqI iffI)
+    fix x
+    assume "x \<in> {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}"
+    then obtain \<omega> where xV: "x \<in> V" and w\<Omega>: "\<omega> \<in> \<Omega>" and Gxw: "G (x,\<omega>) = 0"
+      and nbad: "\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>)"
+      by blast
+    have xwW: "(x,\<omega>) \<in> V\<times>\<Omega>" using xV w\<Omega> by simp
+    have "\<not> surj (\<lambda>b. blinfun_apply (G' (x,\<omega>)) (0,b))"
+      using exists_surj_deriv_iff_partial[OF assms(3) w\<Omega> derG'[OF xwW]] nbad by blast
+    hence "(x,\<omega>) \<in> BZ" using xwW Gxw by (simp add: BZ_def)
+    thus "x \<in> fst ` BZ" by (metis fst_conv image_eqI)
+  next
+    fix x assume "x \<in> fst ` BZ"
+    then obtain q where qBZ: "q \<in> BZ" and xq: "x = fst q" by auto
+    have qW: "q \<in> V\<times>\<Omega>" and Gq: "G q = 0"
+      and np: "\<not> surj (\<lambda>b. blinfun_apply (G' q) (0,b))" using qBZ by (auto simp: BZ_def)
+    obtain a w where q: "q = (a,w)" by (cases q)
+    have aV: "a \<in> V" and w\<Omega>: "w \<in> \<Omega>" using qW q by auto
+    have "\<not> (\<exists>D\<omega>. ((\<lambda>u. G (a,u)) has_derivative D\<omega>) (at w within \<Omega>) \<and> surj D\<omega>)"
+      using exists_surj_deriv_iff_partial[OF assms(3) w\<Omega> derG'[OF qW[unfolded q]]] np q by simp
+    moreover have "G (a,w) = 0" using Gq q by simp
+    ultimately show "x \<in> {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}"
+      using aV w\<Omega> xq q by auto
+  qed
+
+  text \<open>A chart bundle at every bad zero.\<close>
+  define BodyP :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow>
+        ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2))) \<Rightarrow>
+        ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2)))) \<Rightarrow> bool"
+    where "BodyP = (\<lambda>q u0 r \<phi> D\<phi>.
+        0 < r \<and> \<phi> u0 = q \<and>
+        (\<forall>u\<in>cball u0 r. \<phi> u \<in> V\<times>\<Omega> \<and> G (\<phi> u) = 0 \<and>
+            (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+            range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}) \<and>
+        continuous_on (cball u0 r) \<phi> \<and> q \<in> \<phi> ` ball u0 r \<and>
+        openin (top_of_set {z \<in> V\<times>\<Omega>. G z = 0}) (\<phi> ` ball u0 r))"
+
+  have exch: "\<exists>(u0::(real^2)^'n) (r::real) (\<phi>::(real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+                (D\<phi>::(real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2)))).
+        BodyP q u0 r \<phi> D\<phi>"
+    if "q \<in> BZ" for q
+  proof -
+    have qW: "q \<in> V\<times>\<Omega>" and Gq: "G q = 0" using that by (auto simp: BZ_def)
+    show ?thesis
+      unfolding BodyP_def
+      using bad_zero_chart[OF Wopen derG' contG' surjG'[OF qW Gq] qW Gq] .
+  qed
+
+  text \<open>Skolemise the four chart-data functions through a single tuple-valued
+        choice function (\<open>blast\<close>/\<open>metis\<close> cannot do this multi-function choice).\<close>
+  define sk :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow>
+        ((((real^2)^'n) \<times> real \<times> ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+          \<times> ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2))))))"
+    where "sk = (\<lambda>q. SOME t.
+              BodyP q (fst t) (fst (snd t)) (fst (snd (snd t))) (snd (snd (snd t))))"
+  define u0f :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)^'n"
+    where "u0f = (\<lambda>q. fst (sk q))"
+  define rf :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> real"
+    where "rf = (\<lambda>q. fst (snd (sk q)))"
+  define \<phi>f :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2)))"
+    where "\<phi>f = (\<lambda>q. fst (snd (snd (sk q))))"
+  define D\<phi>f :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow>
+        ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2))))"
+    where "D\<phi>f = (\<lambda>q. snd (snd (snd (sk q))))"
+
+  have bun:
+    "0 < rf q \<and> \<phi>f q (u0f q) = q \<and>
+        (\<forall>u\<in>cball (u0f q) (rf q). \<phi>f q u \<in> V\<times>\<Omega> \<and> G (\<phi>f q u) = 0 \<and>
+            (\<phi>f q has_derivative blinfun_apply (D\<phi>f q u)) (at u) \<and>
+            range (blinfun_apply (D\<phi>f q u)) = {w. blinfun_apply (G' (\<phi>f q u)) w = 0}) \<and>
+        continuous_on (cball (u0f q) (rf q)) (\<phi>f q) \<and> q \<in> \<phi>f q ` ball (u0f q) (rf q) \<and>
+        openin (top_of_set {z \<in> V\<times>\<Omega>. G z = 0}) (\<phi>f q ` ball (u0f q) (rf q))"
+    if "q \<in> BZ" for q
+  proof -
+    have ex: "\<exists>t. BodyP q (fst t) (fst (snd t)) (fst (snd (snd t))) (snd (snd (snd t)))"
+    proof -
+      from exch[OF that] obtain u0 :: "(real^2)^'n" and r :: real
+        and \<phi> :: "(real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+        and D\<phi> :: "(real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2)))"
+        where "BodyP q u0 r \<phi> D\<phi>" by blast
+      thus ?thesis by (intro exI[where x = "(u0, r, \<phi>, D\<phi>)"]) simp
+    qed
+    have "BodyP q (fst (sk q)) (fst (snd (sk q)))
+              (fst (snd (snd (sk q)))) (snd (snd (snd (sk q))))"
+      unfolding sk_def by (rule someI_ex[OF ex])
+    thus ?thesis
+      by (simp add: BodyP_def u0f_def rf_def \<phi>f_def D\<phi>f_def)
+  qed
+
+  define Ob where "Ob q = \<phi>f q ` ball (u0f q) (rf q)" for q
+  have q_in_Ob: "q \<in> Ob q" if "q \<in> BZ" for q using bun[OF that] by (simp add: Ob_def)
+  have Ob_open: "openin (top_of_set {z \<in> V\<times>\<Omega>. G z = 0}) (Ob q)" if "q \<in> BZ" for q
+    using bun[OF that] by (simp add: Ob_def)
+
+  obtain \<V> where Vsub: "\<V> \<subseteq> Ob ` BZ" and Vcount: "countable \<V>"
+    and Vun: "\<Union>\<V> = \<Union>(Ob ` BZ)"
+    using Ob_open by (subst Lindelof_openin[where \<F> = "Ob ` BZ" and U = "{z \<in> V\<times>\<Omega>. G z = 0}"],
+                      auto, meson Top1_Ch3.countable_def inj_on_to_nat_on)
+  have BZ_cover: "BZ \<subseteq> \<Union>\<V>"
+    using q_in_Ob Vun by auto
+
+  show ?thesis
+  proof (cases "\<V> = {}")
+    case True
+    have "BZ = {}" using BZ_cover True by simp
+    hence emptyBad: "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))} = {}"
+      using Bad_eq by simp
+    show ?thesis
+      using emptyBad by (intro exI[where x = "\<lambda>i x. (x, 0)"] exI[where x = "\<lambda>i. {}"]
+                exI[where x = "\<lambda>i x. 0"], fastforce)       
+  next
+    case False
+    define rep where "rep V = (SOME q. q \<in> BZ \<and> Ob q = V)" for V
+    have rep: "rep V \<in> BZ \<and> Ob (rep V) = V" if "V \<in> \<V>" for V
+    proof -
+      from that Vsub obtain q where "q \<in> BZ" "Ob q = V" by auto
+      thus ?thesis unfolding rep_def by (metis (mono_tags, lifting) someI)
+    qed
+    define e where "e = from_nat_into \<V>"
+    have e\<V>: "e i \<in> \<V>" for i using False unfolding e_def by (simp add: from_nat_into)
+    have e_surj: "\<exists>i. e i = V" if "V \<in> \<V>" for V
+      using that False Vcount unfolding e_def
+      by (metis from_nat_into_surj top1_countable_nonempty_eq_image_nat uncountable_def) 
+    define qi where "qi i = rep (e i)" for i
+    have qiBZ: "qi i \<in> BZ" for i using rep[OF e\<V>] by (simp add: qi_def)
+    have Ob_qi: "Ob (qi i) = e i" for i using rep[OF e\<V>] by (simp add: qi_def)
+
+    define fstL :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L ((real^2)^'n)"
+      where "fstL = Blinfun fst"
+    have fstL_apply: "blinfun_apply fstL = fst"
+      unfolding fstL_def by (rule bounded_linear_Blinfun_apply[OF bounded_linear_fst])
+
+    define charts where "charts i = \<phi>f (qi i)" for i
+    define Crit where
+      "Crit i = {u \<in> cball (u0f (qi i)) (rf (qi i)).
+                   \<not> surj (\<lambda>b. blinfun_apply (G' (\<phi>f (qi i) u)) (0,b))}" for i
+    define Dmap where "Dmap i x = fstL o\<^sub>L (D\<phi>f (qi i) x)" for i x
+    have Dmap_apply:
+      "blinfun_apply (Dmap i x) = (\<lambda>h. fst (blinfun_apply (D\<phi>f (qi i) x) h))" for i x
+      by (simp add: Dmap_def fstL_apply blinfun_compose.rep_eq o_def)
+
+    show ?thesis
+    proof (intro exI[where x = charts] exI[where x = Crit] exI[where x = Dmap] conjI)
+      show "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+              (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
+            \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      proof -
+        have "fst ` BZ \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+        proof
+          fix x assume "x \<in> fst ` BZ"
+          then obtain q where qBZ: "q \<in> BZ" and xq: "x = fst q" by auto
+          have "q \<in> \<Union>\<V>" using BZ_cover qBZ by auto
+          then obtain V where "V \<in> \<V>" and "q \<in> V" by auto
+          then obtain i where ei: "e i = V" using e_surj by blast
+          have "q \<in> Ob (qi i)" using Ob_qi ei \<open>q \<in> V\<close> by simp
+          then obtain u where uball: "u \<in> ball (u0f (qi i)) (rf (qi i))"
+            and qu: "q = \<phi>f (qi i) u" by (auto simp: Ob_def)
+          have ucball: "u \<in> cball (u0f (qi i)) (rf (qi i))" using uball by auto
+          have "\<not> surj (\<lambda>b. blinfun_apply (G' q) (0,b))" using qBZ by (simp add: BZ_def)
+          hence "u \<in> Crit i" using ucball qu by (simp add: Crit_def)
+          moreover have "fst (charts i u) = x" using qu xq by (simp add: charts_def)
+          ultimately show "x \<in> (\<Union>i. (fst \<circ> charts i) ` (Crit i))" by (auto simp: o_def)
+        qed
+        thus ?thesis using Bad_eq by simp
+      qed
+    next
+      show "\<forall>i x. x \<in> Crit i \<longrightarrow>
+              ((fst \<circ> charts i) has_derivative blinfun_apply (Dmap i x)) (at x within Crit i)"
+      proof (intro allI impI)
+        fix i x assume xC: "x \<in> Crit i"
+        hence xcball: "x \<in> cball (u0f (qi i)) (rf (qi i))" by (simp add: Crit_def)
+        have der\<phi>: "(\<phi>f (qi i) has_derivative blinfun_apply (D\<phi>f (qi i) x)) (at x)"
+          using bun[OF qiBZ] xcball by blast
+        have "((\<lambda>y. fst (\<phi>f (qi i) y)) has_derivative
+                 (\<lambda>h. fst (blinfun_apply (D\<phi>f (qi i) x) h))) (at x)"
+          using bounded_linear.has_derivative[OF bounded_linear_fst der\<phi>] .
+        hence "((fst \<circ> charts i) has_derivative blinfun_apply (Dmap i x)) (at x)"
+          by (simp add: charts_def o_def Dmap_apply)
+        thus "((fst \<circ> charts i) has_derivative blinfun_apply (Dmap i x)) (at x within Crit i)"
+          by (rule has_derivative_at_withinI)
+      qed
+    next
+      show "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (Dmap i x))"
+      proof (intro allI impI)
+        fix i x assume xC: "x \<in> Crit i"
+        hence xcball: "x \<in> cball (u0f (qi i)) (rf (qi i))" by (simp add: Crit_def)
+        have npart: "\<not> surj (\<lambda>b. blinfun_apply (G' (\<phi>f (qi i) x)) (0,b))"
+          using xC by (simp add: Crit_def)
+        have \<phi>W: "\<phi>f (qi i) x \<in> V\<times>\<Omega>" and G\<phi>: "G (\<phi>f (qi i) x) = 0"
+          using bun[OF qiBZ] xcball by blast+
+        have linL: "linear (blinfun_apply (G' (\<phi>f (qi i) x)))"
+          by (simp add: blinfun.bounded_linear_right bounded_linear.linear)
+        have rng: "range (blinfun_apply (D\<phi>f (qi i) x))
+                     = {w. blinfun_apply (G' (\<phi>f (qi i) x)) w = 0}"
+          using bun[OF qiBZ] xcball by blast
+        have "surj (\<lambda>h. fst (blinfun_apply (D\<phi>f (qi i) x) h))
+                \<longleftrightarrow> surj (\<lambda>b. blinfun_apply (G' (\<phi>f (qi i) x)) (0,b))"
+          by (rule chart_proj_surj_iff[OF linL surjG'[OF \<phi>W G\<phi>] rng])
+        thus "\<not> surj (blinfun_apply (Dmap i x))"
+          using npart by (simp add: Dmap_apply)
+      qed
+    next
+      show "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+      proof
+        fix i
+        have cont: "continuous_on (cball (u0f (qi i)) (rf (qi i))) (\<phi>f (qi i))"
+          using bun[OF qiBZ] by blast
+        have \<phi>W: "\<And>u. u \<in> cball (u0f (qi i)) (rf (qi i)) \<Longrightarrow> \<phi>f (qi i) u \<in> V\<times>\<Omega>"
+          using bun[OF qiBZ] by blast
+        have cptCrit: "compact (Crit i)"
+          unfolding Crit_def by (rule crit_piece_compact[OF contG' cont \<phi>W])
+        have "Crit i \<subseteq> cball (u0f (qi i)) (rf (qi i))" by (auto simp: Crit_def)
+        hence "continuous_on (Crit i) (fst \<circ> charts i)"
+          unfolding charts_def o_def
+          using continuous_on_subset[OF continuous_on_fst[OF cont]] by blast
+        hence "compact ((fst \<circ> charts i) ` (Crit i))"
+          using cptCrit compact_continuous_image by blast
+        thus "closed ((fst \<circ> charts i) ` (Crit i))" by (rule compact_imp_closed)
+      qed
+    qed
+  qed
+qed
 
 text \<open>
   Sard for the antenna parameter space. \<open>baby_Sard\<close> is hard-typed to
