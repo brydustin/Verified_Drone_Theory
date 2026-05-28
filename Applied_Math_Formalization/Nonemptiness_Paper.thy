@@ -1013,12 +1013,11 @@ lemma r2_cplx_cplx_r2 [simp]: "r2_cplx (cplx_r2 z) = z"
 
 lemma cplx_r2_r2_cplx [simp]: "cplx_r2 (r2_cplx v) = v"
   unfolding r2_cplx_def cplx_r2_def
-  by (simp add: vec_eq_iff forall_2)
+  by (smt (verit, best) complex.sel(1,2) exhaust_2 vec_eq_iff vector_2(1,2))
 
 lemma bounded_linear_r2_cplx: "bounded_linear r2_cplx"
   unfolding r2_cplx_def
-  by (intro bounded_linearI')
-     (simp_all add: vec_eq_iff forall_2 complex_eq_iff)
+  by (intro bounded_linearI', simp_all add: vec_eq_iff forall_2 complex_eq_iff)
 
 lemma has_derivative_r2_cplx [derivative_intros]:
   fixes v :: "real^2"
