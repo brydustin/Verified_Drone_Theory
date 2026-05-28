@@ -2882,17 +2882,299 @@ text \<open>
   hence its zero set projects meagerly to \<open>V\<close>; a finite union stays meager.
 \<close>
 
+text \<open>
+  Fold-zero branch, unconditionally. The trick: \<open>F\<close> has a 1-dimensional parameter
+  \<open>t\<in>I\<close>, but @{thm parametric_transversality_meager_complex} (our regular-branch
+  engine) is stated for a 2-dimensional parameter \<open>\<omega>\<in>\<Omega>reg \<subseteq> real^2\<close>. We
+  \<^emph>\<open>pad\<close>: lift \<open>F(x,t)\<close> to \<open>Fpad(x,(t,s)) = F(x,t)\<close> (ignoring \<open>s\<close>), and take
+  \<open>\<Omega>reg = {\<omega>::real^2. \<omega>$1 \<in> I}\<close>. Because the \<open>\<omega>\<close>-slice derivative of \<open>Fpad\<close> only
+  depends on \<open>h$1\<close>, its image is at most a real line in \<open>\<complex>\<close> --- so it can
+  \<^emph>\<open>never\<close> be surjective. Hence at any zero of \<open>Fpad\<close>, the regular-branch ``bad''
+  condition \<open>\<not> transverse0_on\<close> automatically holds, and the regular-branch
+  conclusion is exactly \<open>meager \<lbrace>x \<in> V. \<exists>t\<in>I. F(x,t) = 0\<rbrace>\<close>. The hypotheses
+  natural for the antenna application (\<open>open I\<close>, \<open>F\<close> is \<open>C\<^sup>1\<close>) replace the original
+  stub's weaker \<open>F_smooth\<close>.
+\<close>
+
 lemma chart_zero_projection_meager_stub:
   fixes V :: "((real^2)^'n) set" and I :: "real set"
     and F :: "(((real^2)^'n) \<times> real) \<Rightarrow> complex"
-  assumes "open V" and "V \<noteq> {}"
-    and "I \<subseteq> UNIV"
-    and F_smooth: "\<forall>z\<in>V\<times>I. F differentiable at z"
+  assumes V_open: "open V" and V_ne: "V \<noteq> {}"
+    and I_open: "open I"
+    and F_C1: "\<exists>F'. (\<forall>z\<in>V\<times>I. (F has_derivative blinfun_apply (F' z)) (at z))
+                    \<and> continuous_on (V\<times>I) F'"
     and Dx_surj:
       "\<forall>(x,t)\<in>V\<times>I. F (x,t) = 0 \<longrightarrow>
         (\<exists>D. ((\<lambda>y. F (y,t)) has_derivative D) (at x within V) \<and> surj D)"
   shows "meager {x\<in>V. \<exists>t\<in>I. F (x,t) = 0}"
-  sorry
+proof -
+  define Omg :: "(real^2) set" where "Omg = {\<omega>. \<omega>$1 \<in> I}"
+  define P :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (((real^2)^'n) \<times> real)"
+    where "P = (\<lambda>z. (fst z, snd z $ 1))"
+  define Fpad :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+    where "Fpad = F \<circ> P"
+
+  text \<open>\<open>Omg\<close> is open (preimage of open \<open>I\<close> under the continuous projection \<open>\<omega>$1\<close>).\<close>
+  have Omg_open: "open Omg"
+  proof -
+    have "Omg = (\<lambda>\<omega>::real^2. \<omega>$1) -` I" by (auto simp: Omg_def vimage_def)
+    moreover have "continuous_on UNIV (\<lambda>\<omega>::real^2. \<omega>$1)"
+      by (intro continuous_intros)
+    ultimately show ?thesis using I_open
+      by (metis open_vimage)
+  qed
+
+  text \<open>\<open>P\<close> is bounded-linear; \<open>P(V\<times>Omg) \<subseteq> V\<times>I\<close>.\<close>
+  have bl_P: "bounded_linear P"
+    unfolding P_def
+    by (intro bounded_linear_Pair bounded_linear_fst
+              bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_snd])
+  have P_image: "P z \<in> V \<times> I" if z: "z \<in> V \<times> Omg" for z
+    using z by (auto simp: P_def Omg_def)
+
+  obtain F' where derF: "\<And>z. z \<in> V\<times>I \<Longrightarrow> (F has_derivative blinfun_apply (F' z)) (at z)"
+              and contF': "continuous_on (V\<times>I) F'"
+    using F_C1 by blast
+
+  text \<open>Lifted derivative of \<open>Fpad\<close>: post-compose by \<open>F'\<close>, pre-compose by \<open>P\<close>.\<close>
+  define Fpad' :: "(((real^2)^'n) \<times> (real^2))
+                  \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L complex)"
+    where "Fpad' = (\<lambda>z. (F' (P z)) o\<^sub>L (Blinfun P))"
+  have BP_apply: "blinfun_apply (Blinfun P) = P"
+    by (rule bounded_linear_Blinfun_apply[OF bl_P])
+
+  have derFpad: "(Fpad has_derivative blinfun_apply (Fpad' z)) (at z)"
+    if z: "z \<in> V \<times> Omg" for z
+  proof -
+    have dP: "(P has_derivative P) (at z)"
+      using bl_P bounded_linear_imp_has_derivative by blast
+    have dF: "(F has_derivative blinfun_apply (F' (P z))) (at (P z))"
+      using derF[OF P_image[OF z]] .
+    have "((\<lambda>x. F (P x)) has_derivative (\<lambda>h. blinfun_apply (F' (P z)) (P h))) (at z)"
+      using has_derivative_compose[OF dP dF] .
+    moreover have "blinfun_apply (Fpad' z) = (\<lambda>h. blinfun_apply (F' (P z)) (P h))"
+      by (simp add: Fpad'_def blinfun_compose.rep_eq BP_apply o_def)
+    ultimately show ?thesis
+      unfolding Fpad_def by (simp add: o_def)
+  qed
+
+  have contFpad': "continuous_on (V \<times> Omg) Fpad'"
+  proof -
+    have contP_on: "continuous_on (V \<times> Omg) P"
+      using bl_P bounded_linear.continuous_on continuous_on_id by blast
+    have P_sub: "P ` (V \<times> Omg) \<subseteq> V \<times> I"
+      using P_image by blast
+    have "continuous_on (V \<times> Omg) (\<lambda>z. F' (P z))"
+      by (rule continuous_on_compose2[OF contF' contP_on P_sub])
+    moreover have "bounded_linear (\<lambda>b. b o\<^sub>L Blinfun P)"
+      using bounded_bilinear.bounded_linear_left[OF bounded_bilinear_blinfun_compose] .
+    ultimately show ?thesis
+      unfolding Fpad'_def
+      using bounded_linear.continuous_on by blast
+  qed
+
+  text \<open>Joint transversality of \<open>Fpad\<close> at zeros (inherited from \<open>Dx_surj\<close>).\<close>
+  have joint_trans:
+    "\<forall>(x,\<omega>)\<in>V\<times>Omg. Fpad (x,\<omega>) = 0 \<longrightarrow>
+      (\<exists>F''. ((\<lambda>z. Fpad z) has_derivative F'') (at (x,\<omega>) within V\<times>Omg) \<and> surj F'')"
+  proof (clarify)
+    fix x \<omega>
+    assume x_type: "x \<in> V" and \<omega>_type: "\<omega> \<in> Omg" and zero: "Fpad (x,\<omega>) = 0"
+    have tI: "\<omega>$1 \<in> I"
+      using Omg_def \<omega>_type by blast
+    have F0: "F (x, \<omega>$1) = 0" using zero by (simp add: Fpad_def P_def)
+    have mem: "(x, \<omega>) \<in> V \<times> Omg" using x_type \<omega>_type by simp
+
+    have derFpad_at: "(Fpad has_derivative blinfun_apply (Fpad' (x,\<omega>))) (at (x,\<omega>))"
+      using derFpad[OF mem] .
+
+    text \<open>Surjectivity: the joint derivative dominates the \<open>x\<close>-partial.\<close>
+    from Dx_surj x_type tI F0 obtain D
+      where dD: "((\<lambda>y. F (y, \<omega>$1)) has_derivative D) (at x within V)"
+        and surD: "surj D" by blast
+    have "at x within V = at x" by (rule at_within_open[OF x_type V_open])
+    with dD have dD_at: "((\<lambda>y. F (y, \<omega>$1)) has_derivative D) (at x)" by simp
+
+    text \<open>The \<open>x\<close>-slice derivative of \<open>F\<close> equals \<open>D\<close>, which equals the \<open>x\<close>-block of \<open>F'\<close>.\<close>
+    have slice_eq: "D = (\<lambda>h. blinfun_apply (F' (x, \<omega>$1)) (h, 0))"
+    proof -
+      have pxw: "(x, \<omega>$1) \<in> V \<times> I" using x_type tI by simp
+      have "((\<lambda>y. F (y, \<omega>$1)) has_derivative
+                (\<lambda>h. blinfun_apply (F' (x, \<omega>$1)) (h, 0))) (at x)"
+        using partial_omega_deriv[where G = "\<lambda>z. F (snd z, fst z)"] derF[OF pxw]
+        \<comment> \<open>Direct computation; instead, derive via chain rule on the slice embedding.\<close>
+      proof -
+        have embed: "((\<lambda>y. (y, \<omega>$1)) has_derivative (\<lambda>h. (h, 0))) (at x)"
+          by (auto intro!: derivative_eq_intros)
+        from has_derivative_compose[OF embed derF[OF pxw]]
+        show "((\<lambda>y. F (y, \<omega>$1)) has_derivative
+                  (\<lambda>h. blinfun_apply (F' (x, \<omega>$1)) (h, 0))) (at x)"
+          by (simp add: o_def)
+      qed
+      from has_derivative_unique[OF dD_at this] show ?thesis .
+    qed
+
+    text \<open>Lift \<open>D\<close>'s surjectivity to the joint derivative of \<open>Fpad\<close>.\<close>
+    have surj_joint: "surj (blinfun_apply (Fpad' (x,\<omega>)))"
+    proof -
+      have "range D \<subseteq> range (blinfun_apply (Fpad' (x,\<omega>)))"
+      proof
+        fix c assume "c \<in> range D"
+        then obtain h where ch: "c = D h" by auto
+        have "blinfun_apply (Fpad' (x,\<omega>)) (h, 0)
+                = blinfun_apply (F' (x, \<omega>$1)) (P (h, 0))"
+          by (simp add: Fpad'_def blinfun_compose.rep_eq BP_apply, simp add: P_def)
+        also have "\<dots> = blinfun_apply (F' (x, \<omega>$1)) (h, 0)"
+          by (simp add: P_def)
+        also have "\<dots> = D h" using slice_eq by simp
+        finally have "c = blinfun_apply (Fpad' (x,\<omega>)) (h, 0)" using ch by simp
+        thus "c \<in> range (blinfun_apply (Fpad' (x,\<omega>)))" by (rule range_eqI)
+      qed
+      with surD show ?thesis by auto
+    qed
+
+    show "\<exists>F''. (Fpad has_derivative F'') (at (x,\<omega>) within V\<times>Omg) \<and> surj F''"
+      using has_derivative_at_withinI[OF derFpad_at] surj_joint by blast
+  qed
+
+  text \<open>Apply the regular-branch parametric-transversality theorem.\<close>
+  have Fpad_C1: "\<exists>A'. (\<forall>z\<in>V\<times>Omg. (Fpad has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>Omg) A'"
+    using derFpad contFpad' by blast
+  have main: "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg}"
+    by (rule parametric_transversality_meager_complex
+              [OF V_open V_ne Omg_open joint_trans Fpad_C1])
+
+  text \<open>The bad set lies in the regular-branch bad set: at any zero, the
+        \<open>\<omega>\<close>-slice derivative of \<open>Fpad\<close> only depends on \<open>h$1\<close>, hence its image is
+        at most a real line in \<open>\<complex>\<close> --- never surjective.\<close>
+  have subset_incl:
+    "{x\<in>V. \<exists>t\<in>I. F (x,t) = 0} \<subseteq> {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg}"
+  proof
+    fix x assume "x \<in> {x\<in>V. \<exists>t\<in>I. F (x,t) = 0}"
+    then obtain t where xV: "x \<in> V" and tI: "t \<in> I" and Fxt: "F (x,t) = 0" by blast
+
+    define \<omega>0 :: "real^2" where "\<omega>0 = vector [t, 0]"
+    have w0_1: "\<omega>0 $ 1 = t" by (simp add: \<omega>0_def vector_def)
+    have w0_Omg: "\<omega>0 \<in> Omg" using tI w0_1 by (simp add: Omg_def)
+    have Fpadx_w0: "Fpad (x,\<omega>0) = 0"
+      using Fxt w0_1 by (simp add: Fpad_def P_def)
+
+    show "x \<in> {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg}"
+    proof (simp only: mem_Collect_eq, intro conjI xV notI)
+      assume tv: "transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg"
+      from tv[unfolded transverse0_on_def, rule_format, OF w0_Omg Fpadx_w0]
+      obtain f' where df': "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative f') (at \<omega>0 within Omg)"
+                  and sf': "surj f'" by blast
+
+      text \<open>The unique slice derivative \<open>(\<lambda>h. \<partial>F/\<partial>t \<cdot> h$1)\<close>.\<close>
+      define deriv_t :: complex
+        where "deriv_t = blinfun_apply (F' (x, t)) (0, 1)"
+      have pxt: "(x, t) \<in> V \<times> I" using xV tI by simp
+      have dF_xt: "(F has_derivative blinfun_apply (F' (x, t))) (at (x, t))"
+        using derF[OF pxt] .
+      have embed: "((\<lambda>u::real^2. (x, u$1)) has_derivative (\<lambda>h. (0, h$1))) (at \<omega>0)"
+        by (auto intro!: derivative_eq_intros
+                bounded_linear_imp_has_derivative[OF bounded_linear_vec_nth])
+      have d_slice_at:
+        "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative
+           (\<lambda>h. blinfun_apply (F' (x, t)) (0, h$1))) (at \<omega>0)"
+      proof -
+        have eq: "(\<lambda>\<omega>::real^2. Fpad (x, \<omega>)) = (\<lambda>u. F (x, u$1))"
+          by (auto simp: Fpad_def P_def)
+        \<comment> \<open>Substitute \<open>t = \<omega>0$1\<close> in \<open>dF_xt\<close> so the compose lines up at \<open>(x, \<omega>0$1)\<close>.\<close>
+        have dF_xtw: "(F has_derivative blinfun_apply (F' (x, \<omega>0$1))) (at (x, \<omega>0$1))"
+          using dF_xt by (simp add: w0_1)
+        have "((F \<circ> (\<lambda>u::real^2. (x, u$1))) has_derivative
+                  (\<lambda>h. blinfun_apply (F' (x, \<omega>0$1)) (0, h$1))) (at \<omega>0)"
+          using has_derivative_compose[OF embed dF_xtw]
+          by (simp add: has_derivative_transform) 
+        hence "((\<lambda>u::real^2. F (x, u$1)) has_derivative
+                  (\<lambda>h. blinfun_apply (F' (x, \<omega>0$1)) (0, h$1))) (at \<omega>0)"
+          by (simp add: o_def)
+        thus ?thesis unfolding eq by (simp add: w0_1)
+      qed
+      have d_slice_within:
+        "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative
+           (\<lambda>h. blinfun_apply (F' (x, t)) (0, h$1))) (at \<omega>0 within Omg)"
+        using d_slice_at has_derivative_at_withinI by blast
+
+      have "at \<omega>0 within Omg = at \<omega>0" by (rule at_within_open[OF w0_Omg Omg_open])
+      with df' have df'_at: "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative f') (at \<omega>0)" by simp
+      have f'_eq: "f' = (\<lambda>h. blinfun_apply (F' (x, t)) (0, h$1))"
+        using has_derivative_unique[OF df'_at d_slice_at] .
+
+      text \<open>The slice derivative factors through \<open>h$1\<close>, so its image lies in
+            \<open>\<real> \<cdot> deriv_t\<close>, a proper subset of \<open>\<complex>\<close>.\<close>
+      have im_eq: "range f' = (\<lambda>r. deriv_t * of_real r) ` UNIV"
+      proof safe
+        fix h :: "real^2"
+        have "blinfun_apply (F' (x, t)) (0, h$1)
+                = blinfun_apply (F' (x, t)) (h$1 *\<^sub>R (0, 1))"
+          by (simp add: scaleR_prod_def)
+        also have "\<dots> = h$1 *\<^sub>R blinfun_apply (F' (x, t)) (0, 1)"
+          by (simp add: blinfun.scaleR_right, metis blinfun.scaleR_right calculation)
+        also have "\<dots> = of_real (h$1) * deriv_t"
+          by (simp add: deriv_t_def scaleR_conv_of_real)
+        finally show "f' h \<in> (\<lambda>r. deriv_t * of_real r) ` UNIV"
+          using f'_eq by auto
+      next
+        fix r :: real
+        have "(\<lambda>h::real^2. blinfun_apply (F' (x, t)) (0, h$1)) (vector [r, 0])
+                = blinfun_apply (F' (x, t)) (0, r)"
+          by (simp add: vector_def)
+        also have "\<dots> = r *\<^sub>R blinfun_apply (F' (x, t)) (0, 1)"
+          using blinfun.scaleR_right[where r=r and b="(0::(real^2)^'n,1::real)"]
+          by (simp add: scaleR_prod_def)
+        also have "\<dots> = of_real r * deriv_t"
+          by (simp add: deriv_t_def scaleR_conv_of_real)
+        finally show "deriv_t * of_real r \<in> range f'"
+          by (simp add: sf')
+      qed
+
+      have not_surj_real_line: "\<not> surj (\<lambda>r::real. deriv_t * of_real r)"
+      proof
+        assume surj1: "surj (\<lambda>r::real. deriv_t * of_real r)"
+        show False
+        proof (cases "deriv_t = 0")
+          case True
+          from surj1 obtain r where "(1::complex) = deriv_t * of_real r"
+            unfolding surj_def by metis
+          with True show False by simp
+        next
+          case False
+          from surj1 obtain r where "\<i> * deriv_t = deriv_t * of_real r"
+            unfolding surj_def by metis
+          hence "(\<i> - of_real r) * deriv_t = 0" by (simp add: ring_distribs)
+          with False have "\<i> = of_real r"
+            by (metis eq_iff_diff_eq_0 mult_eq_0_iff)
+          hence "Im \<i> = Im (of_real r)" by simp
+          thus False by simp
+        qed
+      qed
+      with sf' im_eq show False by simp
+    qed
+  qed
+
+  text \<open>Subset of meager is meager. (Note: \<open>meager_def\<close> uses a \<^emph>\<open>nat-indexed\<close>
+        family \<open>E :: nat \<Rightarrow> _\<close> with \<open>A \<subseteq> \<Union>n. E n\<close>, not a countable set with equality.)\<close>
+  have meager_subset: "\<And>S T :: ((real^2)^'n) set. meager S \<Longrightarrow> T \<subseteq> S \<Longrightarrow> meager T"
+  proof -
+    fix S T :: "((real^2)^'n) set"
+    assume mS: "meager S" and TS: "T \<subseteq> S"
+    from mS obtain E :: "nat \<Rightarrow> ((real^2)^'n) set"
+      where ES: "S \<subseteq> (\<Union>n. E n)" and Enwd: "\<forall>n. nowhere_dense (E n)"
+      unfolding meager_def by blast
+    define E' :: "nat \<Rightarrow> ((real^2)^'n) set" where "E' = (\<lambda>n. T \<inter> E n)"
+    have "T \<subseteq> (\<Union>n. E' n)"
+      using TS ES by (auto simp: E'_def)
+    moreover have "\<forall>n. nowhere_dense (E' n)"
+      using Enwd nowhere_dense_mono by (auto simp: E'_def, blast)       
+    ultimately show "meager T"
+      unfolding meager_def by blast
+  qed
+  show ?thesis using meager_subset[OF main subset_incl].
+qed
 
 lemma meager_Union_finite:
   fixes A :: "'i \<Rightarrow> 'a::topological_space set"
