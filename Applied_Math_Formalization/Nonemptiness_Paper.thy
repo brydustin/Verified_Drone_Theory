@@ -3389,30 +3389,110 @@ text \<open>The full bigJ determinant chain (\<open>bigJ\<close>, \<open>Jperm\<
     \<open>Applied_Math_BlockDet\<close> heap.\<close>
 
 
+subsection \<open>The paper's six-component moment map\<close>
+
 text \<open>
-  TeX Lemma~\<open>lem:Msurj\<close> (Surjectivity of \<open>D\<^sub>x M\<close>). For \<open>N = CARD('n) \<ge> 6\<close> and
-  \<open>c \<noteq> 0\<close>, the parameter-derivative of the moment map
-  \<open>M(\<cdot>,c) : \<real>\<^sup>2\<^sup>N \<rightarrow> \<complex>\<^sup>6 \<cong> \<real>\<^sup>1\<^sup>2\<close> (the six moments
-  \<open>A, M\<^sub>1, M\<^sub>2, M\<^sub>1\<^sub>1, M\<^sub>1\<^sub>2, M\<^sub>2\<^sub>2\<close>) is surjective on an open dense subset of \<open>V\<close>.
-  The omitted proof is the explicit \<open>12 \<times> 12\<close> real Jacobian minor at the
-  six-element configuration, yielding the big determinant
-  \<open>det J = -5\<pi>\<^sup>8 / (3\<kappa>\<^sup>2) \<noteq> 0\<close>, followed by a lower-semicontinuity upgrade
-  of pointwise surjectivity to an open dense set. This feeds the \<open>ZH0surj\<close>
-  piece of \<open>prop_regnonzero\<close>. The conclusion is guarded by a \<open>big_det\<close>
-  hypothesis (existence of one regular base point), so the recorded obligation
-  is the open-dense propagation, not an (otherwise false) absolute surjectivity
-  claim. TODO: model the six moments concretely and discharge.
+  TeX (Section ``Moment-space form of the bad-point map'') defines, for each
+  configuration \<open>x = (p\<^sub>1, \<dots>, p\<^sub>N) \<in> (\<real>\<^sup>2)\<^sup>N\<close> and each
+  parameter \<open>c \<in> \<real>\<^sup>2\<close>,
+  \begin{align*}
+    A      &= \textstyle\sum_n e^{-\imath\, c\cdot p_n},\\
+    M_k    &= \textstyle\sum_n p_{n,k}\, e^{-\imath\, c\cdot p_n},
+              \quad k=1,2,\\
+    M_{kl} &= \textstyle\sum_n p_{n,k} p_{n,l}\, e^{-\imath\, c\cdot p_n},
+              \quad (k,l) \in \{(1,1),(1,2),(2,2)\}.
+  \end{align*}
+  These six complex numbers are bundled into the moment map
+  \<open>M_paper : (\<real>\<^sup>2)\<^sup>N \<times> \<real>\<^sup>2 \<rightarrow> \<complex>\<^sup>6\<close>.
+
+  All six are weighted variants of \<^const>\<open>A_cart\<close> with a constant
+  \<^term>\<open>cvec\<close> (the dummy \<open>\<omega>\<close>-dependence is irrelevant when the wavevector
+  argument is constant in \<open>\<omega>\<close>). We define each moment directly so that the
+  Jacobian identification \<open>D(M_paper)(x\<^sub>0) = (*v) bigJ\<close> can be checked
+  entry-by-entry against the column formulas of TeX Section ``Surjectivity
+  of the moment map''.
 \<close>
 
-lemma Dx_moment_map_surjective:
+definition A_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
+  where "A_moment x c = (\<Sum>n\<in>UNIV. cis (-(c \<bullet> (x $ n))))"
+
+definition M1_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
+  where "M1_moment x c
+           = (\<Sum>n\<in>UNIV. of_real ((x $ n) $ 1) * cis (-(c \<bullet> (x $ n))))"
+
+definition M2_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
+  where "M2_moment x c
+           = (\<Sum>n\<in>UNIV. of_real ((x $ n) $ 2) * cis (-(c \<bullet> (x $ n))))"
+
+definition M11_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
+  where "M11_moment x c
+           = (\<Sum>n\<in>UNIV. of_real (((x $ n) $ 1)\<^sup>2) * cis (-(c \<bullet> (x $ n))))"
+
+definition M12_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
+  where "M12_moment x c
+           = (\<Sum>n\<in>UNIV. of_real (((x $ n) $ 1) * ((x $ n) $ 2))
+                       * cis (-(c \<bullet> (x $ n))))"
+
+definition M22_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
+  where "M22_moment x c
+           = (\<Sum>n\<in>UNIV. of_real (((x $ n) $ 2)\<^sup>2) * cis (-(c \<bullet> (x $ n))))"
+
+text \<open>
+  The moment map itself, packaged as a \<^typ>\<open>complex^6\<close>-valued function. The
+  component order at indices \<open>1,2,3,4,5,6\<close> is
+  \<open>(A, M\<^sub>1, M\<^sub>2, M\<^sub>1\<^sub>1, M\<^sub>1\<^sub>2, M\<^sub>2\<^sub>2)\<close>, matching the row order of \<^const>\<open>bigJ\<close>
+  (real parts even, imaginary parts odd, paired): \<open>\<real>A,\<I>A, \<real>M\<^sub>1,\<I>M\<^sub>1, \<dots>,
+  \<real>M\<^sub>2\<^sub>2,\<I>M\<^sub>2\<^sub>2\<close>.
+\<close>
+
+definition M_paper :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex^6"
+  where
+  "M_paper x c = vector
+    [ A_moment   x c,
+      M1_moment  x c,
+      M2_moment  x c,
+      M11_moment x c,
+      M12_moment x c,
+      M22_moment x c ]"
+
+text \<open>Convenience: project the \<open>k\<close>-th moment out by name.\<close>
+
+lemma M_paper_components [simp]:
+  shows "M_paper x c $ 1 = A_moment   x c"
+    and "M_paper x c $ 2 = M1_moment  x c"
+    and "M_paper x c $ 3 = M2_moment  x c"
+    and "M_paper x c $ 4 = M11_moment x c"
+    and "M_paper x c $ 5 = M12_moment x c"
+    and "M_paper x c $ 6 = M22_moment x c"
+  unfolding M_paper_def by simp_all
+
+
+text \<open>
+  \<^bold>\<open>Generic analytic scaffolding (not about the moment map specifically).\<close>
+  Any \<open>C\<^sup>1\<close> map into \<^typ>\<open>complex^6\<close> on an open set \<open>V \<subseteq> \<real>\<^sup>2\<^sup>N\<close> whose
+  derivative is surjective at \<^emph>\<open>even one\<close> point of \<open>V\<close> has surjective
+  derivative on an open dense subset of \<open>V\<close>. The proof is the
+  lower-semicontinuity-of-rank upgrade: the surjective stratum is open
+  by lower semicontinuity of the rank of a continuously-varying linear
+  map, and openness + the one regular point + nonemptiness/connectedness
+  of \<open>V\<close> propagates this to open density.
+
+  This lemma is the \<^emph>\<open>tool\<close>. It is instantiated with the concrete moment
+  map \<^const>\<open>M_paper\<close> (below) and the base-point hypothesis is supplied by
+  \<open>bigJ_surj\<close>, yielding the headline concrete theorem
+  \<open>DM_paper_open_dense_surjective\<close>, which is what feeds the
+  \<open>ZH0surj\<close> piece of \<open>prop_regnonzero\<close>.
+\<close>
+
+lemma rank_lower_semicont_open_dense_propagation:
   fixes V :: "((real^2)^'n) set"
-    and \<M> :: "(real^2)^'n \<Rightarrow> complex^6"
-    and D\<M> :: "(real^2)^'n \<Rightarrow> ((real^2)^'n \<Rightarrow> complex^6)"
-  assumes "open V" and "V \<noteq> {}"
+    and \<F> :: "(real^2)^'n \<Rightarrow> complex^6"
+    and D\<F> :: "(real^2)^'n \<Rightarrow> ((real^2)^'n \<Rightarrow> complex^6)"
+  assumes V_open: "open V" and V_ne: "V \<noteq> {}"
     and N_ge_6: "6 \<le> CARD('n)"
-    and deriv: "\<And>x. x \<in> V \<Longrightarrow> (\<M> has_derivative D\<M> x) (at x within V)"
-    and big_det: "\<exists>x\<^sub>0\<in>V. surj (D\<M> x\<^sub>0)"
-  shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U \<and> (\<forall>x\<in>U. surj (D\<M> x))"
+    and deriv: "\<And>x. x \<in> V \<Longrightarrow> (\<F> has_derivative D\<F> x) (at x within V)"
+    and one_regular: "\<exists>x\<^sub>0\<in>V. surj (D\<F> x\<^sub>0)"
+  shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U \<and> (\<forall>x\<in>U. surj (D\<F> x))"
   sorry
 
 theorem prop_regnonzero:

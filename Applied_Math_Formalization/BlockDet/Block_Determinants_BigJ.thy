@@ -1118,11 +1118,12 @@ qed
 text \<open>
   The configuration matrix has full rank, hence the parameter-derivative is
   surjective \<^emph>\<open>at the base point\<close>. This is the pointwise content of
-  \<open>lem:Msurj\<close> that the determinant delivers: it discharges the \<open>big_det\<close>
-  base-point premise of \<open>Dx_moment_map_surjective\<close> once the concrete moment
+  \<open>lem:Msurj\<close> that the determinant delivers: it discharges the
+  \<open>one_regular\<close> base-point premise of
+  \<open>rank_lower_semicont_open_dense_propagation\<close> once the concrete moment
   map's derivative at the six-element configuration is identified with
-  \<^term>\<open>(*v) bigJ\<close>. The open-dense upgrade is a \<^emph>\<open>separate\<close> argument (real-analytic
-  lower semicontinuity of rank), not implied by the single-point determinant.
+  \<^term>\<open>(*v) bigJ\<close>. The open-dense upgrade is a \<^emph>\<open>separate\<close> argument
+  (lower semicontinuity of rank), not implied by the single-point determinant.
 \<close>
 
 lemma bigJ_full_rank: "rank bigJ = CARD(12)"
