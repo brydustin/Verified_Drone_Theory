@@ -7,6 +7,7 @@ theory Nonemptiness_Paper
     Regular_Value_Theorem
     Applied_Math_BlockDet.Block_Determinants
     Applied_Math_BlockDet.Block_Determinants_BigJ
+    Applied_Math_BlockDet.Moment_Map
     "Perron_Frobenius.HMA_Connect"
     "HOL-Complex_Analysis.Conformal_Mappings"
 begin
@@ -35,7 +36,6 @@ text \<open>
 
 
 type_synonym angle = "real^2"   (* (theta, phi) as a 2-vector *)
-type_synonym planar = "real^2"
 
 section \<open>Cartesian Array Factor and Steered Derivatives\<close>
 
@@ -3388,84 +3388,12 @@ text \<open>The full bigJ determinant chain (\<open>bigJ\<close>, \<open>Jperm\<
     \<open>bigJ_full_rank\<close>, \<open>bigJ_surj\<close>) lives in \<open>Block_Determinants_BigJ\<close> in the
     \<open>Applied_Math_BlockDet\<close> heap.\<close>
 
-
-subsection \<open>The paper's six-component moment map\<close>
-
-text \<open>
-  TeX (Section ``Moment-space form of the bad-point map'') defines, for each
-  configuration \<open>x = (p\<^sub>1, \<dots>, p\<^sub>N) \<in> (\<real>\<^sup>2)\<^sup>N\<close> and each
-  parameter \<open>c \<in> \<real>\<^sup>2\<close>,
-  \begin{align*}
-    A      &= \textstyle\sum_n e^{-\imath\, c\cdot p_n},\\
-    M_k    &= \textstyle\sum_n p_{n,k}\, e^{-\imath\, c\cdot p_n},
-              \quad k=1,2,\\
-    M_{kl} &= \textstyle\sum_n p_{n,k} p_{n,l}\, e^{-\imath\, c\cdot p_n},
-              \quad (k,l) \in \{(1,1),(1,2),(2,2)\}.
-  \end{align*}
-  These six complex numbers are bundled into the moment map
-  \<open>M_paper : (\<real>\<^sup>2)\<^sup>N \<times> \<real>\<^sup>2 \<rightarrow> \<complex>\<^sup>6\<close>.
-
-  All six are weighted variants of \<^const>\<open>A_cart\<close> with a constant
-  \<^term>\<open>cvec\<close> (the dummy \<open>\<omega>\<close>-dependence is irrelevant when the wavevector
-  argument is constant in \<open>\<omega>\<close>). We define each moment directly so that the
-  Jacobian identification \<open>D(M_paper)(x\<^sub>0) = (*v) bigJ\<close> can be checked
-  entry-by-entry against the column formulas of TeX Section ``Surjectivity
-  of the moment map''.
-\<close>
-
-definition A_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
-  where "A_moment x c = (\<Sum>n\<in>UNIV. cis (-(c \<bullet> (x $ n))))"
-
-definition M1_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
-  where "M1_moment x c
-           = (\<Sum>n\<in>UNIV. of_real ((x $ n) $ 1) * cis (-(c \<bullet> (x $ n))))"
-
-definition M2_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
-  where "M2_moment x c
-           = (\<Sum>n\<in>UNIV. of_real ((x $ n) $ 2) * cis (-(c \<bullet> (x $ n))))"
-
-definition M11_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
-  where "M11_moment x c
-           = (\<Sum>n\<in>UNIV. of_real (((x $ n) $ 1)\<^sup>2) * cis (-(c \<bullet> (x $ n))))"
-
-definition M12_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
-  where "M12_moment x c
-           = (\<Sum>n\<in>UNIV. of_real (((x $ n) $ 1) * ((x $ n) $ 2))
-                       * cis (-(c \<bullet> (x $ n))))"
-
-definition M22_moment :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex"
-  where "M22_moment x c
-           = (\<Sum>n\<in>UNIV. of_real (((x $ n) $ 2)\<^sup>2) * cis (-(c \<bullet> (x $ n))))"
-
-text \<open>
-  The moment map itself, packaged as a \<^typ>\<open>complex^6\<close>-valued function. The
-  component order at indices \<open>1,2,3,4,5,6\<close> is
-  \<open>(A, M\<^sub>1, M\<^sub>2, M\<^sub>1\<^sub>1, M\<^sub>1\<^sub>2, M\<^sub>2\<^sub>2)\<close>, matching the row order of \<^const>\<open>bigJ\<close>
-  (real parts even, imaginary parts odd, paired): \<open>\<real>A,\<I>A, \<real>M\<^sub>1,\<I>M\<^sub>1, \<dots>,
-  \<real>M\<^sub>2\<^sub>2,\<I>M\<^sub>2\<^sub>2\<close>.
-\<close>
-
-definition M_paper :: "(planar^'n) \<Rightarrow> planar \<Rightarrow> complex^6"
-  where
-  "M_paper x c = vector
-    [ A_moment   x c,
-      M1_moment  x c,
-      M2_moment  x c,
-      M11_moment x c,
-      M12_moment x c,
-      M22_moment x c ]"
-
-text \<open>Convenience: project the \<open>k\<close>-th moment out by name.\<close>
-
-lemma M_paper_components [simp]:
-  shows "M_paper x c $ 1 = A_moment   x c"
-    and "M_paper x c $ 2 = M1_moment  x c"
-    and "M_paper x c $ 3 = M2_moment  x c"
-    and "M_paper x c $ 4 = M11_moment x c"
-    and "M_paper x c $ 5 = M12_moment x c"
-    and "M_paper x c $ 6 = M22_moment x c"
-  unfolding M_paper_def by simp_all
-
+text \<open>The phase factor \<^const>\<open>phase\<close>, the six moment functions
+  \<^const>\<open>A_moment\<close>, \<^const>\<open>M1_moment\<close>, <dots>, \<^const>\<open>M22_moment\<close>,
+  the bundled \<^const>\<open>M_paper\<close>, and all of Layers 1--4 of the Fréchet
+  derivative infrastructure (per-term and per-moment derivative lemmas)
+  now live in @{theory Applied_Math_BlockDet.Moment_Map}, which is
+  baked into the \<open>Applied_Math_BlockDet\<close> heap.\<close>
 
 subsection \<open>The canonical six-element base configuration\<close>
 
@@ -3541,6 +3469,156 @@ text \<open>\<open>c = \<kappa> e\<^sub>\<parallel>\<close> with \<open>\<kappa>
 
 lemma c0_paper_nonzero: "c0_paper \<noteq> 0"
   using c0_paper_entries(1) by fastforce
+
+
+
+text \<open>\<^bold>\<open>Layer 5.\<close> Assemble the six components into the vector-valued
+  derivative \<open>D\<^sub>x M_paper\<close>.\<close>
+
+definition DA_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DA_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV. d_phase c x h i)"
+
+definition DM1_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM1_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real ((h $ i) $ 1) * phase c x i
+        + of_real ((x $ i) $ 1) * d_phase c x h i)"
+
+definition DM2_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM2_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real ((h $ i) $ 2) * phase c x i
+        + of_real ((x $ i) $ 2) * d_phase c x h i)"
+
+definition DM11_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM11_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real (2 * ((x $ i) $ 1) * ((h $ i) $ 1)) * phase c x i
+        + of_real (((x $ i) $ 1)\<^sup>2) * d_phase c x h i)"
+
+definition DM12_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM12_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real (dw_M12 (x $ i) (h $ i)) * phase c x i
+        + of_real (w_M12 (x $ i)) * d_phase c x h i)"
+
+definition DM22_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM22_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real (2 * ((x $ i) $ 2) * ((h $ i) $ 2)) * phase c x i
+        + of_real (((x $ i) $ 2)\<^sup>2) * d_phase c x h i)"
+
+definition DM_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> ((planar^'n) \<Rightarrow> complex^6)"
+where
+  "DM_paper_x x c =
+     (\<lambda>h. \<chi> k.
+        if k = 1 then DA_paper_x x c h
+        else if k = 2 then DM1_paper_x x c h
+        else if k = 3 then DM2_paper_x x c h
+        else if k = 4 then DM11_paper_x x c h
+        else if k = 5 then DM12_paper_x x c h
+        else DM22_paper_x x c h)"
+
+lemma has_derivative_M_paper_x:
+  fixes c :: planar and x :: "planar^'n"
+  shows "((\<lambda>y. M_paper y c) has_derivative DM_paper_x x c) (at x within V)"
+proof -
+  have comps:
+    "\<forall>k :: 6. ((\<lambda>y. M_paper y c $ k) has_derivative (\<lambda>h. DM_paper_x x c h $ k))
+              (at x within V)"
+  proof (intro allI)
+    fix k :: 6
+    consider "k = 1" | "k = 2" | "k = 3" | "k = 4" | "k = 5" | "k = 6"
+      using exhaust_6 by metis
+    thus "((\<lambda>y. M_paper y c $ k) has_derivative (\<lambda>h. DM_paper_x x c h $ k))
+            (at x within V)"
+    proof cases
+      case 1 thus ?thesis
+        using has_derivative_A_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DA_paper_x_def d_A_moment_x_def)
+    next
+      case 2 thus ?thesis
+        using has_derivative_M1_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM1_paper_x_def d_M1_moment_x_def)
+    next
+      case 3 thus ?thesis
+        using has_derivative_M2_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM2_paper_x_def d_M2_moment_x_def)
+    next
+      case 4 thus ?thesis
+        using has_derivative_M11_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM11_paper_x_def d_M11_moment_x_def)
+    next
+      case 5 thus ?thesis
+        using has_derivative_M12_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM12_paper_x_def d_M12_moment_x_def)
+    next
+      case 6 thus ?thesis
+        using has_derivative_M22_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM22_paper_x_def d_M22_moment_x_def)
+    qed
+  qed
+  have vec_der:
+    "((\<lambda>y. \<chi> k. M_paper y c $ k) has_derivative (\<lambda>h. \<chi> k. DM_paper_x x c h $ k))
+     (at x within V)"
+  proof (subst has_derivative_componentwise_within, intro ballI)
+    fix b :: "complex^6" assume bB: "b \<in> Basis"
+    from bB obtain k :: 6 and e :: complex
+      where b_eq: "b = axis k e" and e_basis: "e \<in> Basis"
+      unfolding Basis_vec_def by auto
+    have indiv:
+      "((\<lambda>y. M_paper y c $ k) has_derivative (\<lambda>h. DM_paper_x x c h $ k))
+       (at x within V)"
+      using comps by blast
+    have inner_d:
+      "((\<lambda>z :: complex. z \<bullet> e) has_derivative (\<lambda>z. z \<bullet> e))
+         (at (M_paper x c $ k) within (\<lambda>y. M_paper y c $ k) ` V)"
+      using bounded_linear_inner_left[of e] has_derivative_ident
+      by (rule bounded_linear.has_derivative)       
+    have d_compose:
+      "((\<lambda>y. (M_paper y c $ k) \<bullet> e) has_derivative
+          (\<lambda>h. (DM_paper_x x c h $ k) \<bullet> e))
+       (at x within V)"
+      using has_derivative_in_compose[OF indiv inner_d]
+      by (simp add: o_def)
+    show "((\<lambda>y. (\<chi> k. M_paper y c $ k) \<bullet> b) has_derivative
+           (\<lambda>y. (\<chi> k. DM_paper_x x c y $ k) \<bullet> b))
+          (at x within V)"
+      using d_compose by (simp add: b_eq inner_axis)
+  qed
+
+  have lhs: "(\<lambda>y. \<chi> k. M_paper y c $ k) = (\<lambda>y. M_paper y c)"
+    by (simp add: fun_eq_iff vec_eq_iff)
+  have rhs: "(\<lambda>h. \<chi> k. DM_paper_x x c h $ k) = DM_paper_x x c"
+    by (simp add: fun_eq_iff vec_eq_iff)
+
+  show ?thesis
+    using vec_der by (simp only: lhs rhs)
+qed
+
+lemma DM_paper_x_components:
+  shows "DM_paper_x x c h $ 1 = DA_paper_x x c h"
+    and "DM_paper_x x c h $ 2 = DM1_paper_x x c h"
+    and "DM_paper_x x c h $ 3 = DM2_paper_x x c h"
+    and "DM_paper_x x c h $ 4 = DM11_paper_x x c h"
+    and "DM_paper_x x c h $ 5 = DM12_paper_x x c h"
+    and "DM_paper_x x c h $ 6 = DM22_paper_x x c h"
+  unfolding DM_paper_x_def
+  by simp_all
 
 
 text \<open>

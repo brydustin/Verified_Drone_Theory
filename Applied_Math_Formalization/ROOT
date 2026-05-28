@@ -15,6 +15,7 @@ session Applied_Math_BlockDet in "BlockDet" = Applied_Math_Base +
   theories
     Block_Determinants
     Block_Determinants_BigJ
+    Moment_Map
 
 session Applied_Math_Nonemptiness in "." = Applied_Math_BlockDet +
   options [document = false, quick_and_dirty = true, timeout = 3600]
