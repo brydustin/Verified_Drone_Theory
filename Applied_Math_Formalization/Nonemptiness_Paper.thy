@@ -3815,6 +3815,259 @@ lemma det_A: "det A = - sqrt 3 * pi^6 / 18"
   by simp
 
 
+subsection \<open>The \<open>6\<times>6\<close> \<open>D\<close>-block: \<open>det D = -10\<sqrt>3 \<pi>\<^sup>2\<close>\<close>
+
+text \<open>
+  Factor \<open>\<pi>\<^sup>2\<close> from rows \<open>3,4\<close> of \<open>D\<close> to get the constant matrix \<open>E\<close>;
+  later we reduce \<open>E\<close> to upper-triangular via row-adds.
+\<close>
+
+definition D :: "real^6^6" where
+  "D = vector
+    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
+      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [0, pi / 6, - pi / 3, - pi, -2 * pi / 3, 5 * pi / 6],
+      vector [0, - pi * sqrt 3 / 6, - pi * sqrt 3 / 3, 0,
+              2 * pi * sqrt 3 / 3, 5 * pi * sqrt 3 / 6],
+      vector [4, 2, 0, 0, -2, 2],
+      vector [0, -2 * sqrt 3, 0, 0, 2 * sqrt 3, 2 * sqrt 3] ]"
+
+definition E :: "real^6^6" where
+  "E = vector
+    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
+      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [0, 1/6, -1/3, -1, -2/3, 5/6],
+      vector [0, - sqrt 3 / 6, - sqrt 3 / 3, 0, 2 * sqrt 3 / 3, 5 * sqrt 3 / 6],
+      vector [4, 2, 0, 0, -2, 2],
+      vector [0, -2 * sqrt 3, 0, 0, 2 * sqrt 3, 2 * sqrt 3] ]"
+
+subsubsection \<open>Factor \<open>\<pi>\<^sup>2\<close>: \<open>det D = \<pi>\<^sup>2 \<cdot> det E\<close>\<close>
+
+lemma det_D_eq_pi2_det_E: "det D = pi^2 * det E"
+proof -
+  have row1_eq: "row 1 D = row 1 E"
+    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
+  have row2_eq: "row 2 D = row 2 E"
+    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
+  have row3_eq: "row 3 D = pi *s row 3 E"
+    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
+  have row4_eq: "row 4 D = pi *s row 4 E"
+    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
+  have row5_eq: "row 5 D = row 5 E"
+    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
+  have row6_eq: "row 6 D = row 6 E"
+    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
+
+  define M\<^sub>1 :: "real^6^6"
+    where "M\<^sub>1 = (\<chi> k. if k = 3 then row 3 E else row k D)"
+  define M\<^sub>2 :: "real^6^6"
+    where "M\<^sub>2 = (\<chi> k. if k = 4 then row 4 E else row k M\<^sub>1)"
+
+  text \<open>Factor \<open>\<pi>\<close> from row \<open>3\<close>.\<close>
+  have D_chi3: "D = (\<chi> i. if i = 3 then pi *s row 3 E else row i D)"
+    using row3_eq by (auto simp: vec_eq_iff row_def)
+  have step1: "det D = pi * det M\<^sub>1"
+  proof -
+    have "det (\<chi> i. if i = (3::6) then pi *s (\<lambda>_. row 3 E) i else (\<lambda>i. row i D) i)
+        = pi * det (\<chi> i. if i = 3 then (\<lambda>_. row 3 E) i else (\<lambda>i. row i D) i)"
+      by (rule det_row_mul)
+    thus ?thesis using D_chi3 by (simp add: M\<^sub>1_def)
+  qed
+
+  text \<open>Factor \<open>\<pi>\<close> from row \<open>4\<close> of \<open>M\<^sub>1\<close>.\<close>
+  have M1_row4: "row 4 M\<^sub>1 = pi *s row 4 E"
+    using row4_eq by (simp add: M\<^sub>1_def row_def vec_eq_iff)
+  have M1_chi4: "M\<^sub>1 = (\<chi> i. if i = 4 then pi *s row 4 E else row i M\<^sub>1)"
+    using M1_row4 by (auto simp: vec_eq_iff row_def)
+  have step2: "det M\<^sub>1 = pi * det M\<^sub>2"
+  proof -
+    have "det (\<chi> i. if i = (4::6) then pi *s (\<lambda>_. row 4 E) i else (\<lambda>i. row i M\<^sub>1) i)
+        = pi * det (\<chi> i. if i = 4 then (\<lambda>_. row 4 E) i else (\<lambda>i. row i M\<^sub>1) i)"
+      by (rule det_row_mul)
+    thus ?thesis using M1_chi4 by (simp add: M\<^sub>2_def)
+  qed
+
+  text \<open>\<open>M\<^sub>2 = E\<close>: rows \<open>3,4\<close> set to \<open>E\<close>'s, rows \<open>1,2,5,6\<close> already match.\<close>
+  have M2_eq_E: "M\<^sub>2 = E"
+    unfolding M\<^sub>2_def M\<^sub>1_def vec_eq_iff
+    using row1_eq row2_eq row5_eq row6_eq
+    by (auto simp: forall_6 row_def)
+
+  have "det D = pi * (pi * det M\<^sub>2)" using step1 step2 by simp
+  also have "\<dots> = (pi * pi) * det E" using M2_eq_E by (simp add: algebra_simps)
+  also have "\<dots> = pi^2 * det E" by (simp add: power2_eq_square)
+  finally show ?thesis .
+qed
+
+subsubsection \<open>Row-reduction chain for \<open>E\<close> (to upper-triangular \<open>E\<^sub>5\<close>)\<close>
+
+text \<open>\<open>E\<^sub>1\<close>: \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 - 4 R\<^sub>1\<close>, \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - 4 R\<^sub>2\<close>.\<close>
+
+definition E\<^sub>1 :: "real^6^6" where
+  "E\<^sub>1 = vector
+    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
+      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [0, 1/6, -1/3, -1, -2/3, 5/6],
+      vector [0, - sqrt 3 / 6, - sqrt 3 / 3, 0, 2 * sqrt 3 / 3, 5 * sqrt 3 / 6],
+      vector [0, 0, 2, 4, 0, 0],
+      vector [0, 0, 2 * sqrt 3, 0, 0, 0] ]"
+
+lemma det_E_eq_det_E\<^sub>1: "det E = det E\<^sub>1"
+proof -
+  define V\<^sub>1 :: "real^6^6"
+    where "V\<^sub>1 = (\<chi> k. if k = 5 then row 5 E + (-4) *s row 1 E else row k E)"
+  define V\<^sub>2 :: "real^6^6"
+    where "V\<^sub>2 = (\<chi> k. if k = 6 then row 6 V\<^sub>1 + (-4) *s row 2 V\<^sub>1 else row k V\<^sub>1)"
+  have d1: "det V\<^sub>1 = det E"
+    unfolding V\<^sub>1_def by (rule det_row_operation) auto
+  have d2: "det V\<^sub>2 = det V\<^sub>1"
+    unfolding V\<^sub>2_def by (rule det_row_operation) auto
+  have eq: "V\<^sub>2 = E\<^sub>1"
+    unfolding V\<^sub>2_def V\<^sub>1_def E_def E\<^sub>1_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps)
+  show ?thesis using d1 d2 eq by simp
+qed
+
+text \<open>\<open>E\<^sub>2\<close>: \<open>R\<^sub>3 \<leftarrow> R\<^sub>3 + (\<sqrt>3/9) R\<^sub>2\<close>, \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - (1/3) R\<^sub>2\<close>.\<close>
+
+definition E\<^sub>2 :: "real^6^6" where
+  "E\<^sub>2 = vector
+    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
+      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [0, 0, -1/2, -1, -1/2, 1],
+      vector [0, 0, - sqrt 3 / 6, 0, sqrt 3 / 2, 2 * sqrt 3 / 3],
+      vector [0, 0, 2, 4, 0, 0],
+      vector [0, 0, 2 * sqrt 3, 0, 0, 0] ]"
+
+lemma det_E\<^sub>1_eq_det_E\<^sub>2: "det E\<^sub>1 = det E\<^sub>2"
+proof -
+  define W\<^sub>1 :: "real^6^6"
+    where "W\<^sub>1 = (\<chi> k. if k = 3 then row 3 E\<^sub>1 + (sqrt 3 / 9) *s row 2 E\<^sub>1 else row k E\<^sub>1)"
+  define W\<^sub>2 :: "real^6^6"
+    where "W\<^sub>2 = (\<chi> k. if k = 4 then row 4 W\<^sub>1 + (-1/3) *s row 2 W\<^sub>1 else row k W\<^sub>1)"
+  have d1: "det W\<^sub>1 = det E\<^sub>1"
+    unfolding W\<^sub>1_def by (rule det_row_operation) auto
+  have d2: "det W\<^sub>2 = det W\<^sub>1"
+    unfolding W\<^sub>2_def by (rule det_row_operation) auto
+  have eq: "W\<^sub>2 = E\<^sub>2"
+    unfolding W\<^sub>2_def W\<^sub>1_def E\<^sub>1_def E\<^sub>2_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps power2_eq_square)
+  show ?thesis using d1 d2 eq by simp
+qed
+
+text \<open>\<open>E\<^sub>3\<close>: \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - (\<sqrt>3/3) R\<^sub>3\<close>, \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 + 4 R\<^sub>3\<close>, \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + 4\<sqrt>3 R\<^sub>3\<close>.\<close>
+
+definition E\<^sub>3 :: "real^6^6" where
+  "E\<^sub>3 = vector
+    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
+      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [0, 0, -1/2, -1, -1/2, 1],
+      vector [0, 0, 0, sqrt 3 / 3, 2 * sqrt 3 / 3, sqrt 3 / 3],
+      vector [0, 0, 0, 0, -2, 4],
+      vector [0, 0, 0, -4 * sqrt 3, -2 * sqrt 3, 4 * sqrt 3] ]"
+
+lemma det_E\<^sub>2_eq_det_E\<^sub>3: "det E\<^sub>2 = det E\<^sub>3"
+proof -
+  define Y\<^sub>1 :: "real^6^6"
+    where "Y\<^sub>1 = (\<chi> k. if k = 4 then row 4 E\<^sub>2 + (- sqrt 3 / 3) *s row 3 E\<^sub>2 else row k E\<^sub>2)"
+  define Y\<^sub>2 :: "real^6^6"
+    where "Y\<^sub>2 = (\<chi> k. if k = 5 then row 5 Y\<^sub>1 + 4 *s row 3 Y\<^sub>1 else row k Y\<^sub>1)"
+  define Y\<^sub>3 :: "real^6^6"
+    where "Y\<^sub>3 = (\<chi> k. if k = 6 then row 6 Y\<^sub>2 + (4 * sqrt 3) *s row 3 Y\<^sub>2 else row k Y\<^sub>2)"
+  have d1: "det Y\<^sub>1 = det E\<^sub>2"
+    unfolding Y\<^sub>1_def by (rule det_row_operation) auto
+  have d2: "det Y\<^sub>2 = det Y\<^sub>1"
+    unfolding Y\<^sub>2_def by (rule det_row_operation) auto
+  have d3: "det Y\<^sub>3 = det Y\<^sub>2"
+    unfolding Y\<^sub>3_def by (rule det_row_operation) auto
+  have eq: "Y\<^sub>3 = E\<^sub>3"
+    unfolding Y\<^sub>3_def Y\<^sub>2_def Y\<^sub>1_def E\<^sub>2_def E\<^sub>3_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps power2_eq_square)
+  show ?thesis using d1 d2 d3 eq by simp
+qed
+
+text \<open>\<open>E\<^sub>4\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + 12 R\<^sub>4\<close>.\<close>
+
+definition E\<^sub>4 :: "real^6^6" where
+  "E\<^sub>4 = vector
+    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
+      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [0, 0, -1/2, -1, -1/2, 1],
+      vector [0, 0, 0, sqrt 3 / 3, 2 * sqrt 3 / 3, sqrt 3 / 3],
+      vector [0, 0, 0, 0, -2, 4],
+      vector [0, 0, 0, 0, 6 * sqrt 3, 8 * sqrt 3] ]"
+
+lemma det_E\<^sub>3_eq_det_E\<^sub>4: "det E\<^sub>3 = det E\<^sub>4"
+proof -
+  define Z :: "real^6^6"
+    where "Z = (\<chi> k. if k = 6 then row 6 E\<^sub>3 + 12 *s row 4 E\<^sub>3 else row k E\<^sub>3)"
+  have d: "det Z = det E\<^sub>3"
+    unfolding Z_def by (rule det_row_operation) auto
+  have eq: "Z = E\<^sub>4"
+    unfolding Z_def E\<^sub>3_def E\<^sub>4_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps)
+  show ?thesis using d eq by simp
+qed
+
+text \<open>\<open>E\<^sub>5\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + 3\<sqrt>3 R\<^sub>5\<close>. Upper triangular.\<close>
+
+definition E\<^sub>5 :: "real^6^6" where
+  "E\<^sub>5 = vector
+    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
+      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
+      vector [0, 0, -1/2, -1, -1/2, 1],
+      vector [0, 0, 0, sqrt 3 / 3, 2 * sqrt 3 / 3, sqrt 3 / 3],
+      vector [0, 0, 0, 0, -2, 4],
+      vector [0, 0, 0, 0, 0, 20 * sqrt 3] ]"
+
+lemma det_E\<^sub>4_eq_det_E\<^sub>5: "det E\<^sub>4 = det E\<^sub>5"
+proof -
+  define Z :: "real^6^6"
+    where "Z = (\<chi> k. if k = 6 then row 6 E\<^sub>4 + (3 * sqrt 3) *s row 5 E\<^sub>4 else row k E\<^sub>4)"
+  have d: "det Z = det E\<^sub>4"
+    unfolding Z_def by (rule det_row_operation) auto
+  have eq: "Z = E\<^sub>5"
+    unfolding Z_def E\<^sub>4_def E\<^sub>5_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps power2_eq_square)
+  show ?thesis using d eq by simp
+qed
+
+subsubsection \<open>Read off \<open>det E\<^sub>5\<close> from the diagonal\<close>
+
+lemma det_E\<^sub>5: "det E\<^sub>5 = -10 * sqrt 3"
+proof -
+  text \<open>Sparse: brute-force perm sum collapses to the diagonal product.\<close>
+  have f1: "finite {2::6, 3, 4, 5, 6}" "1 \<notin> {2::6, 3, 4, 5, 6}" by auto
+  have f2: "finite {3::6, 4, 5, 6}"    "2 \<notin> {3::6, 4, 5, 6}"    by auto
+  have f3: "finite {4::6, 5, 6}"       "3 \<notin> {4::6, 5, 6}"       by auto
+  have f4: "finite {5::6, 6}"          "4 \<notin> {5::6, 6}"          by auto
+  have f5: "finite {6::6}"             "5 \<notin> {6::6}"             by auto
+  show ?thesis
+    unfolding E\<^sub>5_def det_def UNIV_6
+    unfolding sum_over_permutations_insert[OF f1]
+    unfolding sum_over_permutations_insert[OF f2]
+    unfolding sum_over_permutations_insert[OF f3]
+    unfolding sum_over_permutations_insert[OF f4]
+    unfolding sum_over_permutations_insert[OF f5]
+    unfolding permutes_sing
+    by (simp add: sign_swap_id permutation_swap_id sign_compose sign_id swap_id_eq
+                  field_simps power2_eq_square)
+qed
+
+subsubsection \<open>Combining: \<open>det D = -10\<sqrt>3 \<pi>\<^sup>2\<close>\<close>
+
+lemma det_D: "det D = -10 * sqrt 3 * pi^2"
+proof -
+  have "det D = pi^2 * det E" by (rule det_D_eq_pi2_det_E)
+  also have "\<dots> = pi^2 * det E\<^sub>5"
+    using det_E_eq_det_E\<^sub>1 det_E\<^sub>1_eq_det_E\<^sub>2 det_E\<^sub>2_eq_det_E\<^sub>3
+          det_E\<^sub>3_eq_det_E\<^sub>4 det_E\<^sub>4_eq_det_E\<^sub>5 by simp
+  also have "\<dots> = pi^2 * (-10 * sqrt 3)" by (simp add: det_E\<^sub>5)
+  also have "\<dots> = -10 * sqrt 3 * pi^2" by simp
+  finally show ?thesis .
+qed
+
+
 definition bigJ :: "real^12^12" where
   "bigJ = vector
     [ vector [0, 0, - sqrt 3 / 2, 0, - sqrt 3 / 2, 0, 0, 0, sqrt 3 / 2, 0, sqrt 3 / 2, 0],
