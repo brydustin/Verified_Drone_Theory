@@ -3394,6 +3394,30 @@ lemma UNIV_6: "UNIV = {1, 2, 3, 4, 5, 6::6}"
 lemma sum_6: "sum f (UNIV::6 set) = f 1 + f 2 + f 3 + f 4 + f 5 + f 6"
   unfolding UNIV_6 by (simp add: ac_simps)
 
+lemma forall_5: "(\<forall>i::5. P i) \<longleftrightarrow> P 1 \<and> P 2 \<and> P 3 \<and> P 4 \<and> P 5"
+  by (metis exhaust_5)
+
+lemma forall_6:
+  "(\<forall>i::6. P i) \<longleftrightarrow> P 1 \<and> P 2 \<and> P 3 \<and> P 4 \<and> P 5 \<and> P 6"
+  by (metis exhaust_6)
+
+lemma vector_5 [simp]:
+ "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 1 = a"
+ "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 2 = b"
+ "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 3 = c"
+ "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 4 = d"
+ "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 5 = e"
+  unfolding vector_def by simp_all
+
+lemma vector_6 [simp]:
+ "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 1 = a"
+ "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 2 = b"
+ "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 3 = c"
+ "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 4 = d"
+ "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 5 = e"
+ "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 6 = f"
+  unfolding vector_def by simp_all
+
 
 text \<open>
   The explicit \<open>12 \<times> 12\<close> real Jacobian minor \<open>J\<close> of \<open>D\<^sub>x M\<close> at the chosen
@@ -3420,8 +3444,207 @@ definition B :: "real^6^6" where
       vector [0,  - sqrt 3 / 18,   - 2 * sqrt 3 / 9, 0,  8 * sqrt 3 / 9,  25 * sqrt 3 / 18],
       vector [0,  -1/18,           2/9,              1,  8/9,             -25/18] ]"
 
+text \<open>
+  \<^bold>\<open>Row-reduction chain for \<open>det B\<close>.\<close> Brute-force unfolding of the 720-term
+  permutation sum is intractable; instead we transform \<open>B\<close> to an upper-
+  triangular \<open>B\<^sub>5\<close> through five determinant-preserving (or sign-flipping)
+  row operations, then read off the determinant from the diagonal.
+
+  \begin{itemize}
+  \item \<open>B\<^sub>1\<close>: swap rows \<open>1\<close> and \<open>2\<close> (\<open>det\<close> negated).
+  \item \<open>B\<^sub>2\<close>: eliminate column \<open>2\<close> below row \<open>2\<close> (four row-adds, \<open>det\<close>
+        preserved).
+  \item \<open>B\<^sub>3\<close>: eliminate column \<open>3\<close> below row \<open>3\<close> (three row-adds).
+  \item \<open>B\<^sub>4\<close>: eliminate column \<open>4\<close> below row \<open>4\<close> (one row-add).
+  \item \<open>B\<^sub>5\<close>: eliminate column \<open>5\<close> below row \<open>5\<close> (one row-add). Upper
+        triangular; diagonal product \<open>= \<sqrt>3/18\<close>.
+  \end{itemize}
+\<close>
+
+subsubsection \<open>Step 1: swap rows \<open>1\<close> and \<open>2\<close>\<close>
+
+definition B\<^sub>1 :: "real^6^6" where
+  "B\<^sub>1 = vector
+    [ vector [-1, -1/2,            1/2,              1,  1/2,             -1/2],
+      vector [0,  - sqrt 3 / 2,    - sqrt 3 / 2,     0,  sqrt 3 / 2,      sqrt 3 / 2],
+      vector [0,  - sqrt 3 / 6,    - sqrt 3 / 3,     0,  2 * sqrt 3 / 3,  5 * sqrt 3 / 6],
+      vector [0,  -1/6,            1/3,              1,  2/3,             -5/6],
+      vector [0,  - sqrt 3 / 18,   - 2 * sqrt 3 / 9, 0,  8 * sqrt 3 / 9,  25 * sqrt 3 / 18],
+      vector [0,  -1/18,           2/9,              1,  8/9,             -25/18] ]"
+
+lemma det_B_eq_neg_det_B\<^sub>1: "det B = - det B\<^sub>1"
+proof -
+  let ?\<sigma> = "Fun.swap (1::6) 2 id"
+  have perm: "?\<sigma> permutes UNIV"
+    by (simp add: permutes_swap_id)
+  have eq: "B\<^sub>1 = (\<chi> i. B $ (?\<sigma> i))"
+    unfolding B_def B\<^sub>1_def vec_eq_iff
+    by (auto simp: forall_6 Fun.swap_def vector_def)
+  have "det B\<^sub>1 = of_int (sign ?\<sigma>) * det B"
+    using det_permute_rows[OF perm, of B] eq by simp
+  also have "\<dots> = - det B"
+    by (simp add: sign_swap_id)
+  finally show ?thesis by simp
+qed
+
+subsubsection \<open>Step 2: eliminate column \<open>2\<close> below the pivot at row \<open>2\<close>\<close>
+
+text \<open>Four row-adds with pivot \<open>B\<^sub>1[2,2] = -\<sqrt>3/2\<close>:
+      \<open>R\<^sub>3 \<leftarrow> R\<^sub>3 - (1/3) R\<^sub>2\<close>,
+      \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - (\<sqrt>3/9) R\<^sub>2\<close>,
+      \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 - (1/9) R\<^sub>2\<close>,
+      \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - (\<sqrt>3/27) R\<^sub>2\<close>.\<close>
+
+definition B\<^sub>2 :: "real^6^6" where
+  "B\<^sub>2 = vector
+    [ vector [-1, -1/2,         1/2,          1,  1/2,             -1/2],
+      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,      sqrt 3 / 2],
+      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,      2 * sqrt 3 / 3],
+      vector [0,  0,            1/2,          1,  1/2,             -1],
+      vector [0,  0,            - sqrt 3 / 6, 0,  5 * sqrt 3 / 6,  4 * sqrt 3 / 3],
+      vector [0,  0,            5/18,         1,  5/6,             -13/9] ]"
+
+lemma det_B\<^sub>1_eq_det_B\<^sub>2: "det B\<^sub>1 = det B\<^sub>2"
+proof -
+  define X\<^sub>1 :: "real^6^6"
+    where "X\<^sub>1 = (\<chi> k. if k = 3 then row 3 B\<^sub>1 + (-1/3) *s row 2 B\<^sub>1 else row k B\<^sub>1)"
+  define X\<^sub>2 :: "real^6^6"
+    where "X\<^sub>2 = (\<chi> k. if k = 4 then row 4 X\<^sub>1 + (- sqrt 3 / 9) *s row 2 X\<^sub>1 else row k X\<^sub>1)"
+  define X\<^sub>3 :: "real^6^6"
+    where "X\<^sub>3 = (\<chi> k. if k = 5 then row 5 X\<^sub>2 + (-1/9) *s row 2 X\<^sub>2 else row k X\<^sub>2)"
+  define X\<^sub>4 :: "real^6^6"
+    where "X\<^sub>4 = (\<chi> k. if k = 6 then row 6 X\<^sub>3 + (- sqrt 3 / 27) *s row 2 X\<^sub>3 else row k X\<^sub>3)"
+  have d1: "det X\<^sub>1 = det B\<^sub>1"
+    unfolding X\<^sub>1_def by (rule det_row_operation) auto
+  have d2: "det X\<^sub>2 = det X\<^sub>1"
+    unfolding X\<^sub>2_def by (rule det_row_operation) auto
+  have d3: "det X\<^sub>3 = det X\<^sub>2"
+    unfolding X\<^sub>3_def by (rule det_row_operation) auto
+  have d4: "det X\<^sub>4 = det X\<^sub>3"
+    unfolding X\<^sub>4_def by (rule det_row_operation) auto
+  have eq: "X\<^sub>4 = B\<^sub>2"
+    unfolding X\<^sub>4_def X\<^sub>3_def X\<^sub>2_def X\<^sub>1_def B\<^sub>1_def B\<^sub>2_def vec_eq_iff
+    by (auto simp: forall_6 row_def vector_def field_simps power2_eq_square)
+  show ?thesis using d1 d2 d3 d4 eq by simp
+qed
+
+subsubsection \<open>Step 3: eliminate column \<open>3\<close> below the pivot at row \<open>3\<close>\<close>
+
+text \<open>Three row-adds with pivot \<open>B\<^sub>2[3,3] = -\<sqrt>3/6\<close>:
+      \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 + \<sqrt>3 R\<^sub>3\<close>,
+      \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 - R\<^sub>3\<close>,
+      \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + (5 \<sqrt>3/9) R\<^sub>3\<close>.\<close>
+
+definition B\<^sub>3 :: "real^6^6" where
+  "B\<^sub>3 = vector
+    [ vector [-1, -1/2,         1/2,          1,  1/2,         -1/2],
+      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,  sqrt 3 / 2],
+      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,  2 * sqrt 3 / 3],
+      vector [0,  0,            0,            1,  2,           1],
+      vector [0,  0,            0,            0,  sqrt 3 / 3,  2 * sqrt 3 / 3],
+      vector [0,  0,            0,            1,  5/3,         -1/3] ]"
+
+lemma det_B\<^sub>2_eq_det_B\<^sub>3: "det B\<^sub>2 = det B\<^sub>3"
+proof -
+  define Y\<^sub>1 :: "real^6^6"
+    where "Y\<^sub>1 = (\<chi> k. if k = 4 then row 4 B\<^sub>2 + sqrt 3 *s row 3 B\<^sub>2 else row k B\<^sub>2)"
+  define Y\<^sub>2 :: "real^6^6"
+    where "Y\<^sub>2 = (\<chi> k. if k = 5 then row 5 Y\<^sub>1 + (-1) *s row 3 Y\<^sub>1 else row k Y\<^sub>1)"
+  define Y\<^sub>3 :: "real^6^6"
+    where "Y\<^sub>3 = (\<chi> k. if k = 6 then row 6 Y\<^sub>2 + (5 * sqrt 3 / 9) *s row 3 Y\<^sub>2 else row k Y\<^sub>2)"
+  have d1: "det Y\<^sub>1 = det B\<^sub>2"
+    unfolding Y\<^sub>1_def by (rule det_row_operation) auto
+  have d2: "det Y\<^sub>2 = det Y\<^sub>1"
+    unfolding Y\<^sub>2_def by (rule det_row_operation) auto
+  have d3: "det Y\<^sub>3 = det Y\<^sub>2"
+    unfolding Y\<^sub>3_def by (rule det_row_operation) auto
+  have eq: "Y\<^sub>3 = B\<^sub>3"
+    unfolding Y\<^sub>3_def Y\<^sub>2_def Y\<^sub>1_def B\<^sub>2_def B\<^sub>3_def vec_eq_iff
+    by (auto simp: forall_6 row_def vector_def field_simps power2_eq_square)
+  show ?thesis using d1 d2 d3 eq by simp
+qed
+
+subsubsection \<open>Step 4: eliminate column \<open>4\<close> below the pivot at row \<open>4\<close>\<close>
+
+text \<open>One row-add with pivot \<open>B\<^sub>3[4,4] = 1\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - R\<^sub>4\<close>.
+      (\<open>B\<^sub>3[5,4]\<close> is already \<open>0\<close>.)\<close>
+
+definition B\<^sub>4 :: "real^6^6" where
+  "B\<^sub>4 = vector
+    [ vector [-1, -1/2,         1/2,          1,  1/2,         -1/2],
+      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,  sqrt 3 / 2],
+      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,  2 * sqrt 3 / 3],
+      vector [0,  0,            0,            1,  2,           1],
+      vector [0,  0,            0,            0,  sqrt 3 / 3,  2 * sqrt 3 / 3],
+      vector [0,  0,            0,            0,  -1/3,        -4/3] ]"
+
+lemma det_B\<^sub>3_eq_det_B\<^sub>4: "det B\<^sub>3 = det B\<^sub>4"
+proof -
+  define Z :: "real^6^6"
+    where "Z = (\<chi> k. if k = 6 then row 6 B\<^sub>3 + (-1) *s row 4 B\<^sub>3 else row k B\<^sub>3)"
+  have d: "det Z = det B\<^sub>3"
+    unfolding Z_def by (rule det_row_operation) auto
+  have eq: "Z = B\<^sub>4"
+    unfolding Z_def B\<^sub>3_def B\<^sub>4_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps)
+  show ?thesis using d eq by simp
+qed
+
+subsubsection \<open>Step 5: eliminate column \<open>5\<close> below the pivot at row \<open>5\<close>\<close>
+
+text \<open>One row-add with pivot \<open>B\<^sub>4[5,5] = \<sqrt>3/3\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + (\<sqrt>3/3) R\<^sub>5\<close>.\<close>
+
+definition B\<^sub>5 :: "real^6^6" where
+  "B\<^sub>5 = vector
+    [ vector [-1, -1/2,         1/2,          1,  1/2,         -1/2],
+      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,  sqrt 3 / 2],
+      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,  2 * sqrt 3 / 3],
+      vector [0,  0,            0,            1,  2,           1],
+      vector [0,  0,            0,            0,  sqrt 3 / 3,  2 * sqrt 3 / 3],
+      vector [0,  0,            0,            0,  0,           -2/3] ]"
+
+lemma det_B\<^sub>4_eq_det_B\<^sub>5: "det B\<^sub>4 = det B\<^sub>5"
+proof -
+  define W :: "real^6^6"
+    where "W = (\<chi> k. if k = 6 then row 6 B\<^sub>4 + (sqrt 3 / 3) *s row 5 B\<^sub>4 else row k B\<^sub>4)"
+  have d: "det W = det B\<^sub>4"
+    unfolding W_def by (rule det_row_operation) auto
+  have eq: "W = B\<^sub>5"
+    unfolding W_def B\<^sub>4_def B\<^sub>5_def vec_eq_iff
+    by (auto simp: forall_6 row_def field_simps power2_eq_square)
+  show ?thesis using d eq by simp
+qed
+
+subsubsection \<open>Step 6: read off \<open>det B\<^sub>5\<close> from the diagonal\<close>
+
+lemma det_B\<^sub>5: "det B\<^sub>5 = sqrt 3 / 18"
+proof -
+  text \<open>\<open>B\<^sub>5\<close> is upper triangular and sparse, so brute-forcing the 720-term
+        permutation sum is tractable: 719 terms vanish via \<open>0 \<cdot> _ = 0\<close>, leaving
+        only the identity-permutation product (the diagonal).\<close>
+  have f1: "finite {2::6, 3, 4, 5, 6}" "1 \<notin> {2::6, 3, 4, 5, 6}" by auto
+  have f2: "finite {3::6, 4, 5, 6}"    "2 \<notin> {3::6, 4, 5, 6}"    by auto
+  have f3: "finite {4::6, 5, 6}"       "3 \<notin> {4::6, 5, 6}"       by auto
+  have f4: "finite {5::6, 6}"          "4 \<notin> {5::6, 6}"          by auto
+  have f5: "finite {6::6}"             "5 \<notin> {6::6}"             by auto
+  show ?thesis
+    unfolding B\<^sub>5_def det_def UNIV_6
+    unfolding sum_over_permutations_insert[OF f1]
+    unfolding sum_over_permutations_insert[OF f2]
+    unfolding sum_over_permutations_insert[OF f3]
+    unfolding sum_over_permutations_insert[OF f4]
+    unfolding sum_over_permutations_insert[OF f5]
+    unfolding permutes_sing
+    apply (simp add: sign_swap_id permutation_swap_id sign_compose sign_id swap_id_eq
+                  field_simps power2_eq_square)
+qed
+
+subsubsection \<open>Combining the chain: \<open>det B = -\<sqrt>3/18\<close>\<close>
+
 lemma det_B: "det B = - sqrt 3 / 18"
-  sorry
+  using det_B_eq_neg_det_B\<^sub>1 det_B\<^sub>1_eq_det_B\<^sub>2 det_B\<^sub>2_eq_det_B\<^sub>3
+        det_B\<^sub>3_eq_det_B\<^sub>4 det_B\<^sub>4_eq_det_B\<^sub>5 det_B\<^sub>5
+  by simp
 
 definition bigJ :: "real^12^12" where
   "bigJ = vector
