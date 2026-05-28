@@ -5,6 +5,8 @@ theory Nonemptiness_Paper
     Nonemptiness_Feasibility
     Nonemptiness_Spine
     Regular_Value_Theorem
+    Applied_Math_BlockDet.Block_Determinants
+    "Perron_Frobenius.HMA_Connect"
     "HOL-Complex_Analysis.Conformal_Mappings"
 begin
 
@@ -1013,7 +1015,8 @@ lemma r2_cplx_cplx_r2 [simp]: "r2_cplx (cplx_r2 z) = z"
 
 lemma cplx_r2_r2_cplx [simp]: "cplx_r2 (r2_cplx v) = v"
   unfolding r2_cplx_def cplx_r2_def
-  by (smt (verit, best) complex.sel(1,2) exhaust_2 vec_eq_iff vector_2(1,2))
+  by (smt (verit, best) Finite_Cartesian_Product.vec_eq_iff complex.sel(1,2) exhaust_2 vector_2(1,2))
+
 
 lemma bounded_linear_r2_cplx: "bounded_linear r2_cplx"
   unfolding r2_cplx_def
@@ -1343,7 +1346,7 @@ proof -
       and rng\<phi>: "\<forall>u\<in>U. range (blinfun_apply (D\<phi> u))
                     = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
     using regular_value_local_chart[OF Wopen qW Gq derG contG' reg]
-    by blast
+    by auto
 
   obtain \<epsilon> :: real where \<epsilon>pos: "\<epsilon> > 0" and ball\<epsilon>: "ball u0 \<epsilon> \<subseteq> U"
     using openU u0U
@@ -1593,7 +1596,7 @@ proof -
     "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
         (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
      = fst ` BZ"
-  proof (intro set_eqI iffI)
+  proof (intro equalityI subsetI)
     fix x
     assume "x \<in> {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
         (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}"
@@ -1852,7 +1855,7 @@ lemma negligible_singular_image_2n:
 proof -
   obtain \<beta> :: "'n bit0 \<Rightarrow> ('n \<times> 2)" where b: "bij \<beta>"
     using exists_index_bij by blast
-  define \<gamma> where "\<gamma> = inv \<beta>"
+  define \<gamma> :: "('n \<times> 2) \<Rightarrow> 'n bit0" where "\<gamma> = Hilbert_Choice.inv \<beta>"
   have g\<beta>: "\<gamma> (\<beta> k) = k" for k unfolding \<gamma>_def
     by (metis b bij_inv_eq_iff)
   have \<beta>g: "\<beta> (\<gamma> p) = p" for p unfolding \<gamma>_def by (meson b bij_inv_eq_iff)
@@ -1863,9 +1866,13 @@ proof -
     where "\<Psi> w = (\<chi> i. \<chi> j. w $ \<gamma> (i,j))" for w
 
   have lin\<Phi>: "linear \<Phi>"
-    by (rule linearI) (auto simp: \<Phi>_def vec_eq_iff)
+    using vec_lambda_unique by (subst linearI, 
+        auto simp: \<Phi>_def vec_eq_iff Finite_Cartesian_Product.plus_vec_def, fastforce)
+     
   have lin\<Psi>: "linear \<Psi>"
-    by (rule linearI) (auto simp: \<Psi>_def vec_eq_iff)
+    by (rule linearI,
+        simp add: Finite_Cartesian_Product.plus_vec_def \<Psi>_def,
+        metis (no_types, lifting) Cart_lambda_cong \<Psi>_def scaleR_vec_def vec_lambda_beta) 
 
   have \<Psi>\<Phi>: "\<Psi> (\<Phi> v) = v" for v
     by (simp add: \<Phi>_def \<Psi>_def vec_eq_iff \<beta>g)
@@ -1875,9 +1882,7 @@ proof -
   define h :: "real^('n bit0) \<Rightarrow> real^('n bit0)"
     where "h = (\<lambda>y. \<Phi> (f (\<Psi> y)))"
 
-  have der_h:
-    "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow>
-      (h has_derivative (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) (at y within \<Phi> ` S)"
+  have der_h: "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow> (h has_derivative (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) (at y within \<Phi> ` S)"
   proof -
     fix y assume yS: "y \<in> \<Phi> ` S"
     have \<Psi>yS: "\<Psi> y \<in> S" using yS \<Psi>\<Phi> by auto
@@ -1895,8 +1900,7 @@ proof -
       using has_derivative_in_compose[OF d_f\<Psi> d\<Phi>] by simp
   qed
 
-  have ns_h:
-    "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow> \<not> surj (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))"
+  have ns_h: "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow> \<not> surj (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))"
   proof
     fix y assume yS: "y \<in> \<Phi> ` S"
     assume sur: "surj (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))"
@@ -2852,16 +2856,31 @@ lemma cvecf_theta_deriv:
 lemma det_Jcvec:
   "det (Jcvec D \<theta> \<phi>) = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
 proof -
-  have py: "cos \<phi> * cos \<phi> + sin \<phi> * sin \<phi> = 1"
-    using sin_cos_squared_add[of \<phi>] by (simp add: power2_eq_square)
-  have m: "D \<bullet> e_r \<phi> = fst D * cos \<phi> + snd D * sin \<phi>"
-    by (simp add: e_r_def inner_prod_def)
-  have raw: "det (Jcvec D \<theta> \<phi>)
+  have "det (Jcvec D \<theta> \<phi>)
       = (cos \<theta> * cos \<phi> - sin \<theta> * fst D) * (sin \<theta> * cos \<phi>)
         - (- (sin \<theta> * sin \<phi>)) * (cos \<theta> * sin \<phi> - sin \<theta> * snd D)"
-    by (simp add: det_2 Jcvec_def)
-  show ?thesis
-    unfolding raw m using py by algebra
+    by (simp add: det_2 Jcvec_def) 
+  also have "... =
+      sin \<theta> *
+        (cos \<theta> * (cos \<phi> * cos \<phi> + sin \<phi> * sin \<phi>)
+         - sin \<theta> * (fst D * cos \<phi> + snd D * sin \<phi>))"
+    by argo        
+  also have "... =
+      sin \<theta> *
+        (cos \<theta> * 1
+         - sin \<theta> * (fst D * cos \<phi> + snd D * sin \<phi>))"
+    using sin_cos_squared_add[of \<phi>]
+    by (simp add: power2_eq_square)
+  also have "... =
+      sin \<theta> *
+        (cos \<theta> * 1
+         - sin \<theta> * (D \<bullet> e_r \<phi>))"
+    by (simp add: e_r_def inner_prod_def)
+  also have "... =  sin \<theta> * (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>))"
+    by simp
+  also have "... = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
+    by (simp add: algebra_simps)
+  finally show ?thesis.
 qed
 
 theorem lem_foldfields:
@@ -3356,715 +3375,12 @@ text \<open>
   is the (proved) reduction that assembles them.
 \<close>
 
-subsection \<open>Index/sum infrastructure for \<open>5\<close>, \<open>6\<close>, \<open>12\<close>\<close>
 
-text \<open>
-  HOL-Analysis provides \<open>exhaust_n\<close>/\<open>UNIV_n\<close>/\<open>sum_n\<close> for \<open>n \<le> 4\<close>; we extend to
-  \<open>5\<close> and \<open>6\<close> (needed for the \<open>6\<times>6\<close> block determinants below).
-\<close>
+text \<open>Block-matrix determinant infrastructure (\<open>det_A\<close>, \<open>det_D\<close>, \<open>UNIV_12\<close>, etc.) lives in the
+  separate \<open>Block_Determinants\<close> theory (session \<open>Applied_Math_BlockDet\<close>) so it can be baked into the
+  heap; the 6x6 matrices are renamed to \<open>Ablk\<close>, \<open>Bblk\<close>, \<open>Dblk\<close>, \<open>Eblk\<close> there to avoid clashes with
+  local-variable names in this file.\<close>
 
-lemma exhaust_5:
-  fixes x :: 5
-  shows "x = 1 \<or> x = 2 \<or> x = 3 \<or> x = 4 \<or> x = 5"
-proof (induct x)
-  case (of_int z)
-  then have "z = 0 \<or> z = 1 \<or> z = 2 \<or> z = 3 \<or> z = 4" by fastforce
-  then show ?case by auto
-qed
-
-lemma UNIV_5: "UNIV = {1, 2, 3, 4, 5::5}"
-  using exhaust_5 by auto
-
-lemma sum_5: "sum f (UNIV::5 set) = f 1 + f 2 + f 3 + f 4 + f 5"
-  unfolding UNIV_5 by (simp add: ac_simps)
-
-lemma exhaust_6:
-  fixes x :: 6
-  shows "x = 1 \<or> x = 2 \<or> x = 3 \<or> x = 4 \<or> x = 5 \<or> x = 6"
-proof (induct x)
-  case (of_int z)
-  then have "z = 0 \<or> z = 1 \<or> z = 2 \<or> z = 3 \<or> z = 4 \<or> z = 5" by fastforce
-  then show ?case by auto
-qed
-
-lemma UNIV_6: "UNIV = {1, 2, 3, 4, 5, 6::6}"
-  using exhaust_6 by auto
-
-lemma sum_6: "sum f (UNIV::6 set) = f 1 + f 2 + f 3 + f 4 + f 5 + f 6"
-  unfolding UNIV_6 by (simp add: ac_simps)
-
-lemma forall_5: "(\<forall>i::5. P i) \<longleftrightarrow> P 1 \<and> P 2 \<and> P 3 \<and> P 4 \<and> P 5"
-  by (metis exhaust_5)
-
-lemma forall_6:
-  "(\<forall>i::6. P i) \<longleftrightarrow> P 1 \<and> P 2 \<and> P 3 \<and> P 4 \<and> P 5 \<and> P 6"
-  by (metis exhaust_6)
-
-lemma vector_5 [simp]:
- "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 1 = a"
- "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 2 = b"
- "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 3 = c"
- "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 4 = d"
- "(vector [a,b,c,d,e] :: ('a::zero)^5) $ 5 = e"
-  unfolding vector_def by simp_all
-
-lemma vector_6 [simp]:
- "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 1 = a"
- "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 2 = b"
- "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 3 = c"
- "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 4 = d"
- "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 5 = e"
- "(vector [a,b,c,d,e,f] :: ('a::zero)^6) $ 6 = f"
-  unfolding vector_def by simp_all
-
-
-text \<open>
-  The explicit \<open>12 \<times> 12\<close> real Jacobian minor \<open>J\<close> of \<open>D\<^sub>x M\<close> at the chosen
-  six-element configuration (TeX Figure~\<open>fig:bigmatrix\<close>), evaluated at
-  \<open>\<kappa> = 1\<close>. Rows are the twelve real moment components
-  \<open>\<real>A, \<I>A, \<real>M\<^sub>1, \<I>M\<^sub>1, \<real>M\<^sub>2, \<I>M\<^sub>2, \<real>M\<^sub>1\<^sub>1, \<I>M\<^sub>1\<^sub>1, \<real>M\<^sub>1\<^sub>2, \<I>M\<^sub>1\<^sub>2, \<real>M\<^sub>2\<^sub>2, \<I>M\<^sub>2\<^sub>2\<close>;
-  the twelve columns are \<open>\<partial>\<^sub>u\<^sub>n M, \<partial>\<^sub>v\<^sub>n M\<close> for \<open>n = 1..6\<close>. (The determinant is
-  transpose-invariant, so the row/column reading is immaterial.)
-\<close>
-
-subsection \<open>The constant \<open>6\<times>6\<close> block \<open>B\<close>\<close>
-
-text \<open>
-  After pulling out a factor \<open>\<pi>\<^sup>6\<close> from the \<open>A\<close>-block (Determinant.md \<section>5),
-  the residual constant matrix is \<open>B\<close>; we will show \<open><det B = -\<sqrt>3/18\<close>.
-\<close>
-
-definition B :: "real^6^6" where
-  "B = vector
-    [ vector [0,  - sqrt 3 / 2,    - sqrt 3 / 2,     0,  sqrt 3 / 2,      sqrt 3 / 2],
-      vector [-1, -1/2,            1/2,              1,  1/2,             -1/2],
-      vector [0,  - sqrt 3 / 6,    - sqrt 3 / 3,     0,  2 * sqrt 3 / 3,  5 * sqrt 3 / 6],
-      vector [0,  -1/6,            1/3,              1,  2/3,             -5/6],
-      vector [0,  - sqrt 3 / 18,   - 2 * sqrt 3 / 9, 0,  8 * sqrt 3 / 9,  25 * sqrt 3 / 18],
-      vector [0,  -1/18,           2/9,              1,  8/9,             -25/18] ]"
-
-text \<open>
-  \<^bold>\<open>Row-reduction chain for \<open>det B\<close>.\<close> Brute-force unfolding of the 720-term
-  permutation sum is intractable; instead we transform \<open>B\<close> to an upper-
-  triangular \<open>B\<^sub>5\<close> through five determinant-preserving (or sign-flipping)
-  row operations, then read off the determinant from the diagonal.
-
-  \begin{itemize}
-  \item \<open>B\<^sub>1\<close>: swap rows \<open>1\<close> and \<open>2\<close> (\<open>det\<close> negated).
-  \item \<open>B\<^sub>2\<close>: eliminate column \<open>2\<close> below row \<open>2\<close> (four row-adds, \<open>det\<close>
-        preserved).
-  \item \<open>B\<^sub>3\<close>: eliminate column \<open>3\<close> below row \<open>3\<close> (three row-adds).
-  \item \<open>B\<^sub>4\<close>: eliminate column \<open>4\<close> below row \<open>4\<close> (one row-add).
-  \item \<open>B\<^sub>5\<close>: eliminate column \<open>5\<close> below row \<open>5\<close> (one row-add). Upper
-        triangular; diagonal product \<open>= \<sqrt>3/18\<close>.
-  \end{itemize}
-\<close>
-
-subsubsection \<open>Step 1: swap rows \<open>1\<close> and \<open>2\<close>\<close>
-
-definition B\<^sub>1 :: "real^6^6" where
-  "B\<^sub>1 = vector
-    [ vector [-1, -1/2,            1/2,              1,  1/2,             -1/2],
-      vector [0,  - sqrt 3 / 2,    - sqrt 3 / 2,     0,  sqrt 3 / 2,      sqrt 3 / 2],
-      vector [0,  - sqrt 3 / 6,    - sqrt 3 / 3,     0,  2 * sqrt 3 / 3,  5 * sqrt 3 / 6],
-      vector [0,  -1/6,            1/3,              1,  2/3,             -5/6],
-      vector [0,  - sqrt 3 / 18,   - 2 * sqrt 3 / 9, 0,  8 * sqrt 3 / 9,  25 * sqrt 3 / 18],
-      vector [0,  -1/18,           2/9,              1,  8/9,             -25/18] ]"
-
-lemma det_B_eq_neg_det_B\<^sub>1: "det B = - det B\<^sub>1"
-proof -
-  let ?\<sigma> = "Fun.swap (1::6) 2 id"
-  have perm: "?\<sigma> permutes UNIV"
-    by (simp add: permutes_swap_id)
-  have eq: "B\<^sub>1 = (\<chi> i. B $ (?\<sigma> i))"
-    unfolding B_def B\<^sub>1_def vec_eq_iff
-    by (auto simp: forall_6 Fun.swap_def vector_def)
-  have "det B\<^sub>1 = of_int (sign ?\<sigma>) * det B"
-    using det_permute_rows[OF perm, of B] eq by simp
-  also have "\<dots> = - det B"
-    by (simp add: sign_swap_id)
-  finally show ?thesis by simp
-qed
-
-subsubsection \<open>Step 2: eliminate column \<open>2\<close> below the pivot at row \<open>2\<close>\<close>
-
-text \<open>Four row-adds with pivot \<open>B\<^sub>1[2,2] = -\<sqrt>3/2\<close>:
-      \<open>R\<^sub>3 \<leftarrow> R\<^sub>3 - (1/3) R\<^sub>2\<close>,
-      \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - (\<sqrt>3/9) R\<^sub>2\<close>,
-      \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 - (1/9) R\<^sub>2\<close>,
-      \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - (\<sqrt>3/27) R\<^sub>2\<close>.\<close>
-
-definition B\<^sub>2 :: "real^6^6" where
-  "B\<^sub>2 = vector
-    [ vector [-1, -1/2,         1/2,          1,  1/2,             -1/2],
-      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,      sqrt 3 / 2],
-      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,      2 * sqrt 3 / 3],
-      vector [0,  0,            1/2,          1,  1/2,             -1],
-      vector [0,  0,            - sqrt 3 / 6, 0,  5 * sqrt 3 / 6,  4 * sqrt 3 / 3],
-      vector [0,  0,            5/18,         1,  5/6,             -13/9] ]"
-
-lemma det_B\<^sub>1_eq_det_B\<^sub>2: "det B\<^sub>1 = det B\<^sub>2"
-proof -
-  define X\<^sub>1 :: "real^6^6"
-    where "X\<^sub>1 = (\<chi> k. if k = 3 then row 3 B\<^sub>1 + (-1/3) *s row 2 B\<^sub>1 else row k B\<^sub>1)"
-  define X\<^sub>2 :: "real^6^6"
-    where "X\<^sub>2 = (\<chi> k. if k = 4 then row 4 X\<^sub>1 + (- sqrt 3 / 9) *s row 2 X\<^sub>1 else row k X\<^sub>1)"
-  define X\<^sub>3 :: "real^6^6"
-    where "X\<^sub>3 = (\<chi> k. if k = 5 then row 5 X\<^sub>2 + (-1/9) *s row 2 X\<^sub>2 else row k X\<^sub>2)"
-  define X\<^sub>4 :: "real^6^6"
-    where "X\<^sub>4 = (\<chi> k. if k = 6 then row 6 X\<^sub>3 + (- sqrt 3 / 27) *s row 2 X\<^sub>3 else row k X\<^sub>3)"
-  have d1: "det X\<^sub>1 = det B\<^sub>1"
-    unfolding X\<^sub>1_def by (rule det_row_operation) auto
-  have d2: "det X\<^sub>2 = det X\<^sub>1"
-    unfolding X\<^sub>2_def by (rule det_row_operation) auto
-  have d3: "det X\<^sub>3 = det X\<^sub>2"
-    unfolding X\<^sub>3_def by (rule det_row_operation) auto
-  have d4: "det X\<^sub>4 = det X\<^sub>3"
-    unfolding X\<^sub>4_def by (rule det_row_operation) auto
-  have eq: "X\<^sub>4 = B\<^sub>2"
-    unfolding X\<^sub>4_def X\<^sub>3_def X\<^sub>2_def X\<^sub>1_def B\<^sub>1_def B\<^sub>2_def vec_eq_iff
-    by (auto simp: forall_6 row_def vector_def field_simps power2_eq_square)
-  show ?thesis using d1 d2 d3 d4 eq by simp
-qed
-
-subsubsection \<open>Step 3: eliminate column \<open>3\<close> below the pivot at row \<open>3\<close>\<close>
-
-text \<open>Three row-adds with pivot \<open>B\<^sub>2[3,3] = -\<sqrt>3/6\<close>:
-      \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 + \<sqrt>3 R\<^sub>3\<close>,
-      \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 - R\<^sub>3\<close>,
-      \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + (5 \<sqrt>3/9) R\<^sub>3\<close>.\<close>
-
-definition B\<^sub>3 :: "real^6^6" where
-  "B\<^sub>3 = vector
-    [ vector [-1, -1/2,         1/2,          1,  1/2,         -1/2],
-      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,  sqrt 3 / 2],
-      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,  2 * sqrt 3 / 3],
-      vector [0,  0,            0,            1,  2,           1],
-      vector [0,  0,            0,            0,  sqrt 3 / 3,  2 * sqrt 3 / 3],
-      vector [0,  0,            0,            1,  5/3,         -1/3] ]"
-
-lemma det_B\<^sub>2_eq_det_B\<^sub>3: "det B\<^sub>2 = det B\<^sub>3"
-proof -
-  define Y\<^sub>1 :: "real^6^6"
-    where "Y\<^sub>1 = (\<chi> k. if k = 4 then row 4 B\<^sub>2 + sqrt 3 *s row 3 B\<^sub>2 else row k B\<^sub>2)"
-  define Y\<^sub>2 :: "real^6^6"
-    where "Y\<^sub>2 = (\<chi> k. if k = 5 then row 5 Y\<^sub>1 + (-1) *s row 3 Y\<^sub>1 else row k Y\<^sub>1)"
-  define Y\<^sub>3 :: "real^6^6"
-    where "Y\<^sub>3 = (\<chi> k. if k = 6 then row 6 Y\<^sub>2 + (5 * sqrt 3 / 9) *s row 3 Y\<^sub>2 else row k Y\<^sub>2)"
-  have d1: "det Y\<^sub>1 = det B\<^sub>2"
-    unfolding Y\<^sub>1_def by (rule det_row_operation) auto
-  have d2: "det Y\<^sub>2 = det Y\<^sub>1"
-    unfolding Y\<^sub>2_def by (rule det_row_operation) auto
-  have d3: "det Y\<^sub>3 = det Y\<^sub>2"
-    unfolding Y\<^sub>3_def by (rule det_row_operation) auto
-  have eq: "Y\<^sub>3 = B\<^sub>3"
-    unfolding Y\<^sub>3_def Y\<^sub>2_def Y\<^sub>1_def B\<^sub>2_def B\<^sub>3_def vec_eq_iff
-    by (auto simp: forall_6 row_def vector_def field_simps power2_eq_square)
-  show ?thesis using d1 d2 d3 eq by simp
-qed
-
-subsubsection \<open>Step 4: eliminate column \<open>4\<close> below the pivot at row \<open>4\<close>\<close>
-
-text \<open>One row-add with pivot \<open>B\<^sub>3[4,4] = 1\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - R\<^sub>4\<close>.
-      (\<open>B\<^sub>3[5,4]\<close> is already \<open>0\<close>.)\<close>
-
-definition B\<^sub>4 :: "real^6^6" where
-  "B\<^sub>4 = vector
-    [ vector [-1, -1/2,         1/2,          1,  1/2,         -1/2],
-      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,  sqrt 3 / 2],
-      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,  2 * sqrt 3 / 3],
-      vector [0,  0,            0,            1,  2,           1],
-      vector [0,  0,            0,            0,  sqrt 3 / 3,  2 * sqrt 3 / 3],
-      vector [0,  0,            0,            0,  -1/3,        -4/3] ]"
-
-lemma det_B\<^sub>3_eq_det_B\<^sub>4: "det B\<^sub>3 = det B\<^sub>4"
-proof -
-  define Z :: "real^6^6"
-    where "Z = (\<chi> k. if k = 6 then row 6 B\<^sub>3 + (-1) *s row 4 B\<^sub>3 else row k B\<^sub>3)"
-  have d: "det Z = det B\<^sub>3"
-    unfolding Z_def by (rule det_row_operation) auto
-  have eq: "Z = B\<^sub>4"
-    unfolding Z_def B\<^sub>3_def B\<^sub>4_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps)
-  show ?thesis using d eq by simp
-qed
-
-subsubsection \<open>Step 5: eliminate column \<open>5\<close> below the pivot at row \<open>5\<close>\<close>
-
-text \<open>One row-add with pivot \<open>B\<^sub>4[5,5] = \<sqrt>3/3\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + (\<sqrt>3/3) R\<^sub>5\<close>.\<close>
-
-definition B\<^sub>5 :: "real^6^6" where
-  "B\<^sub>5 = vector
-    [ vector [-1, -1/2,         1/2,          1,  1/2,         -1/2],
-      vector [0,  - sqrt 3 / 2, - sqrt 3 / 2, 0,  sqrt 3 / 2,  sqrt 3 / 2],
-      vector [0,  0,            - sqrt 3 / 6, 0,  sqrt 3 / 2,  2 * sqrt 3 / 3],
-      vector [0,  0,            0,            1,  2,           1],
-      vector [0,  0,            0,            0,  sqrt 3 / 3,  2 * sqrt 3 / 3],
-      vector [0,  0,            0,            0,  0,           -2/3] ]"
-
-lemma det_B\<^sub>4_eq_det_B\<^sub>5: "det B\<^sub>4 = det B\<^sub>5"
-proof -
-  define W :: "real^6^6"
-    where "W = (\<chi> k. if k = 6 then row 6 B\<^sub>4 + (sqrt 3 / 3) *s row 5 B\<^sub>4 else row k B\<^sub>4)"
-  have d: "det W = det B\<^sub>4"
-    unfolding W_def by (rule det_row_operation) auto
-  have eq: "W = B\<^sub>5"
-    unfolding W_def B\<^sub>4_def B\<^sub>5_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps power2_eq_square)
-  show ?thesis using d eq by simp
-qed
-
-subsubsection \<open>Step 6: read off \<open>det B\<^sub>5\<close> from the diagonal\<close>
-
-lemma det_B\<^sub>5: "det B\<^sub>5 = sqrt 3 / 18"
-proof -
-  text \<open>\<open>B\<^sub>5\<close> is upper triangular and sparse, so brute-forcing the 720-term
-        permutation sum is tractable: 719 terms vanish via \<open>0 \<cdot> _ = 0\<close>, leaving
-        only the identity-permutation product (the diagonal).\<close>
-  have f1: "finite {2::6, 3, 4, 5, 6}" "1 \<notin> {2::6, 3, 4, 5, 6}" by auto
-  have f2: "finite {3::6, 4, 5, 6}"    "2 \<notin> {3::6, 4, 5, 6}"    by auto
-  have f3: "finite {4::6, 5, 6}"       "3 \<notin> {4::6, 5, 6}"       by auto
-  have f4: "finite {5::6, 6}"          "4 \<notin> {5::6, 6}"          by auto
-  have f5: "finite {6::6}"             "5 \<notin> {6::6}"             by auto
-  show ?thesis
-    unfolding B\<^sub>5_def det_def UNIV_6
-    unfolding sum_over_permutations_insert[OF f1]
-    unfolding sum_over_permutations_insert[OF f2]
-    unfolding sum_over_permutations_insert[OF f3]
-    unfolding sum_over_permutations_insert[OF f4]
-    unfolding sum_over_permutations_insert[OF f5]
-    unfolding permutes_sing
-    by (simp add: sign_swap_id permutation_swap_id sign_compose swap_id_eq
-                  field_simps power2_eq_square)
-qed
-
-subsubsection \<open>Combining the chain: \<open>det B = -\<sqrt>3/18\<close>\<close>
-
-lemma det_B: "det B = - sqrt 3 / 18"
-  using det_B_eq_neg_det_B\<^sub>1 det_B\<^sub>1_eq_det_B\<^sub>2 det_B\<^sub>2_eq_det_B\<^sub>3
-        det_B\<^sub>3_eq_det_B\<^sub>4 det_B\<^sub>4_eq_det_B\<^sub>5 det_B\<^sub>5
-  by simp
-
-
-subsection \<open>The \<open>6\<times>6\<close> \<open>A\<close>-block: \<open>det A = -\<sqrt>3 \<pi>\<^sup>6/18\<close>\<close>
-
-text \<open>
-  The original \<open>A\<close>-block (Determinant.md \<section>5). Four \<open>det\<close>-preserving row-adds
-  bring it to \<open>A\<^sub>4\<close>, whose rows \<open>3,4,5,6\<close> are \<open>\<pi>, \<pi>, \<pi>\<^sup>2, \<pi>\<^sup>2\<close> times the
-  corresponding rows of \<open>B\<close>; factoring those out gives \<open>det A\<^sub>4 = \<pi>\<^sup>6 \<cdot> det B\<close>.
-\<close>
-
-definition A :: "real^6^6" where
-  "A = vector
-    [ vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [-1, -1/2, 1/2, 1, 1/2, -1/2],
-      vector [1, 1/2 - pi * sqrt 3 / 6, -1/2 - pi * sqrt 3 / 3, -1,
-              -1/2 + 2 * pi * sqrt 3 / 3, 1/2 + 5 * pi * sqrt 3 / 6],
-      vector [0, - sqrt 3 / 2 - pi / 6, - sqrt 3 / 2 + pi / 3, pi,
-              sqrt 3 / 2 + 2 * pi / 3, sqrt 3 / 2 - 5 * pi / 6],
-      vector [0, pi / 3 - pi^2 * sqrt 3 / 18, -2 * pi / 3 - 2 * pi^2 * sqrt 3 / 9,
-              -2 * pi, -4 * pi / 3 + 8 * pi^2 * sqrt 3 / 9,
-              5 * pi / 3 + 25 * pi^2 * sqrt 3 / 18],
-      vector [0, - pi * sqrt 3 / 3 - pi^2 / 18, -2 * pi * sqrt 3 / 3 + 2 * pi^2 / 9,
-              pi^2, 4 * pi * sqrt 3 / 3 + 8 * pi^2 / 9,
-              5 * pi * sqrt 3 / 3 - 25 * pi^2 / 18] ]"
-
-definition A\<^sub>4 :: "real^6^6" where
-  "A\<^sub>4 = vector
-    [ vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [-1, -1/2, 1/2, 1, 1/2, -1/2],
-      vector [0, - pi * sqrt 3 / 6, - pi * sqrt 3 / 3, 0,
-              2 * pi * sqrt 3 / 3, 5 * pi * sqrt 3 / 6],
-      vector [0, - pi / 6, pi / 3, pi, 2 * pi / 3, -5 * pi / 6],
-      vector [0, - (pi^2) * sqrt 3 / 18, - 2 * pi^2 * sqrt 3 / 9, 0,
-              8 * pi^2 * sqrt 3 / 9, 25 * pi^2 * sqrt 3 / 18],
-      vector [0, - (pi^2) / 18, 2 * pi^2 / 9, pi^2, 8 * pi^2 / 9, -25 * pi^2 / 18] ]"
-
-subsubsection \<open>Row-adds: \<open>det A = det A\<^sub>4\<close>\<close>
-
-text \<open>Four \<open>det\<close>-preserving row-adds:
-      \<open>R\<^sub>3 \<leftarrow> R\<^sub>3 + R\<^sub>2\<close>,
-      \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - R\<^sub>1\<close>,
-      \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 + 2 R\<^sub>4\<close> (using the new \<open>R\<^sub>4\<close>),
-      \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - 2 R\<^sub>3\<close> (using the new \<open>R\<^sub>3\<close>).\<close>
-
-lemma det_A_eq_det_A\<^sub>4: "det A = det A\<^sub>4"
-proof -
-  define U\<^sub>1 :: "real^6^6"
-    where "U\<^sub>1 = (\<chi> k. if k = 3 then row 3 A + 1 *s row 2 A else row k A)"
-  define U\<^sub>2 :: "real^6^6"
-    where "U\<^sub>2 = (\<chi> k. if k = 4 then row 4 U\<^sub>1 + (-1) *s row 1 U\<^sub>1 else row k U\<^sub>1)"
-  define U\<^sub>3 :: "real^6^6"
-    where "U\<^sub>3 = (\<chi> k. if k = 5 then row 5 U\<^sub>2 + 2 *s row 4 U\<^sub>2 else row k U\<^sub>2)"
-  define U\<^sub>4 :: "real^6^6"
-    where "U\<^sub>4 = (\<chi> k. if k = 6 then row 6 U\<^sub>3 + (-2) *s row 3 U\<^sub>3 else row k U\<^sub>3)"
-  have d1: "det U\<^sub>1 = det A"
-    unfolding U\<^sub>1_def by (rule det_row_operation) auto
-  have d2: "det U\<^sub>2 = det U\<^sub>1"
-    unfolding U\<^sub>2_def by (rule det_row_operation) auto
-  have d3: "det U\<^sub>3 = det U\<^sub>2"
-    unfolding U\<^sub>3_def by (rule det_row_operation) auto
-  have d4: "det U\<^sub>4 = det U\<^sub>3"
-    unfolding U\<^sub>4_def by (rule det_row_operation) auto
-  have eq: "U\<^sub>4 = A\<^sub>4"
-    unfolding U\<^sub>4_def U\<^sub>3_def U\<^sub>2_def U\<^sub>1_def A_def A\<^sub>4_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps power2_eq_square)
-  show ?thesis using d1 d2 d3 d4 eq by simp
-qed
-
-subsubsection \<open>Row-mults: \<open>det A\<^sub>4 = \<pi>\<^sup>6 \<cdot> det B\<close>\<close>
-
-text \<open>\<open>A\<^sub>4\<close> rows \<open>3,4\<close> are \<open>\<pi>\<close> times the corresponding \<open>B\<close>-rows; rows \<open>5,6\<close> are
-      \<open>\<pi>\<^sup>2\<close> times. Four applications of @{thm det_row_mul} factor out the powers
-      of \<open>\<pi>\<close>; total factor \<open>\<pi> \<cdot> \<pi> \<cdot> \<pi>\<^sup>2 \<cdot> \<pi>\<^sup>2 = \<pi>\<^sup>6\<close>.\<close>
-
-lemma det_A\<^sub>4_eq_pi6_det_B: "det A\<^sub>4 = pi^6 * det B"
-proof -
-  have row1_eq: "row 1 A\<^sub>4 = row 1 B"
-    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def)
-  have row2_eq: "row 2 A\<^sub>4 = row 2 B"
-    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def)
-  have row3_eq: "row 3 A\<^sub>4 = pi *s row 3 B"
-    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
-  have row4_eq: "row 4 A\<^sub>4 = pi *s row 4 B"
-    unfolding A\<^sub>4_def B_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
-  have row5_eq: "row 5 A\<^sub>4 = (pi^2) *s row 5 B"
-    unfolding A\<^sub>4_def B_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps power2_eq_square)
-  have row6_eq: "row 6 A\<^sub>4 = (pi^2) *s row 6 B"
-    unfolding A\<^sub>4_def B_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps power2_eq_square)
-
-  define N\<^sub>1 :: "real^6^6"
-    where "N\<^sub>1 = (\<chi> k. if k = 3 then row 3 B else row k A\<^sub>4)"
-  define N\<^sub>2 :: "real^6^6"
-    where "N\<^sub>2 = (\<chi> k. if k = 4 then row 4 B else row k N\<^sub>1)"
-  define N\<^sub>3 :: "real^6^6"
-    where "N\<^sub>3 = (\<chi> k. if k = 5 then row 5 B else row k N\<^sub>2)"
-  define N\<^sub>4 :: "real^6^6"
-    where "N\<^sub>4 = (\<chi> k. if k = 6 then row 6 B else row k N\<^sub>3)"
-
-  text \<open>Step: factor \<open>\<pi>\<close> from row \<open>3\<close>.\<close>
-  have A4_chi3: "A\<^sub>4 = (\<chi> i. if i = 3 then pi *s row 3 B else row i A\<^sub>4)"
-    using row3_eq by (auto simp: vec_eq_iff row_def)
-  have step1: "det A\<^sub>4 = pi * det N\<^sub>1"
-  proof -
-    have "det (\<chi> i. if i = (3::6) then pi *s (\<lambda>_. row 3 B) i else (\<lambda>i. row i A\<^sub>4) i)
-        = pi * det (\<chi> i. if i = 3 then (\<lambda>_. row 3 B) i else (\<lambda>i. row i A\<^sub>4) i)"
-      by (rule det_row_mul)
-    thus ?thesis using A4_chi3 by (simp add: N\<^sub>1_def)
-  qed
-
-  text \<open>Step: factor \<open>\<pi>\<close> from row \<open>4\<close> of \<open>N\<^sub>1\<close>.\<close>
-  have N1_row4: "row 4 N\<^sub>1 = pi *s row 4 B"
-    using row4_eq by (simp add: N\<^sub>1_def row_def vec_eq_iff)
-  have N1_chi4: "N\<^sub>1 = (\<chi> i. if i = 4 then pi *s row 4 B else row i N\<^sub>1)"
-    using N1_row4 by (auto simp: vec_eq_iff row_def)
-  have step2: "det N\<^sub>1 = pi * det N\<^sub>2"
-  proof -
-    have "det (\<chi> i. if i = (4::6) then pi *s (\<lambda>_. row 4 B) i else (\<lambda>i. row i N\<^sub>1) i)
-        = pi * det (\<chi> i. if i = 4 then (\<lambda>_. row 4 B) i else (\<lambda>i. row i N\<^sub>1) i)"
-      by (rule det_row_mul)
-    thus ?thesis using N1_chi4 by (simp add: N\<^sub>2_def)
-  qed
-
-  text \<open>Step: factor \<open>\<pi>\<^sup>2\<close> from row \<open>5\<close> of \<open>N\<^sub>2\<close>.\<close>
-  have N2_row5: "row 5 N\<^sub>2 = (pi^2) *s row 5 B"
-    using row5_eq by (simp add: N\<^sub>2_def N\<^sub>1_def row_def vec_eq_iff)
-  have N2_chi5: "N\<^sub>2 = (\<chi> i. if i = 5 then (pi^2) *s row 5 B else row i N\<^sub>2)"
-    using N2_row5 by (auto simp: vec_eq_iff row_def)
-  have step3: "det N\<^sub>2 = (pi^2) * det N\<^sub>3"
-  proof -
-    have "det (\<chi> i. if i = (5::6) then (pi^2) *s (\<lambda>_. row 5 B) i else (\<lambda>i. row i N\<^sub>2) i)
-        = (pi^2) * det (\<chi> i. if i = 5 then (\<lambda>_. row 5 B) i else (\<lambda>i. row i N\<^sub>2) i)"
-      by (rule det_row_mul)
-    thus ?thesis using N2_chi5 by (simp add: N\<^sub>3_def)
-  qed
-
-  text \<open>Step: factor \<open>\<pi>\<^sup>2\<close> from row \<open>6\<close> of \<open>N\<^sub>3\<close>.\<close>
-  have N3_row6: "row 6 N\<^sub>3 = (pi^2) *s row 6 B"
-    using row6_eq by (simp add: N\<^sub>3_def N\<^sub>2_def N\<^sub>1_def row_def vec_eq_iff)
-  have N3_chi6: "N\<^sub>3 = (\<chi> i. if i = 6 then (pi^2) *s row 6 B else row i N\<^sub>3)"
-    using N3_row6 by (auto simp: vec_eq_iff row_def)
-  have step4: "det N\<^sub>3 = (pi^2) * det N\<^sub>4"
-  proof -
-    have "det (\<chi> i. if i = (6::6) then (pi^2) *s (\<lambda>_. row 6 B) i else (\<lambda>i. row i N\<^sub>3) i)
-        = (pi^2) * det (\<chi> i. if i = 6 then (\<lambda>_. row 6 B) i else (\<lambda>i. row i N\<^sub>3) i)"
-      by (rule det_row_mul)
-    thus ?thesis using N3_chi6 by (simp add: N\<^sub>4_def)
-  qed
-
-  text \<open>\<open>N\<^sub>4 = B\<close>: all six rows now match \<open>B\<close>'s.\<close>
-  have N4_eq_B: "N\<^sub>4 = B"
-    unfolding N\<^sub>4_def N\<^sub>3_def N\<^sub>2_def N\<^sub>1_def vec_eq_iff
-    using row1_eq row2_eq
-    by (auto simp: forall_6 row_def)
-
-  have "det A\<^sub>4 = pi * (pi * ((pi^2) * ((pi^2) * det N\<^sub>4)))"
-    using step1 step2 step3 step4 by simp
-  also have "\<dots> = pi^6 * det B"
-    using N4_eq_B by (simp add: field_simps power2_eq_square power_add,
-        metis (no_types, lifting) numeral_Bit0_eq_double power2_eq_square power3_eq_cube power_mult
-        vector_space_over_itself.scale_scale)
-  finally show ?thesis .
-qed
-
-lemma det_A: "det A = - sqrt 3 * pi^6 / 18"
-  using det_A_eq_det_A\<^sub>4 det_A\<^sub>4_eq_pi6_det_B det_B
-  by simp
-
-
-subsection \<open>The \<open>6\<times>6\<close> \<open>D\<close>-block: \<open>det D = -10\<sqrt>3 \<pi>\<^sup>2\<close>\<close>
-
-text \<open>
-  Factor \<open>\<pi>\<^sup>2\<close> from rows \<open>3,4\<close> of \<open>D\<close> to get the constant matrix \<open>E\<close>;
-  later we reduce \<open>E\<close> to upper-triangular via row-adds.
-\<close>
-
-definition D :: "real^6^6" where
-  "D = vector
-    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
-      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [0, pi / 6, - pi / 3, - pi, -2 * pi / 3, 5 * pi / 6],
-      vector [0, - pi * sqrt 3 / 6, - pi * sqrt 3 / 3, 0,
-              2 * pi * sqrt 3 / 3, 5 * pi * sqrt 3 / 6],
-      vector [4, 2, 0, 0, -2, 2],
-      vector [0, -2 * sqrt 3, 0, 0, 2 * sqrt 3, 2 * sqrt 3] ]"
-
-definition E :: "real^6^6" where
-  "E = vector
-    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
-      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [0, 1/6, -1/3, -1, -2/3, 5/6],
-      vector [0, - sqrt 3 / 6, - sqrt 3 / 3, 0, 2 * sqrt 3 / 3, 5 * sqrt 3 / 6],
-      vector [4, 2, 0, 0, -2, 2],
-      vector [0, -2 * sqrt 3, 0, 0, 2 * sqrt 3, 2 * sqrt 3] ]"
-
-subsubsection \<open>Factor \<open>\<pi>\<^sup>2\<close>: \<open>det D = \<pi>\<^sup>2 \<cdot> det E\<close>\<close>
-
-lemma det_D_eq_pi2_det_E: "det D = pi^2 * det E"
-proof -
-  have row1_eq: "row 1 D = row 1 E"
-    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
-  have row2_eq: "row 2 D = row 2 E"
-    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
-  have row3_eq: "row 3 D = pi *s row 3 E"
-    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
-  have row4_eq: "row 4 D = pi *s row 4 E"
-    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def field_simps)
-  have row5_eq: "row 5 D = row 5 E"
-    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
-  have row6_eq: "row 6 D = row 6 E"
-    unfolding D_def E_def vec_eq_iff by (auto simp: forall_6 row_def)
-
-  define M\<^sub>1 :: "real^6^6"
-    where "M\<^sub>1 = (\<chi> k. if k = 3 then row 3 E else row k D)"
-  define M\<^sub>2 :: "real^6^6"
-    where "M\<^sub>2 = (\<chi> k. if k = 4 then row 4 E else row k M\<^sub>1)"
-
-  text \<open>Factor \<open>\<pi>\<close> from row \<open>3\<close>.\<close>
-  have D_chi3: "D = (\<chi> i. if i = 3 then pi *s row 3 E else row i D)"
-    using row3_eq by (auto simp: vec_eq_iff row_def)
-  have step1: "det D = pi * det M\<^sub>1"
-  proof -
-    have "det (\<chi> i. if i = (3::6) then pi *s (\<lambda>_. row 3 E) i else (\<lambda>i. row i D) i)
-        = pi * det (\<chi> i. if i = 3 then (\<lambda>_. row 3 E) i else (\<lambda>i. row i D) i)"
-      by (rule det_row_mul)
-    thus ?thesis using D_chi3 by (simp add: M\<^sub>1_def)
-  qed
-
-  text \<open>Factor \<open>\<pi>\<close> from row \<open>4\<close> of \<open>M\<^sub>1\<close>.\<close>
-  have M1_row4: "row 4 M\<^sub>1 = pi *s row 4 E"
-    using row4_eq by (simp add: M\<^sub>1_def row_def vec_eq_iff)
-  have M1_chi4: "M\<^sub>1 = (\<chi> i. if i = 4 then pi *s row 4 E else row i M\<^sub>1)"
-    using M1_row4 by (auto simp: vec_eq_iff row_def)
-  have step2: "det M\<^sub>1 = pi * det M\<^sub>2"
-  proof -
-    have "det (\<chi> i. if i = (4::6) then pi *s (\<lambda>_. row 4 E) i else (\<lambda>i. row i M\<^sub>1) i)
-        = pi * det (\<chi> i. if i = 4 then (\<lambda>_. row 4 E) i else (\<lambda>i. row i M\<^sub>1) i)"
-      by (rule det_row_mul)
-    thus ?thesis using M1_chi4 by (simp add: M\<^sub>2_def)
-  qed
-
-  text \<open>\<open>M\<^sub>2 = E\<close>: rows \<open>3,4\<close> set to \<open>E\<close>'s, rows \<open>1,2,5,6\<close> already match.\<close>
-  have M2_eq_E: "M\<^sub>2 = E"
-    unfolding M\<^sub>2_def M\<^sub>1_def vec_eq_iff
-    using row1_eq row2_eq row5_eq row6_eq
-    by (auto simp: forall_6 row_def)
-
-  have "det D = pi * (pi * det M\<^sub>2)" using step1 step2 by simp
-  also have "\<dots> = (pi * pi) * det E" using M2_eq_E by (simp add: algebra_simps)
-  also have "\<dots> = pi^2 * det E" by (simp add: power2_eq_square)
-  finally show ?thesis .
-qed
-
-subsubsection \<open>Row-reduction chain for \<open>E\<close> (to upper-triangular \<open>E\<^sub>5\<close>)\<close>
-
-text \<open>\<open>E\<^sub>1\<close>: \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 - 4 R\<^sub>1\<close>, \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 - 4 R\<^sub>2\<close>.\<close>
-
-definition E\<^sub>1 :: "real^6^6" where
-  "E\<^sub>1 = vector
-    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
-      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [0, 1/6, -1/3, -1, -2/3, 5/6],
-      vector [0, - sqrt 3 / 6, - sqrt 3 / 3, 0, 2 * sqrt 3 / 3, 5 * sqrt 3 / 6],
-      vector [0, 0, 2, 4, 0, 0],
-      vector [0, 0, 2 * sqrt 3, 0, 0, 0] ]"
-
-lemma det_E_eq_det_E\<^sub>1: "det E = det E\<^sub>1"
-proof -
-  define V\<^sub>1 :: "real^6^6"
-    where "V\<^sub>1 = (\<chi> k. if k = 5 then row 5 E + (-4) *s row 1 E else row k E)"
-  define V\<^sub>2 :: "real^6^6"
-    where "V\<^sub>2 = (\<chi> k. if k = 6 then row 6 V\<^sub>1 + (-4) *s row 2 V\<^sub>1 else row k V\<^sub>1)"
-  have d1: "det V\<^sub>1 = det E"
-    unfolding V\<^sub>1_def by (rule det_row_operation) auto
-  have d2: "det V\<^sub>2 = det V\<^sub>1"
-    unfolding V\<^sub>2_def by (rule det_row_operation) auto
-  have eq: "V\<^sub>2 = E\<^sub>1"
-    unfolding V\<^sub>2_def V\<^sub>1_def E_def E\<^sub>1_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps)
-  show ?thesis using d1 d2 eq by simp
-qed
-
-text \<open>\<open>E\<^sub>2\<close>: \<open>R\<^sub>3 \<leftarrow> R\<^sub>3 + (\<sqrt>3/9) R\<^sub>2\<close>, \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - (1/3) R\<^sub>2\<close>.\<close>
-
-definition E\<^sub>2 :: "real^6^6" where
-  "E\<^sub>2 = vector
-    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
-      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [0, 0, -1/2, -1, -1/2, 1],
-      vector [0, 0, - sqrt 3 / 6, 0, sqrt 3 / 2, 2 * sqrt 3 / 3],
-      vector [0, 0, 2, 4, 0, 0],
-      vector [0, 0, 2 * sqrt 3, 0, 0, 0] ]"
-
-lemma det_E\<^sub>1_eq_det_E\<^sub>2: "det E\<^sub>1 = det E\<^sub>2"
-proof -
-  define W\<^sub>1 :: "real^6^6"
-    where "W\<^sub>1 = (\<chi> k. if k = 3 then row 3 E\<^sub>1 + (sqrt 3 / 9) *s row 2 E\<^sub>1 else row k E\<^sub>1)"
-  define W\<^sub>2 :: "real^6^6"
-    where "W\<^sub>2 = (\<chi> k. if k = 4 then row 4 W\<^sub>1 + (-1/3) *s row 2 W\<^sub>1 else row k W\<^sub>1)"
-  have d1: "det W\<^sub>1 = det E\<^sub>1"
-    unfolding W\<^sub>1_def by (rule det_row_operation) auto
-  have d2: "det W\<^sub>2 = det W\<^sub>1"
-    unfolding W\<^sub>2_def by (rule det_row_operation) auto
-  have eq: "W\<^sub>2 = E\<^sub>2"
-    unfolding W\<^sub>2_def W\<^sub>1_def E\<^sub>1_def E\<^sub>2_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps power2_eq_square)
-  show ?thesis using d1 d2 eq by simp
-qed
-
-text \<open>\<open>E\<^sub>3\<close>: \<open>R\<^sub>4 \<leftarrow> R\<^sub>4 - (\<sqrt>3/3) R\<^sub>3\<close>, \<open>R\<^sub>5 \<leftarrow> R\<^sub>5 + 4 R\<^sub>3\<close>, \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + 4\<sqrt>3 R\<^sub>3\<close>.\<close>
-
-definition E\<^sub>3 :: "real^6^6" where
-  "E\<^sub>3 = vector
-    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
-      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [0, 0, -1/2, -1, -1/2, 1],
-      vector [0, 0, 0, sqrt 3 / 3, 2 * sqrt 3 / 3, sqrt 3 / 3],
-      vector [0, 0, 0, 0, -2, 4],
-      vector [0, 0, 0, -4 * sqrt 3, -2 * sqrt 3, 4 * sqrt 3] ]"
-
-lemma det_E\<^sub>2_eq_det_E\<^sub>3: "det E\<^sub>2 = det E\<^sub>3"
-proof -
-  define Y\<^sub>1 :: "real^6^6"
-    where "Y\<^sub>1 = (\<chi> k. if k = 4 then row 4 E\<^sub>2 + (- sqrt 3 / 3) *s row 3 E\<^sub>2 else row k E\<^sub>2)"
-  define Y\<^sub>2 :: "real^6^6"
-    where "Y\<^sub>2 = (\<chi> k. if k = 5 then row 5 Y\<^sub>1 + 4 *s row 3 Y\<^sub>1 else row k Y\<^sub>1)"
-  define Y\<^sub>3 :: "real^6^6"
-    where "Y\<^sub>3 = (\<chi> k. if k = 6 then row 6 Y\<^sub>2 + (4 * sqrt 3) *s row 3 Y\<^sub>2 else row k Y\<^sub>2)"
-  have d1: "det Y\<^sub>1 = det E\<^sub>2"
-    unfolding Y\<^sub>1_def by (rule det_row_operation) auto
-  have d2: "det Y\<^sub>2 = det Y\<^sub>1"
-    unfolding Y\<^sub>2_def by (rule det_row_operation) auto
-  have d3: "det Y\<^sub>3 = det Y\<^sub>2"
-    unfolding Y\<^sub>3_def by (rule det_row_operation) auto
-  have eq: "Y\<^sub>3 = E\<^sub>3"
-    unfolding Y\<^sub>3_def Y\<^sub>2_def Y\<^sub>1_def E\<^sub>2_def E\<^sub>3_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps power2_eq_square)
-  show ?thesis using d1 d2 d3 eq by simp
-qed
-
-text \<open>\<open>E\<^sub>4\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + 12 R\<^sub>4\<close>.\<close>
-
-definition E\<^sub>4 :: "real^6^6" where
-  "E\<^sub>4 = vector
-    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
-      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [0, 0, -1/2, -1, -1/2, 1],
-      vector [0, 0, 0, sqrt 3 / 3, 2 * sqrt 3 / 3, sqrt 3 / 3],
-      vector [0, 0, 0, 0, -2, 4],
-      vector [0, 0, 0, 0, 6 * sqrt 3, 8 * sqrt 3] ]"
-
-lemma det_E\<^sub>3_eq_det_E\<^sub>4: "det E\<^sub>3 = det E\<^sub>4"
-proof -
-  define Z :: "real^6^6"
-    where "Z = (\<chi> k. if k = 6 then row 6 E\<^sub>3 + 12 *s row 4 E\<^sub>3 else row k E\<^sub>3)"
-  have d: "det Z = det E\<^sub>3"
-    unfolding Z_def by (rule det_row_operation) auto
-  have eq: "Z = E\<^sub>4"
-    unfolding Z_def E\<^sub>3_def E\<^sub>4_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps)
-  show ?thesis using d eq by simp
-qed
-
-text \<open>\<open>E\<^sub>5\<close>: \<open>R\<^sub>6 \<leftarrow> R\<^sub>6 + 3\<sqrt>3 R\<^sub>5\<close>. Upper triangular.\<close>
-
-definition E\<^sub>5 :: "real^6^6" where
-  "E\<^sub>5 = vector
-    [ vector [1, 1/2, -1/2, -1, -1/2, 1/2],
-      vector [0, - sqrt 3 / 2, - sqrt 3 / 2, 0, sqrt 3 / 2, sqrt 3 / 2],
-      vector [0, 0, -1/2, -1, -1/2, 1],
-      vector [0, 0, 0, sqrt 3 / 3, 2 * sqrt 3 / 3, sqrt 3 / 3],
-      vector [0, 0, 0, 0, -2, 4],
-      vector [0, 0, 0, 0, 0, 20 * sqrt 3] ]"
-
-lemma det_E\<^sub>4_eq_det_E\<^sub>5: "det E\<^sub>4 = det E\<^sub>5"
-proof -
-  define Z :: "real^6^6"
-    where "Z = (\<chi> k. if k = 6 then row 6 E\<^sub>4 + (3 * sqrt 3) *s row 5 E\<^sub>4 else row k E\<^sub>4)"
-  have d: "det Z = det E\<^sub>4"
-    unfolding Z_def by (rule det_row_operation) auto
-  have eq: "Z = E\<^sub>5"
-    unfolding Z_def E\<^sub>4_def E\<^sub>5_def vec_eq_iff
-    by (auto simp: forall_6 row_def field_simps power2_eq_square)
-  show ?thesis using d eq by simp
-qed
-
-subsubsection \<open>Read off \<open>det E\<^sub>5\<close> from the diagonal\<close>
-
-lemma det_E\<^sub>5: "det E\<^sub>5 = -10 * sqrt 3"
-proof -
-  text \<open>Sparse: brute-force perm sum collapses to the diagonal product.\<close>
-  have f1: "finite {2::6, 3, 4, 5, 6}" "1 \<notin> {2::6, 3, 4, 5, 6}" by auto
-  have f2: "finite {3::6, 4, 5, 6}"    "2 \<notin> {3::6, 4, 5, 6}"    by auto
-  have f3: "finite {4::6, 5, 6}"       "3 \<notin> {4::6, 5, 6}"       by auto
-  have f4: "finite {5::6, 6}"          "4 \<notin> {5::6, 6}"          by auto
-  have f5: "finite {6::6}"             "5 \<notin> {6::6}"             by auto
-  show ?thesis
-    unfolding E\<^sub>5_def det_def UNIV_6
-    unfolding sum_over_permutations_insert[OF f1]
-    unfolding sum_over_permutations_insert[OF f2]
-    unfolding sum_over_permutations_insert[OF f3]
-    unfolding sum_over_permutations_insert[OF f4]
-    unfolding sum_over_permutations_insert[OF f5]
-    unfolding permutes_sing
-    by (simp add: sign_swap_id permutation_swap_id sign_compose sign_id swap_id_eq
-                  field_simps power2_eq_square)
-qed
-
-subsubsection \<open>Combining: \<open>det D = -10\<sqrt>3 \<pi>\<^sup>2\<close>\<close>
-
-lemma det_D: "det D = -10 * sqrt 3 * pi^2"
-proof -
-  have "det D = pi^2 * det E" by (rule det_D_eq_pi2_det_E)
-  also have "\<dots> = pi^2 * det E\<^sub>5"
-    using det_E_eq_det_E\<^sub>1 det_E\<^sub>1_eq_det_E\<^sub>2 det_E\<^sub>2_eq_det_E\<^sub>3
-          det_E\<^sub>3_eq_det_E\<^sub>4 det_E\<^sub>4_eq_det_E\<^sub>5 by simp
-  also have "\<dots> = pi^2 * (-10 * sqrt 3)" by (simp add: det_E\<^sub>5)
-  also have "\<dots> = -10 * sqrt 3 * pi^2" by simp
-  finally show ?thesis .
-qed
 
 
 definition bigJ :: "real^12^12" where
@@ -4092,16 +3408,1096 @@ definition bigJ :: "real^12^12" where
 
 text \<open>
   TeX Lemma~\<open>lem:Msurj\<close>, determinant core (\<open>det J = -5\<pi>\<^sup>8/3\<close> at \<open>\<kappa> = 1\<close>;
-  the general value is \<open>-5\<pi>\<^sup>8/(3\<kappa>\<^sup>2)\<close>). This is the standalone arithmetic
-  fact: the explicit symbolic determinant evaluation of the configuration
-  matrix \<^const>\<open>bigJ\<close>. Stated without proof; the (omitted) proof is the
-  four-subsubsection cofactor/Vandermonde computation of TeX
-  Section~\<open>sssec:msurj-config\<close>. Being nonzero, it is the engine behind the
-  \<open>big_det\<close> hypothesis of \<open>Dx_moment_map_surjective\<close> below.
+  the general value is \<open>-5\<pi>\<^sup>8/(3\<kappa>\<^sup>2)\<close>). The explicit symbolic determinant of
+  the configuration matrix \<^const>\<open>bigJ\<close>. Strategy (Determinant.md): reorder
+  the rows by \<open>1,2,3,4,7,8,5,6,9,10,11,12\<close> and the columns by
+  \<open>1,3,5,7,9,11,2,4,6,8,10,12\<close> to expose a block-lower-triangular form
+  \<open>[Ablk | 0; C | Dblk]\<close>; row permutation has sign \<open>+1\<close> (two disjoint swaps),
+  column permutation has sign \<open>-1\<close> (15 inversions / 10-cycle); the block
+  determinant is \<open>det Ablk \<cdot> det Dblk\<close>; combining gives
+  \<open>det bigJ = -det Ablk \<cdot> det Dblk = -(-\<sqrt>3 \<pi>\<^sup>6/18)(-10\<sqrt>3 \<pi>\<^sup>2) = -5\<pi>\<^sup>8/3\<close>.
 \<close>
 
+subsubsection \<open>Row and column permutations exposing the block-lower-triangular form\<close>
+
+definition \<sigma>row :: "12 \<Rightarrow> 12" where
+  "\<sigma>row = Fun.swap 5 7 (Fun.swap 6 8 id)"
+
+definition \<sigma>col :: "12 \<Rightarrow> 12" where
+  "\<sigma>col = Fun.swap 2 3
+            (Fun.swap 2 5
+              (Fun.swap 2 9
+                (Fun.swap 2 6
+                  (Fun.swap 2 11
+                    (Fun.swap 2 10
+                      (Fun.swap 2 8
+                        (Fun.swap 2 4
+                          (Fun.swap 2 7 id)))))))) "
+
+lemma \<sigma>row_as_comp:
+  "\<sigma>row = Fun.swap (6::12) 8 id \<circ> Fun.swap (5::12) 7 id"
+  unfolding \<sigma>row_def by (auto simp: comp_def Fun.swap_def fun_eq_iff)
+
+lemma \<sigma>col_as_comp:
+  "\<sigma>col = Fun.swap (2::12) 7 id \<circ> Fun.swap (2::12) 4 id \<circ> Fun.swap (2::12) 8 id
+        \<circ> Fun.swap (2::12) 10 id \<circ> Fun.swap (2::12) 11 id \<circ> Fun.swap (2::12) 6 id
+        \<circ> Fun.swap (2::12) 9 id \<circ> Fun.swap (2::12) 5 id \<circ> Fun.swap (2::12) 3 id"
+  unfolding \<sigma>col_def by (auto simp: comp_def Fun.swap_def fun_eq_iff)
+
+lemma \<sigma>row_permutes: "\<sigma>row permutes UNIV"
+  by (simp add: \<sigma>row_as_comp permutes_compose permutes_swap_id)
+
+lemma \<sigma>col_permutes: "\<sigma>col permutes UNIV"
+  by (simp add: \<sigma>col_as_comp permutes_compose permutes_swap_id)
+
+lemma sign_\<sigma>row: "sign \<sigma>row = 1"
+proof -
+  have "sign \<sigma>row = sign (Fun.swap (6::12) 8 id) * sign (Fun.swap (5::12) 7 id)"
+    by (simp add: \<sigma>row_as_comp sign_compose permutation_swap_id)
+  thus ?thesis by (simp add: sign_swap_id)
+qed
+
+lemma sign_\<sigma>col: "sign \<sigma>col = -1"
+proof -
+  have "sign \<sigma>col
+      = sign (Fun.swap (2::12) 7 id) * sign (Fun.swap (2::12) 4 id)
+      * sign (Fun.swap (2::12) 8 id) * sign (Fun.swap (2::12) 10 id)
+      * sign (Fun.swap (2::12) 11 id) * sign (Fun.swap (2::12) 6 id)
+      * sign (Fun.swap (2::12) 9 id) * sign (Fun.swap (2::12) 5 id)
+      * sign (Fun.swap (2::12) 3 id)"
+    by (simp add: \<sigma>col_as_comp sign_compose permutation_swap_id
+                  permutation_compose mult.assoc)
+  thus ?thesis by (simp add: sign_swap_id)
+qed
+
+definition Jperm :: "real^12^12" where
+  "Jperm = (\<chi> i j. bigJ $ (\<sigma>row i) $ (\<sigma>col j))"
+
+lemma det_bigJ_eq_neg_det_Jperm: "det bigJ = - det Jperm"
+proof -
+  let ?M = "(\<chi> i j. bigJ $ i $ \<sigma>col j) :: real^12^12"
+  have Jp: "Jperm = (\<chi> i. ?M $ (\<sigma>row i))"
+    unfolding Jperm_def by (simp add: vec_eq_iff)
+  have step_row: "det Jperm = of_int (sign \<sigma>row) * det ?M"
+    using det_permute_rows
+    by (metis Determinants.det_permute_rows Jp \<sigma>row_permutes) 
+  have step_col: "det ?M = of_int (sign \<sigma>col) * det bigJ"
+    using det_permute_columns[OF \<sigma>col_permutes, of bigJ] .
+  have "det Jperm = of_int (sign \<sigma>row) * (of_int (sign \<sigma>col) * det bigJ)"
+    using step_row step_col by simp
+  also have "\<dots> = - det bigJ"
+    by (simp add: sign_\<sigma>row sign_\<sigma>col)
+  finally show ?thesis by simp
+qed
+
+subsubsection \<open>Block decomposition: \<open>det Jperm = det Ablk \<cdot> det Dblk\<close>\<close>
+
+text \<open>
+  The permuted matrix \<^const>\<open>Jperm\<close> has the block form \<open>[Ablk | 0; Cblk | Dblk]\<close>,
+  realized by the type-level embeddings \<open>top_emb\<close>, \<open>bot_emb\<close> from
+  the 6-index type into the 12-index type.
+\<close>
+
+definition top_emb :: "6 \<Rightarrow> 12" where
+  "top_emb k = (if k = 1 then 1 else if k = 2 then 2 else if k = 3 then 3
+                else if k = 4 then 4 else if k = 5 then 5 else 6)"
+
+definition bot_emb :: "6 \<Rightarrow> 12" where
+  "bot_emb k = (if k = 1 then 7 else if k = 2 then 8 else if k = 3 then 9
+                else if k = 4 then 10 else if k = 5 then 11 else 12)"
+
+text \<open>The lower-left block \<open>Cblk\<close> (the values are determined by \<^const>\<open>Jperm\<close>'s
+  definition; we list them explicitly so the structural lemma is checkable by \<open>simp\<close>).\<close>
+
+definition Cblk :: "real^6^6" where
+  "Cblk = vector
+    [ vector [0, - sqrt 3, 0, 0, sqrt 3, sqrt 3],
+      vector [-2, -1, 0, 0, 1, -1],
+      vector [2, 1 - pi * sqrt 3 / 3, 0, 0, -1 + 4 * pi * sqrt 3 / 3,
+              1 + 5 * pi * sqrt 3 / 3],
+      vector [0, - sqrt 3 - pi / 3, 0, 0, sqrt 3 + 4 * pi / 3,
+              sqrt 3 - 5 * pi / 3],
+      vector [0, -2 * sqrt 3, 0, 0, 2 * sqrt 3, 2 * sqrt 3],
+      vector [-4, -2, 0, 0, 2, -2] ]"
+
+lemma exhaust_6:
+  fixes x :: 6
+  shows "x = 1 \<or> x = 2 \<or> x = 3 \<or> x = 4 \<or> x = 5 \<or> x = 6"
+proof (induct x)
+  case (of_int z)
+
+  then have zbound: "0 \<le> z \<and> z < 6"
+    by simp
+
+  from zbound consider
+      "z = 0" | "z = 1" | "z = 2" | "z = 3" | "z = 4" | "z = 5"
+    by linarith
+
+  then have zcases:
+    "z = 0 \<or> z = 1 \<or> z = 2 \<or> z = 3 \<or> z = 4 \<or> z = 5"
+    by cases auto
+
+  then show ?case
+    by auto
+qed
+
+lemma TOP_set:
+  "top_emb ` UNIV = {(1::12), 2, 3, 4, 5, 6}"
+proof
+  show "top_emb ` UNIV \<subseteq> {(1::12), 2, 3, 4, 5, 6}"
+  proof
+    fix y
+    assume ymem: "y \<in> top_emb ` UNIV"
+    then obtain k :: 6 where y: "y = top_emb k"
+      by blast
+
+    have "k = 1 \<or> k = 2 \<or> k = 3 \<or> k = 4 \<or> k = 5 \<or> k = 6"
+      by (rule exhaust_6)
+
+    then show "y \<in> {(1::12), 2, 3, 4, 5, 6}"
+      using y
+      by (auto simp: top_emb_def)
+  qed
+
+  show "{(1::12), 2, 3, 4, 5, 6} \<subseteq> top_emb ` UNIV"
+  proof
+    fix y
+    assume ymem: "y \<in> {(1::12), 2, 3, 4, 5, 6}"
+
+    then consider
+        "y = (1::12)"
+      | "y = (2::12)"
+      | "y = (3::12)"
+      | "y = (4::12)"
+      | "y = (5::12)"
+      | "y = (6::12)"
+      by auto
+
+    then show "y \<in> top_emb ` UNIV"
+    proof cases
+      case 1
+      have "top_emb (1::6) = (1::12)"
+        by (simp add: top_emb_def)
+      then show ?thesis
+        using 1
+        by (metis UNIV_I image_eqI)
+    next
+      case 2
+      have "top_emb (2::6) = (2::12)"
+        by (simp add: top_emb_def)
+      then show ?thesis
+        using 2
+        by (metis UNIV_I image_eqI)
+    next
+      case 3
+      have "top_emb (3::6) = (3::12)"
+        by (simp add: top_emb_def)
+      then show ?thesis
+        using 3
+        by (metis UNIV_I image_eqI)
+    next
+      case 4
+      have "top_emb (4::6) = (4::12)"
+        by (simp add: top_emb_def)
+      then show ?thesis
+        using 4
+        by (metis UNIV_I image_eqI)
+    next
+      case 5
+      have "top_emb (5::6) = (5::12)"
+        by (simp add: top_emb_def)
+      then show ?thesis
+        using 5
+        by (metis UNIV_I image_eqI)
+    next
+      case 6
+      have "top_emb (6::6) = (6::12)"
+        by (simp add: top_emb_def)
+      then show ?thesis
+        using 6
+        by (metis UNIV_I image_eqI)
+    qed
+  qed
+qed
+
+lemma BOT_set:
+  "bot_emb ` UNIV = {(7::12), 8, 9, 10, 11, 12}"
+proof
+  show "bot_emb ` UNIV \<subseteq> {(7::12), 8, 9, 10, 11, 12}"
+  proof
+    fix y
+    assume ymem: "y \<in> bot_emb ` UNIV"
+    then obtain k :: 6 where y: "y = bot_emb k"
+      by blast
+
+    have "k = 1 \<or> k = 2 \<or> k = 3 \<or> k = 4 \<or> k = 5 \<or> k = 6"
+      by (rule exhaust_6)
+
+    then show "y \<in> {(7::12), 8, 9, 10, 11, 12}"
+      using y
+      by (auto simp: bot_emb_def)
+  qed
+
+  show "{(7::12), 8, 9, 10, 11, 12} \<subseteq> bot_emb ` UNIV"
+  proof
+    fix y
+    assume ymem: "y \<in> {(7::12), 8, 9, 10, 11, 12}"
+
+    then consider
+        "y = (7::12)"
+      | "y = (8::12)"
+      | "y = (9::12)"
+      | "y = (10::12)"
+      | "y = (11::12)"
+      | "y = (12::12)"
+      by auto
+
+    then show "y \<in> bot_emb ` UNIV"
+    proof cases
+      case 1
+      have "bot_emb (1::6) = (7::12)"
+        by (simp add: bot_emb_def)
+      then show ?thesis
+        using 1 by (metis UNIV_I image_eqI)
+    next
+      case 2
+      have "bot_emb (2::6) = (8::12)"
+        by (simp add: bot_emb_def)
+      then show ?thesis
+        using 2 by (metis UNIV_I image_eqI)
+    next
+      case 3
+      have "bot_emb (3::6) = (9::12)"
+        by (simp add: bot_emb_def)
+      then show ?thesis
+        using 3 by (metis UNIV_I image_eqI)
+    next
+      case 4
+      have "bot_emb (4::6) = (10::12)"
+        by (simp add: bot_emb_def)
+      then show ?thesis
+        using 4 by (metis UNIV_I image_eqI)
+    next
+      case 5
+      have "bot_emb (5::6) = (11::12)"
+        by (simp add: bot_emb_def)
+      then show ?thesis
+        using 5 by (metis UNIV_I image_eqI)
+    next
+      case 6
+      have "bot_emb (6::6) = (12::12)"
+        by (simp add: bot_emb_def)
+      then show ?thesis
+        using 6 by (metis UNIV_I image_eqI)
+    qed
+  qed
+qed
+
+lemma top_emb_inj: "inj top_emb"
+  by (auto simp: inj_def top_emb_def forall_6 split: if_splits)
+
+lemma bot_emb_inj: "inj bot_emb"
+  by (auto simp: inj_def bot_emb_def forall_6 split: if_splits)
+
+lemma top_bot_disjoint: "top_emb ` UNIV \<inter> bot_emb ` UNIV = {}"
+  unfolding TOP_set BOT_set by auto
+
+lemma top_bot_union: "top_emb ` UNIV \<union> bot_emb ` UNIV = (UNIV :: 12 set)"
+  unfolding TOP_set BOT_set UNIV_12 by auto
+
+text \<open>The four block equations characterizing \<^const>\<open>Jperm\<close>.\<close>
+
+lemma Jperm_TL_all: "\<forall>i j :: 6. Jperm $ (top_emb i) $ (top_emb j) = Ablk $ i $ j"
+  unfolding Jperm_def \<sigma>row_def \<sigma>col_def top_emb_def Ablk_def bigJ_def
+  by (simp add: forall_6 Fun.swap_def)
+
+lemma Jperm_TL: "Jperm $ (top_emb i) $ (top_emb j) = Ablk $ i $ j"
+  using Jperm_TL_all by blast
+
+lemma Jperm_TR_all: "\<forall>i j :: 6. Jperm $ (top_emb i) $ (bot_emb j) = 0"
+  unfolding Jperm_def \<sigma>row_def \<sigma>col_def top_emb_def bot_emb_def bigJ_def
+  by (simp add: forall_6 Fun.swap_def)
+
+lemma Jperm_TR: "Jperm $ (top_emb i) $ (bot_emb j) = 0"
+  using Jperm_TR_all by blast
+
+lemma Jperm_BL_all: "\<forall>i j :: 6. Jperm $ (bot_emb i) $ (top_emb j) = Cblk $ i $ j"
+  unfolding Jperm_def \<sigma>row_def \<sigma>col_def top_emb_def bot_emb_def Cblk_def bigJ_def
+  by (simp add: forall_6 Fun.swap_def)
+
+lemma Jperm_BL: "Jperm $ (bot_emb i) $ (top_emb j) = Cblk $ i $ j"
+  using Jperm_BL_all by blast
+
+lemma Jperm_BR_all: "\<forall>i j :: 6. Jperm $ (bot_emb i) $ (bot_emb j) = Dblk $ i $ j"
+  unfolding Jperm_def \<sigma>row_def \<sigma>col_def bot_emb_def Dblk_def bigJ_def
+  by (simp add: forall_6 Fun.swap_def)
+
+lemma Jperm_BR: "Jperm $ (bot_emb i) $ (bot_emb j) = Dblk $ i $ j"
+  using Jperm_BR_all by blast
+
+text \<open>The Cartesian block determinant lemma, proved via permutation
+  decomposition: nonzero terms of \<open>det Jperm\<close>'s permutation sum come only from
+  block-preserving permutations; those decompose as a pair of \<open>6\<close>-permutations
+  on the top and bottom blocks; the sign and product factor accordingly.\<close>
+
+
+
+lemma det_Jperm: "det Jperm = det Ablk * det Dblk"
+proof -
+  let ?T = "top_emb ` (UNIV::6 set)"
+  let ?B = "bot_emb ` (UNIV::6 set)"
+
+  have fin_T: "finite ?T" by simp
+  have fin_B: "finite ?B" by simp
+  have disj: "?T \<inter> ?B = {}" by (rule top_bot_disjoint)
+  have UN: "(UNIV::12 set) = ?T \<union> ?B" by (rule top_bot_union[symmetric])
+
+  have bij_T: "bij_betw top_emb UNIV ?T"
+    using top_emb_inj by (simp add: bij_betw_def)
+  have bij_B: "bij_betw bot_emb UNIV ?B"
+    using bot_emb_inj by (simp add: bij_betw_def)
+
+  define lift where
+    "lift pT pB = (\<lambda>k::12. if k \<in> ?T
+                            then top_emb (pT (inv_into UNIV top_emb k))
+                            else bot_emb (pB (inv_into UNIV bot_emb k)))"
+    for pT pB :: "6 \<Rightarrow> 6"
+
+  have lift_on_T: "lift pT pB (top_emb i) = top_emb (pT i)" for pT pB i
+    unfolding lift_def
+    using inv_into_f_f[OF top_emb_inj UNIV_I, of i] by auto
+
+  have lift_on_B: "lift pT pB (bot_emb i) = bot_emb (pB i)" for pT pB i
+    unfolding lift_def
+    using inv_into_f_f[OF bot_emb_inj UNIV_I, of i] disj
+    by (auto simp: image_iff)
+
+  have permutes_6_iff_bij:
+    "f permutes (UNIV::6 set) \<longleftrightarrow> bij f"
+    for f :: "6 \<Rightarrow> 6"
+    by (auto simp: permutes_def bij_def inj_on_def surj_def, metis+)
+    
+
+  have permutes_12_iff_bij:
+    "f permutes (UNIV::12 set) \<longleftrightarrow> bij f"
+    for f :: "12 \<Rightarrow> 12"
+    by (auto simp: permutes_def bij_def inj_on_def surj_def, metis+)
+
+  text \<open>Step 1: nonzero contributions come only from block-preserving permutations.\<close>
+  have BP_only: "(\<Prod>k\<in>(UNIV::12 set). Jperm $ k $ p k) = 0"
+    if p_perm: "p permutes (UNIV::12 set)" and not_bp: "p ` ?T \<noteq> ?T"
+    for p
+  proof -
+    from p_perm have inj_p: "inj_on p ?T" by (rule permutes_inj_on)
+    have card_im: "card (p ` ?T) = card ?T" using inj_p by (rule card_image)
+    have "p ` ?T \<subseteq> ?T \<Longrightarrow> p ` ?T = ?T"
+      using fin_T card_im by (metis card_subset_eq)
+    with not_bp obtain k where kT: "k \<in> ?T" and pk_notT: "p k \<notin> ?T" by blast
+    from pk_notT UN have "p k \<in> ?B" by auto
+    then obtain j where pk_eq: "p k = bot_emb j" by auto
+    from kT obtain i where k_eq: "k = top_emb i" by auto
+    have "Jperm $ k $ p k = Jperm $ (top_emb i) $ (bot_emb j)"
+      using k_eq pk_eq by simp
+    also have "\<dots> = 0" by (rule Jperm_TR)
+    finally have "Jperm $ k $ p k = 0" .
+    moreover have "k \<in> UNIV" by simp
+    ultimately show ?thesis by (intro prod_zero) auto
+  qed
+
+  text \<open>Step 2: for block-preserving permutations, the product factors as
+    (top-block product) * (bottom-block product), each indexed by a
+    \<open>6\<close>-permutation.\<close>
+  have BP_factor:
+    "(\<Prod>k\<in>UNIV. Jperm $ k $ p k)
+       = (\<Prod>i\<in>UNIV. Ablk $ i $ ((inv_into UNIV top_emb \<circ> p \<circ> top_emb) i))
+       * (\<Prod>i\<in>UNIV. Dblk $ i $ ((inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) i))"
+    if p_perm: "p permutes (UNIV::12 set)" and bp: "p ` ?T = ?T"
+    for p
+  proof -
+    have bp_B: "p ` ?B = ?B"
+    proof -
+      have inj_UN: "inj_on p (UNIV::12 set)"
+        using p_perm
+        by (rule permutes_inj_on)
+
+      have pB_sub_B: "p ` ?B \<subseteq> ?B"
+      proof
+        fix y
+        assume y_in: "y \<in> p ` ?B"
+        then obtain b where bB: "b \<in> ?B" and y_eq: "y = p b"
+          by blast
+
+        have y_TB: "y \<in> ?T \<union> ?B"
+          using UN
+          by simp
+
+        show "y \<in> ?B"
+        proof (rule ccontr)
+          assume y_not_B: "y \<notin> ?B"
+          then have yT: "y \<in> ?T"
+            using y_TB
+            by blast
+
+          then obtain t where tT: "t \<in> ?T" and y_eq_t: "y = p t"
+            using bp
+            by blast
+
+          have "b = t"
+            using inj_UN y_eq y_eq_t
+            by (auto simp: inj_on_def)
+
+          then have "b \<in> ?T"
+            using tT
+            by simp
+
+          then show False
+            using bB disj
+            by auto
+        qed
+      qed
+
+      have inj_B: "inj_on p ?B"
+        using p_perm
+        by (rule permutes_inj_on)
+
+      have card_pB: "card (p ` ?B) = card ?B"
+        using inj_B
+        by (rule card_image)
+
+      show ?thesis
+        using pB_sub_B fin_B card_pB
+        by (metis card_subset_eq)
+    qed
+    have prod_split:
+      "(\<Prod>k\<in>UNIV. Jperm $ k $ p k)
+       = (\<Prod>k\<in>?T. Jperm $ k $ p k) * (\<Prod>k\<in>?B. Jperm $ k $ p k)"
+      using UN disj fin_T fin_B by (simp add: prod.union_disjoint,
+                                    metis (lifting) fin_B fin_T prod.union_disjoint)
+    have top_prod:
+      "(\<Prod>k\<in>?T. Jperm $ k $ p k)
+       = (\<Prod>i\<in>UNIV. Ablk $ i $ ((inv_into UNIV top_emb \<circ> p \<circ> top_emb) i))"
+    proof -
+      have "(\<Prod>k\<in>?T. Jperm $ k $ p k)
+            = (\<Prod>i\<in>UNIV. Jperm $ (top_emb i) $ p (top_emb i))"
+        by (rule prod.reindex_bij_betw[OF bij_T, symmetric])
+      also have "\<dots> = (\<Prod>i\<in>UNIV. Jperm $ (top_emb i)
+                          $ (top_emb (inv_into UNIV top_emb (p (top_emb i)))))"
+      proof (rule prod.cong[OF refl])
+        fix i :: 6 assume "i \<in> UNIV"
+        have "p (top_emb i) \<in> ?T" using bp by (metis UNIV_I imageI image_eqI)
+        thus "Jperm $ (top_emb i) $ p (top_emb i)
+              = Jperm $ (top_emb i) $ top_emb (inv_into UNIV top_emb (p (top_emb i)))"
+          by (simp add: f_inv_into_f)
+      qed
+      also have "\<dots> = (\<Prod>i\<in>UNIV. Ablk $ i $ (inv_into UNIV top_emb (p (top_emb i))))"
+        by (simp add: Jperm_TL)
+      finally show ?thesis by (simp add: o_def)
+    qed
+    have bot_prod:
+      "(\<Prod>k\<in>?B. Jperm $ k $ p k)
+       = (\<Prod>i\<in>UNIV. Dblk $ i $ ((inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) i))"
+    proof -
+      have "(\<Prod>k\<in>?B. Jperm $ k $ p k)
+            = (\<Prod>i\<in>UNIV. Jperm $ (bot_emb i) $ p (bot_emb i))"
+        by (rule prod.reindex_bij_betw[OF bij_B, symmetric])
+      also have "\<dots> = (\<Prod>i\<in>UNIV. Jperm $ (bot_emb i)
+                          $ (bot_emb (inv_into UNIV bot_emb (p (bot_emb i)))))"
+      proof (rule prod.cong[OF refl])
+        fix i :: 6 assume "i \<in> UNIV"
+        have "p (bot_emb i) \<in> ?B" using bp_B by (metis UNIV_I imageI image_eqI)
+        thus "Jperm $ (bot_emb i) $ p (bot_emb i)
+              = Jperm $ (bot_emb i) $ bot_emb (inv_into UNIV bot_emb (p (bot_emb i)))"
+          by (simp add: f_inv_into_f)
+      qed
+      also have "\<dots> = (\<Prod>i\<in>UNIV. Dblk $ i $ (inv_into UNIV bot_emb (p (bot_emb i))))"
+        by (simp add: Jperm_BR)
+      finally show ?thesis by (simp add: o_def)
+    qed
+    from prod_split top_prod bot_prod show ?thesis by simp
+  qed
+
+  text \<open>Step 3: the bijection between block-preserving 12-perms and
+    pairs of 6-perms, and sign multiplicativity. These remaining algebraic
+    steps are left as helper sorries; combined they close the determinant.\<close>
+
+  have sign_lift: "sign (lift pT pB) = sign pT * sign pB"
+    if pT_perm: "pT permutes (UNIV::6 set)"
+      and pB_perm: "pB permutes (UNIV::6 set)"
+    for pT pB
+  proof -
+    let ?topL = "map_permutation (UNIV::6 set) top_emb pT :: 12 \<Rightarrow> 12"
+    let ?botL = "map_permutation (UNIV::6 set) bot_emb pB :: 12 \<Rightarrow> 12"
+
+    have top_inj_on: "inj_on top_emb (UNIV::6 set)"
+      using top_emb_inj
+      by (simp add: inj_on_def)
+
+    have bot_inj_on: "inj_on bot_emb (UNIV::6 set)"
+      using bot_emb_inj
+      by (simp add: inj_on_def)
+
+    have topL_on_T:
+      "?topL (top_emb i) = top_emb (pT i)"
+      for i :: 6
+      by (rule map_permutation_apply[OF top_inj_on UNIV_I])
+
+    have botL_on_B:
+      "?botL (bot_emb i) = bot_emb (pB i)"
+      for i :: 6
+      by (rule map_permutation_apply[OF bot_inj_on UNIV_I])
+
+    have topL_on_B:
+      "?topL (bot_emb i) = bot_emb i"
+      for i :: 6
+    proof -
+      have "bot_emb i \<notin> ?T"
+        using disj
+        by auto
+      then show ?thesis
+        by (simp add: map_permutation_def restrict_id_def)
+    qed
+
+    have botL_on_T: "?botL (top_emb i) = top_emb i"
+      for i :: 6
+    proof -
+      have "top_emb i \<notin> ?B"
+        using disj
+        by auto
+      then show ?thesis
+        by (simp add: map_permutation_def restrict_id_def)
+    qed
+
+    have lift_eq: "lift pT pB = ?topL \<circ> ?botL"
+    proof
+      fix k :: 12
+      have "k \<in> ?T \<or> k \<in> ?B"
+        using UN
+        by auto
+      then show "lift pT pB k = (?topL \<circ> ?botL) k"
+      proof
+        assume kT: "k \<in> ?T"
+        then obtain i :: 6 where k: "k = top_emb i"
+          by auto
+        then show ?thesis
+          by (simp add: lift_on_T topL_on_T botL_on_T)
+      next
+        assume kB: "k \<in> ?B"
+        then obtain i :: 6 where k: "k = bot_emb i"
+          by auto
+        then show ?thesis
+          by (simp add: lift_on_B topL_on_B botL_on_B)
+      qed
+    qed
+
+    have topL_permutes:
+      "?topL permutes ?T"
+      using bij_T pT_perm
+      by (rule map_permutation_permutes)
+
+    have botL_permutes:
+      "?botL permutes ?B"
+      using bij_B pB_perm
+      by (rule map_permutation_permutes)
+
+    have topL_perm: "permutation ?topL"
+      using fin_T topL_permutes
+      by (rule permutes_imp_permutation)
+
+    have botL_perm: "permutation ?botL"
+      using fin_B botL_permutes
+      by (rule permutes_imp_permutation)
+
+    have sign_top: "sign ?topL = sign pT"
+      by (simp add: pT_perm sign_map_permutation top_emb_inj)
+
+    have sign_bot: "sign ?botL = sign pB"
+      by (simp add: bot_inj_on sign_map_permutation that(2))
+
+    have "sign (lift pT pB) = sign (?topL \<circ> ?botL)"
+      by (simp add: lift_eq)
+    also have "... = sign ?topL * sign ?botL"
+      by (rule sign_compose[OF topL_perm botL_perm])
+    also have "... = sign pT * sign pB"
+      by (simp add: sign_top sign_bot)
+    finally show ?thesis.
+  qed
+
+  have lift_perm: "lift pT pB permutes (UNIV::12 set)"
+    if pT_perm: "pT permutes (UNIV::6 set)"
+      and pB_perm: "pB permutes (UNIV::6 set)"
+    for pT pB
+  proof -
+    have surj_pT: "surj pT"
+      using pT_perm
+      by (simp add: permutes_6_iff_bij bij_def)
+
+    have surj_pB: "surj pB"
+      using pB_perm
+      by (simp add: permutes_6_iff_bij bij_def)
+
+    have surj_lift: "surj (lift pT pB)"
+    proof (unfold surj_def, intro allI)
+      fix y :: 12
+      have y_cases: "y \<in> ?T \<or> y \<in> ?B"
+        using UN
+        by auto
+
+      then show "\<exists>x. y = lift pT pB x"
+      proof
+        assume yT: "y \<in> ?T"
+        then obtain j :: 6 where y: "y = top_emb j"
+          by auto
+
+        obtain i :: 6 where i: "pT i = j"
+          using surj_pT
+          by (auto simp: surj_def, metis)
+
+        have "y = lift pT pB (top_emb i)"
+          using y i
+          by (simp add: lift_on_T)
+
+        then show ?thesis
+          by blast
+      next
+        assume yB: "y \<in> ?B"
+        then obtain j :: 6 where y: "y = bot_emb j"
+          by auto
+
+        obtain i :: 6 where i: "pB i = j"
+          using surj_pB
+          by (auto simp: surj_def, metis)
+
+        have "y = lift pT pB (bot_emb i)"
+          using y i
+          by (simp add: lift_on_B)
+
+        then show ?thesis
+          by blast
+      qed
+    qed
+
+    have inj_pT: "inj pT"
+      using pT_perm
+      by (simp add: permutes_6_iff_bij bij_def)
+
+    have inj_pB: "inj pB"
+      using pB_perm
+      by (simp add: permutes_6_iff_bij bij_def)
+
+    have inj_lift: "inj (lift pT pB)"
+    proof (rule injI)
+      fix a b :: 12
+      assume eq: "lift pT pB a = lift pT pB b"
+
+      have a_cases: "a \<in> ?T \<or> a \<in> ?B"
+        using UN by auto
+      have b_cases: "b \<in> ?T \<or> b \<in> ?B"
+        using UN by auto
+
+      show "a = b"
+        using a_cases
+      proof
+        assume aT: "a \<in> ?T"
+        then obtain i :: 6 where a_eq: "a = top_emb i"
+          by auto
+
+        show "a = b"
+          using b_cases
+        proof
+          assume bT: "b \<in> ?T"
+          then obtain j :: 6 where b_eq: "b = top_emb j"
+            by auto
+
+          have "top_emb (pT i) = top_emb (pT j)"
+            using eq a_eq b_eq
+            by (simp add: lift_on_T)
+
+          then have "pT i = pT j"
+            using top_emb_inj
+            by (simp add: inj_def)
+
+          then have "i = j"
+            using inj_pT
+            by (simp add: inj_def)
+
+          then show "a = b"
+            using a_eq b_eq
+            by simp
+        next
+          assume bB: "b \<in> ?B"
+          then obtain j :: 6 where b_eq: "b = bot_emb j"
+            by auto
+
+          have eq_blocks: "top_emb (pT i) = bot_emb (pB j)"
+            using eq a_eq b_eq
+            by (simp add: lift_on_T lift_on_B)
+
+          have "top_emb (pT i) \<in> ?T"
+            by auto
+          moreover have "bot_emb (pB j) \<in> ?B"
+            by auto
+          ultimately show "a = b"
+            using eq_blocks disj
+            by auto
+        qed
+      next
+        assume aB: "a \<in> ?B"
+        then obtain i :: 6 where a_eq: "a = bot_emb i"
+          by auto
+
+        show "a = b"
+          using b_cases
+        proof
+          assume bT: "b \<in> ?T"
+          then obtain j :: 6 where b_eq: "b = top_emb j"
+            by auto
+
+          have eq_blocks: "bot_emb (pB i) = top_emb (pT j)"
+            using eq a_eq b_eq
+            by (simp add: lift_on_T lift_on_B)
+
+          have "bot_emb (pB i) \<in> ?B"
+            by auto
+          moreover have "top_emb (pT j) \<in> ?T"
+            by auto
+          ultimately show "a = b"
+            using eq_blocks disj
+            by auto
+        next
+          assume bB: "b \<in> ?B"
+          then obtain j :: 6 where b_eq: "b = bot_emb j"
+            by auto
+
+          have "bot_emb (pB i) = bot_emb (pB j)"
+            using eq a_eq b_eq
+            by (simp add: lift_on_B)
+
+          then have "pB i = pB j"
+            using bot_emb_inj
+            by (simp add: inj_def)
+
+          then have "i = j"
+            using inj_pB
+            by (simp add: inj_def)
+
+          then show "a = b"
+            using a_eq b_eq
+            by simp
+        qed
+      qed
+
+      have "bij (lift pT pB)"
+        unfolding bij_def
+        by(simp add: finite_UNIV_surj_inj surj_lift)
+    qed
+    then show ?thesis
+      using bij_def surj_lift by (simp add: permutes_12_iff_bij, auto)       
+  qed
+
+  have lift_image_T: "lift pT pB ` ?T = ?T"
+    if pT_perm: "pT permutes (UNIV::6 set)" for pT pB
+  proof
+    show "lift pT pB ` ?T \<subseteq> ?T"
+    proof
+      fix y
+      assume "y \<in> lift pT pB ` ?T"
+      then obtain i :: 6 where y: "y = lift pT pB (top_emb i)"
+        by auto
+      then have "y = top_emb (pT i)"
+        by (simp add: lift_on_T)
+      then show "y \<in> ?T"
+        by auto
+    qed
+
+    show "?T \<subseteq> lift pT pB ` ?T"
+    proof
+      fix y
+      assume yT: "y \<in> ?T"
+      then obtain j :: 6 where y: "y = top_emb j"
+        by auto
+
+      have "surj pT"
+        using pT_perm
+        by (simp add: permutes_6_iff_bij bij_def)
+
+      then obtain i :: 6 where i: "pT i = j"
+        by (auto simp: surj_def, metis)
+
+      have "lift pT pB (top_emb i) = y"
+        using y i
+        by (simp add: lift_on_T)
+
+      then show "y \<in> lift pT pB ` ?T"
+        by auto
+    qed
+  qed
+
+  have inv_lift: "(inv_into UNIV top_emb \<circ> lift pT pB \<circ> top_emb) = pT
+                \<and> (inv_into UNIV bot_emb \<circ> lift pT pB \<circ> bot_emb) = pB"
+    if "pT permutes UNIV" "pB permutes UNIV" for pT pB
+    using bot_emb_inj lift_on_B lift_on_T top_emb_inj by auto
+
+  let ?BP = "{p. p permutes (UNIV::12 set) \<and> p ` ?T = ?T}"
+  let ?PP = "{pT. pT permutes (UNIV::6 set)} \<times> {pB. pB permutes (UNIV::6 set)}"
+
+  have p_pres_BOT: "p ` ?B = ?B"
+    if p_perm: "p permutes (UNIV::12 set)" and p_bp: "p ` ?T = ?T" for p
+  proof -
+    have inj_p: "inj p"
+      using p_perm by (simp add: permutes_12_iff_bij bij_def)
+    have pB_sub_B: "p ` ?B \<subseteq> ?B"
+    proof
+      fix y assume "y \<in> p ` ?B"
+      then obtain b where bB: "b \<in> ?B" and y_eq: "y = p b" by blast
+      show "y \<in> ?B"
+      proof (rule ccontr)
+        assume y_not_B: "y \<notin> ?B"
+        with UN have yT: "y \<in> ?T" by auto
+        with p_bp obtain t where tT: "t \<in> ?T" and y_eq_t: "y = p t" by blast
+        have "b = t" using inj_p y_eq y_eq_t by (auto simp: inj_def)
+        then have "b \<in> ?T" using tT by simp
+        with bB disj show False by auto
+      qed
+    qed
+    have card_pB: "card (p ` ?B) = card ?B"
+      using inj_p by (auto simp: card_image inj_on_def)
+    show ?thesis
+      using pB_sub_B fin_B card_pB by (metis card_subset_eq)
+  qed
+
+  have unlift_perm:
+    "(inv_into UNIV top_emb \<circ> p \<circ> top_emb) permutes (UNIV::6 set)
+   \<and> (inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) permutes (UNIV::6 set)"
+    if p_perm: "p permutes (UNIV::12 set)" and p_bp: "p ` ?T = ?T" for p
+  proof -
+    have p_bb: "p ` ?B = ?B" by (rule p_pres_BOT[OF p_perm p_bp])
+    have inj_pT: "inj (inv_into UNIV top_emb \<circ> p \<circ> top_emb)"
+    proof (rule injI)
+      fix x y :: 6
+      assume "(inv_into UNIV top_emb \<circ> p \<circ> top_emb) x
+            = (inv_into UNIV top_emb \<circ> p \<circ> top_emb) y"
+      then have eq: "inv_into UNIV top_emb (p (top_emb x))
+                   = inv_into UNIV top_emb (p (top_emb y))" by simp
+      have "p (top_emb x) \<in> ?T" using p_bp by auto
+      moreover have "p (top_emb y) \<in> ?T" using p_bp by auto
+      ultimately have "p (top_emb x) = p (top_emb y)"
+        by (meson eq inv_into_injective)
+      then have "top_emb x = top_emb y"
+        using p_perm by (meson permutes_inj injD)
+      then show "x = y" using top_emb_inj by (meson injD)
+    qed
+    have bij_pT: "bij (inv_into UNIV top_emb \<circ> p \<circ> top_emb)"
+      using finite_class.finite_UNIV inj_imp_permutes inj_pT permutes_6_iff_bij by blast
+    have pT_perm: "(inv_into UNIV top_emb \<circ> p \<circ> top_emb) permutes (UNIV::6 set)"
+      using bij_pT by (simp add: permutes_6_iff_bij)
+    have inj_pB: "inj (inv_into UNIV bot_emb \<circ> p \<circ> bot_emb)"
+    proof (rule injI)
+      fix x y :: 6
+      assume "(inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) x
+            = (inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) y"
+      then have eq: "inv_into UNIV bot_emb (p (bot_emb x))
+                   = inv_into UNIV bot_emb (p (bot_emb y))" by simp
+      have "p (bot_emb x) \<in> ?B" using p_bb by auto
+      moreover have "p (bot_emb y) \<in> ?B" using p_bb by auto
+      ultimately have "p (bot_emb x) = p (bot_emb y)"
+        by (meson eq inv_into_injective)
+      then have "bot_emb x = bot_emb y"
+        using p_perm by (meson permutes_inj injD)
+      then show "x = y" using bot_emb_inj by (meson injD)
+    qed
+    have bij_pB: "bij (inv_into UNIV bot_emb \<circ> p \<circ> bot_emb)"
+      using finite_class.finite_UNIV inj_imp_permutes inj_pB permutes_6_iff_bij by blast
+    have pB_perm: "(inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) permutes (UNIV::6 set)"
+      using bij_pB by (simp add: permutes_6_iff_bij)
+    from pT_perm pB_perm show ?thesis by simp
+  qed
+
+  have lift_unlift:
+    "lift (inv_into UNIV top_emb \<circ> p \<circ> top_emb)
+          (inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) = p"
+    if p_perm: "p permutes (UNIV::12 set)" and p_bp: "p ` ?T = ?T" for p
+  proof
+    fix k :: 12
+    let ?pT = "inv_into UNIV top_emb \<circ> p \<circ> top_emb"
+    let ?pB = "inv_into UNIV bot_emb \<circ> p \<circ> bot_emb"
+    have "k \<in> ?T \<or> k \<in> ?B" using UN by auto
+    then show "lift ?pT ?pB k = p k"
+    proof
+      assume kT: "k \<in> ?T"
+      then obtain i where k: "k = top_emb i" by auto
+      have "lift ?pT ?pB (top_emb i)
+            = top_emb (inv_into UNIV top_emb (p (top_emb i)))"
+        by (simp add: lift_on_T)
+      moreover have "p (top_emb i) \<in> ?T" using p_bp by auto
+      then have "top_emb (inv_into UNIV top_emb (p (top_emb i))) = p (top_emb i)"
+        using bij_T by (auto simp: f_inv_into_f)
+      ultimately show "lift ?pT ?pB k = p k" using k by simp
+    next
+      assume kB: "k \<in> ?B"
+      then obtain i where k: "k = bot_emb i" by auto
+      have p_bb: "p ` ?B = ?B" by (rule p_pres_BOT[OF p_perm p_bp])
+      have "lift ?pT ?pB (bot_emb i)
+            = bot_emb (inv_into UNIV bot_emb (p (bot_emb i)))"
+        by (simp add: lift_on_B)
+      moreover have "p (bot_emb i) \<in> ?B" using p_bb by auto
+      then have "bot_emb (inv_into UNIV bot_emb (p (bot_emb i))) = p (bot_emb i)"
+        using bij_B by (auto simp: f_inv_into_f)
+      ultimately show "lift ?pT ?pB k = p k" using k by simp
+    qed
+  qed
+
+  have bij_lift: "bij_betw (\<lambda>(pT, pB). lift pT pB) ?PP ?BP"
+  proof (rule bij_betwI[where
+           g = "\<lambda>p. (inv_into UNIV top_emb \<circ> p \<circ> top_emb,
+                     inv_into UNIV bot_emb \<circ> p \<circ> bot_emb)"])
+    show "(\<lambda>(pT, pB). lift pT pB) \<in> ?PP \<rightarrow> ?BP"
+    proof
+      fix q :: "(6 \<Rightarrow> 6) \<times> (6 \<Rightarrow> 6)"
+      assume "q \<in> ?PP"
+      then have pT: "fst q permutes (UNIV::6 set)"
+            and pB: "snd q permutes (UNIV::6 set)" by auto
+      have "lift (fst q) (snd q) permutes (UNIV::12 set)"
+        by (rule lift_perm[OF pT pB])
+      moreover have "lift (fst q) (snd q) ` ?T = ?T"
+        by (rule lift_image_T[OF pT])
+      ultimately show "(\<lambda>(pT, pB). lift pT pB) q \<in> ?BP"
+        by (simp add: case_prod_beta)
+    qed
+  next
+    show "(\<lambda>p. (inv_into UNIV top_emb \<circ> p \<circ> top_emb,
+                inv_into UNIV bot_emb \<circ> p \<circ> bot_emb)) \<in> ?BP \<rightarrow> ?PP"
+    proof
+      fix p :: "12 \<Rightarrow> 12"
+      assume "p \<in> ?BP"
+      then have p_perm: "p permutes (UNIV::12 set)" and p_bp: "p ` ?T = ?T" by auto
+      show "(inv_into UNIV top_emb \<circ> p \<circ> top_emb,
+             inv_into UNIV bot_emb \<circ> p \<circ> bot_emb) \<in> ?PP"
+        using unlift_perm[OF p_perm p_bp] by auto
+    qed
+  next
+    fix q :: "(6 \<Rightarrow> 6) \<times> (6 \<Rightarrow> 6)"
+    assume "q \<in> ?PP"
+    then have pT: "fst q permutes (UNIV::6 set)"
+          and pB: "snd q permutes (UNIV::6 set)" by auto
+    have inv_eq: "(inv_into UNIV top_emb \<circ> lift (fst q) (snd q) \<circ> top_emb) = fst q
+                \<and> (inv_into UNIV bot_emb \<circ> lift (fst q) (snd q) \<circ> bot_emb) = snd q"
+      using inv_lift[OF pT pB] .
+    show "(\<lambda>p. (inv_into UNIV top_emb \<circ> p \<circ> top_emb,
+                inv_into UNIV bot_emb \<circ> p \<circ> bot_emb))
+            ((\<lambda>(pT, pB). lift pT pB) q) = q"
+      using inv_eq
+      by (simp add: case_prod_beta) 
+  next
+    fix p :: "12 \<Rightarrow> 12"
+    assume "p \<in> ?BP"
+    then have p_perm: "p permutes (UNIV::12 set)" and p_bp: "p ` ?T = ?T" by auto
+    show "(\<lambda>(pT, pB). lift pT pB)
+            ((\<lambda>p. (inv_into UNIV top_emb \<circ> p \<circ> top_emb,
+                   inv_into UNIV bot_emb \<circ> p \<circ> bot_emb)) p) = p"
+      by (simp add: case_prod_beta lift_unlift[OF p_perm p_bp])
+  qed
+
+  have all_perms_fin: "finite {p. p permutes (UNIV::12 set)}"
+    by (rule finite_permutations) auto
+  have BP_sub: "?BP \<subseteq> {p. p permutes (UNIV::12 set)}" by auto
+
+  have det_split:
+    "det Jperm
+       = sum (\<lambda>p. of_int (sign p) * (\<Prod>k\<in>UNIV. Jperm $ k $ p k)) ?BP"
+  proof -
+    have "det Jperm
+          = sum (\<lambda>p. of_int (sign p) * (\<Prod>k\<in>UNIV. Jperm $ k $ p k))
+                {p. p permutes UNIV}"
+      unfolding det_def by simp
+    also have "\<dots> = sum (\<lambda>p. of_int (sign p) * (\<Prod>k\<in>UNIV. Jperm $ k $ p k)) ?BP
+                  + sum (\<lambda>p. of_int (sign p) * (\<Prod>k\<in>UNIV. Jperm $ k $ p k))
+                        ({p. p permutes UNIV} - ?BP)"
+      by (subst sum.subset_diff[OF BP_sub all_perms_fin]) simp
+    also have "sum (\<lambda>p. of_int (sign p) * (\<Prod>k\<in>UNIV. Jperm $ k $ p k))
+                   ({p. p permutes UNIV} - ?BP) = 0"
+      by (rule sum.neutral, use BP_only in auto)
+    finally show ?thesis by simp
+  qed
+
+  have reindex_step:
+    "sum (\<lambda>p. of_int (sign p) * (\<Prod>k\<in>UNIV. Jperm $ k $ p k)) ?BP
+     = sum (\<lambda>q. of_int (sign (lift (fst q) (snd q)))
+                * (\<Prod>k\<in>UNIV. Jperm $ k $ lift (fst q) (snd q) k)) ?PP"
+    using sum.reindex_bij_betw[OF bij_lift,
+            of "\<lambda>p. of_int (sign p) * (\<Prod>k\<in>UNIV. Jperm $ k $ p k)"]
+    by (simp add: case_prod_beta')
+
+  have prod_pair:
+    "of_int (sign (lift (fst q) (snd q)))
+     * (\<Prod>k\<in>UNIV. Jperm $ k $ lift (fst q) (snd q) k)
+     = (of_int (sign (fst q)) * (\<Prod>i\<in>UNIV. Ablk $ i $ fst q i))
+     * (of_int (sign (snd q)) * (\<Prod>i\<in>UNIV. Dblk $ i $ snd q i))"
+    if q_in: "q \<in> ?PP" for q
+  proof -
+    from q_in have pT: "fst q permutes UNIV" and pB: "snd q permutes UNIV" by auto
+    let ?p = "lift (fst q) (snd q)"
+    have p_perm: "?p permutes UNIV" using lift_perm[OF pT pB] .
+    have p_bp: "?p ` ?T = ?T" using lift_image_T[OF pT] .
+    have BP_fact: "(\<Prod>k\<in>UNIV. Jperm $ k $ ?p k)
+                 = (\<Prod>i\<in>UNIV. Ablk $ i $ ((inv_into UNIV top_emb \<circ> ?p \<circ> top_emb) i))
+                 * (\<Prod>i\<in>UNIV. Dblk $ i $ ((inv_into UNIV bot_emb \<circ> ?p \<circ> bot_emb) i))"
+      using BP_factor[OF p_perm p_bp] .
+    have idT: "(inv_into UNIV top_emb \<circ> ?p \<circ> top_emb) = fst q"
+          and idB: "(inv_into UNIV bot_emb \<circ> ?p \<circ> bot_emb) = snd q"
+      using inv_lift[OF pT pB] by auto
+    have sig: "sign ?p = sign (fst q) * sign (snd q)"
+      using sign_lift[OF pT pB] .
+    show ?thesis
+      by (simp add: BP_fact idT idB sig of_int_mult)
+  qed
+
+  have sum_factor:
+    "sum (\<lambda>q. of_int (sign (lift (fst q) (snd q)))
+              * (\<Prod>k\<in>UNIV. Jperm $ k $ lift (fst q) (snd q) k)) ?PP
+     = (sum (\<lambda>pT. of_int (sign pT) * (\<Prod>i\<in>UNIV. Ablk $ i $ pT i))
+            {pT. pT permutes (UNIV::6 set)})
+     * (sum (\<lambda>pB. of_int (sign pB) * (\<Prod>i\<in>UNIV. Dblk $ i $ pB i))
+            {pB. pB permutes (UNIV::6 set)})"
+  proof -
+    have "sum (\<lambda>q. of_int (sign (lift (fst q) (snd q)))
+                * (\<Prod>k\<in>UNIV. Jperm $ k $ lift (fst q) (snd q) k)) ?PP
+        = sum (\<lambda>q. (of_int (sign (fst q)) * (\<Prod>i\<in>UNIV. Ablk $ i $ fst q i))
+                 * (of_int (sign (snd q)) * (\<Prod>i\<in>UNIV. Dblk $ i $ snd q i))) ?PP"
+      by (rule sum.cong[OF refl]) (rule prod_pair)
+    also have "\<dots> = (\<Sum>pT\<in>{pT. pT permutes UNIV}.
+                     \<Sum>pB\<in>{pB. pB permutes UNIV}.
+                       (of_int (sign pT) * (\<Prod>i\<in>UNIV. Ablk $ i $ pT i))
+                     * (of_int (sign pB) * (\<Prod>i\<in>UNIV. Dblk $ i $ pB i)))"
+      by (subst sum.cartesian_product, metis (mono_tags, lifting) case_prod_beta prod.cong)
+    also have "\<dots> = (\<Sum>pT\<in>{pT. pT permutes UNIV}.
+                       of_int (sign pT) * (\<Prod>i\<in>UNIV. Ablk $ i $ pT i))
+                  * (\<Sum>pB\<in>{pB. pB permutes UNIV}.
+                       of_int (sign pB) * (\<Prod>i\<in>UNIV. Dblk $ i $ pB i))"
+      by (simp add: sum_product)
+    finally show ?thesis .
+  qed
+
+  from det_split reindex_step sum_factor
+  show "det Jperm = det Ablk * det Dblk"
+    unfolding det_def by simp
+qed
+
 lemma bigJ_det: "det bigJ = - (5 * pi^8) / 3"
-  sorry
+proof -
+  have s_sq: "sqrt 3 * sqrt 3 = (3::real)"
+    using real_sqrt_mult_self by simp
+  have "det bigJ = - det Jperm"
+    by (rule det_bigJ_eq_neg_det_Jperm)
+  also have "\<dots> = - (det Ablk * det Dblk)" by (simp add: det_Jperm)
+  also have "\<dots> = - ((- sqrt 3 * pi^6 / 18) * (-10 * sqrt 3 * pi^2))"
+    by (simp add: det_A det_D)
+  also have "\<dots> = - (10 * (sqrt 3 * sqrt 3) * (pi^6 * pi^2) / 18)"
+    by (simp add: field_simps)
+  also have "\<dots> = - (10 * 3 * pi^8 / 18)"
+    by (simp add: s_sq flip: power_add)
+  also have "\<dots> = - (5 * pi^8) / 3" by simp
+  finally show ?thesis .
+qed
 
 lemma bigJ_det_nonzero: "det bigJ \<noteq> 0"
 proof -
