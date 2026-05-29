@@ -162,6 +162,42 @@ it with the concrete `M_paper` then requires `M_paper` to be C¹. Since
 `Ck_on 1 M_paper …` there (via `Ck1_C1_Bridge`) is the right next step — necessary
 for Paper:3650, and the natural concrete use of the higher-diff theory.
 
+### Done this session — `M_paper` is C¹ (`Moment_Map.thy`, Layer 6, sorry-free)
+
+Added a "Layer 6" to `BlockDet/Moment_Map.thy` proving continuity of the
+configuration-derivative. Verified: `Applied_Math_BlockDet` + downstream
+`Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`.
+
+Decision (same as the keystone): prove it in **native** `has_derivative`/
+`continuous_on` language, *not* via `Ck_on`/`Ck1_C1_Bridge` — because the
+derivative `DM_paper_x` is already explicit (Layer 5), so C¹ here is a pure
+*continuity* obligation, not a differentiability one, and going through
+`frechet_derivative`/`Ck_on` would needlessly drag `Smooth_Manifolds` into the
+`Applied_Math_BlockDet` heap. (The higher-diff theory is the right tool when we
+must *establish* differentiability; here we already have the derivative.)
+
+Chain: `continuous_on_phase_x` / `continuous_on_d_phase_x` (the phase factor and
+its differential are continuous in the base point — `cis ∘ (linear)`); a shared
+`moment_cont_intros` intro-set discharges all six per-moment derivative
+continuities (`continuous_on_d_{A,M1,M2,M11,M12,M22}_moment_x`) as finite sums of
+products of `of_real`-lifted polynomials and the phase; `continuous_on_DM_paper_x_vec`
+assembles the `complex^6` vector (via `continuous_on_vec_lambda` + `exhaust_6`);
+`continuous_on_Blinfun_DM_paper_x` upgrades to operator-norm continuity
+(`continuous_on_blinfun_componentwise`, using `bounded_linear_DM_paper_x` from
+`has_derivative_M_paper_x` to make the `Blinfun` rep faithful). Final bundle
+`C1_M_paper_x`: `(∀x∈V. (M_paper(·,c) has_derivative blinfun_apply(Blinfun(DM_paper_x x c))) (at x within V)) ∧ continuous_on V (λx. Blinfun (DM_paper_x x c))`
+— the `derG`+`contG'` pair for the rank argument.
+
+Needed two extra imports (`HOL-Analysis.Bounded_Linear_Function`,
+`HOL-Analysis.Cartesian_Euclidean_Space`). Trap re-logged: a bare `C\<^sup>1` in
+prose text (outside a `\<open>…\<close>` cartouche) is parsed as an undefined `\<^sup>`
+antiquotation — keep superscripts inside cartouches.
+
+**Next:** prove `rank_lower_semicont_open_dense_propagation` (`Nonemptiness_Paper.thy:3650`),
+adding a continuity-of-derivative (C¹) hypothesis and discharging it for the
+concrete moment map via `C1_M_paper_x`; that yields `DM_paper_open_dense_surjective`
+→ `ZH0surj` → `prop_regnonzero`.
+
 ### Next target (where this resumes)
 
 Discharge `regular_zero_set_projection_local_chart_2d` from

@@ -2,6 +2,8 @@ theory Moment_Map
   imports
     Block_Determinants
     "HOL-Analysis.Derivative"
+    "HOL-Analysis.Bounded_Linear_Function"
+    "HOL-Analysis.Cartesian_Euclidean_Space"
 begin
 
 text \<open>
@@ -637,6 +639,180 @@ proof -
       using vec_der
       by (simp only: lhs rhs)
   qed
+qed
+
+
+subsection \<open>\<^bold>\<open>Layer 6.\<close> \<open>C\<^sup>1\<close>: continuity of the configuration derivative\<close>
+
+text \<open>
+  Layer 5 gives that \<^const>\<open>M_paper\<close> is differentiable in \<open>x\<close>, with Fréchet
+  derivative \<^const>\<open>DM_paper_x\<close>.  The rank--lower-semicontinuity argument
+  (\<open>rank_lower_semicont_open_dense_propagation\<close>, which feeds
+  \<open>DM_paper_open_dense_surjective\<close>) needs more: that the derivative varies
+  \<^emph>\<open>continuously\<close> with the base point, i.e.\ \<^const>\<open>M_paper\<close> is \<open>C\<^sup>1\<close>.
+
+  Every component of \<^const>\<open>DM_paper_x\<close> is a finite sum of products of
+  polynomial weights in the (continuous) coordinates \<open>(x $ n) $ k\<close> and the
+  phase factor \<^term>\<open>cis (-(c \<bullet> (x $ n)))\<close>, all continuous in \<open>x\<close>.  We package
+  the conclusion as operator-norm continuity of
+  \<open>x \<mapsto> Blinfun (DM_paper_x x c)\<close> --- exactly the \<open>contG'\<close>-shaped \<open>C\<^sup>1\<close> input the
+  rank argument consumes (paired with @{thm has_derivative_M_paper_x} as \<open>derG\<close>).
+
+  Kept in native \<open>has_derivative\<close>/\<open>continuous_on\<close> language so this stays in the
+  \<open>Applied_Math_BlockDet\<close> heap without pulling in the \<open>Smooth_Manifolds\<close>-rooted
+  higher-differentiability session.
+\<close>
+
+text \<open>Building blocks: continuity of the coordinate projections and the phase.\<close>
+
+lemma bounded_linear_inner_c_nth:
+  fixes c :: planar
+  shows "bounded_linear (\<lambda>y :: planar^'n. c \<bullet> (y $ n))"
+  by (rule bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth])
+
+lemma continuous_on_nth_real:
+  fixes n :: "'n::finite" and k :: 2
+  shows "continuous_on V (\<lambda>y :: planar^'n. (y $ n) $ k)"
+  by (rule linear_continuous_on[OF bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_vec_nth]])
+
+lemma continuous_on_of_real_comp:
+  fixes f :: "'a::topological_space \<Rightarrow> real"
+  assumes "continuous_on V f"
+  shows "continuous_on V (\<lambda>y. of_real (f y) :: complex)"
+  by (rule bounded_linear.continuous_on[OF bounded_linear_of_real assms])
+
+lemma continuous_on_phase_x:
+  fixes c :: planar
+  shows "continuous_on V (\<lambda>y :: planar^'n. phase c y n)"
+proof -
+  have "continuous_on V (\<lambda>y :: planar^'n. c \<bullet> (y $ n))"
+    by (rule linear_continuous_on[OF bounded_linear_inner_c_nth])
+  hence "continuous_on V (\<lambda>y :: planar^'n. -(c \<bullet> (y $ n)))"
+    by (rule continuous_on_minus)
+  hence "continuous_on V (\<lambda>y :: planar^'n. cis (-(c \<bullet> (y $ n))))"
+    by (rule continuous_on_cis)
+  thus ?thesis unfolding phase_def .
+qed
+
+lemma continuous_on_d_phase_x:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. d_phase c y h n)"
+proof -
+  have ph: "continuous_on V (\<lambda>y :: planar^'n. cis (-(c \<bullet> (y $ n))))"
+    using continuous_on_phase_x unfolding phase_def .
+  have "continuous_on V (\<lambda>y :: planar^'n. -(c \<bullet> (h $ n)) *\<^sub>R (\<i> * cis (-(c \<bullet> (y $ n)))))"
+    by (intro continuous_intros ph)
+  thus ?thesis unfolding d_phase_def .
+qed
+
+text \<open>Continuity of each per-moment derivative in the base point (for fixed
+  direction \<open>h\<close>).  Common intro set; spurious intros are harmless.\<close>
+
+lemmas moment_cont_intros =
+  continuous_on_sum continuous_on_add continuous_on_mult continuous_on_const
+  continuous_on_minus continuous_on_power continuous_on_phase_x
+  continuous_on_d_phase_x continuous_on_of_real_comp continuous_on_nth_real
+
+lemma continuous_on_d_A_moment_x:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. d_A_moment_x y c h)"
+  unfolding d_A_moment_x_def by (intro moment_cont_intros)
+
+lemma continuous_on_d_M1_moment_x:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. d_M1_moment_x y c h)"
+  unfolding d_M1_moment_x_def by (intro moment_cont_intros)
+
+lemma continuous_on_d_M2_moment_x:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. d_M2_moment_x y c h)"
+  unfolding d_M2_moment_x_def by (intro moment_cont_intros)
+
+lemma continuous_on_d_M11_moment_x:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. d_M11_moment_x y c h)"
+  unfolding d_M11_moment_x_def by (intro moment_cont_intros)
+
+lemma continuous_on_d_M12_moment_x:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. d_M12_moment_x y c h)"
+  unfolding d_M12_moment_x_def w_M12_def dw_M12_def by (intro moment_cont_intros)
+
+lemma continuous_on_d_M22_moment_x:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. d_M22_moment_x y c h)"
+  unfolding d_M22_moment_x_def by (intro moment_cont_intros)
+
+text \<open>Assemble: the full vector-valued derivative is continuous in the base point.\<close>
+
+lemma continuous_on_DM_paper_x_vec:
+  fixes c :: planar and h :: "planar^'n"
+  shows "continuous_on V (\<lambda>y :: planar^'n. DM_paper_x y c h)"
+proof -
+  have "continuous_on V (\<lambda>y :: planar^'n. \<chi> k::6. DM_paper_x y c h $ k)"
+  proof (rule continuous_on_vec_lambda)
+    fix k :: 6
+    consider "k = 1" | "k = 2" | "k = 3" | "k = 4" | "k = 5" | "k = 6"
+      using exhaust_6 by metis
+    thus "continuous_on V (\<lambda>y. DM_paper_x y c h $ k)"
+    proof cases
+      case 1 thus ?thesis by (simp add: continuous_on_d_A_moment_x)
+    next
+      case 2 thus ?thesis by (simp add: continuous_on_d_M1_moment_x)
+    next
+      case 3 thus ?thesis by (simp add: continuous_on_d_M2_moment_x)
+    next
+      case 4 thus ?thesis by (simp add: continuous_on_d_M11_moment_x)
+    next
+      case 5 thus ?thesis by (simp add: continuous_on_d_M12_moment_x)
+    next
+      case 6 thus ?thesis by (simp add: continuous_on_d_M22_moment_x)
+    qed
+  qed
+  thus ?thesis by (simp only: vec_lambda_eta)
+qed
+
+text \<open>
+  \<^bold>\<open>The \<open>C\<^sup>1\<close> statement.\<close> Operator-norm continuity of the configuration
+  derivative, the \<open>contG'\<close> input for the rank argument.
+\<close>
+
+lemma bounded_linear_DM_paper_x:
+  fixes c :: planar and x :: "planar^'n"
+  shows "bounded_linear (DM_paper_x x c)"
+  using has_derivative_M_paper_x has_derivative_bounded_linear by blast
+
+lemma continuous_on_Blinfun_DM_paper_x:
+  fixes c :: planar
+  shows "continuous_on V (\<lambda>x :: planar^'n. Blinfun (DM_paper_x x c))"
+proof (rule continuous_on_blinfun_componentwise)
+  fix i :: "planar^'n" assume "i \<in> Basis"
+  show "continuous_on V (\<lambda>x. blinfun_apply (Blinfun (DM_paper_x x c)) i)"
+  proof (rule continuous_on_eq[OF continuous_on_DM_paper_x_vec[where V=V and c=c and h=i]])
+    fix x :: "planar^'n" assume "x \<in> V"
+    show "DM_paper_x x c i = blinfun_apply (Blinfun (DM_paper_x x c)) i"
+      by (simp add: bounded_linear_Blinfun_apply[OF bounded_linear_DM_paper_x])
+  qed
+qed
+
+text \<open>
+  The two halves bundled in the \<open>derG\<close>/\<open>contG'\<close> shape consumed downstream:
+  for fixed steering \<open>c\<close> and open \<open>V\<close>, \<open>x \<mapsto> M_paper x c\<close> is \<open>C\<^sup>1\<close> on \<open>V\<close>.
+\<close>
+
+lemma C1_M_paper_x:
+  fixes c :: planar
+  shows "(\<forall>x\<in>V. ((\<lambda>y. M_paper y c) has_derivative blinfun_apply (Blinfun (DM_paper_x x c))) (at x within V))
+       \<and> continuous_on V (\<lambda>x :: planar^'n. Blinfun (DM_paper_x x c))"
+proof (intro conjI ballI)
+  fix x :: "planar^'n" assume "x \<in> V"
+  have "((\<lambda>y. M_paper y c) has_derivative DM_paper_x x c) (at x within V)"
+    by (rule has_derivative_M_paper_x)
+  thus "((\<lambda>y. M_paper y c) has_derivative blinfun_apply (Blinfun (DM_paper_x x c))) (at x within V)"
+    by (simp add: bounded_linear_Blinfun_apply[OF bounded_linear_DM_paper_x])
+next
+  show "continuous_on V (\<lambda>x :: planar^'n. Blinfun (DM_paper_x x c))"
+    by (rule continuous_on_Blinfun_DM_paper_x)
 qed
 
 end
