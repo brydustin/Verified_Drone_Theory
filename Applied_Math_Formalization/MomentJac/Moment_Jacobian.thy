@@ -475,4 +475,61 @@ lemma det_matrix_MJ: "det (matrix MJ) = det bigJ"
 lemma det_matrix_MJ_nonzero: "det (matrix MJ) \<noteq> 0"
   using bigJ_det_nonzero by (simp add: matrix_MJ)
 
+
+subsection \<open>P1.6: the surjective stratum as a determinant non-vanishing set\<close>
+
+text \<open>
+  The Jacobian-at-a-\<^emph>\<open>general\<close>-configuration, transported into \<open>\<real>\<^sup>1\<^sup>2\<close>, and its
+  determinant \<open>m\<^sup>*\<close>. Surjectivity of the moment-map derivative at \<open>x\<close> is exactly
+  \<open>m\<^sup>*(x) \<noteq> 0\<close>: the transported map is a real \<open>12\<times>12\<close> endomorphism, for which
+  surjective \<open>\<longleftrightarrow>\<close> injective \<open>\<longleftrightarrow>\<close> nonzero determinant; the bijective transports
+  carry this back to \<^const>\<open>DM_paper_x\<close>. At the base point \<open>m\<^sup>*(x0) = det bigJ \<noteq> 0\<close>.
+\<close>
+
+definition MJx :: "(real^2)^6 \<Rightarrow> real^12 \<Rightarrow> real^12" where
+  "MJx x = transC \<circ> (DM_paper_x x c0_paper) \<circ> transD"
+
+definition m_star :: "(real^2)^6 \<Rightarrow> real" where
+  "m_star x = det (matrix (MJx x))"
+
+lemma linear_MJx: "linear (MJx x)"
+  unfolding MJx_def
+  by (intro linear_compose linear_transC linear_transD
+            bounded_linear.linear[OF bounded_linear_DM_paper_x])
+
+lemma MJ_is_MJx: "MJ = MJx x0_paper"
+  by (simp add: MJ_def MJx_def)
+
+lemma m_star_x0_nonzero: "m_star x0_paper \<noteq> 0"
+  using det_matrix_MJ_nonzero by (simp add: m_star_def MJ_is_MJx)
+
+lemma surj_transC: "surj transC" using bij_transC by (rule bij_is_surj)
+lemma surj_transD: "surj transD" using bij_transD by (rule bij_is_surj)
+lemma surj_transC_inv: "surj transC_inv" by (metis surjI transC_inv_left)
+lemma surj_transD_inv: "surj transD_inv" by (metis surjI transD_inv_left)
+
+lemma surj_MJx_iff: "surj (MJx x) \<longleftrightarrow> surj (DM_paper_x x c0_paper)"
+proof
+  assume "surj (MJx x)"
+  moreover have "DM_paper_x x c0_paper = transC_inv \<circ> MJx x \<circ> transD_inv"
+    by (rule ext) (simp add: MJx_def transC_inv_left transD_inv_right)
+  ultimately show "surj (DM_paper_x x c0_paper)"
+    using comp_surj[OF surj_transD_inv comp_surj[OF _ surj_transC_inv]] by simp
+next
+  assume "surj (DM_paper_x x c0_paper)"
+  thus "surj (MJx x)"
+    unfolding MJx_def
+    using comp_surj[OF surj_transD comp_surj[OF _ surj_transC]] by simp
+qed
+
+lemma surj_iff_m_star: "surj (DM_paper_x x c0_paper) \<longleftrightarrow> m_star x \<noteq> 0"
+proof -
+  have "surj (MJx x) \<longleftrightarrow> inj (MJx x)"
+    by (metis linear_MJx linear_injective_imp_surjective linear_surjective_imp_injective)
+  also have "\<dots> \<longleftrightarrow> det (matrix (MJx x)) \<noteq> 0"
+    using det_nz_iff_inj[OF linear_MJx] by blast
+  finally show ?thesis
+    using surj_MJx_iff by (simp add: m_star_def)
+qed
+
 end
