@@ -117,6 +117,51 @@ hypothesis to the keystone), and repackage into
 `regular_zero_set_projection_local_chart_2d`'s `differentiable_on`/`homeomorphism`
 conclusion.
 
+### Done this session — the keystone `regular_zero_set_projection_local_chart_2d`
+
+Discharged the keystone sorry in `Parametric_Transversality_Euclidean_Base.thy`.
+Verified: `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]` (14s, reusing the
+Base/BlockDet heaps — Munkres/JNF/Perron untouched in the heap).
+
+Design decision: rather than import the higher-diff theory into the (heavy,
+Munkres-rooted) Nonemptiness session graph, the keystone now takes the C¹ data in
+the engine's **native language** — `fixes G'` + `assumes derG` (blinfun-valued
+derivative on `V×Ω`) + `contG'` (`continuous_on (V×Ω) G'`). This keeps
+`Smooth_Manifolds` out of the main graph; `Ck1_C1_Bridge.Ck1_on_imp_C1_interface`
+is applied later, at the *concrete* call site, to manufacture exactly `derG`+`contG'`.
+
+Proof: `W = V×Ω` open (`open_Times`); `p∈W`, `G p = 0` from `p∈M`; `regp`
+(surjectivity of `G' p`) recovered from `regular_value_on` + `derG` via
+`has_derivative_unique` (on open `W`, `at p within W = at p`); then a single
+`regular_value_local_chart[OF …]` and `blast` (dropping the engine's extra `Dφ`
+conjuncts; `unfolding M_def` to match the level set). The lemma as *originally*
+stated (only `regular_value_on`, no C¹) was **not provable** — `regular_value_on`
+gives a pointwise surjective derivative but no continuity, and the IFT needs C¹;
+this is the same gap that forced the C¹ hypothesis onto `charts_core_Nn` (05-27).
+
+Threaded the same `G'`/`derG`/`contG'` through the keystone's only caller,
+`countable_chart_cover_of_levelset_2d` (which has no callers of its own, so
+propagation stops). Remaining sorries in the file: `charts_core_2d` (369) and
+`parametric_transversality_meager_euclidean_stub` (1015).
+
+### Finding: the moment map M_paper *will* need C¹ — but for Paper:3650, not the keystone
+
+Checked whether `Moment_Map.thy`'s base-function derivatives need a C¹ upgrade for
+the work just done. **They do not** — the keystone is generic and its concrete `G`
+is the *array factor* (`(real^2)^N × real^2 → real^2`), whose C¹-ness comes from
+analyticity (`C1_cplx_r2_comp`), not from the moment map.
+
+However, `rank_lower_semicont_open_dense_propagation` (`Nonemptiness_Paper.thy:3650`,
+the one open sorry there) is about the moment map `M_paper`. Its current
+hypotheses (`deriv` = pointwise `has_derivative` within `V`, `one_regular`) are
+**insufficient**: open-density of the surjective stratum rests on lower
+semicontinuity of `rank`, which requires `DℱF` to vary *continuously* — i.e. C¹.
+So that lemma must gain a continuity-of-derivative hypothesis, and instantiating
+it with the concrete `M_paper` then requires `M_paper` to be C¹. Since
+`Moment_Map.thy` already computes every per-term Fréchet derivative, proving
+`Ck_on 1 M_paper …` there (via `Ck1_C1_Bridge`) is the right next step — necessary
+for Paper:3650, and the natural concrete use of the higher-diff theory.
+
 ### Next target (where this resumes)
 
 Discharge `regular_zero_set_projection_local_chart_2d` from

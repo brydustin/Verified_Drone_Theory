@@ -378,10 +378,14 @@ lemma regular_zero_set_projection_local_chart_2d:
   fixes V :: "(real^'m::{finite,wellorder}) set"
     and \<Omega> :: "(real^2) set"
     and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
+    and G' :: "((real^'m::{finite,wellorder}) \<times> (real^2))
+                 \<Rightarrow> (((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
     and p :: "(real^'m::{finite,wellorder}) \<times> (real^2)"
   defines "M \<equiv> {q \<in> V\<times>\<Omega>. G q = 0}"
-  assumes "open V" "open \<Omega>"
+  assumes openV: "open V" and openOmega: "open \<Omega>"
     and pM: "p \<in> M"
+    and derG: "\<And>z. z \<in> V\<times>\<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on (V\<times>\<Omega>) G'"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
   shows "\<exists>(U::(real^'m::{finite,wellorder}) set) (u0::real^'m::{finite,wellorder})
             (\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))
@@ -391,7 +395,32 @@ lemma regular_zero_set_projection_local_chart_2d:
             \<phi> ` U \<subseteq> M \<and>
             openin (top_of_set M) (\<phi> ` U) \<and>
             homeomorphism U (\<phi> ` U) \<phi> g"
-  sorry
+proof -
+  text \<open>The working set is the open product \<open>W = V \<times> \<Omega>\<close>; \<open>p\<close> is a zero in it.\<close>
+  have Wopen: "open (V \<times> \<Omega>)" by (rule open_Times[OF openV openOmega])
+  have pW: "p \<in> V \<times> \<Omega>" using pM by (simp add: M_def)
+  have Gp0: "G p = 0" using pM by (simp add: M_def)
+
+  text \<open>
+    \<open>regular_value_on\<close> only gives \<^emph>\<open>some\<close> surjective derivative at \<open>p\<close>; by
+    uniqueness of the Fréchet derivative (on the open set \<open>W\<close>, where
+    \<open>at p within W = at p\<close>) it must coincide with our chosen \<open>G' p\<close>, so the
+    latter is surjective too --- the regularity input the engine wants.
+  \<close>
+  have atp: "at p within (V\<times>\<Omega>) = at p" by (rule at_within_open[OF pW Wopen])
+  obtain f' where hf': "(G has_derivative f') (at p within (V\<times>\<Omega>))" and sf': "surj f'"
+    using reg0 pW Gp0 unfolding regular_value_on_def by blast
+  have hf'2: "(G has_derivative f') (at p)" using hf' atp by simp
+  have der_p: "(G has_derivative blinfun_apply (G' p)) (at p)" by (rule derG[OF pW])
+  have "blinfun_apply (G' p) = f'" by (rule has_derivative_unique[OF der_p hf'2])
+  with sf' have regp: "surj (blinfun_apply (G' p))" by simp
+
+  text \<open>Apply the IFT-based regular-value engine and forget the extra \<open>D\<phi>\<close> data.\<close>
+  show ?thesis
+    unfolding M_def
+    using regular_value_local_chart[OF Wopen pW Gp0 derG contG' regp]
+    by blast
+qed
 
 text \<open>
   Countable chart cover of the regular level set, extracted from the local chart
@@ -406,8 +435,12 @@ lemma countable_chart_cover_of_levelset_2d:
   fixes V :: "(real^'m::{finite,wellorder}) set"
     and \<Omega> :: "(real^2) set"
     and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
+    and G' :: "((real^'m::{finite,wellorder}) \<times> (real^2))
+                 \<Rightarrow> (((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
   defines "M \<equiv> {q \<in> V\<times>\<Omega>. G q = 0}"
-  assumes "open V" "open \<Omega>"
+  assumes openV: "open V" and openOmega: "open \<Omega>"
+    and derG: "\<And>z. z \<in> V\<times>\<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on (V\<times>\<Omega>) G'"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
   shows "\<exists>(U :: nat \<Rightarrow> (real^'m::{finite,wellorder}) set)
             (charts :: nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec)))).
@@ -424,14 +457,14 @@ proof -
   proof -
     fix p
     assume pM: "p \<in> M"
-    have pM': "p \<in> {q \<in> V\<times>\<Omega>. G q = 0}"
-      using pM by (simp add: M_def)
     show "\<exists>(U::(real^'m::{finite,wellorder}) set) (u0::real^'m::{finite,wellorder})
             (\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))
             (g::((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> real^'m::{finite,wellorder}).
       open U \<and> u0 \<in> U \<and> \<phi> u0 = p \<and> \<phi> differentiable_on U \<and> \<phi> ` U \<subseteq> M \<and>
       openin (top_of_set M) (\<phi> ` U) \<and> homeomorphism U (\<phi> ` U) \<phi> g"
-      using M_def assms(2,3) pM reg0 regular_zero_set_projection_local_chart_2d[of V \<Omega> p G] by blast
+      unfolding M_def
+      by (rule regular_zero_set_projection_local_chart_2d
+            [OF openV openOmega pM[unfolded M_def] derG contG' reg0])
   qed
 
   define \<F> where
