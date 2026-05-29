@@ -461,4 +461,18 @@ proof -
     using comp_surj[OF surjDi comp_surj[OF surjMJ surjCi]] dm by simp
 qed
 
+text \<open>
+  The base point is not merely \<^emph>\<open>regular\<close> (surjective derivative) but
+  \<^emph>\<open>non-degenerate\<close>: the transported Jacobian has nonzero determinant
+  \<open>det bigJ = -(5\<cdot>\<pi>\<^sup>8)/3 \<noteq> 0\<close>. This is the seed of the open-dense argument
+  (P1.6): the determinant is a nontrivial real-analytic function of the
+  configuration, so its zero set is nowhere dense.
+\<close>
+
+lemma det_matrix_MJ: "det (matrix MJ) = det bigJ"
+  by (simp add: matrix_MJ)
+
+lemma det_matrix_MJ_nonzero: "det (matrix MJ) \<noteq> 0"
+  using bigJ_det_nonzero by (simp add: matrix_MJ)
+
 end
