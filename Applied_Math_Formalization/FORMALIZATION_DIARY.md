@@ -8,6 +8,45 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-29 (cont.) — P1.6 (openness): the surjective stratum is open
+
+The first half of P1.6 is done (sorry-free, `Applied_Math_MomentJac` `BUILD_EXIT=[0]`),
+in `MomentJac/Moment_Jacobian.thy`:
+
+- `MJx x = transC ∘ (DM_paper_x x c0_paper) ∘ transD` (the transported Jacobian at
+  a *general* configuration `x`) and `m_star x = det (matrix (MJx x))`.
+- `surj_iff_m_star`: `surj (DM_paper_x x c0_paper) ⟷ m_star x ≠ 0` — a real
+  `12×12` endomorphism is surjective iff injective iff its determinant is nonzero
+  (`det_nz_iff_inj` + the bijective transports). `m_star_x0_nonzero`:
+  `m_star x0_paper = det bigJ ≠ 0`.
+- `continuous_m_star`: `m_star` is continuous (`continuous_on_det_fun`, a small
+  general lemma: `det` of a continuously-varying matrix; the entries are continuous
+  via `continuous_on_DM_paper_x_vec` + `bounded_linear transC`).
+- `open_surj_stratum`: `open {x::(real^2)^6. surj (DM_paper_x x c0_paper)}`
+  (= `{x. m_star x ≠ 0}`, open by `open_Collect_neq`). This is the C¹
+  (lower-semicontinuity-of-rank) half.
+
+**Lesson worth a footnote (the schematic-type trap).** `open_surj_stratum` first
+refused *every* closing tactic (`simp`, `unfolding`, `subst`, `metis` all "failed
+to apply") on what looked like a trivial set rewrite. The cause was **not** the
+tactics: the statement `open {x. surj (DM_paper_x x c0_paper)}` leaves the bound
+`x` at a *schematic* type `planar^'n` (nothing pins `'n`), whereas the supporting
+facts (`m_star`, `surj_iff_m_star`, forced through `transD : real^12 → (real^2)^6`)
+are all at the concrete `(real^2)^6`. So the goal's set and the rewrite's LHS
+differ by `'n` vs `6` and nothing unifies. Pinning the binder —
+`open {x::(real^2)^6. …}` — fixed it instantly. (Same family as the 05‑27 rule:
+*annotate a binder whose type is only pinned through a function applied to it.*)
+
+**Next — P1.6 (density):** `m_star` is `rline_entire` (its matrix entries are
+coordinate-polynomials × `cos`/`sin` of the steering form) and nontrivial
+(`m_star_x0_nonzero`), so `{m_star = 0}` is nowhere dense (the
+`lines_entire_slice_nowhere_dense` engine) ⟹ the surjective stratum is *dense*.
+Combined with openness this gives `rank_lower_semicont_open_dense_propagation`
+unconditionally; then P1.7 assembly → `meager (ZH0surj ∩ V)` → `prop_regnonzero`.
+(Layering of the `rline_entire` engine vs the HMA-free context still to be decided.)
+
+---
+
 ## 2026-05-29 (cont.) — P1.5 COMPLETE: the Jacobian identification `D_xM_paper(x0,c0) = (*v) bigJ`
 
 The keystone connection between the abstract matrix `bigJ` and the *actual*
