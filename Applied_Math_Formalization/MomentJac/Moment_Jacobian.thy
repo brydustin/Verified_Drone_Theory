@@ -271,4 +271,32 @@ lemma bij_transD: "bij transD"
   by (rule o_bij[of transD_inv transD])
      (simp_all add: fun_eq_iff transD_inv_left transD_inv_right)
 
+
+subsection \<open>Connecting the moment map to \<^const>\<open>bigJ\<close>: phase reduction at the base point\<close>
+
+text \<open>
+  Because \<open>c0_paper = (1,0)\<close>, the steering form \<open>c0_paper \<bullet> w\<close> is just the first
+  coordinate \<open>w$1\<close>. Hence the phase factor at the base configuration collapses to
+  \<open>cis(-u_n)\<close> with \<open>u_n = (x0_paper$n)$1\<close> the equally-spaced base angles, and its
+  real/imaginary parts are \<open>cos u_n\<close>, \<open>-sin u_n\<close> --- known in closed form
+  (\<open>base_trig_values\<close>). This is the bridge from the symbolic moment-map
+  derivative to the explicit numeric entries of \<^const>\<open>bigJ\<close>.
+\<close>
+
+lemma c0_dot: "c0_paper \<bullet> (w::planar) = w $ 1"
+proof -
+  have "(UNIV::2 set) = {1, 2}" using exhaust_2 by auto
+  thus ?thesis by (simp add: inner_vec_def  sum_2)
+qed
+
+lemma phase_c0_x0: "phase c0_paper x0_paper n = cis (- ((x0_paper $ n) $ 1))"
+  by (simp add: phase_def c0_dot)
+
+text \<open>The steering form applied to a perturbation direction: also its first coordinate.\<close>
+
+lemma d_phase_c0_x0:
+  "d_phase c0_paper x0_paper h n
+     = - ((h $ n) $ 1) *\<^sub>R (\<i> * cis (- ((x0_paper $ n) $ 1)))"
+  by (simp add: d_phase_def c0_dot)
+
 end
