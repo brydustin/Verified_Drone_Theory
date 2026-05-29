@@ -261,6 +261,40 @@ Lemmas added (`Nonemptiness_Paper.thy`, after the `x0_paper`/`c0_paper` block):
   `(√3/2)² = 3/4`; `5π/3` reuses the `2π/3` values. (Replaced the initial
   one-line `simp` attempts, which were fragile around `√3·√3`.)
 
+### Performance pathology + fix: nested vec-projection under `HMA_Connect`/`Conformal_Mappings`
+
+Building the real-linear transports between `(real^2)^6`/`complex^6` and the
+`real^12` of `bigJ` exposed a sharp performance trap, worth recording for the
+paper's formalization notes.
+
+- The transports: `transC : complex^6 → real^12`, `transD : real^12 → (real^2)^6`,
+  and their inverses, defined by explicit `vector [...]`. `transD_inv` is the only
+  one with a **nested** projection `(c$i)$j` (flattening `(real^2)^6` into 12 reals).
+- **Symptom:** in `Nonemptiness_Paper` (which imports `Perron_Frobenius.HMA_Connect`
+  and `HOL-Complex_Analysis.Conformal_Mappings`) the *definition* of `transD_inv`
+  never finishes elaborating — in batch it ran 24 min then died "Run out of store";
+  in jEdit it sits purple forever. The single-projection transports are fine.
+- **Isolated reproduction:** the identical definitions build in **4 s** when the
+  theory imports only `Block_Determinants`; adding `HMA_Connect` +
+  `Conformal_Mappings` makes the same `transD_inv` time out. So the cost is the
+  *import context* interacting with nested vec-projection elaboration (pinning the
+  index types `(c$(i::6))$(j::2)` did **not** help — it is not numeral inference).
+- **Fix (architectural):** define the transports (and, next, the Jacobian
+  identification) in `BlockDet/Moment_Jacobian.thy`, which imports only the
+  `HMA_Connect`/`Conformal_Mappings`-free moment-map theories (`Moment_Map`,
+  `Block_Determinants_BigJ`). There the nested projection elaborates in
+  milliseconds; the definitions are baked into the `Applied_Math_BlockDet` heap,
+  and `Nonemptiness_Paper` merely *uses* the constants (using a constant never
+  re-runs its definition's elaboration). Verified: `Applied_Math_BlockDet` +
+  `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`.
+- **Proof engineering (separate point):** the transport lemmas reduce each vec
+  equality to per-component facts via a *bounded* `exhaust_N` case split
+  (`exhaust_12[of i]` + `elim disjE; simp`); a blanket `forall_12`/`vec_eq_iff`
+  simp over the nested `vector[...]` also exhausts memory and must be avoided.
+
+`Moment_Jacobian.thy` now contains `transC`/`transC_inv`/`transD`/`transD_inv`
+with `linear_*`, `*_inv_left/right`, and `bij_transC`/`bij_transD` (all sorry-free).
+
 **Next within P1.5:** compute `D_x M_paper(x0_paper, c0_paper)` column by column
 — for each base point `n` and coordinate `k`, the directional derivative
 collapses the moment sums to the single `n`-th term, giving an explicit
