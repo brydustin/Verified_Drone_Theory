@@ -3522,6 +3522,98 @@ text \<open>\<open>c = \<kappa> e\<^sub>\<parallel>\<close> with \<open>\<kappa>
 lemma c0_paper_nonzero: "c0_paper \<noteq> 0"
   using c0_paper_entries(1) by fastforce
 
+text \<open>
+  \<^bold>\<open>Closed-form phase values at the base configuration.\<close> Since
+  \<open>c0_paper = (1,0)\<close>, the steering form at point \<open>n\<close> is
+  \<open>c0_paper \<bullet> (x0_paper $ n) = u_n\<close>, the first coordinate, taking the six
+  equally-spaced values \<open>0, \<pi>/3, 2\<pi>/3, \<pi>, 4\<pi>/3, 5\<pi>/3\<close>. The phase factor is
+  \<open>cis(-u_n) = cos u_n - \<imath> sin u_n\<close>, so the entire Jacobian
+  \<open>D\<^sub>x M_paper(x0_paper, c0_paper)\<close> is expressible through \<open>cos\<close>/\<open>sin\<close> at these
+  six angles. We record their values (sixth roots of unity) once; this is the
+  arithmetic substrate of the identification \<open>D\<^sub>x M_paper = (*v) bigJ\<close>.
+\<close>
+
+lemma sqrt3_sq: "sqrt 3 * sqrt 3 = 3"
+  using real_sqrt_pow2[of 3] by (simp add: power2_eq_square)
+
+lemma base_trig_values:
+  shows "cos (0::real) = 1" and "sin (0::real) = 0"
+    and "cos (pi/3) = 1/2" and "sin (pi/3) = sqrt 3 / 2"
+    and "cos (2*pi/3) = - (1/2)" and "sin (2*pi/3) = sqrt 3 / 2"
+    and "cos pi = - 1" and "sin pi = 0"
+    and "cos (4*pi/3) = - (1/2)" and "sin (4*pi/3) = - (sqrt 3 / 2)"
+    and "cos (5*pi/3) = 1/2" and "sin (5*pi/3) = - (sqrt 3 / 2)"
+proof -
+  have c3: "cos (pi/3) = 1/2" by (rule cos_60)
+  have s3: "sin (pi/3) = sqrt 3 / 2" by (rule sin_60)
+
+  text \<open>\<open>2\<pi>/3 = \<pi>/3 + \<pi>/3\<close>: the \<open>cos\<close> needs \<open>sqrt 3 \<cdot> sqrt 3 = 3\<close>.\<close>
+  have c2: "cos (2*pi/3) = - (1/2)"
+  proof -
+    have "cos (2*pi/3) = cos (pi/3 + pi/3)" by simp
+    also have "\<dots> = cos (pi/3) * cos (pi/3) - sin (pi/3) * sin (pi/3)"
+      by (rule cos_add)
+    also have "\<dots> = 1/2 * (1/2) - sqrt 3 / 2 * (sqrt 3 / 2)"
+      by (simp only: c3 s3)
+    also have "\<dots> = 1/4 - 3 / 4" by (simp add: sqrt3_sq)
+    also have "\<dots> = - (1/2)" by simp
+    finally show ?thesis .
+  qed
+  have s2: "sin (2*pi/3) = sqrt 3 / 2"
+  proof -
+    have "sin (2*pi/3) = sin (pi/3 + pi/3)" by simp
+    also have "\<dots> = sin (pi/3) * cos (pi/3) + cos (pi/3) * sin (pi/3)"
+      by (rule sin_add)
+    also have "\<dots> = sqrt 3 / 2" by (simp add: c3 s3)
+    finally show ?thesis .
+  qed
+
+  text \<open>\<open>4\<pi>/3 = \<pi> + \<pi>/3\<close>: both are linear in \<open>sqrt 3\<close>.\<close>
+  have c4: "cos (4*pi/3) = - (1/2)"
+  proof -
+    have "cos (4*pi/3) = cos (pi + pi/3)" by simp
+    also have "\<dots> = cos pi * cos (pi/3) - sin pi * sin (pi/3)" by (rule cos_add)
+    also have "\<dots> = - (1/2)" by (simp add: c3 s3)
+    finally show ?thesis .
+  qed
+  have s4: "sin (4*pi/3) = - (sqrt 3 / 2)"
+  proof -
+    have "sin (4*pi/3) = sin (pi + pi/3)" by simp
+    also have "\<dots> = sin pi * cos (pi/3) + cos pi * sin (pi/3)" by (rule sin_add)
+    also have "\<dots> = - (sqrt 3 / 2)" by (simp add: c3 s3)
+    finally show ?thesis .
+  qed
+
+  text \<open>\<open>5\<pi>/3 = \<pi> + 2\<pi>/3\<close>: reuse the \<open>2\<pi>/3\<close> values.\<close>
+  have c5: "cos (5*pi/3) = 1/2"
+  proof -
+    have "cos (5*pi/3) = cos (pi + 2*pi/3)" by simp
+    also have "\<dots> = cos pi * cos (2*pi/3) - sin pi * sin (2*pi/3)" by (rule cos_add)
+    also have "\<dots> = 1/2" by (simp add: c2 s2)
+    finally show ?thesis .
+  qed
+  have s5: "sin (5*pi/3) = - (sqrt 3 / 2)"
+  proof -
+    have "sin (5*pi/3) = sin (pi + 2*pi/3)" by simp
+    also have "\<dots> = sin pi * cos (2*pi/3) + cos pi * sin (2*pi/3)" by (rule sin_add)
+    also have "\<dots> = - (sqrt 3 / 2)" by (simp add: c2 s2)
+    finally show ?thesis .
+  qed
+
+  show "cos (0::real) = 1" by simp
+  show "sin (0::real) = 0" by simp
+  show "cos (pi/3) = 1/2" by (rule c3)
+  show "sin (pi/3) = sqrt 3 / 2" by (rule s3)
+  show "cos (2*pi/3) = - (1/2)" by (rule c2)
+  show "sin (2*pi/3) = sqrt 3 / 2" by (rule s2)
+  show "cos pi = - 1" by simp
+  show "sin pi = 0" by simp
+  show "cos (4*pi/3) = - (1/2)" by (rule c4)
+  show "sin (4*pi/3) = - (sqrt 3 / 2)" by (rule s4)
+  show "cos (5*pi/3) = 1/2" by (rule c5)
+  show "sin (5*pi/3) = - (sqrt 3 / 2)" by (rule s5)
+qed
+
 
 
 text \<open>\<^bold>\<open>Layer 5.\<close> Assemble the six components into the vector-valued

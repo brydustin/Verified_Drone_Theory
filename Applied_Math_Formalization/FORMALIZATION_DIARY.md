@@ -235,6 +235,40 @@ the 12×12 Jacobian minor `m*` will be `rline_entire`.
 (nontriviality) and `surj` at the base point. Then P1.6 instantiation (steps 1–7
 in `P1_PLAN.md`), then P1.7 assembly.
 
+### Done this session — P1.5 arithmetic foundation (base-point phase values)
+
+Began P1.5 (the Jacobian identification `D_x M_paper(x0_paper, c0_paper) = (*v) bigJ`,
+`Nonemptiness_Paper.thy`). Established the arithmetic substrate, sorry-free,
+`Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`.
+
+Precise statement of the reduction (for the paper): the canonical base
+configuration `x0_paper` has six points whose first ("`u`") coordinates are the
+equally-spaced angles `u_n ∈ {0, π/3, 2π/3, π, 4π/3, 5π/3}`, and the steering
+vector is `c0_paper = (1,0)`. Hence the steering form at point `n` is
+`c0_paper · (x0_paper$n) = u_n`, and the phase factor is
+`phase c0_paper x0_paper n = cis(-u_n) = cos u_n − 𝚤·sin u_n`. Every entry of the
+12×12 Jacobian `D_x M_paper(x0_paper, c0_paper)` is therefore a polynomial in the
+base coordinates and in `cos u_n`, `sin u_n` — i.e. expressible through `cos`/`sin`
+at these six angles, which are the sixth roots of unity.
+
+Lemmas added (`Nonemptiness_Paper.thy`, after the `x0_paper`/`c0_paper` block):
+- `sqrt3_sq`: `sqrt 3 * sqrt 3 = 3` (via `real_sqrt_pow2`).
+- `base_trig_values`: the twelve closed forms
+  `cos/sin` of `0, π/3, 2π/3, π, 4π/3, 5π/3`
+  (`= 1,0; 1/2,√3/2; −1/2,√3/2; −1,0; −1/2,−√3/2; 1/2,−√3/2`). Proved by explicit
+  calculational Isar from `cos_add`/`sin_add` and the `π/3` values (`cos_60`,
+  `sin_60`), isolating the single `sqrt3_sq` step where `cos(2π/3)` needs
+  `(√3/2)² = 3/4`; `5π/3` reuses the `2π/3` values. (Replaced the initial
+  one-line `simp` attempts, which were fragile around `√3·√3`.)
+
+**Next within P1.5:** compute `D_x M_paper(x0_paper, c0_paper)` column by column
+— for each base point `n` and coordinate `k`, the directional derivative
+collapses the moment sums to the single `n`-th term, giving an explicit
+`complex^6` vector whose `Re`/`Im` parts (via `base_trig_values`) must match the
+corresponding column of `bigJ` — then assemble the 12×12 identification and read
+off `surj (DM_paper_x x0_paper c0_paper)` (from `bigJ_surj`) and
+`det = det bigJ ≠ 0`.
+
 ### Next target (where this resumes)
 
 Discharge `regular_zero_set_projection_local_chart_2d` from
