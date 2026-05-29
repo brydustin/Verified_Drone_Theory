@@ -295,6 +295,29 @@ paper's formalization notes.
 `Moment_Jacobian.thy` now contains `transC`/`transC_inv`/`transD`/`transD_inv`
 with `linear_*`, `*_inv_left/right`, and `bij_transC`/`bij_transD` (all sorry-free).
 
+### Session architecture: the edited theory must not be in its own logic heap
+
+`Moment_Jacobian` is where the Jacobian identification (`D_x M_paper(x0,c0) = (*v) bigJ`)
+is being actively developed, so it cannot sit in the heap we load to edit it. Moved
+it to its **own directory + session** `Applied_Math_MomentJac in "MomentJac"`,
+parented on `Applied_Math_BlockDet`. Also moved the base configuration
+(`x0_paper`, `c0_paper`, their `*_entries`/`*_values` lemmas, `sqrt3_sq`,
+`base_trig_values`) out of `Nonemptiness_Paper` into `Moment_Jacobian`, since the
+identification needs them in this clean (HMA-free) context and `Moment_Jacobian`
+cannot import `Nonemptiness_Paper`. `Nonemptiness_Paper` no longer imports
+`Moment_Jacobian` during development (it used none of those names yet); it will be
+rewired once the identification is proved.
+
+- **Edit** `MomentJac/Moment_Jacobian.thy` with `-l Applied_Math_BlockDet`
+  (deps from the heap, the theory itself live — fast, no staleness).
+- **Batch-verify** with `isabelle build … Applied_Math_MomentJac` (~3 s on the
+  prebuilt BlockDet heap).
+
+Verified: `Applied_Math_BlockDet` (clean, no `Moment_Jacobian`) +
+`Applied_Math_Nonemptiness` (decoupled) + `Applied_Math_MomentJac` all
+`BUILD_EXIT=[0]`. (ROOT-comment trap re-logged: `(*v)` inside an Isabelle `(* … *)`
+comment opens a nested comment and breaks parsing — write it without the `(*`.)
+
 **Next within P1.5:** compute `D_x M_paper(x0_paper, c0_paper)` column by column
 — for each base point `n` and coordinate `k`, the directional derivative
 collapses the moment sums to the single `n`-th term, giving an explicit

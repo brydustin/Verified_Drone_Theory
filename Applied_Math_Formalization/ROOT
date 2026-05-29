@@ -16,6 +16,15 @@ session Applied_Math_BlockDet in "BlockDet" = Applied_Math_Base +
     Block_Determinants
     Block_Determinants_BigJ
     Moment_Map
+
+(* Moment_Jacobian (transports + the D_x M_paper = bigJ Jacobian identification)
+   lives in its OWN session/dir, parented on Applied_Math_BlockDet, so it can be edited
+   interactively with -l Applied_Math_BlockDet: its dependencies come from that
+   heap while Moment_Jacobian itself is NOT in the heap (a theory under active
+   editing must not be part of the logic image it is loaded against). *)
+session Applied_Math_MomentJac in "MomentJac" = Applied_Math_BlockDet +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
     Moment_Jacobian
 
 session Applied_Math_Nonemptiness in "." = Applied_Math_BlockDet +
