@@ -8,6 +8,56 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-29 (cont.) — P1.5 COMPLETE: the Jacobian identification `D_xM_paper(x0,c0) = (*v) bigJ`
+
+The keystone connection between the abstract matrix `bigJ` and the *actual*
+moment-map function is proved (sorry-free; `Applied_Math_MomentJac` `BUILD_EXIT=[0]`),
+in `MomentJac/Moment_Jacobian.thy`:
+
+- `matrix_MJ : matrix MJ = bigJ`, where
+  `MJ = transC ∘ (DM_paper_x x0_paper c0_paper) ∘ transD`.
+- `MJ_eq_bigJ : MJ = (*v) bigJ`  (via `(*v)(matrix MJ) = MJ` for linear `MJ`).
+- `surj_DM_paper_base : surj (DM_paper_x x0_paper c0_paper)` — surjectivity of the
+  genuine moment-map derivative at the base point, transferred from `bigJ_surj`
+  through the bijective transports.
+
+So `bigJ` is **not just a matrix of numbers**: it is the Fréchet derivative of the
+real moment map `M_paper` at the canonical base configuration, in the
+`(Re,Im)` × `(u_n,v_n)` coordinates fixed by `transC`/`transD`.
+
+**Proof shape (for the paper):** twelve per-column lemmas `MJ_col1..MJ_col12`,
+each `MJ (axis j 1) = (χ i. bigJ$i$j)`. For basis direction `axis j 1` the moment
+sums (`sum_6`) collapse to the single base point that direction touches; the
+surviving term is `weight · cis(-u_n)` whose `Re`/`Im` (via `base_trig_values`,
+the sixth-roots-of-unity values) match `bigJ`'s explicit entries. Shared simp
+bundle `MJ_col_simps`; each column discharged by a bounded `exhaust_12[of i]` +
+`elim disjE; simp_all`. The second-moment rows (M₁₁/M₁₂/M₂₂) need polynomial-in-π
+algebra, supplied by `power_divide`/`power_mult_distrib` (e.g. `9·(π/3)² = π²`).
+`matrix_MJ` assembles the columns (case split on `j`); `MJ_eq_bigJ` then uses
+`(*v)(matrix MJ) = MJ`; `surj_DM_paper_base` writes
+`DM_paper_x x0 c0 = transC_inv ∘ MJ ∘ transD_inv` and composes surjections.
+(Engineering: `DM_paper_x_components` and `cos pi`/`sin pi` are already `[simp]`, so
+omitted from the bundle to avoid duplicate-rewrite warnings.)
+
+**Next — P1.6 (density) then P1.7 (assembly):**
+- *Immediate:* `det (matrix MJ) = det bigJ = -(5·π⁸)/3 ≠ 0` (one line from
+  `matrix_MJ` + `bigJ_det_nonzero`) — the regular base point is a *non-degenerate*
+  one.
+- *P1.6:* the surjective stratum `{x. surj (DM_paper_x x c0)}` is **open and dense**.
+  Define the minor `m*(x) = det (matrix (transC ∘ DM_paper_x x c0 ∘ transD))`;
+  `m*(x0_paper) = det bigJ ≠ 0` (nontrivial) and `m*` is `rline_entire` (its
+  entries are coordinate-polynomials × `cos`/`sin` of the steering form — the
+  `rline_entire_coord`/`_cos_inner`/`_sin_inner` base cases + closure). Then
+  `lines_entire_slice_nowhere_dense` gives `{m*=0}` nowhere dense ⟹ `{m*≠0}`
+  open dense ⊆ surjective stratum. **Layering note:** `rline_entire` lives in
+  `Nonemptiness_Paper`; the minor involves nested-vec transports (must stay in the
+  HMA-free context), so decide where the density proof lives (likely move the
+  `rline_entire` engine into a lower heap theory, or do the density step carefully).
+- *P1.7:* assemble `DM_paper_open_dense_surjective` → `meager (ZH0surj ∩ V)` →
+  `prop_regnonzero`; then re-import `Moment_Jacobian` into `Nonemptiness_Paper`.
+
+---
+
 ## 2026-05-29 — Diary catch-up + importing higher-order differentiability
 
 ### Mea culpa: the diary lapsed

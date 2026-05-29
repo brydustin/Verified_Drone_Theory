@@ -299,4 +299,166 @@ lemma d_phase_c0_x0:
      = - ((h $ n) $ 1) *\<^sub>R (\<i> * cis (- ((x0_paper $ n) $ 1)))"
   by (simp add: d_phase_def c0_dot)
 
+
+subsection \<open>The Jacobian identification \<open>D\<^sub>x M_paper(x0,c0) = (*v) bigJ\<close>\<close>
+
+definition MJ :: "real^12 \<Rightarrow> real^12" where
+  "MJ = transC \<circ> (DM_paper_x x0_paper c0_paper) \<circ> transD"
+
+lemma linear_MJ: "linear MJ"
+  unfolding MJ_def
+  by (intro linear_compose linear_transC linear_transD
+            bounded_linear.linear[OF bounded_linear_DM_paper_x])
+
+text \<open>
+  The 12 columns of \<open>matrix MJ\<close>: for each standard basis direction \<open>axis j 1\<close>
+  the moment sums collapse to the single base-point term it touches, and the
+  resulting \<open>complex^6\<close> (real/imaginary parts via \<open>base_trig_values\<close>) is exactly
+  the \<open>j\<close>-th column of \<^const>\<open>bigJ\<close>. Optimized simp set: \<open>DM_paper_x_components\<close>
+  and \<open>cos pi\<close>/\<open>sin pi\<close> are already \<open>[simp]\<close>, so they are omitted here.
+\<close>
+
+lemmas MJ_col_simps =
+  MJ_def transD_def transC_def axis_def
+  d_A_moment_x_def d_M1_moment_x_def d_M2_moment_x_def
+  d_M11_moment_x_def d_M12_moment_x_def d_M22_moment_x_def
+  sum_6 phase_c0_x0 d_phase_c0_x0 bigJ_def
+  base_trig_values(1,2,3,4,5,6,9,10,11,12)
+  power_divide power_mult_distrib
+
+lemma MJ_col1: "MJ (axis (1::12) 1) = (\<chi> i. bigJ $ i $ 1)"
+proof -
+  have "MJ (axis (1::12) 1) $ i = bigJ $ i $ 1" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col2: "MJ (axis (2::12) 1) = (\<chi> i. bigJ $ i $ 2)"
+proof -
+  have "MJ (axis (2::12) 1) $ i = bigJ $ i $ 2" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col3: "MJ (axis (3::12) 1) = (\<chi> i. bigJ $ i $ 3)"
+proof -
+  have "MJ (axis (3::12) 1) $ i = bigJ $ i $ 3" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col4: "MJ (axis (4::12) 1) = (\<chi> i. bigJ $ i $ 4)"
+proof -
+  have "MJ (axis (4::12) 1) $ i = bigJ $ i $ 4" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col5: "MJ (axis (5::12) 1) = (\<chi> i. bigJ $ i $ 5)"
+proof -
+  have "MJ (axis (5::12) 1) $ i = bigJ $ i $ 5" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col6: "MJ (axis (6::12) 1) = (\<chi> i. bigJ $ i $ 6)"
+proof -
+  have "MJ (axis (6::12) 1) $ i = bigJ $ i $ 6" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col7: "MJ (axis (7::12) 1) = (\<chi> i. bigJ $ i $ 7)"
+proof -
+  have "MJ (axis (7::12) 1) $ i = bigJ $ i $ 7" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col8: "MJ (axis (8::12) 1) = (\<chi> i. bigJ $ i $ 8)"
+proof -
+  have "MJ (axis (8::12) 1) $ i = bigJ $ i $ 8" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col9: "MJ (axis (9::12) 1) = (\<chi> i. bigJ $ i $ 9)"
+proof -
+  have "MJ (axis (9::12) 1) $ i = bigJ $ i $ 9" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col10: "MJ (axis (10::12) 1) = (\<chi> i. bigJ $ i $ 10)"
+proof -
+  have "MJ (axis (10::12) 1) $ i = bigJ $ i $ 10" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col11: "MJ (axis (11::12) 1) = (\<chi> i. bigJ $ i $ 11)"
+proof -
+  have "MJ (axis (11::12) 1) $ i = bigJ $ i $ 11" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+lemma MJ_col12: "MJ (axis (12::12) 1) = (\<chi> i. bigJ $ i $ 12)"
+proof -
+  have "MJ (axis (12::12) 1) $ i = bigJ $ i $ 12" for i :: 12
+    using exhaust_12[of i] dw_M12_def w_M12_def
+    by (elim disjE, simp_all add: MJ_col_simps)
+  then show ?thesis by (metis (no_types, lifting) ext vec_lambda_eta)
+qed
+
+text \<open>Assembling the columns: \<open>matrix MJ = bigJ\<close>, hence \<open>MJ = (*v) bigJ\<close>.\<close>
+
+lemma matrix_MJ: "matrix MJ = bigJ"
+proof -
+  have cols: "MJ (axis (j::12) 1) = (\<chi> i. bigJ $ i $ j)" for j :: 12
+    using exhaust_12[of j]
+    by (elim disjE)
+       (simp_all add: MJ_col1 MJ_col2 MJ_col3 MJ_col4 MJ_col5 MJ_col6
+                      MJ_col7 MJ_col8 MJ_col9 MJ_col10 MJ_col11 MJ_col12)
+  have "matrix MJ $ i $ j = bigJ $ i $ j" for i j :: 12
+    using cols by (simp add: matrix_def)
+  thus ?thesis by (simp add: vec_eq_iff)
+qed
+
+lemma MJ_eq_bigJ: "MJ = (*v) bigJ"
+proof -
+  have "(*v) (matrix MJ) = MJ"
+    by (simp add: linear_MJ) 
+  thus ?thesis by (simp add: matrix_MJ)
+qed
+
+text \<open>
+  \<^bold>\<open>The connection to the actual function.\<close> The Fréchet derivative of the genuine
+  moment map \<^const>\<open>M_paper\<close> at the base configuration, transported into
+  \<open>\<real>\<^sup>1\<^sup>2\<close>-coordinates, \<^emph>\<open>is\<close> the explicit matrix \<^const>\<open>bigJ\<close>. Surjectivity of the
+  derivative therefore follows from \<open>bigJ_surj\<close>.
+\<close>
+
+lemma surj_DM_paper_base: "surj (DM_paper_x x0_paper c0_paper)"
+proof -
+  have surjMJ: "surj MJ" using bigJ_surj by (simp add: MJ_eq_bigJ)
+  have surjCi: "surj transC_inv" by (metis surjI transC_inv_left)
+  have surjDi: "surj transD_inv" by (metis surjI transD_inv_left)
+  have dm: "DM_paper_x x0_paper c0_paper = transC_inv \<circ> MJ \<circ> transD_inv"
+    by (rule ext) (simp add: MJ_def transC_inv_left transD_inv_right)
+  show ?thesis
+    using comp_surj[OF surjDi comp_surj[OF surjMJ surjCi]] dm by simp
+qed
+
 end
