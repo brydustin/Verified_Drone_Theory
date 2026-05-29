@@ -2468,6 +2468,58 @@ proof -
 qed
 
 text \<open>
+  Two further base cases needed for the \<^emph>\<open>moment-map\<close> Jacobian minor (as opposed
+  to the array factor): a single Cartesian coordinate \<open>(x $ n) $ k\<close> is affine in
+  the line parameter, hence has entire line restrictions; and the real
+  \<open>cos\<close>/\<open>sin\<close> of the steering form \<open>c \<bullet> (x $ n)\<close> are the real/imaginary parts of
+  the \<open>cis\<close>-phase, hence \<open>rline_entire\<close>. The minor's entries are sums of products
+  of these (polynomial weight times \<open>cos\<close>/\<open>sin\<close>), so the determinant --- a sum of
+  products of entries --- is \<open>rline_entire\<close> by the closure lemmas above.
+\<close>
+
+lemma rline_entire_coord:
+  fixes n :: "'n::finite" and k :: 2
+  shows "rline_entire (\<lambda>x::planar^'n. (x $ n) $ k)"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v :: "planar^'n"
+  let ?F = "\<lambda>z. complex_of_real ((a $ n) $ k) + z * complex_of_real ((v $ n) $ k)"
+  have "?F holomorphic_on UNIV" by (intro holomorphic_intros)
+  moreover have "?F (complex_of_real t) = complex_of_real (((a + t *\<^sub>R v) $ n) $ k)" for t::real
+    by (simp flip: of_real_mult of_real_add)
+  ultimately show "\<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t)
+                                   = complex_of_real (((a + t *\<^sub>R v) $ n) $ k))"
+    by blast
+qed
+
+lemma cline_entire_phase:
+  fixes c :: planar and n :: "'n::finite"
+  shows "cline_entire (\<lambda>x::planar^'n. cis (c \<bullet> (x $ n)))"
+proof (rule cline_entire_cis_linear)
+  show "bounded_linear (\<lambda>x::planar^'n. c \<bullet> (x $ n))"
+    by (rule bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth])
+qed
+
+lemma rline_entire_cos_inner:
+  fixes c :: planar and n :: "'n::finite"
+  shows "rline_entire (\<lambda>x::planar^'n. cos (c \<bullet> (x $ n)))"
+proof -
+  have "rline_entire (\<lambda>x::planar^'n. Re (cis (c \<bullet> (x $ n))))"
+    by (rule rline_entire_Re[OF cline_entire_phase])
+  thus ?thesis by simp
+qed
+
+lemma rline_entire_sin_inner:
+  fixes c :: planar and n :: "'n::finite"
+  shows "rline_entire (\<lambda>x::planar^'n. sin (c \<bullet> (x $ n)))"
+proof -
+  have "rline_entire (\<lambda>x::planar^'n. Im (cis (c \<bullet> (x $ n))))"
+    by (rule rline_entire_Im[OF cline_entire_phase])
+  thus ?thesis by simp
+qed
+
+text \<open>
   The array factor is a finite sum of \<open>cis\<close> of linear forms in \<open>x\<close>, hence has
   entire line restrictions; the power pattern \<open>U = g\<cdot>|A|\<^sup>2\<close> inherits this.
 \<close>

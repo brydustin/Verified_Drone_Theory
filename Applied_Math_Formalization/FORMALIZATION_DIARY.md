@@ -198,6 +198,43 @@ adding a continuity-of-derivative (C¹) hypothesis and discharging it for the
 concrete moment map via `C1_M_paper_x`; that yields `DM_paper_open_dense_surjective`
 → `ZH0surj` → `prop_regnonzero`.
 
+### Plan written down + the density-needs-analyticity finding (P1 arc)
+
+Wrote [P1_PLAN.md](P1_PLAN.md): the moment-map branch P1.1–P1.7 with status, since
+the `P1.x` labels previously lived only in commit messages (no tracked plan, no
+"P1.4"). What we did this arc (keystone + `M_paper` C¹) is the natural P1.4.
+Also confirmed: `bigJ_det = -(5·π⁸)/3`, `bigJ_surj` are **already proven**
+(BlockDet, 0 sorry — the 05‑27 "deferred to last" item is done).
+
+**Critical finding (ultrathink).** `rank_lower_semicont_open_dense_propagation`
+(P1.6) is **not** provable from C¹: its conclusion forces the surjective stratum
+to be *dense* (`V ⊆ closure U`), and the docstring's "openness + one regular point
++ connectedness ⟹ density" is **false** — counterexample: a C¹ map on connected
+`ℝ` with derivative non-zero at `0` but `≡ 0` on `[1,2]` has a non-dense surjective
+stratum. C¹ gives only *openness*; **density needs real-analyticity** of the
+Jacobian. User chose to build the analytic density unconditionally.
+
+**Good news:** the analytic engine is **already built and proven** for the
+array-factor branch — `lines_entire_identity` / `lines_entire_slice_nowhere_dense`
+(1‑D line-restriction identity theorem via `analytic_continuation`) plus the
+`cline_entire`/`rline_entire` closure algebra. So P1.6 is *instantiation*, not
+from-scratch building.
+
+### Done this session — moment-map base cases for the entire-line-restriction algebra
+
+Added to `Nonemptiness_Paper.thy` (sorry-free; `Applied_Math_Nonemptiness`
+`BUILD_EXIT=[0]`): the closure base cases the moment-map minor needs but the array
+factor didn't — `rline_entire_coord` (a single coordinate `(x$n)$k` is affine in
+the line parameter ⟹ entire), `cline_entire_phase`, `rline_entire_cos_inner`,
+`rline_entire_sin_inner` (`cos`/`sin (c · (x$n))` are `Re`/`Im` of the `cis`-phase).
+With `det` = sum-of-products of entries and the existing `rline_entire_add/_mult/_sum`,
+the 12×12 Jacobian minor `m*` will be `rline_entire`.
+
+**Next (P1.5, the prerequisite):** the Jacobian identification
+`DM_paper_x x0_paper c0_paper = (*v) bigJ`, giving `m*(x0_paper) = det bigJ ≠ 0`
+(nontriviality) and `surj` at the base point. Then P1.6 instantiation (steps 1–7
+in `P1_PLAN.md`), then P1.7 assembly.
+
 ### Next target (where this resumes)
 
 Discharge `regular_zero_set_projection_local_chart_2d` from
