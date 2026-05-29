@@ -532,4 +532,55 @@ proof -
     using surj_MJx_iff by (simp add: m_star_def)
 qed
 
+
+subsection \<open>P1.6 (openness): the surjective stratum is open\<close>
+
+text \<open>
+  \<open>m\<^sup>*\<close> is continuous (it is the determinant of a continuously-varying matrix,
+  the transported Fréchet derivative), so the surjective stratum
+  \<open>{x. surj (DM_paper_x x c0)} = {x. m\<^sup>*(x) \<noteq> 0}\<close> is open. This is the \<open>C\<^sup>1\<close>
+  (lower-semicontinuity-of-rank) half; density is the separate real-analytic
+  argument.
+\<close>
+
+lemma continuous_on_det_fun:
+  fixes A :: "'a::topological_space \<Rightarrow> real^'n^'n"
+  assumes "\<And>i j. continuous_on S (\<lambda>x. A x $ i $ j)"
+  shows "continuous_on S (\<lambda>x. det (A x))"
+  unfolding det_def
+  by (auto intro!: continuous_on_sum continuous_on_mult continuous_on_const
+                   continuous_on_prod assms finite_permutations)
+
+lemma bounded_linear_transC: "bounded_linear transC"
+  using linear_transC by (simp add: linear_conv_bounded_linear)
+
+lemma cont_MJx_apply: "continuous_on UNIV (\<lambda>x. MJx x y)"
+proof -
+  have "continuous_on UNIV (\<lambda>x. DM_paper_x x c0_paper (transD y))"
+    by (rule continuous_on_DM_paper_x_vec)
+  hence "continuous_on UNIV (\<lambda>x. transC (DM_paper_x x c0_paper (transD y)))"
+    by (rule bounded_linear.continuous_on[OF bounded_linear_transC])
+  thus ?thesis by (simp add: MJx_def o_def)
+qed
+
+lemma cont_matrix_MJx_entry: "continuous_on UNIV (\<lambda>x. matrix (MJx x) $ i $ j)"
+proof -
+  have "continuous_on UNIV (\<lambda>x. MJx x (axis j 1) $ i)"
+    using cont_MJx_apply by (rule bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+  thus ?thesis by (simp add: matrix_def)
+qed
+
+lemma continuous_m_star: "continuous_on UNIV m_star"
+  unfolding m_star_def
+  by (rule continuous_on_det_fun) (rule cont_matrix_MJx_entry)
+
+lemma open_surj_stratum: "open {x::(real^2)^6. surj (DM_paper_x x c0_paper)}"
+proof -
+  have set_eq: "{x::(real^2)^6. surj (DM_paper_x x c0_paper)} = {x. m_star x \<noteq> (0::real)}"
+    using surj_iff_m_star by auto
+  have open_nonzero: "open {x::(real^2)^6. m_star x \<noteq> (0::real)}"
+    by (rule open_Collect_neq[OF continuous_m_star continuous_on_const])
+  show ?thesis
+    by (subst set_eq) (rule open_nonzero)
+qed
 end
