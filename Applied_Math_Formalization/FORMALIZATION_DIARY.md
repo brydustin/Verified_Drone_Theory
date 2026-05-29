@@ -8,6 +8,130 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-29 — Diary catch-up + importing higher-order differentiability
+
+### Mea culpa: the diary lapsed
+
+This entry catches up three sessions' worth of work (commits `28846a2`..`a6f5316`)
+that landed after the `charts_core_Nn` entry but were never logged here. Going
+forward the diary is updated at the end of *every* session, not retroactively.
+
+### What happened since the last entry (reconstructed from git)
+
+- **Moment-map heap (`28846a2` P1.1, `20c7035` P1.2, `1b77582` P1.3).** The
+  six-component moment map `M_paper`, its base configuration `x0_paper`/`c0_paper`,
+  and the per-term Fréchet-derivative lemmas were factored out of
+  `Nonemptiness_Paper.thy` into `BlockDet/Moment_Map.thy` so the expensive
+  operator-overload elaboration is paid once at heap-build time.
+- **`bigJ` determinant chain (`82baa57`, `66c0e7b`, `ad8e16f`, `f469397`,
+  `d01ffdf`, `4192198`).** The `det_A/B/D` row-reduction pieces of the `12×12`
+  Jacobian determinant were baked into `Applied_Math_BlockDet`.
+- **Sard port (`f9d1110`, `087004b`, `a6f5316`).** `negligible_singular_image_2n`
+  — the `(real^2)^'n ≅ real^('n bit0)` transport feeding `baby_Sard` — is now a
+  **sorry-free** build theory `SardNegligible/Sard_Negligible.thy`, registered as
+  session `Applied_Math_Sard`. Note: this branch needs only **C¹** (a single
+  `has_derivative` + non-surjectivity), *not* higher-order differentiability.
+- **`chart_zero_projection_meager_stub` (`9a9cc95`)** proved unconditionally —
+  closing the fold-zero branch.
+
+### Current `sorry` ledger (verified by grep this session)
+
+- `Nonemptiness_Paper.thy:3650` — `rank_lower_semicont_open_dense_propagation`
+  (the C¹ rank-lower-semicontinuity tool feeding `DM_paper_open_dense_surjective`
+  → `ZH0surj` → `prop_regnonzero`). **Only C¹.**
+- `Parametric_Transversality_Euclidean_Base.thy` — three:
+  - `regular_zero_set_projection_local_chart_2d` (line ~373) — **the keystone**:
+    regular value ⇒ local smooth chart of the level set.
+  - `regular_zero_set_projection_charts_core_2d` (line ~352) — the countable-cover
+    assembly built on the keystone.
+  - `parametric_transversality_meager_euclidean_stub` (line ~972) — the meager
+    conclusion built on the assembly.
+- `Regular_Value_Theorem.thy` — **sorry-free**, but **not registered in any
+  session/ROOT**. Its theorem `regular_value_local_chart` is the IFT-based engine
+  for the keystone: it returns `U, u0, φ, g, Dφ` with `φ differentiable_on U`,
+  `φ ` U ⊆ {G=0}`, `openin … (φ ` U)`, `homeomorphism U (φ ` U) φ g`,
+  `range(Dφ u) = ker(G'(φ u))`. **Hypotheses: `derG` (Fréchet derivative `G'` as a
+  blinfun on `W`) + `contG'` (`continuous_on W G'`, i.e. C¹) + `regp` (`surj G'` at
+  `p`).**
+
+### Why we just imported `Higher_Differentiability_Multi`
+
+The keystone is currently stated with only `regular_value_on G (V×Ω) 0`, which
+gives a *pointwise* surjective derivative at the zeros but **no continuity of the
+derivative**. The IFT engine needs **C¹** (`contG'`). That is precisely the gap
+`Higher_Differentiability_Multi` fills:
+
+- `Ck_on 1 G W` (its `Ck_on`/`Ck_at` C¹ notion) ⟹ a continuous blinfun-valued
+  derivative on `W` ⟹ discharges `derG` + `contG'`.
+- Bridges: `Ck_on_imp_k_times_Fr_on`, `Ck_on_iff_higher_differentiable_on`
+  (agreement with the AFP `Smooth_Manifolds.higher_differentiable_on`).
+
+Copied into `HigherDiff/` with its three local deps (`Limits_Higher_Order_Derivatives`,
+`Auxiliary_Facts`, `Higher_Differentiability`); registered as session
+`Applied_Math_HigherDiff = HOL-Analysis + Smooth_Manifolds`. Builds clean
+(`BUILD_EXIT=[0]`). One pre-existing `sorry` in `Higher_Differentiability` ⇒
+session kept `quick_and_dirty`.
+
+#### Dependencies imported this session (for the record)
+
+Source: `…/Academic/Isabelle_Stuff/Verified_Numerical_Algorithms_ITP2026/`.
+Copied verbatim into `Applied_Math_Formalization/HigherDiff/`:
+
+| File | Imports (after copy) |
+| --- | --- |
+| `Limits_Higher_Order_Derivatives.thy` | `HOL-Analysis.Analysis` |
+| `Auxiliary_Facts.thy`                 | `Limits_Higher_Order_Derivatives` |
+| `Higher_Differentiability.thy`        | `Auxiliary_Facts`, `Smooth_Manifolds.Smooth`, `HOL-Analysis.Analysis` (carries 1 `sorry`) |
+| `Higher_Differentiability_Multi.thy`  | `Higher_Differentiability`, `Smooth_Manifolds.Smooth`, `HOL-Analysis.Analysis` |
+
+Non-local deps **not** copied (already available): `HOL-Analysis` (Isabelle
+dist), `Smooth_Manifolds` (AFP `afp-2026-04-09`, globally registered). UTP /
+`ITree_Numeric_VCG` machinery from the source project was deliberately **not**
+imported — it is only for imperative program verification, irrelevant here.
+New session in `ROOT`: `Applied_Math_HigherDiff in "HigherDiff" = HOL-Analysis +
+sessions Smooth_Manifolds`.
+
+### Done this session — the C¹ bridge (`Ck1_C1_Bridge.thy`, sorry-free)
+
+New theory `HigherDiff/Ck1_C1_Bridge.thy` (imports `Higher_Differentiability_Multi`,
+added to `Applied_Math_HigherDiff`; whole session `BUILD_EXIT=[0]`). It converts
+the higher-diff C¹ notion into the regular-value engine's interface:
+
+- `Dblinfun G z ≡ Blinfun (frechet_derivative G (at z))` — the canonical blinfun
+  derivative; `blinfun_apply_Dblinfun` proves the rep is faithful where `G` is
+  differentiable (finite-dim ⇒ Fréchet derivative is bounded-linear).
+- `Ck1_on_imp_has_derivative_blinfun`: `Ck_on (Suc 0) G W` ⇒
+  `(G has_derivative blinfun_apply (Dblinfun G z)) (at z)` for `z∈W`  (= `derG`).
+- `Ck1_on_imp_continuous_Dblinfun`: `Ck_on (Suc 0) G W` ⇒
+  `continuous_on W (Dblinfun G)`  (= `contG'`). Crux: per-direction continuity of
+  `frechet_derivative` (from `Ck_at 1`) ⇒ operator-norm continuity, via
+  `continuous_on_blinfun_componentwise` (finite-dim) + `continuous_on_eq`.
+- `Ck1_on_imp_C1_interface`: the two packaged in the engine's exact shape.
+
+Lesson (logged): header `text` blocks **before** `theory … begin` cannot resolve
+`\<^const>`/`@{thm}` antiquotations — keep the pre-`theory` header plain prose.
+
+**Next:** instantiate `regular_value_local_chart` at `'c := real^'m`, `'b := real^2`,
+feed it `Dblinfun` via `Ck1_on_imp_C1_interface` (after adding a `Ck_on 1 G (V×Ω)`
+hypothesis to the keystone), and repackage into
+`regular_zero_set_projection_local_chart_2d`'s `differentiable_on`/`homeomorphism`
+conclusion.
+
+### Next target (where this resumes)
+
+Discharge `regular_zero_set_projection_local_chart_2d` from
+`regular_value_local_chart` by instantiating `'c := real^'m`, `'b := real^2`, and
+supplying the missing **C¹** hypothesis via `Ck_on 1 G (V×Ω)`. Concretely:
+1. register `Regular_Value_Theorem` (and then `Parametric_Transversality_*`) in a
+   session whose base sees both HOL-Analysis and `Applied_Math_HigherDiff`;
+2. add a `Ck_on 1 G (V×Ω)` hypothesis to the keystone (mirroring how the C¹
+   hypothesis was threaded through `charts_core_Nn` on 05-27);
+3. extract `G'` + `continuous_on (V×Ω) G'` + the point-`p` surjectivity from
+   `regular_value_on` + C¹, then apply the engine and repackage its conclusion
+   into the keystone's `differentiable_on`/`homeomorphism` shape.
+
+---
+
 ## 2026-05-27 — The regular-value branch: `charts_core_Nn` from sorry to QED
 
 ### Where this fits

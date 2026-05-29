@@ -30,3 +30,18 @@ session Applied_Math_Sard in "SardNegligible" = Applied_Math_Base +
     "HOL-Analysis"
   theories
     Sard_Negligible
+
+(* Higher-order (k-times Fréchet) differentiability, ported from the
+   Verified_Numerical_Algorithms project.  Parented directly on HOL-Analysis +
+   the AFP's Smooth_Manifolds; deliberately independent of the Munkres/Jordan
+   stack above, since these theories only need real-analysis. *)
+session Applied_Math_HigherDiff in "HigherDiff" = "HOL-Analysis" +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Smooth_Manifolds
+  theories
+    Limits_Higher_Order_Derivatives
+    Auxiliary_Facts
+    Higher_Differentiability
+    Higher_Differentiability_Multi
+    Ck1_C1_Bridge
