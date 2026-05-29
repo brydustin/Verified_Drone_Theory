@@ -23,3 +23,10 @@ session Applied_Math_Nonemptiness in "." = Applied_Math_BlockDet +
     Applied_Math_BlockDet
   theories
     Nonemptiness_Paper
+
+session Applied_Math_Sard in "Sard" = Applied_Math_Base +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    "HOL-Analysis"
+  theories
+    Sard_Negligible
