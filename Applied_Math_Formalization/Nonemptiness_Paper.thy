@@ -8,6 +8,7 @@ theory Nonemptiness_Paper
     Applied_Math_BlockDet.Block_Determinants
     Applied_Math_BlockDet.Block_Determinants_BigJ
     Applied_Math_BlockDet.Moment_Map
+    Applied_Math_MomentJac.Moment_Jacobian
     "Perron_Frobenius.HMA_Connect"
     "HOL-Complex_Analysis.Conformal_Mappings"
 begin
