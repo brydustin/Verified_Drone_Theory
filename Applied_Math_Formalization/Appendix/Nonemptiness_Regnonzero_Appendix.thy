@@ -105,6 +105,11 @@ definition bstar :: "real \<Rightarrow> real \<Rightarrow> real" where
        - \<kappa> * u * sin (2 * \<kappa> * u) + cos (2 * \<kappa> * u) + 1)
      / (\<kappa>\<^sup>2 * (1 + (sin (\<kappa> * u))\<^sup>2))"
 
+text \<open>The ratio \<open>R\<close> behind \<open>prop:upair\<close>: \<open>\<alpha>(u)/\<beta>(u) = (1/\<kappa>) R(\<kappa>u)\<close>.\<close>
+
+definition Rratio :: "real \<Rightarrow> real" where
+  "Rratio t = t * (t * sin t - 2 * cos t) / (t * cos t + sin t)"
+
 
 subsection \<open>Spine: block-triangular and rank-3 moment Jacobians (concrete)\<close>
 
@@ -176,6 +181,54 @@ lemma prop_upair:
     and "betaU \<kappa> ui \<noteq> 0" and "betaU \<kappa> uj \<noteq> 0"
     and inj: "inj_on (\<lambda>u. alphaU \<kappa> u / betaU \<kappa> u) I"
   shows "betaU \<kappa> ui * alphaU \<kappa> uj - betaU \<kappa> uj * alphaU \<kappa> ui \<noteq> 0"
+  sorry
+
+text \<open>
+  \<^bold>\<open>Corrected supporting facts.\<close>  The honest replacement for the paper's false
+  ``\<open>R\<close> strictly monotone on \<real>''.  \<open>R\<close> is \<^emph>\<open>even\<close> (so \<^emph>\<open>not\<close> globally injective)
+  with a minimum at \<open>0\<close> (\<open>R(t) = -1 + (2/3)t\<^sup>2 + O(t\<^sup>4)\<close>); it is strictly monotone
+  only on each one-sided branch up to the first pole \<open>t\<^sub>1 \<approx> 2.029\<close> (the first
+  positive root of \<open>t cos t + sin t = 0\<close>).  The hypothesis
+  ``\<open>t cos t + sin t > 0\<close> on \<open>(0,B]\<close>'' exactly says \<open>(0,B]\<close> lies in the first
+  branch (\<open>B \<le> t\<^sub>1\<close>), where \<open>R\<close> is increasing and \<open>\<beta> \<noteq> 0\<close>.
+\<close>
+
+lemma R_even:
+  fixes t :: real
+  shows "Rratio (- t) = Rratio t"
+  sorry
+
+lemma R_strict_mono_first_branch:
+  fixes B :: real
+  assumes "0 < B" and "\<forall>t. 0 < t \<and> t \<le> B \<longrightarrow> t * cos t + sin t > 0"
+  shows "strict_mono_on {t. 0 < t \<and> t < B} Rratio"
+  sorry
+
+text \<open>Hence \<open>\<alpha>/\<beta>\<close> is injective on a single branch \<open>(0,B)\<close> (with \<open>\<kappa>B\<close> inside the
+  first branch) --- exactly the hypothesis \<open>prop_upair\<close> consumes.\<close>
+
+lemma alpha_beta_inj_on_branch:
+  fixes \<kappa> B :: real
+  assumes "\<kappa> > 0" and "0 < B"
+    and "\<forall>t. 0 < t \<and> t \<le> \<kappa> * B \<longrightarrow> t * cos t + sin t > 0"
+  shows "inj_on (\<lambda>u. alphaU \<kappa> u / betaU \<kappa> u) {u. 0 < u \<and> u < B}"
+  sorry
+
+text \<open>
+  \<^bold>\<open>The robust, Baire-compatible form\<close> (route 2).  As a function of the working
+  point, the \<open>u\<close>-pair minor \<open>Du\<close> is real-analytic and not identically zero (it is
+  nonzero for small same-sign \<open>u\<close>'s), so its zero set is \<^emph>\<open>nowhere dense\<close> --- which
+  is all the downstream meagerness argument needs, and it sidesteps
+  branch-localization entirely.  This is an instance of
+  \<open>analytic_cut_nowhere_dense\<close>: \<^const>\<open>rline_entire\<close> \<open>Du\<close> is dischargeable because
+  \<open>\<beta>,\<alpha>\<close> are entire combinations of \<open>cis\<close>/polynomials in the (affine) line parameter,
+  exactly as for the array factor.\<close>
+
+lemma upair_minor_nowhere_dense:
+  fixes W :: "'w::euclidean_space set" and Du :: "'w \<Rightarrow> real"
+  assumes "rline_entire Du" and "\<exists>x. Du x \<noteq> 0"
+    \<comment> \<open>\<open>Du x = \<beta>(u\<^sub>i x)\<alpha>(u\<^sub>j x) - \<beta>(u\<^sub>j x)\<alpha>(u\<^sub>i x)\<close>\<close>
+  shows "nowhere_dense {x \<in> W. Du x = 0}"
   sorry
 
 text \<open>TeX \<open>prop:vcos\<close> (L1583), \<open>prop:vsin\<close> (L1605), \<open>prop:vmixed\<close> (L1621):
