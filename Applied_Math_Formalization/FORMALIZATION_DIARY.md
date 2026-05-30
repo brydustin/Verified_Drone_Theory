@@ -8,6 +8,26 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (robust set, Part 1) — concrete U, 𝓕, and 𝓕 compact
+
+New theory `Appendix/Nonemptiness_Robust.thy` begins the concrete, paper-faithful
+build of `thm:final`. Part 1 (sorry-free):
+- `Upow cvec g x ω = g ω · (cmod (af cvec x ω))²` — the sidelobe power `U = g|A|²`.
+- `continuous_on_af_config` / `continuous_on_Upow_config`: `A`, `U` are continuous in
+  the configuration `x` (`continuous_intros` + `continuous_on_cis`).
+- `Ffeas cvec g R dmin δnull ωN = {x ∈ cball 0 R : ∀n≠m. dmin ≤ dist(x$n)(x$m),
+  Upow … ωN ≤ δnull}` — the feasible set `𝓕`.
+- `Ffeas_compact`: `𝓕` is COMPACT — it is `cball 0 R ∩ closed_spacing ∩ closed_null`,
+  i.e. closed feasibility constraints inside a bounded ball (Heine–Borel via
+  `compact_Int_closed`/`compact_cball`).
+
+Plan for the rest (concrete `thm:final`): Part 2 — `Γ_ε(x)`, `X₀(ξ,κ)`, `𝓕₀` using the
+gradient `\<nabla>`/Hessian `\<nabla>\<^sup>2` and `‖·‖` (σ_min ≥ 2ξ rendered as
+`⟨v,∇²U·v⟩ ≥ 2ξ‖v‖²`); Part 3 — finite-critical-set ⟹ `ξ` exists; Part 4 — assemble.
+ARCHITECTURE NOTE: `\<nabla>`/`\<nabla>\<^sup>2` live in `Higher_Differentiability_Multi`
+(`HigherDiff` session on `Smooth_Manifolds`), NOT imported by the nonemptiness stack;
+Parts 2–4 need either merging that session or re-exposing `\<nabla>` locally.
+
 ## 2026-05-30 (appendix sorry-free!) — lem_h0res_a1a2 made concrete; regnonzero appendix complete
 
 `lem_h0res_a1a2` PROVED concretely, so **`Nonemptiness_Regnonzero_Appendix.thy` is now
