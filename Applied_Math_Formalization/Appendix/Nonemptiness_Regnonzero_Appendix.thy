@@ -110,6 +110,20 @@ text \<open>The ratio \<open>R\<close> behind \<open>prop:upair\<close>: \<open>
 definition Rratio :: "real \<Rightarrow> real" where
   "Rratio t = t * (t * sin t - 2 * cos t) / (t * cos t + sin t)"
 
+text \<open>TeX \<open>prop:double-param\<close> (L5755): \<open>(\<alpha>\<^sub>\<ast>,\<beta>\<^sub>\<ast>)\<close> is the unique double-root
+  parameterization of \<open>F = \<partial>\<^sub>uF = 0\<close>, and \<open>\<alpha>\<^sub>\<ast>\<close> is strictly increasing.\<close>
+
+lemma prop_double_param_solves:
+  fixes \<kappa> u :: real
+  shows "Fparam \<kappa> u (astar \<kappa> u) (bstar \<kappa> u) = 0"
+  sorry
+
+lemma prop_double_param_mono:
+  fixes \<kappa> :: real
+  assumes "\<kappa> \<noteq> 0"
+  shows "strict_mono_on UNIV (astar \<kappa>)"
+  sorry
+
 
 subsection \<open>Spine: block-triangular and rank-3 moment Jacobians (concrete)\<close>
 
@@ -196,7 +210,9 @@ text \<open>
 lemma R_even:
   fixes t :: real
   shows "Rratio (- t) = Rratio t"
-  sorry
+  by (metis (no_types, opaque_lifting) Groups.add_ac(2) Rratio_def cos_minus minus_add minus_divide_right
+      minus_mult_commute minus_mult_right minus_real_def more_arith_simps(10) sin_periodic_pi2 sin_pi_minus
+      times_divide_eq_right)
 
 lemma R_strict_mono_first_branch:
   fixes B :: real
@@ -224,10 +240,28 @@ text \<open>
   \<open>\<beta>,\<alpha>\<close> are entire combinations of \<open>cis\<close>/polynomials in the (affine) line parameter,
   exactly as for the array factor.\<close>
 
+text \<open>
+  \<^bold>\<open>On \<open>Du\<close> and real derivatives.\<close>  \<open>Du\<close> is the \<open>u\<close>-pair minor \<^emph>\<open>as a function of the
+  working point\<close> \<open>x\<close>: it is the \<open>2\<times>2\<close> Jacobian determinant
+  \<open>Du x = det \<partial>(b\<^sub>1,a\<^sub>1\<^sub>1)/\<partial>(u\<^sub>i,u\<^sub>j) = \<beta>(u\<^sub>i x)\<alpha>(u\<^sub>j x) - \<beta>(u\<^sub>j x)\<alpha>(u\<^sub>i x)\<close>, where
+  \<^emph>\<open>\<open>\<beta>,\<alpha>\<close> are themselves the partial derivatives\<close> \<open>\<partial>\<^sub>u b\<^sub>1 = \<beta>(u)\<close>,
+  \<open>\<partial>\<^sub>u a\<^sub>1\<^sub>1 = \<alpha>(u)\<close> (= \<^const>\<open>betaU\<close>, \<^const>\<open>alphaU\<close>).  So the derivative content is
+  already \<^emph>\<open>inside\<close> \<open>\<beta>,\<alpha>\<close>; once evaluated, \<open>Du x\<close> is a plain real depending on \<open>x\<close>.
+  The meagerness step does not re-differentiate --- it needs only that \<open>Du\<close> is
+  real-analytic (\<^const>\<open>rline_entire\<close>, since \<open>\<beta>,\<alpha>\<close> are entire and the \<open>u\<close>-coordinates
+  are affine in the line parameter) and not identically zero (from \<open>prop_upair\<close>).
+
+  \<^bold>\<open>How it connects to the real derivatives.\<close>  With the concrete moment map: (i)
+  prove the leaf identities \<open>\<partial>\<^sub>u b\<^sub>1 = betaU \<kappa> u\<close>, \<open>\<partial>\<^sub>u a\<^sub>1\<^sub>1 = alphaU \<kappa> u\<close>
+  (\<^emph>\<open>this\<close> is where \<^const>\<open>has_derivative\<close>\<open>/\<close>\<^const>\<open>deriv\<close> appear); (ii) \<^bold>\<open>define\<close> the
+  concrete \<open>Du x = betaU \<kappa> (uu x i) * alphaU \<kappa> (uu x j) - betaU \<kappa> (uu x j) * alphaU \<kappa> (uu x i)\<close>;
+  (iii) instantiate this lemma, discharging \<^const>\<open>rline_entire\<close> from the
+  \<open>cline_entire\<close>/\<open>rline_entire\<close> closure lemmas and non-triviality from \<open>prop_upair\<close>.
+\<close>
+
 lemma upair_minor_nowhere_dense:
   fixes W :: "'w::euclidean_space set" and Du :: "'w \<Rightarrow> real"
   assumes "rline_entire Du" and "\<exists>x. Du x \<noteq> 0"
-    \<comment> \<open>\<open>Du x = \<beta>(u\<^sub>i x)\<alpha>(u\<^sub>j x) - \<beta>(u\<^sub>j x)\<alpha>(u\<^sub>i x)\<close>\<close>
   shows "nowhere_dense {x \<in> W. Du x = 0}"
   sorry
 
@@ -344,7 +378,7 @@ lemma cor_szero_meager:
     and s1 :: "'w \<Rightarrow> real"
   assumes "rline_entire s1" and "\<exists>x. s1 x \<noteq> 0"
   shows "meager (piV ` {x \<in> Wset. s1 x = 0})"
-  sorry
+  by (rule analytic_cut_meager_proj[OF assms subset_refl])
 
 text \<open>TeX \<open>prop:h0res-threecos\<close> (L3396) --- three-cosine branch, certificate \<open>c\<^sub>1\<close>.\<close>
 
@@ -353,7 +387,7 @@ lemma prop_h0res_threecos:
     and c1 :: "'w \<Rightarrow> real"
   assumes "rline_entire c1" and "\<exists>x. c1 x \<noteq> 0"
   shows "meager (piV ` {x \<in> Wset. c1 x = 0})"
-  sorry
+  by (rule analytic_cut_meager_proj[OF assms subset_refl])
 
 text \<open>TeX \<open>cor:allcos-a1a2\<close> (L2990) --- certificate the rank-3 minor
   \<open>m = u\<^sub>1 B\<^sub>1 S c\<^sub>1c\<^sub>2c\<^sub>3\<close> (its analytic zero set covers the \<open>S \<noteq> 0\<close>, some-\<open>B\<^sub>j \<noteq> 0\<close> subcase).\<close>
@@ -363,7 +397,7 @@ lemma cor_allcos_a1a2:
     and m :: "'w \<Rightarrow> real" and B :: "'w set"
   assumes "rline_entire m" and "\<exists>x. m x \<noteq> 0" and "B \<subseteq> {x \<in> Wset. m x = 0}"
   shows "meager (piV ` B)"
-  sorry
+  by (rule analytic_cut_meager_proj[OF assms])
 
 
 subsection \<open>The three branch facts feeding \<open>prop:regnonzero\<close>\<close>
@@ -386,7 +420,8 @@ lemma prop_dimZ:
   assumes "rline_entire fZ" "\<exists>x. fZ x \<noteq> 0" "Zreg \<subseteq> {x \<in> Wset. fZ x = 0}"
     and "rline_entire fH" "\<exists>x. fH x \<noteq> 0" "ZH0surj \<subseteq> {x \<in> Wset. fH x = 0}"
   shows "meager (piV ` Zreg)" and "meager (piV ` ZH0surj)"
-  sorry
+  using analytic_cut_meager_proj[OF assms(1) assms(2) assms(3)]
+        analytic_cut_meager_proj[OF assms(4) assms(5) assms(6)] by blast+
 
 text \<open>TeX \<open>prop:h0res-meager\<close> (L3544), fact (4): assembled from the residual
   \<open>H\<equiv>0\<close> branch projections (\<open>B\<^sub>1=B\<^sub>2=B\<^sub>3=0\<close>, \<open>S=0\<close>, two-/three-cosine).\<close>
@@ -397,7 +432,14 @@ lemma prop_h0res_meager:
     and "meager (Bbranch \<inter> Vset)" and "meager (Sbranch \<inter> Vset)"
     and "meager (twocos \<inter> Vset)" and "meager (threecos \<inter> Vset)"
   shows "meager (BH0res \<inter> Vset)"
-  sorry
+proof -
+  have un: "meager ((Bbranch \<inter> Vset) \<union> (Sbranch \<inter> Vset) \<union> (twocos \<inter> Vset) \<union> (threecos \<inter> Vset))"
+    by (rule meager_Un[OF meager_Un[OF meager_Un[OF assms(2) assms(3)] assms(4)] assms(5)])
+  have sub: "BH0res \<inter> Vset
+              \<subseteq> (Bbranch \<inter> Vset) \<union> (Sbranch \<inter> Vset) \<union> (twocos \<inter> Vset) \<union> (threecos \<inter> Vset)"
+    using assms(1) by blast
+  show ?thesis by (rule meager_subset[OF sub un])
+qed
 
 text \<open>TeX \<open>cor:caseBmeager\<close> (L6206), fact (3): assembled from the three
   nonzero-Hessian branch closures \<open>cor:H11-closed\<close>, the \<open>H\<^sub>2\<^sub>2 \<noteq> 0\<close> closure, and
@@ -408,47 +450,341 @@ lemma cor_caseBmeager:
   assumes "BcaseB \<subseteq> BH11 \<union> BH22 \<union> BH12"
     and "meager (BH11 \<inter> Vset)" and "meager (BH22 \<inter> Vset)" and "meager (BH12 \<inter> Vset)"
   shows "meager (BcaseB \<inter> Vset)"
+proof -
+  have un: "meager ((BH11 \<inter> Vset) \<union> (BH22 \<inter> Vset) \<union> (BH12 \<inter> Vset))"
+    by (rule meager_Un[OF meager_Un[OF assms(2) assms(3)] assms(4)])
+  have sub: "BcaseB \<inter> Vset \<subseteq> (BH11 \<inter> Vset) \<union> (BH22 \<inter> Vset) \<union> (BH12 \<inter> Vset)"
+    using assms(1) by blast
+  show ?thesis by (rule meager_subset[OF sub un])
+qed
+
+
+subsection \<open>Appendix C --- common-cofactor theorem (\<open>H\<equiv>0\<close>)\<close>
+
+text \<open>TeX \<open>prop:direct5\<close> (L1887): the pair determinant
+  \<open>\<partial>(b\<^sub>1,b\<^sub>2,a\<^sub>1\<^sub>1,a\<^sub>1\<^sub>2,a\<^sub>2\<^sub>2)/\<partial>(u\<^sub>i,u\<^sub>j,v\<^sub>1,v\<^sub>2,v\<^sub>3) = -2 \<Delta>\<^sup>(\<^sup>u\<^sup>)\<^sub>i\<^sub>j K\<close>.
+  Consumable form (\<open>cor:pairambiguity\<close>, L1942): with that factorization and
+  \<open>\<Delta>\<^sup>(\<^sup>u\<^sup>) \<noteq> 0\<close>, the three pair determinants vanish simultaneously iff \<open>K = 0\<close>
+  (the factorization is carried as a hypothesis, so this is genuine algebra).\<close>
+
+lemma cor_pairambiguity:
+  fixes d12 d13 d23 Delu12 Delu13 Delu23 Kf :: "'w::euclidean_space \<Rightarrow> real" and x :: 'w
+  assumes "Delu12 x \<noteq> 0" "Delu13 x \<noteq> 0" "Delu23 x \<noteq> 0"
+    and "d12 x = - 2 * Delu12 x * Kf x"
+    and "d13 x = - 2 * Delu13 x * Kf x"
+    and "d23 x = - 2 * Delu23 x * Kf x"
+  shows "(d12 x = 0 \<and> d13 x = 0 \<and> d23 x = 0) \<longleftrightarrow> Kf x = 0"
+  sorry
+
+text \<open>TeX \<open>prop:direct5alt\<close> (L1955), \<open>cor:H0subcase\<close> (L1996): alternative
+  factorizations \<open>= -2\<Delta>\<^sup>(\<^sup>u\<^sup>)L\<close>, \<open>= -\<Delta>\<^sup>(\<^sup>u\<^sup>)M\<close>, and the closed \<open>H\<equiv>0\<close> subcase
+  (\<open>a\<^sub>1a\<^sub>2 \<noteq> 0\<close>, some \<open>L,M \<noteq> 0\<close> \<Longrightarrow> some alternative pair determinant nonzero).\<close>
+
+lemma cor_H0subcase:
+  fixes dL dM Delu Lf Mf a1f a2f :: "'w::euclidean_space \<Rightarrow> real" and x :: 'w
+  assumes "Delu x \<noteq> 0" and "a1f x * a2f x \<noteq> 0"
+    and "dL x = - 2 * Delu x * Lf x" and "dM x = - 1 * Delu x * Mf x"
+    and "Lf x \<noteq> 0 \<or> Mf x \<noteq> 0"
+  shows "dL x \<noteq> 0 \<or> dM x \<noteq> 0"
   sorry
 
 
-subsection \<open>Remaining appendix sub-lemmas (roadmap)\<close>
+subsection \<open>Appendix D --- all-sine-zero \<open>H\<equiv>0\<close> subcase\<close>
 
-text \<open>
-  The sub-lemmas of Appendices C--I that are not separately stated above all fall
-  into the two connectable patterns: either a concrete determinant/rank identity in
-  the moment or triple-coordinate variables (state like \<open>lem:3x3\<close> / Appendix A), or
-  an analytic-cut meagerness instance (state like \<open>cor:szero-meager\<close>, via
-  \<open>analytic_cut_meager_proj\<close> with the certificate listed in the table above).
-  In dependency order they are:
+text \<open>TeX \<open>lem:Fij\<close> (L2083): not all
+  \<open>F\<^sub>i\<^sub>j = a(u\<^sub>iv\<^sub>j - u\<^sub>jv\<^sub>i) + a\<^sub>1(v\<^sub>i-v\<^sub>j) - a\<^sub>2(u\<^sub>i-u\<^sub>j)\<close> vanish.
+  \<^bold>\<open>Truth note:\<close> FALSE without the good-triple hypothesis (if the three points are
+  collinear w.r.t. the line \<open>(a,a\<^sub>1,a\<^sub>2)\<close>, all \<open>F\<^sub>i\<^sub>j\<close> vanish); the noncollinearity
+  hypothesis is carried explicitly.\<close>
 
-  \<^bold>\<open>Appendix C\<close> (\<open>H\<equiv>0\<close> common cofactor): \<open>prop:direct5\<close>, \<open>cor:pairambiguity\<close>,
-    \<open>prop:direct5alt\<close>, \<open>cor:H0subcase\<close>.
-  \<^bold>\<open>Appendix D\<close> (all-sine-zero): \<open>prop:direct5szero\<close>, \<open>lem:Fij\<close>, \<open>cor:szeroH0\<close>,
-    \<open>prop:szero-small\<close>.
-  \<^bold>\<open>Appendix E\<close> (one-cosine): \<open>prop:onecos-codim3\<close>, \<open>cor:onecos-codim3\<close>,
-    \<open>prop:onecos-lam\<close>, \<open>cor:onecos-lam\<close>, \<open>prop:onecos-terminal\<close>, \<open>cor:onecos-terminal\<close>,
-    \<open>cor:onecos-exhausted\<close>.
-  \<^bold>\<open>Appendix F\<close> (degenerate all-cosine): \<open>prop:allcos-La2\<close>, \<open>cor:allcos-La2\<close>,
-    \<open>prop:quarterturn\<close>, \<open>cor:allcos-Ma1\<close>.
-  \<^bold>\<open>Appendix G\<close> (simultaneous zero): \<open>prop:allcos-a1a2\<close>.
-  \<^bold>\<open>Appendix H\<close> (\<open>app:H0res\<close>): \<open>lem:h0res-Bcuts\<close>, \<open>prop:h0res-Bbranch\<close>,
-    \<open>lem:h0res-residue-exc\<close>, \<open>lem:h0res-a1a2\<close>, \<open>lem:h0res-baseSK\<close>,
-    \<open>prop:h0res-Sbranch\<close>, \<open>prop:h0res-twocos\<close>.
-  \<^bold>\<open>Appendix I\<close> (\<open>app:caseB\<close>): \<open>prop:vblock\<close>, \<open>prop:branch\<close>, \<open>cor:repair\<close>,
-    \<open>prop:uphi-reduce\<close>, \<open>prop:uphi-codim3\<close>, \<open>cor:uphi-exhausted\<close>, \<open>prop:vpair11\<close>,
-    \<open>cor:vpair11\<close>, \<open>prop:szero-local\<close>, \<open>prop:vpair11-graph\<close>, \<open>cor:vpair11-graph\<close>,
-    \<open>cor:H11-closed\<close>, \<open>prop:vpair22\<close>, \<open>cor:vpair22\<close>, \<open>cor:vpair22-common\<close>,
-    \<open>prop:vpair22-graph\<close>, \<open>cor:vpair22-graph\<close>, \<open>prop:vpair22-KLM\<close>,
-    \<open>cor:vpair22-nonzero\<close>, \<open>prop:vpair22-elim\<close>, \<open>prop:vpair22-onezero\<close>,
-    \<open>cor:vpair22-onezero\<close>, \<open>prop:vpair22-full\<close>, \<open>cor:vpair22-full\<close>, \<open>prop:H12zero\<close>,
-    \<open>cor:H12zero\<close>, \<open>prop:Lambda-common\<close>, \<open>prop:double-param\<close>, \<open>cor:double-impossible\<close>,
-    \<open>prop:Lambda-simple\<close>, \<open>cor:Lambda-remains\<close>, \<open>prop:Lambda-high\<close>,
-    \<open>prop:Lambda-onefold\<close>, \<open>cor:Lambda-refined\<close>, \<open>prop:Lambda-twofold\<close>,
-    \<open>cor:Lambda-twofold\<close>, \<open>cor:Lambda-closed\<close>.
+lemma lem_Fij:
+  fixes a a1 a2 :: real and u v :: "nat \<Rightarrow> real"
+  defines "F \<equiv> (\<lambda>i j. a*(u i * v j - u j * v i) + a1*(v i - v j) - a2*(u i - u j))"
+  assumes "a > 0"
+    and noncollinear:
+      "\<not> (\<exists>p q r. (p,q,r) \<noteq> (0,0,0) \<and> (\<forall>k\<in>{1,2,3}. p * u k + q * v k + r = 0))"
+  shows "F 1 2 \<noteq> 0 \<or> F 1 3 \<noteq> 0 \<or> F 2 3 \<noteq> 0"
+  sorry
 
-  (The concrete double-root functions \<^const>\<open>astar\<close>, \<^const>\<open>bstar\<close>, \<^const>\<open>Fparam\<close>,
-  \<^const>\<open>betaU\<close>, \<^const>\<open>alphaU\<close> are already defined above for \<open>prop:upair\<close> and the
-  Appendix-I \<open>\<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<close> double-root chain.)
-\<close>
+text \<open>TeX \<open>prop:direct5szero\<close> (L2029)/\<open>cor:szeroH0\<close> (L2131): on the all-sine-zero
+  stratum the \<open>5\<times>5\<close> determinants factor as
+  \<open>64 a\<^sup>3 c\<^sub>i\<^sup>2c\<^sub>j\<^sup>2c\<^sub>k g\<^sup>4 \<kappa>\<^sup>3 (a\<^sub>1g\<^sub>1+gb\<^sub>1\<^sub>1) A\<^sub>T F\<^sub>i\<^sub>j\<close>; rank 5 when \<open>a\<^sub>1g\<^sub>1+gb\<^sub>1\<^sub>1 \<noteq> 0\<close>.
+  Consumable: the rank-deficient locus lies in the analytic cut
+  \<open>{(a\<^sub>1g\<^sub>1+gb\<^sub>1\<^sub>1)\<cdot>F\<^sub>1\<^sub>2 = 0}\<close>, hence projects meagerly.\<close>
+
+lemma cor_szeroH0_meager:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+text \<open>TeX \<open>prop:szero-small\<close> (L2165): \<open>\<Sigma>\<^sub>0 = {s\<^sub>1=s\<^sub>2=s\<^sub>3=0}\<close> is codim 3
+  (cert: any one sine \<open>s\<^sub>1\<close>).\<close>
+
+lemma prop_szero_small_meager:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and s1 :: "'w \<Rightarrow> real"
+  assumes "rline_entire s1" "\<exists>x. s1 x \<noteq> 0"
+  shows "meager (piV ` {x \<in> Wset. s1 x = 0})"
+  by (rule analytic_cut_meager_proj[OF assms subset_refl])
+
+
+subsection \<open>Appendix E --- residual one-cosine-zero subcases\<close>
+
+text \<open>TeX \<open>cor:onecos-codim3\<close> (L2306): cert
+  \<open>= det \<partial>(c\<^sub>1,K,a\<^sub>2)/\<partial>(u\<^sub>1,v\<^sub>2,v\<^sub>3) = \<kappa> s\<^sub>1\<^sup>2 c\<^sub>2 c\<^sub>3 (c\<^sub>2u\<^sub>2+c\<^sub>3u\<^sub>3)\<close>;
+  \<open>cor:onecos-lam\<close> (L2416): cert
+  \<open>= det \<partial>(c\<^sub>1,a\<^sub>2,\<Lambda>)/\<partial>(u\<^sub>1,u\<^sub>2,v\<^sub>2) = \<kappa> s\<^sub>1 c\<^sub>2 (c\<^sub>2 - \<kappa> s\<^sub>2 u\<^sub>2)\<close>;
+  \<open>cor:onecos-terminal\<close> (L2508): cert
+  \<open>= det \<partial>(c\<^sub>1,E\<^sub>2,E\<^sub>3)/\<partial>(u\<^sub>1,u\<^sub>2,u\<^sub>3) = -\<kappa> s\<^sub>1 (-2\<kappa>s\<^sub>2-\<kappa>\<^sup>2u\<^sub>2c\<^sub>2)(-2\<kappa>s\<^sub>3-\<kappa>\<^sup>2u\<^sub>3c\<^sub>3)\<close>,
+  \<open>E\<^sub>k = c\<^sub>k - \<kappa> s\<^sub>k u\<^sub>k\<close>.  Each is an analytic-cut meagerness instance.\<close>
+
+lemma cor_onecos_codim3:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+lemma cor_onecos_lam:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+lemma cor_onecos_terminal:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+text \<open>TeX \<open>cor:onecos-exhausted\<close> (L2531): the union of the three subcases exhausts
+  the \<open>c\<^sub>1=0\<close> residual.\<close>
+
+lemma cor_onecos_exhausted:
+  fixes Vset :: "'v::{real_normed_vector,heine_borel} set" and Bexh :: "'v set"
+  assumes "Bexh \<subseteq> Bcodim3 \<union> Blam \<union> Bterminal"
+    and "meager (Bcodim3 \<inter> Vset)" "meager (Blam \<inter> Vset)" "meager (Bterminal \<inter> Vset)"
+  shows "meager (Bexh \<inter> Vset)"
+proof -
+  have un: "meager ((Bcodim3 \<inter> Vset) \<union> (Blam \<inter> Vset) \<union> (Bterminal \<inter> Vset))"
+    by (rule meager_Un[OF meager_Un[OF assms(2) assms(3)] assms(4)])
+  have sub: "Bexh \<inter> Vset \<subseteq> (Bcodim3 \<inter> Vset) \<union> (Blam \<inter> Vset) \<union> (Bterminal \<inter> Vset)"
+    using assms(1) by blast
+  show ?thesis by (rule meager_subset[OF sub un])
+qed
+
+
+subsection \<open>Appendix F/G --- degenerate all-cosine branches\<close>
+
+text \<open>TeX \<open>cor:allcos-La2\<close> (L2678): \<open>K=L=a\<^sub>2=0\<close> branch codim 4 (after one auxiliary).
+  \<open>prop:quarterturn\<close> (L2733) is the symmetry \<open>u'=v, v'=-u, K'=K, L'=-M, M'=L\<close>, giving
+  \<open>cor:allcos-Ma1\<close> (L2862, the dual \<open>K=M=a\<^sub>1=0\<close> branch) from \<open>cor:allcos-La2\<close>.\<close>
+
+lemma cor_allcos_La2:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+lemma cor_allcos_Ma1:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+
+subsection \<open>Appendix H --- residual Hessian-zero closure \<open>app:H0res\<close>\<close>
+
+text \<open>TeX \<open>lem:h0res-Bcuts\<close> (L3143): each \<open>B\<^sub>j = \<beta>(t\<^sub>j) = cos t\<^sub>j - t\<^sub>j sin t\<^sub>j\<close> is a
+  smooth hypersurface, \<open>\<beta>'(t) = -(2 sin t + t cos t) \<noteq> 0\<close> on \<open>{\<beta>=0}\<close>.\<close>
+
+lemma lem_h0res_Bcuts:
+  fixes t :: real
+  assumes "cos t - t * sin t = 0"
+  shows "- (2 * sin t + t * cos t) \<noteq> 0"
+  sorry
+
+text \<open>TeX \<open>prop:h0res-Bbranch\<close> (L3175): \<open>B\<^sub>1=B\<^sub>2=B\<^sub>3=0\<close> branch codim \<open>\<ge>3\<close> (cert any
+  \<open>B\<^sub>j\<close>); \<open>lem:h0res-residue-exc\<close> (L3196): residue exceptional sets codim \<open>\<ge>N-3\<ge>4\<close>
+  (cert any residue cosine); \<open>lem:h0res-baseSK\<close> (L3269): base slice
+  \<open>{c\<^sub>1c\<^sub>2c\<^sub>3\<noteq>0, S=0, K=0}\<close> codim \<open>\<ge>2\<close> (cert \<open>S\<close>); \<open>prop:h0res-Sbranch\<close> (L3349):
+  \<open>S=0\<close> branch meager (cert \<open>S\<close>); \<open>prop:h0res-twocos\<close> (L3417): two-cosine branch
+  codim \<open>\<ge>2\<close> (cert \<open>c\<^sub>i\<close>).\<close>
+
+lemma prop_h0res_Bbranch:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+lemma lem_h0res_residue_exc:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+lemma lem_h0res_baseSK:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+lemma prop_h0res_Sbranch:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and Sf :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire Sf" "\<exists>x. Sf x \<noteq> 0" "B \<subseteq> {x \<in> Wset. Sf x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+lemma prop_h0res_twocos:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and ci :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire ci" "\<exists>x. ci x \<noteq> 0" "B \<subseteq> {x \<in> Wset. ci x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+text \<open>TeX \<open>lem:h0res-a1a2\<close> (L3234): off the residue exceptional sets the residue
+  map \<open>r \<mapsto> (a\<^sub>1,a\<^sub>2)\<close> has rank 2.\<close>
+
+lemma lem_h0res_a1a2:
+  fixes rk_residue :: "'w::euclidean_space \<Rightarrow> nat" and exc :: "'w \<Rightarrow> bool" and x :: 'w
+  assumes "\<not> exc x"  \<comment> \<open>\<open>x\<close> off \<open>E\<^sub>c\<^sub>~ \<union> E\<^sub>B\<^sub>~\<close>\<close>
+  shows "rk_residue x = 2"
+  sorry
+
+
+subsection \<open>Appendix I --- direct configuration-space closure of Case B\<close>
+
+text \<open>TeX \<open>prop:vblock\<close> (L3682): \<open>det \<partial>(\<Phi>\<^sub>2,H\<^sub>1\<^sub>2,H\<^sub>2\<^sub>2)/\<partial>(v) = -16a\<^sup>2g\<^sup>3(aK+a\<^sub>1L-a\<^sub>2M)\<close>;
+  \<open>prop:branch\<close> (L3712)/\<open>cor:repair\<close> (L3812): on \<open>{H\<^sub>2\<^sub>2\<noteq>0, H\<^sub>1\<^sub>2\<noteq>0, aK+a\<^sub>1L-a\<^sub>2M\<noteq>0}\<close>
+  with a regular \<open>u\<close>-slice direction, \<open>rank D\<^bsub>x\<^esub>\<Phi> = 3\<close>.  Consumable: the
+  rank-deficient locus is the analytic cut \<open>{aK+a\<^sub>1L-a\<^sub>2M = 0}\<close> (mod the \<open>u\<close>-slice
+  residue of \<open>cor:uphi-exhausted\<close>), hence meager.\<close>
+
+lemma cor_repair_meager:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+text \<open>TeX \<open>prop:uphi-reduce\<close> (L3849): \<open>D\<Phi>\<^sub>1|\<^bsub>E\<^sub>u\<^esub> = 0 \<longleftrightarrow> F\<^sub>\<eta>(u\<^sub>j) = 0\<close>,
+  \<open>F\<^sub>\<eta>(u) = cos(\<kappa>u) - \<kappa>(u-\<eta>)sin(\<kappa>u)\<close>, \<open>\<eta> = g\<^sub>1/(2g)\<close>; \<open>prop:uphi-codim3\<close> (L3920):
+  \<open>Z\<^sub>\<eta> = {u : F\<^sub>\<eta>(u)=0}\<close> is discrete (real-analytic isolated zeros);
+  \<open>cor:uphi-exhausted\<close> (L3980): the vanishing \<open>u\<close>-slice residue is nowhere dense.\<close>
+
+lemma prop_uphi_codim3:
+  fixes \<kappa> \<eta> :: real
+  defines "Feta \<equiv> (\<lambda>u. cos (\<kappa> * u) - \<kappa> * (u - \<eta>) * sin (\<kappa> * u))"
+  assumes "\<kappa> \<noteq> 0"
+  shows "\<forall>u. Feta u = 0 \<longrightarrow> (\<exists>\<epsilon>>0. \<forall>u'. \<bar>u' - u\<bar> < \<epsilon> \<and> Feta u' = 0 \<longrightarrow> u' = u)"
+  sorry
+
+lemma cor_uphi_exhausted:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+    \<comment> \<open>\<open>cert = F\<^sub>\<eta>(u\<^sub>1) F\<^sub>\<eta>(u\<^sub>2) F\<^sub>\<eta>(u\<^sub>3)\<close>\<close>
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+text \<open>TeX \<open>prop:vpair11\<close>..\<open>cor:H11-closed\<close> (L4032--4337): the \<open>H\<^sub>1\<^sub>1 \<noteq> 0\<close> branch is
+  exhausted by the all-sine-zero slice (\<open>prop:szero-local\<close>, codim 3), the \<open>u\<close>-slice
+  residue (nowhere dense), the rank-3 subcase (\<open>\<Delta>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j \<noteq> 0\<close>,
+  \<open>\<Delta>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j = -8ag\<^sup>2 H\<^sub>1\<^sub>1\<^sup>-\<^sup>1(s\<^sub>ic\<^sub>jR\<^sub>j-s\<^sub>jc\<^sub>iR\<^sub>i)\<close>), and the pair-minor residue (codim 4).\<close>
+
+lemma cor_H11_closed:
+  fixes Vset :: "'v::{real_normed_vector,heine_borel} set" and BH11 :: "'v set"
+  assumes "BH11 \<subseteq> Bszero \<union> Buslice \<union> Bgraph"
+    and "meager (Bszero \<inter> Vset)" "meager (Buslice \<inter> Vset)" "meager (Bgraph \<inter> Vset)"
+  shows "meager (BH11 \<inter> Vset)"
+proof -
+  have un: "meager ((Bszero \<inter> Vset) \<union> (Buslice \<inter> Vset) \<union> (Bgraph \<inter> Vset))"
+    by (rule meager_Un[OF meager_Un[OF assms(2) assms(3)] assms(4)])
+  have sub: "BH11 \<inter> Vset \<subseteq> (Bszero \<inter> Vset) \<union> (Buslice \<inter> Vset) \<union> (Bgraph \<inter> Vset)"
+    using assms(1) by blast
+  show ?thesis by (rule meager_subset[OF sub un])
+qed
+
+text \<open>TeX \<open>prop:vpair22\<close>..\<open>cor:vpair22-full\<close> (L4398--5401): the \<open>H\<^sub>1\<^sub>2\<noteq>0, H\<^sub>2\<^sub>2\<noteq>0\<close>
+  branch.  Pair-minor residue \<open>\<Delta>\<^sup>(\<^sup>2\<^sup>2\<^sup>) = -8ag\<^sup>2 H\<^sub>1\<^sub>2 H\<^sub>2\<^sub>2\<^sup>-\<^sup>2(s\<^sub>ic\<^sub>jR\<^sub>j-s\<^sub>jc\<^sub>iR\<^sub>i)\<close>,
+  graph reduction \<open>v\<^sub>j = \<delta>+\<mu>u\<^sub>j-\<rho>tan(\<kappa>u\<^sub>j)\<close>, the KLM relations
+  (\<open>L=-c\<^sub>1c\<^sub>2c\<^sub>3 V\<^sub>\<tau>\<close> etc.), scalar residue \<open>\<Theta>\<^sub>1\<^sup>(\<^sup>2\<^sup>2\<^sup>)=\<Theta>\<^sub>2\<^sup>(\<^sup>2\<^sup>2\<^sup>)=0\<close>: all codim-4 cuts.\<close>
+
+lemma cor_vpair22_full_meager:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+text \<open>TeX \<open>cor:vpair22-nonzero\<close> (L4928): when the scalar residue vanishes,
+  \<open>L/M = H\<^sub>2\<^sub>2/H\<^sub>1\<^sub>2\<close> (genuine algebra from \<open>\<Theta>\<^sub>1\<^sup>(\<^sup>2\<^sup>2\<^sup>) = H\<^sub>2\<^sub>2M - H\<^sub>1\<^sub>2L = 0\<close>).\<close>
+
+lemma cor_vpair22_nonzero:
+  fixes Kf Lf Mf H12 H22 af a1f a2f :: "'w::euclidean_space \<Rightarrow> real" and x :: 'w
+  assumes "H12 x \<noteq> 0" "H22 x \<noteq> 0" "Mf x \<noteq> 0"
+    and "H22 x * Mf x - H12 x * Lf x = 0"
+  shows "Lf x / Mf x = H22 x / H12 x"
+  sorry
+
+text \<open>TeX \<open>prop:H12zero\<close> (L5447)/\<open>cor:H12zero\<close> (L5529): \<open>H\<^sub>1\<^sub>2=0\<close> block factorization
+  \<open>det \<partial>(\<Phi>)/\<partial>(u\<^sub>i,u\<^sub>j,v\<^sub>k) = 2ag s\<^sub>k H\<^sub>2\<^sub>2 \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<close>; rank 3 if \<open>s\<^sub>k\<noteq>0, \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<noteq>0\<close>.
+  Consumable: the rank-deficient locus is the analytic cut \<open>{s\<^sub>k \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j = 0}\<close>.\<close>
+
+lemma cor_H12zero_meager:
+  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
+    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
+  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
+  shows "meager (piV ` B)"
+  by (rule analytic_cut_meager_proj[OF assms])
+
+text \<open>TeX \<open>prop:Lambda-common\<close> (L5656): the vanishing \<open>\<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<close>-residue gives
+  \<open>\<alpha>,\<beta>\<close> with \<open>F\<^sub>j(\<alpha>,\<beta>) = 2(\<alpha>-u\<^sub>j)B\<^sub>j + \<kappa> s\<^sub>j(\<beta>-u\<^sub>j\<^sup>2) = 0\<close>.\<close>
+
+lemma prop_Lambda_common:
+  fixes \<kappa> :: real and Lam :: "nat \<Rightarrow> nat \<Rightarrow> real" and uu BB ss :: "nat \<Rightarrow> real"
+  defines "Fj \<equiv> (\<lambda>\<alpha> \<beta> j. 2*(\<alpha> - uu j)*BB j + \<kappa> * ss j * (\<beta> - (uu j)\<^sup>2))"
+  assumes "Lam 1 2 = 0" "Lam 1 3 = 0" "Lam 2 3 = 0"
+  shows "\<exists>\<alpha> \<beta>. \<forall>j\<in>{1,2,3}. Fj \<alpha> \<beta> j = 0"
+  sorry
+
+text \<open>TeX \<open>cor:double-impossible\<close> (L5816): no two distinct indices are both
+  degenerate-critical, because \<open>\<alpha>\<^sub>\<ast>\<close> is strictly increasing
+  (\<open>prop_double_param_mono\<close>), hence injective.\<close>
+
+lemma cor_double_impossible:
+  fixes \<kappa> :: real and uu :: "nat \<Rightarrow> real" and i j :: nat
+  assumes "\<kappa> \<noteq> 0" "uu i \<noteq> uu j"
+  shows "astar \<kappa> (uu i) \<noteq> astar \<kappa> (uu j)"
+  using prop_double_param_mono[OF assms(1)] assms(2)
+  by (meson UNIV_I strict_mono_on_imp_inj_on inj_onD)
+
+text \<open>TeX \<open>prop:Lambda-simple/high/onefold/twofold\<close> + \<open>cor:Lambda-*\<close> (L5836--6182):
+  the \<open>\<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<close>-residue critical-point families are codim 3/4/5 analytic cuts
+  (cert: the degenerate-critical equations \<open>F\<^sub>j,G\<^sub>j,H\<^sub>j\<close>); \<open>cor:Lambda-closed\<close> (L6185):
+  the whole \<open>H\<^sub>1\<^sub>2=0, H\<^sub>2\<^sub>2\<noteq>0\<close> branch projects meagerly.\<close>
+
+lemma cor_Lambda_closed:
+  fixes Vset :: "'v::{real_normed_vector,heine_borel} set" and BH12 :: "'v set"
+  assumes "BH12 \<subseteq> Bsimple \<union> Bonefold \<union> Bhigh"
+    and "meager (Bsimple \<inter> Vset)" "meager (Bonefold \<inter> Vset)" "meager (Bhigh \<inter> Vset)"
+  shows "meager (BH12 \<inter> Vset)"
+proof -
+  have un: "meager ((Bsimple \<inter> Vset) \<union> (Bonefold \<inter> Vset) \<union> (Bhigh \<inter> Vset))"
+    by (rule meager_Un[OF meager_Un[OF assms(2) assms(3)] assms(4)])
+  have sub: "BH12 \<inter> Vset \<subseteq> (Bsimple \<inter> Vset) \<union> (Bonefold \<inter> Vset) \<union> (Bhigh \<inter> Vset)"
+    using assms(1) by blast
+  show ?thesis by (rule meager_subset[OF sub un])
+qed
 
 end
