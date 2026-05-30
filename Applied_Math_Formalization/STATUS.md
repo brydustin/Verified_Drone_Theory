@@ -109,7 +109,7 @@ status per the legend; "—" means no counterpart and none planned as a named ob
 | 637  | `lem:3x3`            | Three explicit 3×3 rank-3 minors of `D_M F` equal `−8g³a³H₂₂`, `−8g³a³H₁₁`, `16g³a³H₁₂` (+ duals). | ✗ |
 | 670  | `lem:Msurj`          | For `N≥6`, `c≠0`, `D_x M : ℝ^{2N}→ℂ⁶≅ℝ¹²` has rank 12 on an open dense subset of `V` — the **explicit 12×12 determinant** at a six-element configuration. | ✅ `bigJ_det_nonzero`/`bigJ_surj` + `DM_paper_open_dense_surjective` (`W_surj` = the open-dense surjective locus) |
 | 1144 | `prop:dimZ`          | On `W_surj`: `Z_reg` (H≢0 piece) is a smooth codim-3 submanifold (dim ≤ 2N−1); the H≡0 stratum has dim ≤ 2N−3. | ✗ |
-| 1197 | `lem:smooth-chart-meager` | A smooth map from open `U⊂ℝ^m` to `ℝ^n` with `m<n` has meager image (measure-zero cube cover). | ✗ (negligible→meager half proven separately) |
+| 1197 | `lem:smooth-chart-meager` | A smooth map from open `U⊂ℝ^m` to `ℝ^n` with `m<n` has meager image (measure-zero cube cover). | ✅ `smooth_chart_meager` (+ general `rank_deficient_C1_image_meager`, `open_sigma_compact_exhaustion`) in `Parametric_Transversality_Euclidean_Base` |
 | 1239 | `prop:regnonzero`    | `B_{reg,≠0} ⊆ π_V(Z_reg) ∪ π_V(H≡0 stratum) ∪ B_{CaseB,≠0} ∪ B_{H0,res}`. | ✅ `prop_regnonzero` (proved 4-piece decomposition reduction) |
 | 1342 | `thm:final`          | **Flagship.** Odd `N≥7` + secant/spacing hyps ⟹ ∃`ξ>0`, `F_zero` nonempty (Baire over the 4 meager branches). | ◐ `thm_final` (closeout proven, conditional on the 4 branch facts; via `nonemptiness_from_meager_branches`) |
 

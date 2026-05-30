@@ -1003,6 +1003,121 @@ proof -
     using assms(1) meager_subset by blast
 qed
 
+subsection \<open>Lower-dimensional / rank-deficient \<open>C\<^sup>1\<close> images are meager (tex \<open>lem:smooth-chart-meager\<close>)\<close>
+
+text \<open>
+  Countable compact exhaustion of an open set, then \<open>baby_Sard\<close> on each compact
+  piece (rank-deficient \<open>\<Longrightarrow>\<close> negligible image) plus the closed-negligible cover
+  \<open>meager_negligible_closed_cover\<close>.  The corollary \<open>smooth_chart_meager\<close> is the
+  paper's \<open>lem:smooth-chart-meager\<close> (tex L1197): a smooth map from open
+  \<open>U \<subseteq> \<real>\<^sup>m\<close> into \<open>\<real>\<^sup>n\<close> with \<open>m < n\<close> has meager image.
+\<close>
+
+lemma open_sigma_compact_exhaustion:
+  fixes U :: "'a::{heine_borel,real_normed_vector} set"
+  assumes U: "open U"
+  obtains K :: "nat \<Rightarrow> 'a set"
+  where "\<And>n. compact (K n)" "\<And>n. K n \<subseteq> U" "(\<Union>n. K n) = U"
+proof (cases "U = UNIV")
+  case True
+  have "compact (cball (0::'a) (real n))" for n by simp
+  moreover have "(\<Union>n. cball (0::'a) (real n)) = UNIV"
+    by (auto simp: real_arch_simple)
+  ultimately show ?thesis using True that[of "\<lambda>n. cball 0 (real n)"] by auto
+next
+  case False
+  then have neU: "- U \<noteq> {}" by auto
+  define K where
+    "K n = cball (0::'a) (real n) \<inter> {x. inverse (real (Suc n)) \<le> setdist {x} (- U)}" for n :: nat
+  have clset: "closed {x::'a. inverse (real (Suc n)) \<le> setdist {x} (- U)}" for n
+    by (rule closed_Collect_le[OF continuous_on_const continuous_on_setdist])
+  have cpt: "compact (K n)" for n
+    unfolding K_def by (rule compact_Int_closed[OF compact_cball clset])
+  have sub: "K n \<subseteq> U" for n
+  proof
+    fix x assume "x \<in> K n"
+    then have pos: "0 < setdist {x} (- U)"
+      using K_def by (simp add: order.strict_trans1, metis inverse_Suc of_nat_Suc order_less_le_trans)
+    show "x \<in> U"
+    proof (rule ccontr)
+      assume "x \<notin> U"
+      then have "setdist {x} (- U) \<le> dist x x" by (intro setdist_le_dist) auto
+      with pos show False by simp
+    qed
+  qed
+  have cov: "(\<Union>n. K n) = U"
+  proof
+    show "(\<Union>n. K n) \<subseteq> U" using sub by blast
+    show "U \<subseteq> (\<Union>n. K n)"
+    proof
+      fix x assume xU: "x \<in> U"
+      then obtain e where e: "e > 0" "ball x e \<subseteq> U" using U open_contains_ball by blast
+      have margin: "e \<le> setdist {x} (- U)"
+      proof (subst le_setdist_iff, intro conjI ballI impI)
+        fix z y assume "z \<in> {x}" and yU: "y \<in> - U"
+        then have "y \<notin> ball x e" using e by blast
+        with \<open>z \<in> {x}\<close> show "e \<le> dist z y" by (auto simp: dist_commute)
+      qed (use neU e in auto)
+      obtain n1 where n1: "norm x \<le> real n1" using real_arch_simple by blast
+      obtain n2 where n2: "inverse (real (Suc n2)) \<le> e"
+        by (meson e(1) less_eq_real_def reals_Archimedean)
+      define n where "n = max n1 n2"
+      have "x \<in> cball 0 (real n)" using n1 unfolding n_def by (simp add: dist_norm)
+      moreover have "inverse (real (Suc n)) \<le> setdist {x} (- U)"
+      proof -
+        have "inverse (real (Suc n)) \<le> inverse (real (Suc n2))"
+          unfolding n_def by (simp add: frac_le)
+        also have "\<dots> \<le> e" using n2 .
+        also have "\<dots> \<le> setdist {x} (- U)" using margin .
+        finally show ?thesis .
+      qed
+      ultimately have "x \<in> K n" unfolding K_def by simp
+      then show "x \<in> (\<Union>n. K n)" by blast
+    qed
+  qed
+  show ?thesis using that[of K] cpt sub cov by blast
+qed
+
+lemma rank_deficient_C1_image_meager:
+  fixes F :: "(real^'m::{finite,wellorder}) \<Rightarrow> (real^'n::{finite,wellorder})"
+  assumes mlen: "CARD('m) \<le> CARD('n)"
+    and U: "open U"
+    and der: "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)"
+    and rk: "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('n)"
+  shows "meager (F ` U)"
+proof -
+  obtain K :: "nat \<Rightarrow> _ set"
+    where Kc: "\<And>n. compact (K n)" and KU: "\<And>n. K n \<subseteq> U" and Kcov: "(\<Union>n. K n) = U"
+    using open_sigma_compact_exhaustion[OF U] by metis
+  have contF: "continuous_on U F"
+    by (rule has_derivative_continuous_on[OF der])
+  have neg: "negligible (F ` K n)" for n
+  proof (rule baby_Sard[OF mlen])
+    show "\<And>x. x \<in> K n \<Longrightarrow> (F has_derivative F' x) (at x within K n)"
+      using der KU has_derivative_subset by blast
+    show "\<And>x. x \<in> K n \<Longrightarrow> rank (matrix (F' x)) < CARD('n)"
+      using rk KU by blast
+  qed
+  have clo: "closed (F ` K n)" for n
+    by (meson Kc KU compact_continuous_image compact_imp_closed contF continuous_on_subset)
+  have "F ` U = (\<Union>n. F ` K n)" using Kcov by blast
+  then show ?thesis
+    using meager_negligible_closed_cover[of "F ` U" "\<lambda>n. F ` K n"] clo neg by auto
+qed
+
+corollary smooth_chart_meager:
+  fixes F :: "(real^'m::{finite,wellorder}) \<Rightarrow> (real^'n::{finite,wellorder})"
+  assumes mn: "CARD('m) < CARD('n)"
+    and U: "open U"
+    and der: "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)"
+  shows "meager (F ` U)"
+proof (rule rank_deficient_C1_image_meager[OF less_imp_le[OF mn] U der])
+  fix x assume "x \<in> U"
+  have "rank (matrix (F' x)) \<le> CARD('m)"
+    by (metis column_rank_def dim_subset_UNIV_cart rank_transpose)
+  with mn show "rank (matrix (F' x)) < CARD('n)" by linarith
+qed
+
 theorem parametric_transversality_meager_euclidean_stub:
   fixes V :: "(real^'m::{finite,wellorder}) set"
     and \<Omega> :: "(real^2) set"

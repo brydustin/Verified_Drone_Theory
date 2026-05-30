@@ -41,8 +41,11 @@ STATUS "Label" column. Transcribe from here; do not reverse-engineer from one-li
 - [ ] `prop_openfeas` (◐ feasibility half), `lem_twotriplecover` (◐ geometric packaging).
 
 ### Tier 1 — appendix foundations
-- [ ] `lem:smooth-chart-meager` (tex L1198): smooth U⊂ℝ^m→ℝ^n, m<n ⟹ meager image.
-      Half-done (Sard negligible→meager); need smooth+m<n ⟹ negligible image.
+- [x] `lem:smooth-chart-meager` (tex L1198): smooth U⊂ℝ^m→ℝ^n, m<n ⟹ meager image.
+      DONE as `smooth_chart_meager` in `Parametric_Transversality_Euclidean_Base`, via
+      general `rank_deficient_C1_image_meager` (open `U`, C¹, rank `<n` ⟹ meager image:
+      `open_sigma_compact_exhaustion` + `baby_Sard` per piece + `meager_negligible_closed_cover`).
+      Also serves transversality stub 2 (rank-deficient, not just m<n).
 - [ ] Appendix A minors (L1462): `prop:upair`, `prop:vcos`, `prop:vsin`, `prop:vmixed`, `prop:KLM`.
 - [ ] Appendix B minors (L1771): `prop:moment3`, `prop:moment5`, `prop:moment5alt`.
       (All self-contained symbolic determinants — reuse the `bigJ_det` pattern.)

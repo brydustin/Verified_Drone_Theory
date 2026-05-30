@@ -8,6 +8,43 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-29 (cont.) — Tier 1: `lem:smooth-chart-meager` proved (rank-deficient C¹ image is meager)
+
+`smooth_chart_meager` (sorry-free, `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`), in
+`Parametric_Transversality_Euclidean_Base`: a smooth map from an open `U ⊆ ℝ^m` into
+`ℝ^n` with `m < n` has meager image (paper `lem:smooth-chart-meager`, tex L1197).
+Proved via the strictly more general
+
+  `rank_deficient_C1_image_meager`: open `U`, `(F has_derivative F' x)(at x within U)`
+  on `U`, and `rank (matrix (F' x)) < CARD('n)` everywhere ⟹ `meager (F ` U)`.
+
+**Proof shape (for the paper).** Three ingredients:
+1. `open_sigma_compact_exhaustion` — every open `U` in a heine-borel real-normed space
+   is `⋃ₙ Kₙ` with each `Kₙ` compact. Construction: `Kₙ = cball 0 n ∩ {x. 1/(n+1) ≤
+   setdist {x} (−U)}` (closed margin set via `continuous_on_setdist`, intersect with a
+   ball → compact); the `setdist`-margin forces `Kₙ ⊆ U`, and openness (`ball x e ⊆ U`)
+   gives the cover. `U = UNIV` handled separately by plain `cball` exhaustion.
+2. `baby_Sard` on each compact piece: `rank < n` ⟹ `negligible (F ` Kₙ)`.
+3. `Kₙ` compact + `F` continuous ⟹ `F ` Kₙ` compact (closed); a countable union of
+   closed negligible sets is meager (`meager_negligible_closed_cover`, already in Base).
+The `m < n` corollary discharges the rank hypothesis for free
+(`rank (matrix (F' x)) ≤ CARD('m) < CARD('n)` via `rank_transpose`/`rank_bound`).
+
+This is the single highest-leverage Tier-1 lemma: it feeds **both** transversality
+stub 2 (`parametric_transversality_meager_euclidean_stub`, rank-deficient case) **and**
+`prop:dimZ` facts 1 & 2 of `prop:regnonzero` (`m<n` case). Prototyped in a fast
+standalone `HOL-Analysis`-only theory, then folded into the Base theory (reusing its
+`meager`/closed-cover chain — no duplication) and verified in the real session.
+
+**Traps hit (recorded for next time):** (i) `cball 0` needs sort `zero` →
+`{heine_borel,real_normed_vector}`, not bare `heine_borel`; (ii) annotating an
+`obtain` with `(real^'m)` re-imposes the `vec` constructor's bare `finite` sort,
+clashing with the context default `{finite,wellorder}` ("finite inconsistent with
+default…") — use `nat ⇒ _ set` and let inference recover the element type from `U`;
+(iii) `nat_approx_posE` yields `1/of_nat(Suc n) < e`, not `inverse(real(Suc n)) ≤ e`;
+(iv) `has_derivative_continuous_on[OF der]` instead of `meson …` to avoid a
+unification-bound blowup.
+
 ## 2026-05-29 (cont.) — DECISION: commit to the full unconditional `thm:final`; built the complete obligation map
 
 brydustin asked, point-blank, whether there is a real pathway to a *complete* proof
