@@ -145,7 +145,29 @@ lemma lem_block:
     and \<comment> \<open>off-block: \<open>\<Phi>\<^sub>1,\<Phi>\<^sub>2\<close> do not depend on the \<open>a\<^sub>k\<^sub>l\<close>\<close>
         "deriv (\<lambda>t. Phi1m g1 g a b a1 b1) a11 = 0"
     and "deriv (\<lambda>t. Phi2m g2 g a b a2 b2) a22 = 0"
-  sorry
+proof -
+  show "deriv (\<lambda>t. Phi1m g1 g a b a1 t) b1 = 2 * g * a"
+    unfolding Phi1m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  show "deriv (\<lambda>t. Phi2m g2 g a b a2 t) b2 = 2 * g * a"
+    unfolding Phi2m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  show "deriv (\<lambda>t. H11m g11 g1 g a b a1 b1 t b11) a11 = - 2 * g * a"
+    unfolding H11m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  show "deriv (\<lambda>t. H12m g12 g1 g2 g a b a1 b1 a2 b2 t b12) a12 = - 2 * g * a"
+    unfolding H12m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  show "deriv (\<lambda>t. H22m g22 g2 g a b a2 b2 t b22) a22 = - 2 * g * a"
+    unfolding H22m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  show "deriv (\<lambda>t. Phi1m g1 g a b a1 b1) a11 = 0"
+    unfolding Phi1m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros)
+  show "deriv (\<lambda>t. Phi2m g2 g a b a2 b2) a22 = 0"
+    unfolding Phi2m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros)
+qed
 
 text \<open>TeX \<open>lem:3x3\<close> (L637): the rank-3 minor identities.  With
   \<open>\<Phi>\<^sub>3 = H\<^sub>1\<^sub>1 H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close>, the key partial is \<open>\<partial>\<^sub>a\<^sub>1\<^sub>1\<Phi>\<^sub>3 = -2ga H\<^sub>2\<^sub>2\<close> (and duals),
@@ -162,7 +184,17 @@ lemma lem_3x3:
            = - 2*g*a * H11m g11 g1 g a b a1 b1 a11 b11"
     and "deriv (\<lambda>t. Phi3 a11 t a22) a12
            =   4*g*a * H12m g12 g1 g2 g a b a1 b1 a2 b2 a12 b12"
-  sorry
+proof -
+  show "deriv (\<lambda>t. Phi3 t a12 a22) a11 = - 2*g*a * H22m g22 g2 g a b a2 b2 a22 b22"
+    unfolding Phi3_def H11m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  show "deriv (\<lambda>t. Phi3 a11 a12 t) a22 = - 2*g*a * H11m g11 g1 g a b a1 b1 a11 b11"
+    unfolding Phi3_def H22m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  show "deriv (\<lambda>t. Phi3 a11 t a22) a12 = 4*g*a * H12m g12 g1 g2 g a b a1 b1 a2 b2 a12 b12"
+    unfolding Phi3_def H12m_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+qed
 
 text \<open>TeX \<open>lem:Msurj\<close> (L670): \<open>D\<^bsub>x\<^esub>\<M>\<close> has rank 12 on an open dense subset of \<open>V\<close>.
   \<^bold>\<open>Already proven\<close> --- \<open>bigJ\<close> + \<open>bigJ_det_nonzero\<close> /
