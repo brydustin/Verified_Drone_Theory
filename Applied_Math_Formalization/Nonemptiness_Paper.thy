@@ -2468,6 +2468,29 @@ proof -
     unfolding eq by (intro rline_entire_add rline_entire_mult rline_entire_Re rline_entire_Im assms)
 qed
 
+text \<open>Closure under constants, finite sums/products, and hence the determinant of a
+  matrix whose entries are \<open>rline_entire\<close> --- the route to \<open>m\<^sup>*\<close> being \<open>rline_entire\<close>.\<close>
+
+lemma rline_entire_const: "rline_entire (\<lambda>x. c)"
+  using rline_entire_Re[OF cline_entire_const[of "complex_of_real c"]] by simp
+
+lemma rline_entire_sum:
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> rline_entire (g i)"
+  shows "rline_entire (\<lambda>x. \<Sum>i\<in>I. g i x)"
+  using assms by (induction I rule: finite_induct) (auto intro: rline_entire_const rline_entire_add)
+
+lemma rline_entire_prod:
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> rline_entire (g i)"
+  shows "rline_entire (\<lambda>x. \<Prod>i\<in>I. g i x)"
+  using assms by (induction I rule: finite_induct) (auto intro: rline_entire_const rline_entire_mult)
+
+lemma rline_entire_det_fun:
+  fixes A :: "'a::euclidean_space \<Rightarrow> real^'n^'n"
+  assumes "\<And>i j. rline_entire (\<lambda>x. A x $ i $ j)"
+  shows "rline_entire (\<lambda>x. det (A x))"
+  unfolding det_def
+  by (auto intro!: rline_entire_sum rline_entire_scale rline_entire_prod assms finite_permutations)
+
 text \<open>
   Two further base cases needed for the \<^emph>\<open>moment-map\<close> Jacobian minor (as opposed
   to the array factor): a single Cartesian coordinate \<open>(x $ n) $ k\<close> is affine in
