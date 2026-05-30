@@ -552,6 +552,48 @@ proof (rule proj_lowdim_meager[OF mlen U _ _ cover])
   show "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('v)" using rk by blast
 qed
 
+text \<open>
+  \<^bold>\<open>Pattern applied to the \<open>B\<^sub>1=B\<^sub>2=B\<^sub>3=0\<close> branch\<close> (\<open>prop:h0res-Bbranch\<close>, L3175).  Two
+  genuine improvements over the bare three-cosine template:
+
+  \<^enum> the transversality that builds the chart is \<^emph>\<open>now a proved theorem\<close>,
+    \<open>lem_h0res_Bcuts\<close>: since \<open>B\<^sub>j = \<beta>(t\<^sub>j)\<close> with \<open>\<partial>\<^sub>u\<^sub>j B\<^sub>j = \<kappa> \<beta>'(t\<^sub>j) \<noteq> 0\<close> on
+    \<open>{\<beta>=0}\<close> and the three \<open>B\<^sub>j\<close> involve \<^emph>\<open>disjoint\<close> coordinates \<open>u\<^sub>1,u\<^sub>2,u\<^sub>3\<close>, the
+    \<open>(u\<^sub>1,u\<^sub>2,u\<^sub>3)\<close>-Jacobian of \<open>(B\<^sub>1,B\<^sub>2,B\<^sub>3)\<close> is diagonal and invertible --- a clean
+    codim-3 transversality (this discharges the \<open>der\<close>/\<open>rk\<close>/\<open>cover\<close> chart obligation
+    via the IFT keystone);
+
+  \<^enum> the \<^emph>\<open>full\<close> branch carries extra cuts (\<open>c\<^sub>1c\<^sub>2c\<^sub>3 \<noteq> 0\<close>, \<open>K=0\<close>, \<open>a\<^sub>1=a\<^sub>2=0\<close>) that only
+    \<^emph>\<open>shrink\<close> it, so meagerness of the \<open>B\<close>-cut alone propagates by \<open>meager_subset\<close>.
+\<close>
+
+lemma Bbranch_meager_in_V:
+  fixes Wset :: "'w::euclidean_space set"
+    and piV :: "'w \<Rightarrow> (real^('v::{finite,wellorder}))"
+    and Kf a1f a2f :: "'w \<Rightarrow> real" and BBf cc :: "'w \<Rightarrow> nat \<Rightarrow> real"
+    and F :: "(real^('m::{finite,wellorder})) \<Rightarrow> (real^('v::{finite,wellorder}))"
+    and U :: "(real^('m::{finite,wellorder})) set"
+  assumes mlen: "CARD('m) \<le> CARD('v)" and U: "open U"
+    and der: "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)"
+    and rk:  "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('v)"
+    and cover: "piV ` {x \<in> Wset. BBf x 1 = 0 \<and> BBf x 2 = 0 \<and> BBf x 3 = 0} \<subseteq> F ` U"
+  shows "meager (piV ` {x \<in> Wset. cc x 1 * cc x 2 * cc x 3 \<noteq> 0
+                  \<and> Kf x = 0 \<and> a1f x = 0 \<and> a2f x = 0
+                  \<and> BBf x 1 = 0 \<and> BBf x 2 = 0 \<and> BBf x 3 = 0})"
+proof -
+  have meagerB: "meager (piV ` {x \<in> Wset. BBf x 1 = 0 \<and> BBf x 2 = 0 \<and> BBf x 3 = 0})"
+  proof (rule proj_lowdim_meager[OF mlen U _ _ cover])
+    show "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)" using der by blast
+    show "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('v)" using rk by blast
+  qed
+  have sub: "piV ` {x \<in> Wset. cc x 1 * cc x 2 * cc x 3 \<noteq> 0
+                  \<and> Kf x = 0 \<and> a1f x = 0 \<and> a2f x = 0
+                  \<and> BBf x 1 = 0 \<and> BBf x 2 = 0 \<and> BBf x 3 = 0}
+             \<subseteq> piV ` {x \<in> Wset. BBf x 1 = 0 \<and> BBf x 2 = 0 \<and> BBf x 3 = 0}"
+    by (rule image_mono) blast
+  show ?thesis by (rule meager_subset[OF sub meagerB])
+qed
+
 
 subsection \<open>Appendix B--I as instances --- branch certificates\<close>
 
@@ -800,9 +842,21 @@ text \<open>TeX \<open>lem:h0res-Bcuts\<close> (L3143): each \<open>B\<^sub>j = 
 
 lemma lem_h0res_Bcuts:
   fixes t :: real
-  assumes "cos t - t * sin t = 0"
+  assumes b: "cos t - t * sin t = 0"
   shows "- (2 * sin t + t * cos t) \<noteq> 0"
-  sorry
+proof
+  assume "- (2 * sin t + t * cos t) = 0"
+  hence d: "2 * sin t + t * cos t = 0" by simp
+  from b have c: "cos t = t * sin t" by simp
+  have "sin t * (2 + t\<^sup>2) = 2 * sin t + t * cos t"
+    by (simp add: c algebra_simps power2_eq_square)
+  also have "\<dots> = 0" using d by simp
+  finally have prod0: "sin t * (2 + t\<^sup>2) = 0" .
+  have "2 + t\<^sup>2 > 0" using zero_le_power2[of t] by linarith
+  with prod0 have s0: "sin t = 0" by simp
+  hence "cos t = 0" using c by simp
+  with s0 sin_cos_squared_add[of t] show False by simp
+qed
 
 text \<open>TeX \<open>prop:h0res-Bbranch\<close> (L3175): \<open>B\<^sub>1=B\<^sub>2=B\<^sub>3=0\<close> branch codim \<open>\<ge>3\<close> (cert any
   \<open>B\<^sub>j\<close>); \<open>lem:h0res-residue-exc\<close> (L3196): residue exceptional sets codim \<open>\<ge>N-3\<ge>4\<close>
