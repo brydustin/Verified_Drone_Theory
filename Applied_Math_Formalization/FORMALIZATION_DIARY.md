@@ -8,6 +8,46 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-29 (cont.) — DECISION: commit to the full unconditional `thm:final`; built the complete obligation map
+
+brydustin asked, point-blank, whether there is a real pathway to a *complete* proof
+or whether we are chasing a rabbit. Honest answer: there **is** a genuine pathway —
+`thm:final` is a Baire closeout over four meager branches (architecture proven), and
+each branch reduces to concrete, transcribable obligations. Not a dead end, not a
+false theorem. The cost is a large, lopsided appendix. brydustin chose the honest
+path: **the complete unconditional theorem.**
+
+Spent this session mapping the *entire* remaining obligation set accurately (the prior
+STATUS map had stale entries):
+
+- **Found the ground-truth paper source** (the only place the detailed appendix proofs
+  live): `…/Vern_Paulsen_QC/Applied Math/nonemptiness_unified_singlefile_complete.tex`
+  (6285 lines). `STATUS.md`'s `L####` index this file; `\label{…}` match the Label
+  column. The appendix is **transcribable**, not reverse-engineerable. Recorded in
+  memory + `APPENDIX_PLAN.md`.
+- **Reframe: `lem:Msurj` (the #1-hardest item per STATUS — the explicit 12×12
+  determinant) is already DONE** as `bigJ_det_nonzero`/`bigJ_surj` +
+  `DM_paper_open_dense_surjective` (= `W_surj`, the open-dense surjective locus). The
+  tex partials (`∂_uA`, `∂_uM₁`, …) are exactly `DM_paper_x_components`. STATUS marked
+  it ✗; corrected to ✅. The hardest foundation is behind us.
+- **`prop:regnonzero` (tex L1240) needs 4 sets meager:** `π_V(Z_reg)`,
+  `π_V(Z∩{H≡0}∩W_surj)` [the "ZH0surj" piece], `B_CaseB`, `B_H0res` — via
+  `prop:dimZ`+`lem:smooth-chart-meager`, Appendix I (`cor:caseBmeager`), Appendix H
+  (`prop:h0res-meager`) respectively.
+- **Transversality stubs analyzed** (`Parametric_Transversality_Euclidean_Base`,
+  L369 `charts_core_2d`, L1015 meager-stub): stub 2 = stub 1 (Lindelöf assembly of the
+  proven single-point keystone) + rank-deficient-image-negligible + the
+  already-proved `meager_negligible_closed_cover`. So **`lem:smooth-chart-meager` is
+  the single highest-leverage lemma**: it unblocks the transversality pipeline
+  (→ `prop_regzero`, `prop_foldzero`) *and* `prop:dimZ` facts 1&2.
+- The Sard theory already provides `negligible_singular_image_2n` (rank-deficient
+  C¹ ⟹ negligible image) and the library `baby_Sard`. Gap to *meager*:
+  negligible alone ≠ meager; need the σ-compact exhaustion (closed-negligible pieces
+  ⟹ meager). That is the **next concrete target**.
+
+Full dependency-ordered plan (Tiers 0–4) written to `APPENDIX_PLAN.md`. No theory
+changes this entry — map + plan + STATUS/diary/memory only; build unchanged.
+
 ## 2026-05-29 (cont.) — P1.6 COMPLETE: regular stratum is open AND dense (real-analytic)
 
 `DM_paper_open_dense_surjective` (sorry-free, `Applied_Math_Nonemptiness`

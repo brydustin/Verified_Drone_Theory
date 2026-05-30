@@ -107,7 +107,7 @@ status per the legend; "—" means no counterpart and none planned as a named ob
 | 547  | `cor:Hyp3false`      | Existence of such a point falsifies the old Hypothesis 3. | ✗ |
 | 602  | `lem:block`          | The 5×5 Jacobian `J₅` is block-triangular with `det J₅ = −32 g⁵ a⁵` (dual `±32 g⁵ b⁵`). | ✗ |
 | 637  | `lem:3x3`            | Three explicit 3×3 rank-3 minors of `D_M F` equal `−8g³a³H₂₂`, `−8g³a³H₁₁`, `16g³a³H₁₂` (+ duals). | ✗ |
-| 670  | `lem:Msurj`          | For `N≥6`, `c≠0`, `D_x M : ℝ^{2N}→ℂ⁶≅ℝ¹²` has rank 12 on an open dense subset of `V` — the **explicit 12×12 determinant** at a six-element configuration. | ✗ |
+| 670  | `lem:Msurj`          | For `N≥6`, `c≠0`, `D_x M : ℝ^{2N}→ℂ⁶≅ℝ¹²` has rank 12 on an open dense subset of `V` — the **explicit 12×12 determinant** at a six-element configuration. | ✅ `bigJ_det_nonzero`/`bigJ_surj` + `DM_paper_open_dense_surjective` (`W_surj` = the open-dense surjective locus) |
 | 1144 | `prop:dimZ`          | On `W_surj`: `Z_reg` (H≢0 piece) is a smooth codim-3 submanifold (dim ≤ 2N−1); the H≡0 stratum has dim ≤ 2N−3. | ✗ |
 | 1197 | `lem:smooth-chart-meager` | A smooth map from open `U⊂ℝ^m` to `ℝ^n` with `m<n` has meager image (measure-zero cube cover). | ✗ (negligible→meager half proven separately) |
 | 1239 | `prop:regnonzero`    | `B_{reg,≠0} ⊆ π_V(Z_reg) ∪ π_V(H≡0 stratum) ∪ B_{CaseB,≠0} ∪ B_{H0,res}`. | ✅ `prop_regnonzero` (proved 4-piece decomposition reduction) |
