@@ -3774,6 +3774,39 @@ proof -
 qed
 
 text \<open>
+  \<^bold>\<open>P1.6 conclusion.\<close> On any open working set \<open>V\<close>, the regular (surjective)
+  stratum of the moment-map derivative is open \<^emph>\<open>and dense\<close>: take
+  \<open>U = V \<inter> {x. m\<^sup>*(x) \<noteq> 0}\<close>. Openness is \<open>C\<^sup>1\<close>; density is real-analytic
+  (\<open>{m\<^sup>*=0}\<close> nowhere dense, so its complement is dense and meets every open
+  subset of \<open>V\<close>). This is \<open>rank_lower_semicont_open_dense_propagation\<close> made
+  unconditional for the concrete moment map (no C¹-only false claim).
+\<close>
+
+lemma DM_paper_open_dense_surjective:
+  fixes V :: "((real^2)^6) set"
+  assumes V: "open V"
+  shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U
+            \<and> (\<forall>x\<in>U. surj (Moment_Map.DM_paper_x x c0_paper))"
+proof (intro exI[of _ "V \<inter> {x::(real^2)^6. m_star x \<noteq> 0}"] conjI)
+  show "open (V \<inter> {x::(real^2)^6. m_star x \<noteq> 0})"
+    using V open_Collect_neq[OF continuous_m_star continuous_on_const] by blast
+next
+  show "V \<inter> {x::(real^2)^6. m_star x \<noteq> 0} \<subseteq> V" by blast
+next
+  have cl0: "closed {x::(real^2)^6. m_star x = 0}"
+    by (rule closed_Collect_eq[OF continuous_m_star continuous_on_const])
+  have int0: "interior {x::(real^2)^6. m_star x = 0} = {}"
+    using nowhere_dense_m_star_zeros cl0 by (simp only: nowhere_dense_def closure_closed)
+  have dense: "closure {x::(real^2)^6. m_star x \<noteq> 0} = UNIV"
+    by (simp add: Collect_neg_eq closure_complement int0)
+  show "V \<subseteq> closure (V \<inter> {x::(real^2)^6. m_star x \<noteq> 0})"
+    using open_Int_closure_subset[OF V, of "{x::(real^2)^6. m_star x \<noteq> 0}"] dense by simp
+next
+  show "\<forall>x\<in>V \<inter> {x::(real^2)^6. m_star x \<noteq> 0}. surj (Moment_Map.DM_paper_x x c0_paper)"
+    by (auto simp: surj_iff_m_star)
+qed
+
+text \<open>
   \<^bold>\<open>Generic analytic scaffolding (not about the moment map specifically).\<close>
   Any \<open>C\<^sup>1\<close> map into \<^typ>\<open>complex^6\<close> on an open set \<open>V \<subseteq> \<real>\<^sup>2\<^sup>N\<close> whose
   derivative is surjective at \<^emph>\<open>even one\<close> point of \<open>V\<close> has surjective
