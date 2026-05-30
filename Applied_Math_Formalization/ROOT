@@ -39,6 +39,7 @@ session Applied_Math_Appendix in "Appendix" = Applied_Math_Nonemptiness +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   theories
     Nonemptiness_Regnonzero_Appendix
+    Nonemptiness_Capstone
 
 session Applied_Math_Sard in "SardNegligible" = Applied_Math_Base +
   options [document = false, quick_and_dirty = true, timeout = 3600]
