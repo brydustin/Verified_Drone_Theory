@@ -115,7 +115,11 @@ text \<open>TeX \<open>prop:double-param\<close> (L5755): \<open>(\<alpha>\<^sub
 
 lemma prop_double_param_solves:
   fixes \<kappa> u :: real
+  assumes "\<kappa> \<noteq> 0"
   shows "Fparam \<kappa> u (astar \<kappa> u) (bstar \<kappa> u) = 0"
+  \<comment> \<open>True (the double-root parameterization); the proof is a fiddly double-angle
+      identity --- \<open>field_simps\<close> reorders \<open>2\<kappa>u\<close> to \<open>\<kappa>(u\<cdot>2)\<close> so \<open>sin_double\<close>/\<open>cos_double\<close>
+      do not fire. Deferred (needs explicit \<open>sin(2\<kappa>u)\<close>/\<open>cos(2\<kappa>u)\<close> rewrites first).\<close>
   sorry
 
 lemma prop_double_param_mono:
@@ -781,11 +785,17 @@ text \<open>TeX \<open>lem:Fij\<close> (L2083): not all
 lemma lem_Fij:
   fixes a a1 a2 :: real and u v :: "nat \<Rightarrow> real"
   defines "F \<equiv> (\<lambda>i j. a*(u i * v j - u j * v i) + a1*(v i - v j) - a2*(u i - u j))"
-  assumes "a > 0"
-    and noncollinear:
-      "\<not> (\<exists>p q r. (p,q,r) \<noteq> (0,0,0) \<and> (\<forall>k\<in>{1,2,3}. p * u k + q * v k + r = 0))"
+  assumes a: "a > 0"
+    and noncollinear: "det3 1 1 1 (u 1) (u 2) (u 3) (v 1) (v 2) (v 3) \<noteq> 0"
+      \<comment> \<open>good-triple noncollinearity (\<open>A\<^sub>T \<noteq> 0\<close>); equivalent to the \<open>\<exists>\<close>-line form\<close>
   shows "F 1 2 \<noteq> 0 \<or> F 1 3 \<noteq> 0 \<or> F 2 3 \<noteq> 0"
-  sorry
+proof -
+  have id: "F 1 2 - F 1 3 + F 2 3 = a * det3 1 1 1 (u 1) (u 2) (u 3) (v 1) (v 2) (v 3)"
+    unfolding F_def det3_def by (simp add: algebra_simps)
+  have "a * det3 1 1 1 (u 1) (u 2) (u 3) (v 1) (v 2) (v 3) \<noteq> 0"
+    using a noncollinear by simp
+  with id show ?thesis by auto
+qed
 
 text \<open>TeX \<open>prop:direct5szero\<close> (L2029)/\<open>cor:szeroH0\<close> (L2131): on the all-sine-zero
   stratum the \<open>5\<times>5\<close> determinants factor as
