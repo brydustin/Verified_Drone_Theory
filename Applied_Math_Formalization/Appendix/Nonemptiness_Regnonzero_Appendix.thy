@@ -195,7 +195,19 @@ lemma prop_upair:
     and "betaU \<kappa> ui \<noteq> 0" and "betaU \<kappa> uj \<noteq> 0"
     and inj: "inj_on (\<lambda>u. alphaU \<kappa> u / betaU \<kappa> u) I"
   shows "betaU \<kappa> ui * alphaU \<kappa> uj - betaU \<kappa> uj * alphaU \<kappa> ui \<noteq> 0"
-  sorry
+proof (rule notI)
+  assume "betaU \<kappa> ui * alphaU \<kappa> uj - betaU \<kappa> uj * alphaU \<kappa> ui = 0"
+  hence eq: "betaU \<kappa> ui * alphaU \<kappa> uj = betaU \<kappa> uj * alphaU \<kappa> ui" by simp
+  have cross: "alphaU \<kappa> ui * betaU \<kappa> uj = alphaU \<kappa> uj * betaU \<kappa> ui"
+    using eq by (metis mult.commute)
+  have ratio: "alphaU \<kappa> ui / betaU \<kappa> ui = alphaU \<kappa> uj / betaU \<kappa> uj"
+    using cross assms(4) assms(5) by (simp add: field_simps)
+  have feq: "(\<lambda>u. alphaU \<kappa> u / betaU \<kappa> u) ui = (\<lambda>u. alphaU \<kappa> u / betaU \<kappa> u) uj"
+    using ratio by simp
+  have "ui = uj"
+    by (rule inj_onD[OF inj feq assms(2) assms(3)])
+  with assms(1) show False by simp
+qed
 
 text \<open>
   \<^bold>\<open>Corrected supporting facts.\<close>  The honest replacement for the paper's false
@@ -210,9 +222,20 @@ text \<open>
 lemma R_even:
   fixes t :: real
   shows "Rratio (- t) = Rratio t"
-  by (metis (no_types, opaque_lifting) Groups.add_ac(2) Rratio_def cos_minus minus_add minus_divide_right
-      minus_mult_commute minus_mult_right minus_real_def more_arith_simps(10) sin_periodic_pi2 sin_pi_minus
-      times_divide_eq_right)
+proof -
+  have mm: "\<And>a b::real. (- a) / (- b) = a / b" by simp
+  have num: "- t * (- t * sin (- t) - 2 * cos (- t)) = - (t * (t * sin t - 2 * cos t))"
+    by (simp add: sin_minus cos_minus algebra_simps)
+  have den: "- t * cos (- t) + sin (- t) = - (t * cos t + sin t)"
+    by (simp add: sin_minus cos_minus algebra_simps)
+  have "Rratio (- t) = - (t * (t * sin t - 2 * cos t)) / (- (t * cos t + sin t))"
+    by (simp only: Rratio_def num den)
+  also have "\<dots> = t * (t * sin t - 2 * cos t) / (t * cos t + sin t)"
+    by (rule mm)
+  also have "\<dots> = Rratio t"
+    by (simp only: Rratio_def)
+  finally show ?thesis .
+qed
 
 lemma R_strict_mono_first_branch:
   fixes B :: real
