@@ -8,6 +8,49 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-29 (cont.) — P1.6 COMPLETE: regular stratum is open AND dense (real-analytic)
+
+`DM_paper_open_dense_surjective` (sorry-free, `Applied_Math_Nonemptiness`
+`BUILD_EXIT=[0]`): for any open `V :: ((real^2)^6) set`,
+\[
+  \exists U.\ \text{open } U \wedge U \subseteq V \wedge V \subseteq \overline{U}
+            \wedge (\forall x\in U.\ \mathrm{surj}\,(D_x M\_paper(x, c0\_paper))).
+\]
+Take `U = V ∩ {x. m*(x) ≠ 0}`. **Openness** is the C¹ half (`m*` continuous →
+`{m*≠0}` open). **Density** is the real-analytic half: `m*` is `rline_entire`
+(`rline_entire_m_star`) and nontrivial (`m*(x0)=det bigJ≠0`), so `{m*=0}` is
+nowhere dense (`nowhere_dense_m_star_zeros` via the `lines_entire_slice_nowhere_dense`
+engine); hence `{m*≠0}` is dense and, `V` being open,
+`V ⊆ closure(V ∩ {m*≠0})` (`open_Int_closure_subset`). This is exactly
+`rank_lower_semicont_open_dense_propagation` made **unconditional** for the
+concrete moment map — and it required the real-analyticity (C¹ alone gives only
+openness, as flagged earlier; the generic lemma is false under C¹).
+
+**How the analyticity went through (for the paper):** each entry of the
+transported Jacobian `matrix(MJx x)` is `Re`/`Im` of a moment-derivative component
+`Moment_Map.DM_paper_x x c0 h $ m`, which is `cline_entire` — phase/`d_phase` are
+`cis` of bounded-linear forms, and the `of_real` polynomial weights are
+`cline_entire` via `rline_entire f ⟹ cline_entire (of_real∘f)`. The determinant
+`m*` is then `rline_entire` (`rline_entire_det_fun`: `det` = sum-of-products of
+entries, closed under the `rline_entire` algebra). The whole density argument
+reused the **existing** `cline_entire`/`rline_entire`/`lines_entire` engine
+(array-factor branch) — no new analytic foundations needed.
+
+**Traps hit this session (autonomous run):** (i) the stale **local
+`Nonemptiness_Paper.DM_paper_x`** shadows `Moment_Map.DM_paper_x` (which `MJx`
+uses) — qualify `Moment_Map.DM_paper_x`; the two are definitionally equal. (ii)
+schematic-binder type trap recurred twice (`w` in `rline_entire_transC_comp`, `V`
+in `DM_paper_open_dense_surjective`) — pin types. (iii) engine `lines` hyp is meta
+`⋀a v`; supply via a local `have … for a v` (or `rule_format`), not the object
+`∀` from `rline_entire_def`.
+
+**Next — P1.7:** feed `DM_paper_open_dense_surjective` to the `ZH0surj` branch:
+on the open-dense regular stratum, transversality/Sard ⟹ `meager (ZH0surj ∩ V)`,
+discharging that hypothesis of `prop_regnonzero`. (This pulls in the Case-B / H≡0
+appendix inputs — the larger remaining piece.)
+
+---
+
 ## 2026-05-29 (cont.) — P1.6 (openness): the surjective stratum is open
 
 The first half of P1.6 is done (sorry-free, `Applied_Math_MomentJac` `BUILD_EXIT=[0]`),
