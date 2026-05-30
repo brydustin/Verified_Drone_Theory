@@ -8,6 +8,25 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (uphi) — prop_uphi_codim3: discreteness of the F_eta zero set
+
+`prop_uphi_codim3` PROVED: \<open>Z\<^sub>\<eta> = {u : F\<^sub>\<eta>(u)=0}\<close> is discrete, where
+\<open>F\<^sub>\<eta>(u) = cos(\<kappa>u) - \<kappa>(u-\<eta>)sin(\<kappa>u)\<close>, \<open>\<kappa>\<noteq>0\<close>. Appendix down to 2 real sorries
+(`prop_Lambda_common`, `lem_h0res_a1a2`).
+
+Key: the zeros are \<^emph>\<open>simple\<close>. At a zero, \<open>F\<^sub>\<eta>'(u) = -2\<kappa> sin\<kappa>u - \<kappa>\<^sup>2(u-\<eta>)cos\<kappa>u \<noteq> 0\<close>:
+if both \<open>F\<^sub>\<eta>=0\<close> and \<open>F\<^sub>\<eta>'=0\<close> then substituting \<open>cos\<kappa>u = \<kappa>(u-\<eta>)sin\<kappa>u\<close> gives
+\<open>sin\<kappa>u\<cdot>(2+(\<kappa>(u-\<eta>))\<^sup>2)=0\<close>, so \<open>sin\<kappa>u=0\<close> (the factor is \<open>>0\<close>), hence \<open>cos\<kappa>u=0\<close> too ---
+contradicting \<open>sin\<^sup>2+cos\<^sup>2=1\<close>. A simple zero is isolated: \<open>F\<^sub>\<eta>'\<close> is continuous, so it
+keeps its sign on a ball \<open>(u-\<delta>,u+\<delta>)\<close> (`order_tendstoD` + `eventually_at`); there
+\<open>F\<^sub>\<eta>\<close> is strictly monotone (`DERIV_pos_imp_increasing` / `DERIV_neg_imp_decreasing`),
+hence injective, so \<open>u\<close> is the only zero in the ball.
+
+GOTCHAS: (i) substitute the zero relation with `simp only: e1` BEFORE `algebra_simps`
+--- in `using e1 ... simp`, `algebra_simps` reorders \<open>e1\<close> into a sum and never uses it
+as the rewrite \<open>cos\<kappa>u \<rightarrow> \<kappa>(u-\<eta>)sin\<kappa>u\<close>. (ii) the original `assumes "\<kappa> \<noteq> 0"` was
+UNNAMED; naming it `\<kappa>:` is required to cite it (`Undefined fact "\<kappa>"`).
+
 ## 2026-05-30 (KLM minors) — prop_KLM_1 + prop_KLM_2 via Cramer / cofactor identities
 
 Both `prop:KLM` minors PROVED; appendix down to 3 real sorries (`prop_uphi_codim3`,

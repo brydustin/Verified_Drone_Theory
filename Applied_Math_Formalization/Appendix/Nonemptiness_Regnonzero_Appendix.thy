@@ -1281,9 +1281,116 @@ text \<open>TeX \<open>prop:uphi-reduce\<close> (L3849): \<open>D\<Phi>\<^sub>1|
 lemma prop_uphi_codim3:
   fixes \<kappa> \<eta> :: real
   defines "Feta \<equiv> (\<lambda>u. cos (\<kappa> * u) - \<kappa> * (u - \<eta>) * sin (\<kappa> * u))"
-  assumes "\<kappa> \<noteq> 0"
+  assumes \<kappa>: "\<kappa> \<noteq> 0"
   shows "\<forall>u. Feta u = 0 \<longrightarrow> (\<exists>\<epsilon>>0. \<forall>u'. \<bar>u' - u\<bar> < \<epsilon> \<and> Feta u' = 0 \<longrightarrow> u' = u)"
-  sorry
+proof (intro allI impI)
+  fix u :: real assume Fu: "Feta u = 0"
+  define F' where "F' = (\<lambda>x. - 2 * \<kappa> * sin (\<kappa> * x) - \<kappa>\<^sup>2 * (x - \<eta>) * cos (\<kappa> * x))"
+  have der: "\<And>x. (Feta has_real_derivative F' x) (at x)"
+    unfolding Feta_def F'_def
+    by (auto intro!: derivative_eq_intros simp: algebra_simps power2_eq_square)
+  have tend: "(F' \<longlongrightarrow> F' u) (at u)"
+  proof -
+    have "isCont F' u" unfolding F'_def by simp
+    thus ?thesis by (simp add: isCont_def)
+  qed
+  \<comment> \<open>\<open>F\<^sub>\<eta>\<close> has only \<^emph>\<open>simple\<close> zeros: at a zero \<open>F\<^sub>\<eta>'\<close> cannot vanish\<close>
+  have nz: "F' u \<noteq> 0"
+  proof
+    assume z: "F' u = 0"
+    have e1: "cos (\<kappa> * u) = \<kappa> * (u - \<eta>) * sin (\<kappa> * u)" using Fu unfolding Feta_def by simp
+    have "F' u = - \<kappa> * (sin (\<kappa> * u) * (2 + (\<kappa> * (u - \<eta>))\<^sup>2))"
+      unfolding F'_def by (simp only: e1) (simp add: algebra_simps power2_eq_square)
+    hence "sin (\<kappa> * u) * (2 + (\<kappa> * (u - \<eta>))\<^sup>2) = 0" using z \<kappa> by simp
+    moreover have "2 + (\<kappa> * (u - \<eta>))\<^sup>2 > 0" by (smt (verit) zero_le_power2)
+    ultimately have s0: "sin (\<kappa> * u) = 0" by simp
+    hence "cos (\<kappa> * u) = 0" using e1 by simp
+    with s0 sin_cos_squared_add[of "\<kappa> * u"] show False by simp
+  qed
+  consider "F' u > 0" | "F' u < 0" using nz by linarith
+  then show "\<exists>\<epsilon>>0. \<forall>u'. \<bar>u' - u\<bar> < \<epsilon> \<and> Feta u' = 0 \<longrightarrow> u' = u"
+  proof cases
+    case pos: 1
+    have "\<forall>\<^sub>F x in at u. 0 < F' x" using tend pos by (rule order_tendstoD)
+    then obtain \<delta> where \<delta>0: "\<delta> > 0" and ne: "\<And>x. x \<noteq> u \<Longrightarrow> \<bar>x - u\<bar> < \<delta> \<Longrightarrow> 0 < F' x"
+      by (auto simp: eventually_at dist_real_def)
+    have ball: "\<And>x. \<bar>x - u\<bar> < \<delta> \<Longrightarrow> 0 < F' x"
+      using ne pos by (metis (full_types))
+    show ?thesis
+    proof (intro exI[of _ \<delta>] conjI allI impI)
+      show "\<delta> > 0" by (rule \<delta>0)
+      fix u' assume "\<bar>u' - u\<bar> < \<delta> \<and> Feta u' = 0"
+      hence d': "\<bar>u' - u\<bar> < \<delta>" and Fu': "Feta u' = 0" by auto
+      show "u' = u"
+      proof (rule ccontr)
+        assume "u' \<noteq> u"
+        then consider "u' < u" | "u < u'" by linarith
+        thus False
+        proof cases
+          case 1
+          have "Feta u' < Feta u"
+          proof (rule DERIV_pos_imp_increasing[OF \<open>u' < u\<close>])
+            fix x assume "u' \<le> x" "x \<le> u"
+            hence dx: "\<bar>x - u\<bar> < \<delta>" using d' \<open>u' < u\<close> by auto
+            show "\<exists>y. (Feta has_real_derivative y) (at x) \<and> 0 < y"
+              using der[of x] ball[OF dx] by blast
+          qed
+          thus False using Fu Fu' by simp
+        next
+          case 2
+          have "Feta u < Feta u'"
+          proof (rule DERIV_pos_imp_increasing[OF \<open>u < u'\<close>])
+            fix x assume "u \<le> x" "x \<le> u'"
+            hence dx: "\<bar>x - u\<bar> < \<delta>" using d' \<open>u < u'\<close> by auto
+            show "\<exists>y. (Feta has_real_derivative y) (at x) \<and> 0 < y"
+              using der[of x] ball[OF dx] by blast
+          qed
+          thus False using Fu Fu' by simp
+        qed
+      qed
+    qed
+  next
+    case neg: 2
+    have "\<forall>\<^sub>F x in at u. F' x < 0" using tend neg by (rule order_tendstoD)
+    then obtain \<delta> where \<delta>0: "\<delta> > 0" and ne: "\<And>x. x \<noteq> u \<Longrightarrow> \<bar>x - u\<bar> < \<delta> \<Longrightarrow> F' x < 0"
+      by (auto simp: eventually_at dist_real_def)
+    have ball: "\<And>x. \<bar>x - u\<bar> < \<delta> \<Longrightarrow> F' x < 0"
+      using ne neg by (metis (full_types))
+    show ?thesis
+    proof (intro exI[of _ \<delta>] conjI allI impI)
+      show "\<delta> > 0" by (rule \<delta>0)
+      fix u' assume "\<bar>u' - u\<bar> < \<delta> \<and> Feta u' = 0"
+      hence d': "\<bar>u' - u\<bar> < \<delta>" and Fu': "Feta u' = 0" by auto
+      show "u' = u"
+      proof (rule ccontr)
+        assume "u' \<noteq> u"
+        then consider "u' < u" | "u < u'" by linarith
+        thus False
+        proof cases
+          case 1
+          have "Feta u < Feta u'"
+          proof (rule DERIV_neg_imp_decreasing[OF \<open>u' < u\<close>])
+            fix x assume "u' \<le> x" "x \<le> u"
+            hence dx: "\<bar>x - u\<bar> < \<delta>" using d' \<open>u' < u\<close> by auto
+            show "\<exists>y. (Feta has_real_derivative y) (at x) \<and> y < 0"
+              using der[of x] ball[OF dx] by blast
+          qed
+          thus False using Fu Fu' by simp
+        next
+          case 2
+          have "Feta u' < Feta u"
+          proof (rule DERIV_neg_imp_decreasing[OF \<open>u < u'\<close>])
+            fix x assume "u \<le> x" "x \<le> u'"
+            hence dx: "\<bar>x - u\<bar> < \<delta>" using d' \<open>u < u'\<close> by auto
+            show "\<exists>y. (Feta has_real_derivative y) (at x) \<and> y < 0"
+              using der[of x] ball[OF dx] by blast
+          qed
+          thus False using Fu Fu' by simp
+        qed
+      qed
+    qed
+  qed
+qed
 
 lemma cor_uphi_exhausted:
   fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
