@@ -432,7 +432,7 @@ lemma prop_vcos:
   shows "det3 c1 c2 c3 (u1 * c1) (u2 * c2) (u3 * c3)
               (2 * v1 * c1) (2 * v2 * c2) (2 * v3 * c3)
          = 2 * c1 * c2 * c3 * det3 1 1 1 u1 u2 u3 v1 v2 v3"
-  sorry
+  by (simp add: det3_def algebra_simps)
 
 lemma prop_vsin:
   fixes \<kappa> u1 u2 u3 v1 v2 v3 :: real
@@ -440,16 +440,16 @@ lemma prop_vsin:
   shows "det3 (- s1) (- s2) (- s3) (- u1 * s1) (- u2 * s2) (- u3 * s3)
               (- 2 * v1 * s1) (- 2 * v2 * s2) (- 2 * v3 * s3)
          = - 2 * s1 * s2 * s3 * det3 1 1 1 u1 u2 u3 v1 v2 v3"
-  sorry
+  by (simp add: det3_def algebra_simps)
 
 lemma prop_vmixed:
   fixes \<kappa> u1 u2 u3 v1 v2 v3 :: real
   defines "c1 \<equiv> cos (\<kappa> * u1)" and "c2 \<equiv> cos (\<kappa> * u2)" and "c3 \<equiv> cos (\<kappa> * u3)"
       and "s1 \<equiv> sin (\<kappa> * u1)" and "s2 \<equiv> sin (\<kappa> * u2)" and "s3 \<equiv> sin (\<kappa> * u3)"
   shows "det3 (- s1) (- s2) (- s3) (u1 * c1) (u2 * c2) (u3 * c3)
-              (v1 * c1) (v2 * c2) (v3 * c3)
+              (2 * v1 * c1) (2 * v2 * c2) (2 * v3 * c3)
          = - 2 * det3 s1 s2 s3 (u1 * c1) (u2 * c2) (u3 * c3) (v1 * c1) (v2 * c2) (v3 * c3)"
-  sorry
+  by (simp add: det3_def algebra_simps)
 
 text \<open>TeX \<open>prop:KLM\<close> (L1668): with \<open>K = det[s;uc;vc]\<close>, \<open>L = det[c;s;vc]\<close>,
   \<open>M = det[c;s;uc]\<close>: (1) on \<open>c\<^sub>1c\<^sub>2c\<^sub>3 \<noteq> 0\<close>, \<open>K=L=M=0 \<longleftrightarrow> s\<^sub>1=s\<^sub>2=s\<^sub>3=0\<close>;
