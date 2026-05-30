@@ -8,6 +8,23 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (appendix sorry-free!) — lem_h0res_a1a2 made concrete; regnonzero appendix complete
+
+`lem_h0res_a1a2` PROVED concretely, so **`Nonemptiness_Regnonzero_Appendix.thy` is now
+entirely sorry-free**. The abstract `rk_residue x = 2` (unprovable: arbitrary `rk_residue`)
+was replaced by the paper's actual computation. The residue moments are the `b₁`-type
+`a₁ = -Σ uₖ sin(κuₖ)` and the `v`-cosine `a₂ = Σ vₖ cos(κuₖ)`; differentiating (single-slot,
+à la `lem_block`, with `deriv` + `derivative_eq_intros`) gives the residue partials
+`∂_{uₙ}a₁ = β(uₙ) = -(κuₙ cos κuₙ + sin κuₙ)`, `∂_{vₘ}a₁ = 0`, `∂_{vₘ}a₂ = cos κuₘ`,
+`∂_{uₙ}a₂ = -κvₙ sin κuₙ`. The `2×2` Jacobian block is triangular, so its determinant is
+`β(uₙ)·cos κuₘ`, nonzero off the exceptional sets (`β(uₙ)≠0`, `cos κuₘ≠0`) — rank 2.
+
+Remaining holes are all in `Nonemptiness_Capstone.thy` (the concrete-nonemptiness layer):
+`capstone_feasible`, the four `branch_*_meager` reductions, and `capstone_X0_sound`.
+Plan for that layer: define `X_robust(κ)` and `X₀(ξ,κ)` explicitly, use the `\<nabla>` gradient
+(`Higher_Differentiability_Multi.hess_fun`/grad) and `\<parallel>\<cdot>\<parallel>` norm notation, prove `\<F>` compact
+before the nonemptiness assembly, and keep everything readable / faithful to `thm:final`.
+
 ## 2026-05-30 (Lambda-common) — prop_Lambda_common via collinearity of the (∂E₁,∂Q₁₁) vectors
 
 `prop_Lambda_common` PROVED. As originally stated it was UNprovable: `Lam` was an

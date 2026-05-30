@@ -1249,14 +1249,42 @@ lemma prop_h0res_twocos:
   shows "nowhere_dense {x \<in> Wset. cert x = 0}"
   by (rule analytic_cut_nowhere_dense[OF assms])
 
-text \<open>TeX \<open>lem:h0res-a1a2\<close> (L3234): off the residue exceptional sets the residue
-  map \<open>r \<mapsto> (a\<^sub>1,a\<^sub>2)\<close> has rank 2.\<close>
+text \<open>TeX \<open>lem:h0res-a1a2\<close> (L3234): off the residue exceptional sets \<open>E\<^sub>c\<^sub>~ \<union> E\<^sub>B\<^sub>~\<close>
+  the residue map \<open>r \<mapsto> (a\<^sub>1,a\<^sub>2)\<close> has differential of rank \<open>2\<close>.  Concretely the residue
+  moments are the \<open>b\<^sub>1\<close>-type \<open>a\<^sub>1 = - \<Sum>\<^sub>k u\<^sub>k sin(\<kappa>u\<^sub>k)\<close> and the \<open>v\<close>-cosine
+  \<open>a\<^sub>2 = \<Sum>\<^sub>k v\<^sub>k cos(\<kappa>u\<^sub>k)\<close>; off \<open>E\<^sub>B\<^sub>~\<close> some residue index \<open>n\<close> has
+  \<open>\<partial>\<^bsub>u\<^sub>n\<^esub>a\<^sub>1 = \<beta>(u\<^sub>n) = -(\<kappa>u\<^sub>n cos\<kappa>u\<^sub>n + sin\<kappa>u\<^sub>n) \<noteq> 0\<close>, off \<open>E\<^sub>c\<^sub>~\<close> some \<open>m\<close> has
+  \<open>\<partial>\<^bsub>v\<^sub>m\<^esub>a\<^sub>2 = cos\<kappa>u\<^sub>m \<noteq> 0\<close>.  Since \<open>\<partial>\<^bsub>v\<^sub>m\<^esub>a\<^sub>1 = 0\<close>, the residue Jacobian block
+  \<open>\<partial>(a\<^sub>1,a\<^sub>2)/\<partial>(u\<^sub>n,v\<^sub>m)\<close> is triangular with determinant \<open>\<beta>(u\<^sub>n) cos\<kappa>u\<^sub>m \<noteq> 0\<close>: rank \<open>2\<close>.\<close>
 
 lemma lem_h0res_a1a2:
-  fixes rk_residue :: "'w::euclidean_space \<Rightarrow> nat" and exc :: "'w \<Rightarrow> bool" and x :: 'w
-  assumes "\<not> exc x"  \<comment> \<open>\<open>x\<close> off \<open>E\<^sub>c\<^sub>~ \<union> E\<^sub>B\<^sub>~\<close>\<close>
-  shows "rk_residue x = 2"
-  sorry
+  fixes \<kappa> un vn um vm C1 C2u C2v :: real
+  defines "a1u \<equiv> (\<lambda>t. C1 - t * sin (\<kappa> * t))"   \<comment> \<open>\<open>a\<^sub>1\<close> as a function of \<open>u\<^sub>n\<close>\<close>
+      and "a1v \<equiv> (\<lambda>t::real. C1)"                \<comment> \<open>\<open>a\<^sub>1\<close> as a function of \<open>v\<^sub>m\<close> (constant)\<close>
+      and "a2u \<equiv> (\<lambda>t. C2u + vn * cos (\<kappa> * t))"  \<comment> \<open>\<open>a\<^sub>2\<close> as a function of \<open>u\<^sub>n\<close>\<close>
+      and "a2v \<equiv> (\<lambda>t. C2v + t * cos (\<kappa> * um))"  \<comment> \<open>\<open>a\<^sub>2\<close> as a function of \<open>v\<^sub>m\<close>\<close>
+  assumes Bn: "\<kappa> * un * cos (\<kappa> * un) + sin (\<kappa> * un) \<noteq> 0"  \<comment> \<open>off \<open>E\<^sub>B\<^sub>~\<close>: \<open>B\<^sub>~\<^sub>n = \<beta>(u\<^sub>n) \<noteq> 0\<close>\<close>
+    and cm: "cos (\<kappa> * um) \<noteq> 0"                          \<comment> \<open>off \<open>E\<^sub>c\<^sub>~\<close>: \<open>c\<^sub>~\<^sub>m \<noteq> 0\<close>\<close>
+  shows "deriv a1u un * deriv a2v vm - deriv a1v vm * deriv a2u un \<noteq> 0"
+    \<comment> \<open>the \<open>2\<times>2\<close> residue Jacobian minor \<open>\<partial>(a\<^sub>1,a\<^sub>2)/\<partial>(u\<^sub>n,v\<^sub>m)\<close>, nonzero \<open>\<Longrightarrow>\<close> rank \<open>2\<close>\<close>
+proof -
+  have d1u: "deriv a1u un = - (\<kappa> * un * cos (\<kappa> * un) + sin (\<kappa> * un))"
+    unfolding a1u_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  have d1v: "deriv a1v vm = 0"
+    unfolding a1v_def by (rule DERIV_imp_deriv) (rule DERIV_const)
+  have d2v: "deriv a2v vm = cos (\<kappa> * um)"
+    unfolding a2v_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros)
+  have d2u: "deriv a2u un = - \<kappa> * vn * sin (\<kappa> * un)"
+    unfolding a2u_def
+    by (rule DERIV_imp_deriv) (auto intro!: derivative_eq_intros simp: algebra_simps)
+  have "deriv a1u un * deriv a2v vm - deriv a1v vm * deriv a2u un
+        = - (\<kappa> * un * cos (\<kappa> * un) + sin (\<kappa> * un)) * cos (\<kappa> * um)"
+    by (simp add: d1u d1v d2v d2u)
+  also have "\<dots> \<noteq> 0" using Bn cm by simp
+  finally show ?thesis .
+qed
 
 
 subsection \<open>Appendix I --- direct configuration-space closure of Case B\<close>
