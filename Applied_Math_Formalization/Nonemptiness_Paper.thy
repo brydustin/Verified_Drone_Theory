@@ -3622,6 +3622,157 @@ lemma DM_paper_x_components:
   by simp_all
 
 
+subsection \<open>P1.6 (density): the moment-map Jacobian minor \<open>m\<^sup>*\<close> is real-analytic\<close>
+
+text \<open>
+  Each entry of the moment-map derivative is a finite sum of products of
+  \<open>of_real\<close>-lifted coordinate polynomials and the phase \<open>cis(-(c0 \<bullet> x$n))\<close> --- all
+  \<open>cline_entire\<close>. Hence each transported real Jacobian entry (a \<open>Re\<close>/\<open>Im\<close>) is
+  \<open>rline_entire\<close>, and the determinant \<open>m\<^sup>*\<close> is \<open>rline_entire\<close>. Being nontrivial
+  (\<open>m\<^sup>*(x0) = det bigJ \<noteq> 0\<close>), its zero set is nowhere dense, so the surjective
+  stratum is dense.
+\<close>
+
+lemma bl_neg_inner_c0_nth: "bounded_linear (\<lambda>x::(real^2)^6. - (c0_paper \<bullet> (x $ n)))"
+  by (intro bounded_linear_minus
+            bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth])
+
+lemma cline_entire_of_real_rline:
+  "rline_entire f \<Longrightarrow> cline_entire (\<lambda>x. complex_of_real (f x))"
+  unfolding rline_entire_def cline_entire_def by simp
+
+lemma cline_entire_phase0: "cline_entire (\<lambda>x::(real^2)^6. phase c0_paper x n)"
+  unfolding phase_def by (rule cline_entire_cis_linear[OF bl_neg_inner_c0_nth])
+
+lemma cline_entire_dphase0: "cline_entire (\<lambda>x::(real^2)^6. d_phase c0_paper x h n)"
+proof -
+  have "cline_entire (\<lambda>x::(real^2)^6.
+          complex_of_real (- (c0_paper \<bullet> (h $ n))) * (\<i> * cis (- (c0_paper \<bullet> (x $ n)))))"
+    by (intro cline_entire_mult cline_entire_const cline_entire_cis_linear[OF bl_neg_inner_c0_nth])
+  thus ?thesis
+    unfolding d_phase_def by (simp add: scaleR_conv_of_real)
+qed
+
+lemmas moment_cline_intros =
+  cline_entire_sum cline_entire_add cline_entire_mult cline_entire_const
+  cline_entire_phase0 cline_entire_dphase0 cline_entire_of_real_rline
+  rline_entire_coord rline_entire_const rline_entire_add rline_entire_mult rline_entire_scale
+
+lemma cline_entire_dA: "cline_entire (\<lambda>x::(real^2)^6. d_A_moment_x x c0_paper h)"
+  unfolding d_A_moment_x_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM1: "cline_entire (\<lambda>x::(real^2)^6. d_M1_moment_x x c0_paper h)"
+  unfolding d_M1_moment_x_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM2: "cline_entire (\<lambda>x::(real^2)^6. d_M2_moment_x x c0_paper h)"
+  unfolding d_M2_moment_x_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM11: "cline_entire (\<lambda>x::(real^2)^6. d_M11_moment_x x c0_paper h)"
+  unfolding d_M11_moment_x_def power2_eq_square by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM12: "cline_entire (\<lambda>x::(real^2)^6. d_M12_moment_x x c0_paper h)"
+  unfolding d_M12_moment_x_def w_M12_def dw_M12_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM22: "cline_entire (\<lambda>x::(real^2)^6. d_M22_moment_x x c0_paper h)"
+  unfolding d_M22_moment_x_def power2_eq_square by (intro moment_cline_intros) simp
+
+lemma cline_entire_DM_comp:
+  "cline_entire (\<lambda>x::(real^2)^6. DM_paper_x x c0_paper h $ m)"
+proof -
+  from exhaust_6[of m] consider
+      (m1) "m = (1::6)"
+    | (m2) "m = (2::6)"
+    | (m3) "m = (3::6)"
+    | (m4) "m = (4::6)"
+    | (m5) "m = (5::6)"
+    | (m6) "m = (6::6)"
+    by blast
+
+  then show ?thesis
+  proof cases
+    case m1
+    then show ?thesis
+      by (metis (no_types, lifting) 
+          ext DA_paper_x_def Nonemptiness_Paper.DM_paper_x_components(1)
+          cline_entire_dA d_A_moment_x_def)
+  next
+    case m2
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM1_paper_x_def Nonemptiness_Paper.DM_paper_x_components(2)
+          cline_entire_dM1 d_M1_moment_x_def)
+  next
+    case m3
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM2_paper_x_def Nonemptiness_Paper.DM_paper_x_components(3)
+          cline_entire_dM2 d_M2_moment_x_def)
+  next
+    case m4
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM11_paper_x_def Nonemptiness_Paper.DM_paper_x_components(4)
+          cline_entire_dM11 d_M11_moment_x_def)
+  next
+    case m5
+    then show ?thesis
+      by (metis (no_types, lifting) DM12_paper_x_def Nonemptiness_Paper.DM_paper_x_components(5)
+          cline_entire_dM12 cline_entire_def d_M12_moment_x_def)
+  next
+    case m6
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM22_paper_x_def Nonemptiness_Paper.DM_paper_x_components(6)
+          cline_entire_dM22 d_M22_moment_x_def)
+  qed
+qed
+    
+text \<open>The \<^const>\<open>Moment_Map.DM_paper_x\<close>-qualified component analyticity (this is the
+  one \<^const>\<open>MJx\<close>/\<^const>\<open>m_star\<close> are built from), then \<open>m\<^sup>*\<close> itself is \<open>rline_entire\<close>,
+  so its zero set is nowhere dense.\<close>
+
+lemma cline_entire_DM_comp_MM:
+  "cline_entire (\<lambda>x::(real^2)^6. Moment_Map.DM_paper_x x c0_paper h $ m)"
+  using exhaust_6[of m]
+  by (elim disjE)
+     (simp_all add: Moment_Map.DM_paper_x_components cline_entire_dA cline_entire_dM1
+        cline_entire_dM2 cline_entire_dM11 cline_entire_dM12 cline_entire_dM22)
+
+lemma rline_entire_transC_comp:
+  fixes w :: "(real^2)^6 \<Rightarrow> complex^6" and i :: 12
+  assumes "\<And>m. cline_entire (\<lambda>x. w x $ m)"
+  shows "rline_entire (\<lambda>x. transC (w x) $ i)"
+  using exhaust_12[of i]
+  by (elim disjE)
+     (simp_all add: transC_def rline_entire_Re[OF assms] rline_entire_Im[OF assms])
+
+lemma rline_entire_matrix_MJx_entry:
+  "rline_entire (\<lambda>x::(real^2)^6. matrix (MJx x) $ i $ j)"
+proof -
+  have eq: "(\<lambda>x::(real^2)^6. matrix (MJx x) $ i $ j)
+            = (\<lambda>x. transC (Moment_Map.DM_paper_x x c0_paper (transD (axis j 1))) $ i)"
+    by (rule ext) (simp add: matrix_def MJx_def)
+  show ?thesis
+    unfolding eq by (rule rline_entire_transC_comp[OF cline_entire_DM_comp_MM])
+qed
+
+lemma rline_entire_m_star: "rline_entire m_star"
+proof -
+  have "rline_entire (\<lambda>x::(real^2)^6. m_star x)"
+    unfolding m_star_def
+    by (rule rline_entire_det_fun) (rule rline_entire_matrix_MJx_entry)
+  thus ?thesis by simp
+qed
+
+lemma nowhere_dense_m_star_zeros:
+  "nowhere_dense {x::(real^2)^6. m_star x = 0}"
+proof -
+  have lines: "\<exists>F. F holomorphic_on UNIV
+                  \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (m_star (a + t *\<^sub>R v)))"
+    for a v :: "(real^2)^6"
+    using rline_entire_m_star unfolding rline_entire_def by blast
+  have "nowhere_dense {x::(real^2)^6 \<in> UNIV. m_star x = 0}"
+    by (rule lines_entire_slice_nowhere_dense[OF continuous_m_star lines])
+       (use m_star_x0_nonzero in blast)
+  thus ?thesis by simp
+qed
+
 text \<open>
   \<^bold>\<open>Generic analytic scaffolding (not about the moment map specifically).\<close>
   Any \<open>C\<^sup>1\<close> map into \<^typ>\<open>complex^6\<close> on an open set \<open>V \<subseteq> \<real>\<^sup>2\<^sup>N\<close> whose
