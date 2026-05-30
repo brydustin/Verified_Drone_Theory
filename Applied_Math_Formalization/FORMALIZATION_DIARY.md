@@ -8,6 +8,25 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (even later) — astar strict-monotonicity (the double-root injectivity)
+
+`prop_double_param_mono` (`strict_mono_on UNIV (astar \<kappa>)`, \<kappa>\<noteq>0) now PROVED, plus its
+prerequisite `astar_deriv`. This is the ingredient behind `cor:double-impossible`
+(no two distinct indices are both degenerate-critical), so `cor_double_impossible`
+also goes through. Appendix down to 5 real sorries.
+
+- `astar_deriv`: \<open>astar' u = sin\<^sup>2(\<kappa>u)(5+sin\<^sup>2(\<kappa>u))/(1+sin\<^sup>2(\<kappa>u))\<^sup>2\<close> (a manifest SOS \<open>\<ge>0\<close>).
+  Built via the quotient rule (`DERIV_divide`, whose denominator is `g*g` not `g\<^sup>2`),
+  then the value is simplified through a cleared-numerator polynomial identity
+  `?g\<cdot>?g - ?num = 4\<kappa>\<^sup>2 s\<^sup>2(5+s\<^sup>2)`: rewrite the double angles with `simp only: sd cd`
+  FIRST, substitute `cos\<^sup>2 = 1-sin\<^sup>2` once, then plain `algebra_simps`/`power2_eq_square`.
+- `prop_double_param_mono`: the library only gives nondecreasing from `f'\<ge>0`
+  (`DERIV_nonneg_imp_increasing_open`), and `astar'` vanishes at the isolated points
+  `sin(\<kappa>u)=0`, so strictness needs an extra argument: if `astar x = astar y` then `astar`
+  is constant on `[x,y]`, hence (via `has_field_derivative_transform_within_open` against
+  the constant function) `astar' \<equiv> 0` on `(x,y)`, forcing `sin(\<kappa>u)\<equiv>0` there; the same
+  transform trick on `sin(\<kappa>\<cdot>)` then gives `cos(\<kappa>u\<^sub>0)=0` too, contradicting `sin\<^sup>2+cos\<^sup>2=1`.
+
 ## 2026-05-30 (later still) — Appendix leaves: lem_Fij, the algebra corollaries, prop_double_param_solves
 
 Cleared four more `sorry` leaves in `Nonemptiness_Regnonzero_Appendix.thy` (now 6 real

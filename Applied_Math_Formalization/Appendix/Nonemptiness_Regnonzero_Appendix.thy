@@ -180,12 +180,160 @@ proof -
   finally show ?thesis.
 qed
 
+lemma astar_deriv:
+  fixes \<kappa> u :: real
+  assumes \<kappa>: "\<kappa> \<noteq> 0"
+  shows "(astar \<kappa> has_real_derivative
+            (sin (\<kappa> * u))\<^sup>2 * (5 + (sin (\<kappa> * u))\<^sup>2) / (1 + (sin (\<kappa> * u))\<^sup>2)\<^sup>2) (at u)"
+proof -
+  let ?s = "sin (\<kappa> * u)" and ?c = "cos (\<kappa> * u)"
+  let ?g = "2 * \<kappa> * (1 + (sin (\<kappa> * u))\<^sup>2)"
+  let ?num = "2 * \<kappa> * cos (2 * \<kappa> * u) * ?g - sin (2 * \<kappa> * u) * (4 * \<kappa>\<^sup>2 * ?s * ?c)"
+
+  have D0: "(1::real) + ?s\<^sup>2 \<noteq> 0" by (smt (verit) zero_le_power2)
+  have gn: "?g \<noteq> 0" using \<kappa> D0 by simp
+  have gne: "?g * ?g \<noteq> 0" using gn by simp
+  have sd: "sin (2 * \<kappa> * u) = 2 * ?s * ?c"
+    using sin_double[of "\<kappa> * u"] by (simp add: mult.assoc)
+  have cd: "cos (2 * \<kappa> * u) = 1 - 2 * ?s\<^sup>2"
+    using cos_double_sin[of "\<kappa> * u"] by (simp add: mult.assoc)
+  have pyth: "?c\<^sup>2 = 1 - ?s\<^sup>2"
+    using sin_cos_squared_add[of "\<kappa> * u"] by argo
+
+  \<comment> \<open>Differentiate \<open>astar \<kappa> = (\<lambda>u. u - sin 2\<kappa>u / (2\<kappa>(1+s\<^sup>2)))\<close> by the quotient rule.\<close>
+  have ad: "(astar \<kappa> has_real_derivative 1 - ?num / (?g * ?g)) (at u)"
+  proof -
+    have nd: "((\<lambda>u. sin (2 * \<kappa> * u)) has_real_derivative 2 * \<kappa> * cos (2 * \<kappa> * u)) (at u)"
+      by (auto intro!: derivative_eq_intros)
+    have md: "((\<lambda>u. 2 * \<kappa> * (1 + (sin (\<kappa> * u))\<^sup>2)) has_real_derivative 4 * \<kappa>\<^sup>2 * ?s * ?c) (at u)"
+      by (auto intro!: derivative_eq_intros simp: power2_eq_square algebra_simps)
+    have qd: "((\<lambda>u. sin (2 * \<kappa> * u) / (2 * \<kappa> * (1 + (sin (\<kappa> * u))\<^sup>2)))
+                 has_real_derivative ?num / (?g * ?g)) (at u)"
+      by (rule DERIV_divide[OF nd md gn])
+    have "astar \<kappa> = (\<lambda>u. u - sin (2 * \<kappa> * u) / (2 * \<kappa> * (1 + (sin (\<kappa> * u))\<^sup>2)))"
+      by (rule ext) (simp add: astar_def)
+    thus ?thesis
+    proof -
+      have "\<forall>f r ra R. \<not> (f has_real_derivative r) (at ra within R) \<or> ((\<lambda>r. r - f r) has_real_derivative 1 - r) (at ra within R)"
+        by (simp add: DERIV_diff)
+      then show ?thesis
+        using \<open>astar \<kappa> = (\<lambda>u. u - sin (2 * \<kappa> * u) / (2 * \<kappa> * (1 + (sin (\<kappa> * u))\<^sup>2)))\<close> qd by presburger
+    qed
+  qed
+
+  \<comment> \<open>The derivative value simplifies to the announced sum of squares.  The cleared
+      numerator is the polynomial identity \<open>?g\<cdot>?g - ?num = 4\<kappa>\<^sup>2 s\<^sup>2(5+s\<^sup>2)\<close>.\<close>
+  have key: "?g * ?g - ?num = 4 * \<kappa>\<^sup>2 * (?s\<^sup>2 * (5 + ?s\<^sup>2))"
+  proof -
+    have "?g * ?g - ?num
+            = 4 * \<kappa>\<^sup>2 * ((1 + ?s\<^sup>2)\<^sup>2 - (1 - 2 * ?s\<^sup>2) * (1 + ?s\<^sup>2) + 2 * ?s\<^sup>2 * ?c\<^sup>2)"
+      by (simp only: sd cd) (simp add: algebra_simps power2_eq_square)
+    also have "\<dots> = 4 * \<kappa>\<^sup>2 * ((1 + ?s\<^sup>2)\<^sup>2 - (1 - 2 * ?s\<^sup>2) * (1 + ?s\<^sup>2) + 2 * ?s\<^sup>2 * (1 - ?s\<^sup>2))"
+      by (simp only: pyth)
+    also have "\<dots> = 4 * \<kappa>\<^sup>2 * (?s\<^sup>2 * (5 + ?s\<^sup>2))"
+      by (simp add: algebra_simps power2_eq_square)
+    finally show ?thesis .
+  qed
+  have gxx: "?g * ?g = 4 * \<kappa>\<^sup>2 * (1 + ?s\<^sup>2)\<^sup>2"
+    by (simp add: power2_eq_square algebra_simps)
+  have val: "1 - ?num / (?g * ?g)
+              = (sin (\<kappa> * u))\<^sup>2 * (5 + (sin (\<kappa> * u))\<^sup>2) / (1 + (sin (\<kappa> * u))\<^sup>2)\<^sup>2"
+  proof -
+    have "1 - ?num / (?g * ?g) = (?g * ?g - ?num) / (?g * ?g)"
+      using gne by (simp add: diff_divide_distrib)
+    also have "\<dots> = (4 * \<kappa>\<^sup>2 * (?s\<^sup>2 * (5 + ?s\<^sup>2))) / (4 * \<kappa>\<^sup>2 * (1 + ?s\<^sup>2)\<^sup>2)"
+      using gxx key by presburger
+    also have "\<dots> = (sin (\<kappa> * u))\<^sup>2 * (5 + (sin (\<kappa> * u))\<^sup>2) / (1 + (sin (\<kappa> * u))\<^sup>2)\<^sup>2"
+      using \<kappa> by simp
+    finally show ?thesis.
+  qed
+  show ?thesis using ad 
+    by (metis ad val)
+qed
+
 lemma prop_double_param_mono:
   fixes \<kappa> :: real
-  assumes "\<kappa> \<noteq> 0"
+  assumes \<kappa>: "\<kappa> \<noteq> 0"
   shows "strict_mono_on UNIV (astar \<kappa>)"
-  sorry
-
+proof (rule strict_mono_onI)
+  fix x y :: real assume "x \<in> (UNIV::real set)" "y \<in> (UNIV::real set)" and xy: "x < y"
+  define D where "D = (\<lambda>u. (sin (\<kappa> * u))\<^sup>2 * (5 + (sin (\<kappa> * u))\<^sup>2) / (1 + (sin (\<kappa> * u))\<^sup>2)\<^sup>2)"
+  have der: "\<And>u. (astar \<kappa> has_real_derivative D u) (at u)"
+    using astar_deriv[OF \<kappa>] by (simp add: D_def)
+  have Dnn: "\<And>u. D u \<ge> 0"
+  proof -
+    fix u
+    have "(sin (\<kappa> * u))\<^sup>2 * (5 + (sin (\<kappa> * u))\<^sup>2) \<ge> 0"
+      by (intro mult_nonneg_nonneg) (auto simp: add_nonneg_nonneg)
+    thus "D u \<ge> 0" unfolding D_def by (simp add: divide_nonneg_nonneg)
+  qed
+  have cont: "continuous_on UNIV (astar \<kappa>)"
+    using der by (meson DERIV_isCont UNIV_I continuous_at_imp_continuous_on)
+  \<comment> \<open>nondecreasing, from \<open>D \<ge> 0\<close>\<close>
+  have mono: "\<And>a b. a \<le> b \<Longrightarrow> astar \<kappa> a \<le> astar \<kappa> b"
+  proof -
+    fix a b :: real assume ab: "a \<le> b"
+    show "astar \<kappa> a \<le> astar \<kappa> b"
+    proof (rule DERIV_nonneg_imp_increasing_open[OF ab])
+      fix t assume "a < t" "t < b"
+      show "\<exists>y. (astar \<kappa> has_real_derivative y) (at t) \<and> 0 \<le> y"
+        using der[of t] Dnn[of t] by blast
+    next
+      show "continuous_on {a..b} (astar \<kappa>)"
+        by (rule continuous_on_subset[OF cont subset_UNIV])
+    qed
+  qed
+  have le: "astar \<kappa> x \<le> astar \<kappa> y" using mono[OF less_imp_le[OF xy]] .
+  show "astar \<kappa> x < astar \<kappa> y"
+  proof (rule ccontr)
+    assume "\<not> astar \<kappa> x < astar \<kappa> y"
+    with le have eq: "astar \<kappa> x = astar \<kappa> y" by simp
+    \<comment> \<open>nondecreasing + equal endpoints \<open>\<Longrightarrow>\<close> constant on \<open>[x,y]\<close>\<close>
+    have const: "\<And>u. x \<le> u \<Longrightarrow> u \<le> y \<Longrightarrow> astar \<kappa> u = astar \<kappa> x"
+    proof -
+      fix u assume "x \<le> u" "u \<le> y"
+      from mono[OF \<open>x \<le> u\<close>] mono[OF \<open>u \<le> y\<close>] eq show "astar \<kappa> u = astar \<kappa> x" by simp
+    qed
+    \<comment> \<open>constant on the open interval \<open>\<Longrightarrow>\<close> derivative \<open>0\<close> \<open>\<Longrightarrow>\<close> \<open>sin (\<kappa> u) = 0\<close> there\<close>
+    have sin0: "\<And>u. x < u \<Longrightarrow> u < y \<Longrightarrow> sin (\<kappa> * u) = 0"
+    proof -
+      fix u assume u: "x < u" "u < y"
+      have c0: "((\<lambda>_. astar \<kappa> x) has_real_derivative 0) (at u)" by (rule DERIV_const)
+      have d0: "(astar \<kappa> has_real_derivative 0) (at u)"
+      proof (rule has_field_derivative_transform_within_open[OF c0])
+        show "open {x<..<y}" by simp
+        show "u \<in> {x<..<y}" using u by simp
+        show "\<And>z. z \<in> {x<..<y} \<Longrightarrow> astar \<kappa> x = astar \<kappa> z"
+          by (metis const greaterThanLessThan_iff nless_le)
+      qed
+      have "D u = 0" using der[of u] d0 by (rule DERIV_unique)
+      hence "(sin (\<kappa> * u))\<^sup>2 * (5 + (sin (\<kappa> * u))\<^sup>2) = 0"
+        unfolding D_def by (simp add: divide_eq_0_iff, metis power_one sum_power2_eq_zero_iff)
+      moreover have "5 + (sin (\<kappa> * u))\<^sup>2 > 0" by (smt (verit) zero_le_power2)
+      ultimately have "(sin (\<kappa> * u))\<^sup>2 = 0" by simp
+      thus "sin (\<kappa> * u) = 0" by simp
+    qed
+    \<comment> \<open>but \<open>sin (\<kappa> \<cdot>) \<equiv> 0\<close> on an interval forces \<open>cos = 0\<close> too --- contradiction\<close>
+    define u0 where "u0 = (x + y) / 2"
+    have u0: "x < u0" "u0 < y" using xy by (simp_all add: u0_def)
+    have s0: "sin (\<kappa> * u0) = 0" using sin0[OF u0] .
+    have z0: "((\<lambda>_. 0::real) has_real_derivative 0) (at u0)" by (rule DERIV_const)
+    have "((\<lambda>u. sin (\<kappa> * u)) has_real_derivative 0) (at u0)"
+    proof (rule has_field_derivative_transform_within_open[OF z0])
+      show "open {x<..<y}" by simp
+      show "u0 \<in> {x<..<y}" using u0 by simp
+      show "\<And>z. z \<in> {x<..<y} \<Longrightarrow> (0::real) = sin (\<kappa> * z)"
+        using sin0 by force
+    qed
+    moreover have "((\<lambda>u. sin (\<kappa> * u)) has_real_derivative \<kappa> * cos (\<kappa> * u0)) (at u0)"
+      by (auto intro!: derivative_eq_intros)
+    ultimately have "\<kappa> * cos (\<kappa> * u0) = 0"
+      using DERIV_unique by blast 
+    with \<kappa> have "cos (\<kappa> * u0) = 0" by simp
+    with s0 have "(sin (\<kappa> * u0))\<^sup>2 + (cos (\<kappa> * u0))\<^sup>2 = 0" by simp
+    thus False using sin_cos_squared_add[of "\<kappa> * u0"] by simp
+  qed
+qed
 
 subsection \<open>Spine: block-triangular and rank-3 moment Jacobians (concrete)\<close>
 
