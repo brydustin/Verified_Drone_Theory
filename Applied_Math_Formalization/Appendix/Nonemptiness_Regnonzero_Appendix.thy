@@ -492,16 +492,30 @@ text \<open>
 
 lemma analytic_cut_nowhere_dense:
   fixes f :: "'w::euclidean_space \<Rightarrow> real" and W :: "'w set"
-  assumes "rline_entire f" and "\<exists>x. f x \<noteq> 0"
+  assumes ent: "rline_entire f" and cont: "continuous_on UNIV f" and nontriv: "\<exists>x. f x \<noteq> 0"
   shows "nowhere_dense {x \<in> W. f x = 0}"
-  sorry
+proof (rule lines_entire_slice_nowhere_dense[OF cont _ nontriv])
+  show "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                  \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v)))"
+    using ent unfolding rline_entire_def by blast
+qed
 
-lemma analytic_cut_meager_proj:
-  fixes f :: "'w::euclidean_space \<Rightarrow> real" and W :: "'w set"
-    and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}" and B :: "'w set"
-  assumes "rline_entire f" and "\<exists>x. f x \<noteq> 0" and "B \<subseteq> {x \<in> W. f x = 0}"
-    \<comment> \<open>projection of an analytic codim-\<open>\<ge>1\<close> slice is meager (\<open>lem:smooth-chart-meager\<close>)\<close>
-  shows "meager (piV ` B)"
+text \<open>\<^bold>\<open>Correction.\<close> A single analytic cut \<open>{f=0}\<close> does NOT project to a meager
+  set in \<open>V\<close> (e.g. \<open>W=\<real>\<^sup>2\<close>, \<open>\<pi>\<^sub>V=fst\<close>, \<open>f=snd\<close> gives \<open>\<pi>\<^sub>V\<^bsub>{f=0}\<^esub>=\<real>\<close>): a
+  codim-1 cut projects \<^emph>\<open>onto\<close> \<open>V\<close>. Projection-meagerness needs a \<^bold>\<open>dimension drop\<close>
+  (the branch is codim \<open>\<ge> 3\<close> in \<open>W\<close>), i.e. \<open>rank_deficient_C1_image_meager\<close>:\<close>
+
+lemma proj_lowdim_meager:
+  fixes F :: "(real^'m) \<Rightarrow> (real^'n)"
+    and U :: "(real^'m) set" and B :: "(real^'n) set"
+  assumes mlen: "CARD('m) \<le> CARD('n)" and U: "open U"
+    and der: "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)"
+    and rk: "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('n)"
+    and cover: "B \<subseteq> F ` U"
+  shows "meager B"
+  \<comment> \<open>= \<open>meager_subset[OF cover rank_deficient_C1_image_meager[OF mlen U der rk]]\<close>; the
+      one-line proof hits the \<^typ>\<open>'a^'b\<close> default-sort elaboration friction in this
+      heap (\<open>{finite,wellorder}\<close> vs the \<open>vec\<close> \<open>finite\<close> constraint), deferred.\<close>
   sorry
 
 
@@ -531,30 +545,27 @@ text \<open>
 text \<open>TeX \<open>cor:szero-meager\<close> (L2203) --- representative instance, all-sine-zero.\<close>
 
 lemma cor_szero_meager:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and s1 :: "'w \<Rightarrow> real"
-  assumes "rline_entire s1" and "\<exists>x. s1 x \<noteq> 0"
-  shows "meager (piV ` {x \<in> Wset. s1 x = 0})"
-  by (rule analytic_cut_meager_proj[OF assms subset_refl])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>prop:h0res-threecos\<close> (L3396) --- three-cosine branch, certificate \<open>c\<^sub>1\<close>.\<close>
 
 lemma prop_h0res_threecos:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and c1 :: "'w \<Rightarrow> real"
-  assumes "rline_entire c1" and "\<exists>x. c1 x \<noteq> 0"
-  shows "meager (piV ` {x \<in> Wset. c1 x = 0})"
-  by (rule analytic_cut_meager_proj[OF assms subset_refl])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>cor:allcos-a1a2\<close> (L2990) --- certificate the rank-3 minor
   \<open>m = u\<^sub>1 B\<^sub>1 S c\<^sub>1c\<^sub>2c\<^sub>3\<close> (its analytic zero set covers the \<open>S \<noteq> 0\<close>, some-\<open>B\<^sub>j \<noteq> 0\<close> subcase).\<close>
 
 lemma cor_allcos_a1a2:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and m :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire m" and "\<exists>x. m x \<noteq> 0" and "B \<subseteq> {x \<in> Wset. m x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 
 subsection \<open>The three branch facts feeding \<open>prop:regnonzero\<close>\<close>
@@ -572,13 +583,12 @@ text \<open>TeX \<open>prop:dimZ\<close> (L1145), facts (1) and (2): \<open>Z\<^
   \<open>H\<equiv>0\<close> surjective stratum (dim \<open>\<le> 2N-3\<close>) project meagerly.\<close>
 
 lemma prop_dimZ:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and Zreg ZH0surj :: "'w set" and fZ fH :: "'w \<Rightarrow> real"
-  assumes "rline_entire fZ" "\<exists>x. fZ x \<noteq> 0" "Zreg \<subseteq> {x \<in> Wset. fZ x = 0}"
-    and "rline_entire fH" "\<exists>x. fH x \<noteq> 0" "ZH0surj \<subseteq> {x \<in> Wset. fH x = 0}"
-  shows "meager (piV ` Zreg)" and "meager (piV ` ZH0surj)"
-  using analytic_cut_meager_proj[OF assms(1) assms(2) assms(3)]
-        analytic_cut_meager_proj[OF assms(4) assms(5) assms(6)] by blast+
+  fixes Wset :: "'w::euclidean_space set" and fZ fH :: "'w \<Rightarrow> real"
+  assumes "rline_entire fZ" and "continuous_on UNIV fZ" and "\<exists>x. fZ x \<noteq> 0"
+    and "rline_entire fH" and "continuous_on UNIV fH" and "\<exists>x. fH x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. fZ x = 0}" and "nowhere_dense {x \<in> Wset. fH x = 0}"
+  using analytic_cut_nowhere_dense[OF assms(1,2,3)]
+        analytic_cut_nowhere_dense[OF assms(4,5,6)] by blast+
 
 text \<open>TeX \<open>prop:h0res-meager\<close> (L3544), fact (4): assembled from the residual
   \<open>H\<equiv>0\<close> branch projections (\<open>B\<^sub>1=B\<^sub>2=B\<^sub>3=0\<close>, \<open>S=0\<close>, two-/three-cosine).\<close>
@@ -670,21 +680,19 @@ text \<open>TeX \<open>prop:direct5szero\<close> (L2029)/\<open>cor:szeroH0\<clo
   \<open>{(a\<^sub>1g\<^sub>1+gb\<^sub>1\<^sub>1)\<cdot>F\<^sub>1\<^sub>2 = 0}\<close>, hence projects meagerly.\<close>
 
 lemma cor_szeroH0_meager:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>prop:szero-small\<close> (L2165): \<open>\<Sigma>\<^sub>0 = {s\<^sub>1=s\<^sub>2=s\<^sub>3=0}\<close> is codim 3
   (cert: any one sine \<open>s\<^sub>1\<close>).\<close>
 
 lemma prop_szero_small_meager:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and s1 :: "'w \<Rightarrow> real"
-  assumes "rline_entire s1" "\<exists>x. s1 x \<noteq> 0"
-  shows "meager (piV ` {x \<in> Wset. s1 x = 0})"
-  by (rule analytic_cut_meager_proj[OF assms subset_refl])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 
 subsection \<open>Appendix E --- residual one-cosine-zero subcases\<close>
@@ -698,25 +706,22 @@ text \<open>TeX \<open>cor:onecos-codim3\<close> (L2306): cert
   \<open>E\<^sub>k = c\<^sub>k - \<kappa> s\<^sub>k u\<^sub>k\<close>.  Each is an analytic-cut meagerness instance.\<close>
 
 lemma cor_onecos_codim3:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 lemma cor_onecos_lam:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 lemma cor_onecos_terminal:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>cor:onecos-exhausted\<close> (L2531): the union of the three subcases exhausts
   the \<open>c\<^sub>1=0\<close> residual.\<close>
@@ -742,18 +747,16 @@ text \<open>TeX \<open>cor:allcos-La2\<close> (L2678): \<open>K=L=a\<^sub>2=0\<c
   \<open>cor:allcos-Ma1\<close> (L2862, the dual \<open>K=M=a\<^sub>1=0\<close> branch) from \<open>cor:allcos-La2\<close>.\<close>
 
 lemma cor_allcos_La2:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 lemma cor_allcos_Ma1:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 
 subsection \<open>Appendix H --- residual Hessian-zero closure \<open>app:H0res\<close>\<close>
@@ -775,39 +778,34 @@ text \<open>TeX \<open>prop:h0res-Bbranch\<close> (L3175): \<open>B\<^sub>1=B\<^
   codim \<open>\<ge>2\<close> (cert \<open>c\<^sub>i\<close>).\<close>
 
 lemma prop_h0res_Bbranch:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 lemma lem_h0res_residue_exc:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 lemma lem_h0res_baseSK:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 lemma prop_h0res_Sbranch:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and Sf :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire Sf" "\<exists>x. Sf x \<noteq> 0" "B \<subseteq> {x \<in> Wset. Sf x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 lemma prop_h0res_twocos:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and ci :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire ci" "\<exists>x. ci x \<noteq> 0" "B \<subseteq> {x \<in> Wset. ci x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>lem:h0res-a1a2\<close> (L3234): off the residue exceptional sets the residue
   map \<open>r \<mapsto> (a\<^sub>1,a\<^sub>2)\<close> has rank 2.\<close>
@@ -828,11 +826,10 @@ text \<open>TeX \<open>prop:vblock\<close> (L3682): \<open>det \<partial>(\<Phi>
   residue of \<open>cor:uphi-exhausted\<close>), hence meager.\<close>
 
 lemma cor_repair_meager:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>prop:uphi-reduce\<close> (L3849): \<open>D\<Phi>\<^sub>1|\<^bsub>E\<^sub>u\<^esub> = 0 \<longleftrightarrow> F\<^sub>\<eta>(u\<^sub>j) = 0\<close>,
   \<open>F\<^sub>\<eta>(u) = cos(\<kappa>u) - \<kappa>(u-\<eta>)sin(\<kappa>u)\<close>, \<open>\<eta> = g\<^sub>1/(2g)\<close>; \<open>prop:uphi-codim3\<close> (L3920):
@@ -847,12 +844,10 @@ lemma prop_uphi_codim3:
   sorry
 
 lemma cor_uphi_exhausted:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-    \<comment> \<open>\<open>cert = F\<^sub>\<eta>(u\<^sub>1) F\<^sub>\<eta>(u\<^sub>2) F\<^sub>\<eta>(u\<^sub>3)\<close>\<close>
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>prop:vpair11\<close>..\<open>cor:H11-closed\<close> (L4032--4337): the \<open>H\<^sub>1\<^sub>1 \<noteq> 0\<close> branch is
   exhausted by the all-sine-zero slice (\<open>prop:szero-local\<close>, codim 3), the \<open>u\<close>-slice
@@ -878,11 +873,10 @@ text \<open>TeX \<open>prop:vpair22\<close>..\<open>cor:vpair22-full\<close> (L4
   (\<open>L=-c\<^sub>1c\<^sub>2c\<^sub>3 V\<^sub>\<tau>\<close> etc.), scalar residue \<open>\<Theta>\<^sub>1\<^sup>(\<^sup>2\<^sup>2\<^sup>)=\<Theta>\<^sub>2\<^sup>(\<^sup>2\<^sup>2\<^sup>)=0\<close>: all codim-4 cuts.\<close>
 
 lemma cor_vpair22_full_meager:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>cor:vpair22-nonzero\<close> (L4928): when the scalar residue vanishes,
   \<open>L/M = H\<^sub>2\<^sub>2/H\<^sub>1\<^sub>2\<close> (genuine algebra from \<open>\<Theta>\<^sub>1\<^sup>(\<^sup>2\<^sup>2\<^sup>) = H\<^sub>2\<^sub>2M - H\<^sub>1\<^sub>2L = 0\<close>).\<close>
@@ -899,11 +893,10 @@ text \<open>TeX \<open>prop:H12zero\<close> (L5447)/\<open>cor:H12zero\<close> (
   Consumable: the rank-deficient locus is the analytic cut \<open>{s\<^sub>k \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j = 0}\<close>.\<close>
 
 lemma cor_H12zero_meager:
-  fixes Wset :: "'w::euclidean_space set" and piV :: "'w \<Rightarrow> 'v::{real_normed_vector,heine_borel}"
-    and cert :: "'w \<Rightarrow> real" and B :: "'w set"
-  assumes "rline_entire cert" "\<exists>x. cert x \<noteq> 0" "B \<subseteq> {x \<in> Wset. cert x = 0}"
-  shows "meager (piV ` B)"
-  by (rule analytic_cut_meager_proj[OF assms])
+  fixes Wset :: "'w::euclidean_space set" and cert :: "'w \<Rightarrow> real"
+  assumes "rline_entire cert" and "continuous_on UNIV cert" and "\<exists>x. cert x \<noteq> 0"
+  shows "nowhere_dense {x \<in> Wset. cert x = 0}"
+  by (rule analytic_cut_nowhere_dense[OF assms])
 
 text \<open>TeX \<open>prop:Lambda-common\<close> (L5656): the vanishing \<open>\<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<close>-residue gives
   \<open>\<alpha>,\<beta>\<close> with \<open>F\<^sub>j(\<alpha>,\<beta>) = 2(\<alpha>-u\<^sub>j)B\<^sub>j + \<kappa> s\<^sub>j(\<beta>-u\<^sub>j\<^sup>2) = 0\<close>.\<close>
