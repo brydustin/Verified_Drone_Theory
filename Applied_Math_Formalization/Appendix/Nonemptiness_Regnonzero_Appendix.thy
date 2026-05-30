@@ -506,17 +506,51 @@ text \<open>\<^bold>\<open>Correction.\<close> A single analytic cut \<open>{f=0
   (the branch is codim \<open>\<ge> 3\<close> in \<open>W\<close>), i.e. \<open>rank_deficient_C1_image_meager\<close>:\<close>
 
 lemma proj_lowdim_meager:
-  fixes F :: "(real^'m) \<Rightarrow> (real^'n)"
-    and U :: "(real^'m) set" and B :: "(real^'n) set"
+  fixes F :: "(real^('m::{finite,wellorder})) \<Rightarrow> (real^('n::{finite,wellorder}))"
+    and U :: "(real^('m::{finite,wellorder})) set" and B :: "(real^('n::{finite,wellorder})) set"
   assumes mlen: "CARD('m) \<le> CARD('n)" and U: "open U"
     and der: "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)"
     and rk: "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('n)"
     and cover: "B \<subseteq> F ` U"
   shows "meager B"
-  \<comment> \<open>= \<open>meager_subset[OF cover rank_deficient_C1_image_meager[OF mlen U der rk]]\<close>; the
-      one-line proof hits the \<^typ>\<open>'a^'b\<close> default-sort elaboration friction in this
-      heap (\<open>{finite,wellorder}\<close> vs the \<open>vec\<close> \<open>finite\<close> constraint), deferred.\<close>
-  sorry
+proof -
+  have m: "meager (F ` U)"
+  proof (rule rank_deficient_C1_image_meager[OF mlen U])
+    show "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)" using der by blast
+    show "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('n)" using rk by blast
+  qed
+  show ?thesis by (rule meager_subset[OF cover m])
+qed
+
+text \<open>
+  \<^bold>\<open>Template: a branch's equations \<open>\<rightarrow>\<close> meager in \<open>V\<close>.\<close>  Worked example for the
+  three-cosine branch \<open>{c\<^sub>1=c\<^sub>2=c\<^sub>3=0}\<close> (\<open>prop:h0res-threecos\<close>).  Fixing the three
+  cosines to \<open>0\<close> pins \<open>u\<^sub>1,u\<^sub>2,u\<^sub>3\<close> to discrete values, so the branch is codim \<open>\<ge> 3\<close>
+  in \<open>W\<close>; its \<open>V\<close>-projection is therefore covered by a single \<^emph>\<open>lower-dimensional\<close>
+  \<open>C\<^sup>1\<close> chart \<open>F : \<real>\<^sup>m \<rightarrow> V\<close> (\<open>m \<le> dim V\<close>, rank-deficient), and
+  \<open>proj_lowdim_meager\<close> turns that into meagerness in \<open>V\<close>.
+
+  The two hypotheses \<open>der\<close>/\<open>rk\<close>/\<open>cover\<close> below \<^emph>\<open>are\<close> the genuine geometric
+  obligation (constructing the chart from the codim-3 structure --- the
+  regular-value/IFT keystone); everything downstream is now machine-checked.
+  (\<open>V\<close> is taken as \<^typ>\<open>real^'v\<close> here; the real config space \<open>(\<real>\<^sup>2)\<^sup>n \<cong> \<real>\<^sup>2\<^sup>N\<close>
+  connects via that linear isomorphism.)\<close>
+
+lemma threecos_meager_in_V:
+  fixes Wset :: "'w::euclidean_space set"
+    and piV :: "'w \<Rightarrow> (real^('v::{finite,wellorder}))"
+    and c1 c2 c3 :: "'w \<Rightarrow> real"
+    and F :: "(real^('m::{finite,wellorder})) \<Rightarrow> (real^('v::{finite,wellorder}))"
+    and U :: "(real^('m::{finite,wellorder})) set"
+  assumes mlen: "CARD('m) \<le> CARD('v)" and U: "open U"
+    and der: "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)"
+    and rk:  "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('v)"
+    and cover: "piV ` {x \<in> Wset. c1 x = 0 \<and> c2 x = 0 \<and> c3 x = 0} \<subseteq> F ` U"
+  shows "meager (piV ` {x \<in> Wset. c1 x = 0 \<and> c2 x = 0 \<and> c3 x = 0})"
+proof (rule proj_lowdim_meager[OF mlen U _ _ cover])
+  show "\<And>x. x \<in> U \<Longrightarrow> (F has_derivative F' x) (at x within U)" using der by blast
+  show "\<And>x. x \<in> U \<Longrightarrow> rank (matrix (F' x)) < CARD('v)" using rk by blast
+qed
 
 
 subsection \<open>Appendix B--I as instances --- branch certificates\<close>
