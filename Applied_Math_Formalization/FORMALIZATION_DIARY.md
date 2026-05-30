@@ -8,6 +8,29 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (Lambda-common) — prop_Lambda_common via collinearity of the (∂E₁,∂Q₁₁) vectors
+
+`prop_Lambda_common` PROVED. As originally stated it was UNprovable: `Lam` was an
+abstract `fixes` function and the hypotheses `Lam i j = 0` had no stated relation to
+the conclusion `Fj` (3 linear equations in 2 unknowns are generically inconsistent).
+Restated faithfully to the paper (tex L5434/L5656): `Λ⁽¹¹⁾ᵢⱼ = det ∂(Φ₁,H₁₁)/∂(uᵢ,uⱼ)`
+is the `2×2` minor of the gauge-data vectors `vE j = ∂_{uⱼ}E₁ = -2g·BBⱼ - g₁κ·ssⱼ`
+and `wQ j = ∂_{uⱼ}Q₁₁`, so the hypotheses become the minor equations
+`vEᵢ·wQⱼ = vEⱼ·wQᵢ`. With a nondegeneracy `some vE ≠ 0` (the regular-stratum gauge
+`g>0` supplies it), all three vectors `(vEⱼ,wQⱼ)` are collinear, hence share a ratio
+`μ` (`wQⱼ = μ·vEⱼ`); then `α = r+gμ`, `β = r²-χ₁₁+g₁μ` solves all three because
+`Fⱼ(α,β) = wQⱼ - μ·vEⱼ` (a polynomial identity).
+
+Only **1 real sorry remains**: `lem_h0res_a1a2` (`rk_residue x = 2` for an abstract
+`rk_residue :: 'w ⇒ nat`) — a genuine placeholder, NOT provable as stated (false for
+an arbitrary `rk_residue`); it needs the concrete residue Jacobian defined and its rank
+computed (à la `bigJ_det`).
+
+GOTCHAS: (i) `defines` are SIMULTANEOUS, so a later one cannot reference an earlier one
+(`Lam ≡ ... vE ... wQ ...` failed "Extra variables on rhs") — state the minor equations
+directly instead. (ii) `\<lambda>` is the reserved lambda binder; do not use it as a variable
+name (`∃\<lambda>. ...` fails to parse) — used `\<mu>`.
+
 ## 2026-05-30 (uphi) — prop_uphi_codim3: discreteness of the F_eta zero set
 
 `prop_uphi_codim3` PROVED: \<open>Z\<^sub>\<eta> = {u : F\<^sub>\<eta>(u)=0}\<close> is discrete, where

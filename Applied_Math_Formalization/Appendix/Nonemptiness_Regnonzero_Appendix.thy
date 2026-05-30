@@ -1451,11 +1451,100 @@ text \<open>TeX \<open>prop:Lambda-common\<close> (L5656): the vanishing \<open>
   \<open>\<alpha>,\<beta>\<close> with \<open>F\<^sub>j(\<alpha>,\<beta>) = 2(\<alpha>-u\<^sub>j)B\<^sub>j + \<kappa> s\<^sub>j(\<beta>-u\<^sub>j\<^sup>2) = 0\<close>.\<close>
 
 lemma prop_Lambda_common:
-  fixes \<kappa> :: real and Lam :: "nat \<Rightarrow> nat \<Rightarrow> real" and uu BB ss :: "nat \<Rightarrow> real"
-  defines "Fj \<equiv> (\<lambda>\<alpha> \<beta> j. 2*(\<alpha> - uu j)*BB j + \<kappa> * ss j * (\<beta> - (uu j)\<^sup>2))"
-  assumes "Lam 1 2 = 0" "Lam 1 3 = 0" "Lam 2 3 = 0"
+  fixes \<kappa> g g1 r \<chi>11 :: real and uu BB ss :: "nat \<Rightarrow> real"
+  defines "vE \<equiv> (\<lambda>j. - 2 * g * BB j - g1 * \<kappa> * ss j)"
+      \<comment> \<open>\<open>\<partial>\<^bsub>u\<^sub>j\<^esub>E\<^sub>1\<close>\<close>
+    and "wQ \<equiv> (\<lambda>j. 2 * (r - uu j) * BB j + \<kappa> * ss j * (r\<^sup>2 - \<chi>11 - (uu j)\<^sup>2))"
+      \<comment> \<open>\<open>\<partial>\<^bsub>u\<^sub>j\<^esub>Q\<^sub>1\<^sub>1\<close>\<close>
+    and "Fj \<equiv> (\<lambda>\<alpha> \<beta> j. 2*(\<alpha> - uu j)*BB j + \<kappa> * ss j * (\<beta> - (uu j)\<^sup>2))"
+  assumes L12: "vE 1 * wQ 2 = vE 2 * wQ 1"  \<comment> \<open>\<open>\<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>1\<^sub>2 = vE\<^sub>1 wQ\<^sub>2 - vE\<^sub>2 wQ\<^sub>1 = 0\<close>\<close>
+      and L13: "vE 1 * wQ 3 = vE 3 * wQ 1"
+      and L23: "vE 2 * wQ 3 = vE 3 * wQ 2"
+    and nondeg: "vE 1 \<noteq> 0 \<or> vE 2 \<noteq> 0 \<or> vE 3 \<noteq> 0"
+      \<comment> \<open>some \<open>\<partial>E\<^sub>1 \<noteq> 0\<close>: the regular-stratum gauge (\<open>g>0\<close>) supplies this; without it
+          the three collinear vectors need not share a finite ratio\<close>
   shows "\<exists>\<alpha> \<beta>. \<forall>j\<in>{1,2,3}. Fj \<alpha> \<beta> j = 0"
-  sorry
+proof -
+  \<comment> \<open>pairwise-vanishing \<open>2\<times>2\<close> minors \<open>\<Longrightarrow>\<close> the vectors \<open>(\<partial>E\<^sub>1,\<partial>Q\<^sub>1\<^sub>1)\<^sub>j\<close> share a ratio \<open>\<mu>\<close>\<close>
+  have ratio: "\<exists>\<mu>. \<forall>j\<in>{1,2,3}. wQ j = \<mu> * vE j"
+  proof -
+    from nondeg consider "vE 1 \<noteq> 0" | "vE 2 \<noteq> 0" | "vE 3 \<noteq> 0" by blast
+    then show ?thesis
+    proof cases
+      case 1
+      have "\<forall>j\<in>{1,2,3}. wQ j = (wQ 1 / vE 1) * vE j"
+      proof
+        fix j :: nat assume "j \<in> {1,2,3}"
+        then consider "j = 1" | "j = 2" | "j = 3" by auto
+        thus "wQ j = (wQ 1 / vE 1) * vE j"
+        proof cases
+          case 1 thus ?thesis using \<open>vE 1 \<noteq> 0\<close> by simp
+        next
+          case 2
+          have "vE 1 * wQ 2 = vE 2 * wQ 1" using L12 by simp
+          thus ?thesis using \<open>vE 1 \<noteq> 0\<close> \<open>j = 2\<close> by (simp add: field_simps)
+        next
+          case 3
+          have "vE 1 * wQ 3 = vE 3 * wQ 1" using L13 by simp
+          thus ?thesis using \<open>vE 1 \<noteq> 0\<close> \<open>j = 3\<close> by (simp add: field_simps)
+        qed
+      qed
+      thus ?thesis by blast
+    next
+      case 2
+      have "\<forall>j\<in>{1,2,3}. wQ j = (wQ 2 / vE 2) * vE j"
+      proof
+        fix j :: nat assume "j \<in> {1,2,3}"
+        then consider "j = 1" | "j = 2" | "j = 3" by auto
+        thus "wQ j = (wQ 2 / vE 2) * vE j"
+        proof cases
+          case 1
+          have "vE 1 * wQ 2 = vE 2 * wQ 1" using L12 by simp
+          thus ?thesis using \<open>vE 2 \<noteq> 0\<close> \<open>j = 1\<close> by (simp add: field_simps)
+        next
+          case 2 thus ?thesis using \<open>vE 2 \<noteq> 0\<close> by simp
+        next
+          case 3
+          have "vE 2 * wQ 3 = vE 3 * wQ 2" using L23 by simp
+          thus ?thesis using \<open>vE 2 \<noteq> 0\<close> \<open>j = 3\<close> by (simp add: field_simps)
+        qed
+      qed
+      thus ?thesis by blast
+    next
+      case 3
+      have "\<forall>j\<in>{1,2,3}. wQ j = (wQ 3 / vE 3) * vE j"
+      proof
+        fix j :: nat assume "j \<in> {1,2,3}"
+        then consider "j = 1" | "j = 2" | "j = 3" by auto
+        thus "wQ j = (wQ 3 / vE 3) * vE j"
+        proof cases
+          case 1
+          have "vE 1 * wQ 3 = vE 3 * wQ 1" using L13 by simp
+          thus ?thesis using \<open>vE 3 \<noteq> 0\<close> \<open>j = 1\<close> by (simp add: field_simps)
+        next
+          case 2
+          have "vE 2 * wQ 3 = vE 3 * wQ 2" using L23 by simp
+          thus ?thesis using \<open>vE 3 \<noteq> 0\<close> \<open>j = 2\<close> by (simp add: field_simps)
+        next
+          case 3 thus ?thesis using \<open>vE 3 \<noteq> 0\<close> by simp
+        qed
+      qed
+      thus ?thesis by blast
+    qed
+  qed
+  then obtain \<mu> where \<mu>: "\<forall>j\<in>{1,2,3}. wQ j = \<mu> * vE j" by blast
+  \<comment> \<open>\<open>\<alpha> = r + g\<mu>\<close>, \<open>\<beta> = r\<^sup>2 - \<chi>\<^sub>1\<^sub>1 + g\<^sub>1\<mu>\<close> solves all three, since \<open>F\<^sub>j = \<partial>Q\<^sub>1\<^sub>1 - \<mu> \<partial>E\<^sub>1\<close>\<close>
+  have "\<forall>j\<in>{1,2,3}. Fj (r + g * \<mu>) (r\<^sup>2 - \<chi>11 + g1 * \<mu>) j = 0"
+  proof
+    fix j :: nat assume j: "j \<in> {1,2,3}"
+    have "Fj (r + g * \<mu>) (r\<^sup>2 - \<chi>11 + g1 * \<mu>) j = wQ j - \<mu> * vE j"
+      unfolding Fj_def vE_def wQ_def by (simp add: algebra_simps)
+    also have "\<dots> = 0"
+      using \<mu> j by fastforce
+    finally show "Fj (r + g * \<mu>) (r\<^sup>2 - \<chi>11 + g1 * \<mu>) j = 0" .
+  qed
+  thus ?thesis by blast
+qed
 
 text \<open>TeX \<open>cor:double-impossible\<close> (L5816): no two distinct indices are both
   degenerate-critical, because \<open>\<alpha>\<^sub>\<ast>\<close> is strictly increasing
