@@ -8,6 +8,65 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 — Transversality MEAGER stub: blocked on one σ-compact ∃-discharge (full record of dead ends)
+
+**Stop point for the night.** One — and only one — proof step is blocking the whole
+`parametric_transversality_meager_euclidean_stub` (stub 2). Everything around it works;
+the σ-compact `∃K` discharge does not, and we burned hours on it. This entry records
+*exactly* what fails so we do NOT repeat it tomorrow, plus untried ideas to try first.
+
+### Proven + COMMITTED (safe baseline)
+- `smooth_chart_meager` / `rank_deficient_C1_image_meager` / `open_sigma_compact_exhaustion`
+  (= `lem:smooth-chart-meager`), in `Parametric_Transversality_Euclidean_Base`. Sorry-free,
+  `Applied_Math_Nonemptiness BUILD_EXIT=[0]`, committed+pushed earlier today.
+- (yesterday) `DM_paper_open_dense_surjective` = `lem:Msurj`; `APPENDIX_PLAN.md`; STATUS reframe.
+
+### In the working tree, UNCOMMITTED and currently BROKEN (build fails at the σ-step)
+- `meager_critical_values_from_charts` — meager analog of `negligible_critical_values_from_charts`,
+  with a σ-compact hypothesis `sigma` (currently object form `∀i. ∃K. (∀n. compact (K n)) ∧ Crit i = (⋃n. K n)`).
+- `charts_core_2d` (the IFT-chart `sorry`) was strengthened with a 4th conjunct giving σ-compact `Crit0`.
+- `parametric_transversality_meager_euclidean_stub` (stub 2): proof =
+  `elim exE` of `charts_core_2d`'s existential → `meager_critical_values_from_charts` → `meager_subset`.
+
+**What already WORKS inside stub 2** (do not re-litigate these):
+- Destructuring `charts_core_2d[OF assms]` via `from … show ?thesis proof (elim exE) fix charts Crit0 D0 assume H: "<body>"`. The `elim exE` peels the 3 function-typed existentials cleanly (this solved the original "obtain hangs/fails" problem).
+- `note der/rk/sig = conjunct…[OF H]` to split the 4-conjunct `H`.
+- der/rk subgoals of `meager_critical_values_from_charts`: `show "⋀i x. …" using der by auto` / `… using rk by auto` — **verified, terminate**.
+- Final: `show ?thesis by (rule meager_subset[OF conjunct1[OF H] meag])` — fine.
+
+### THE BLOCKER — discharge `⋀i. ∃K. (∀n. compact (K n)) ∧ Crit0 i = ⋃(range K)` from `sig`
+`sig` (= `conjunct2[OF conjunct2[OF conjunct2[OF H]]]`) is `∀i. ∃K. (∀n. compact (K n)) ∧ Crit0 i = ⋃(range K)`
+— i.e. **the goal and `sig` are the same statement** (modulo `∀i` vs `⋀i`). Yet *every* discharge fails.
+
+**FAILED — do NOT try these again:**
+1. `using sig by blast` — **HANGS** (jEdit purple, non-terminating). blast explores the giant `assume H` (the full `?bad ⊆ … ∧ …` with nested quantifiers) that is in scope.
+2. `using sig by auto` / `(use der rk sig in auto)` — FAILS ("Failed to finish proof"): auto won't *synthesize* the `∃K` witness from a `∀∃` fact.
+3. `obtain K … using sig[rule_format, of i] by blast` — **HANGS** (blast + `H`).
+4. `from sig[rule_format, of i] obtain K where "(∀n. compact (K n)) ∧ Crit0 i = ⋃n. K n" ..` — the `..` (exE) FAILS to prove it.
+5. `from sig[rule_format] show "∃K…" .` — `.`/`this` FAILS: it won't instantiate the *fact's* schematic `?i` to the goal's concrete `i`.
+6. `by (rule sig[rule_format])` (on the meta `⋀i.∃K…` goal) — FAILS ("Failed to apply initial proof method").
+7. `from sig show "∃K…" by (rule spec)` — FAILS: `rule spec`'s higher-order unification picks a *constant* `?P`, so the resulting premise ≠ `sig`.
+8. `by (rule sig)` (object `∀i.∃K…` goal, object `sig`) — FAILS ("Failed to apply"): can't use an object-`∀` fact as an intro rule for an object-`∀` goal.
+9. `by (fact sig)` — FAILS, same shape.
+10. `from sig show "∀i.∃K…" .` — FAILS, same.
+11. `meager_critical_values_from_charts[where D=D0, OF der[rule_format] rk[rule_format] sig]` — **"OF: no unifiers."** Cause: `der[rule_format]` is `?x∈Crit0 ?i ⟹ …` (schematic `?i ?x`) but the lemma hyp is `⋀i x. x∈?Crit i ⟹ …` (meta-bound) → schematic-vs-bound mismatch. (So OF cannot discharge the meta-`⋀` der/rk hyps from the object der/rk facts.)
+12. `from sig show "∃K…" by (rule spec[of "λj. ∃K. (∀n. compact (K n)) ∧ Crit0 j = ⋃n. K n" i])` — FAILS even with the predicate given *explicitly*. Most likely the literal `Φ` I wrote does not β/η-match `sig`'s stored body (`(⋃n. K n)` prints as `⋃(range K)`), so `from sig` cannot discharge the `∀x. Φ x` premise.
+
+### Root-cause hypotheses (for tomorrow)
+- blast/auto family: **hang** (the `assume H` is in scope) or cannot construct an `∃` witness.
+- rule/fact/`.`/spec: object `∀`/`∃` quantifiers + a probable **η/representation difference** (`(⋃n. K n)` vs `⋃(range K)`, and possibly the `∃K` binder type) defeat exact matching; HOU picks wrong instances.
+- **We have been working BLIND** — we never once printed `thm sig` next to the actual goal. That must change.
+
+### TRY TOMORROW — in this order (all UNTRIED)
+1. **Inspect the terms FIRST.** In jEdit put `thm sig` on a scratch line and read the goal at the σ-`show`; diff them character-by-character (η on `range K`, the `∃K` type, sort, `Trueprop`). Do not attempt another proof until we can SEE the exact mismatch.
+2. **`elim exE conjE`** instead of `elim exE` + `conjunct…`: split `H` into *directly named* `assume sub … and der … and rk … and sig …`. A directly-assumed `sig` may behave differently from a `conjunct2[OF …]`-extracted one.
+3. **`meson` / `metis` with ONLY `sig` passed**: `using sig by meson` — resolution provers are depth-bounded (won't hang like blast) and may close `∀∃ ⟹ ∀∃` without touching `H`. (Sledgehammer was only ever run on the *obtain*, never on this subgoal.)
+4. **Hoist the σ-lift into a separate clean lemma** (no `H` in scope): e.g. `lemma σlift: "(∀i. ∃K. P i K) ⟹ <lemma's sigma form>" by blast` proved in a clean context, then `using sig by (rule σlift)` in stub 2 — `rule` applies a closed lemma and does **not** explore `H`. The crux is matching `P`/the term shape.
+5. **Reformulate `meager_critical_values_from_charts`** to avoid the `∃`-extraction: take the cover as an explicit family `K :: nat ⇒ nat ⇒ … set` with hyps `compact (K i n)` and `Crit i = (⋃n. K i n)`; stub 2 then supplies `K` from `sig` per-`i` (no global choice needed) — this removes the σ-`∃` discharge entirely. **(Note: axiom of choice is NOT needed — this is pointwise existence; confirmed.)**
+6. If the diff in (1) is genuinely η, normalise (`simp only: …`) or restate the σ-hyp literally as `⋃(range K)` to match.
+
+**Bottom line:** the analytic content is done; this is a pure Isar/automation plumbing wall around discharging a trivial `∀∃` in a context polluted by a huge `assume`. Start tomorrow at item (1) — see the terms — then (2)/(4).
+
 ## 2026-05-29 (cont.) — Tier 1: `lem:smooth-chart-meager` proved (rank-deficient C¹ image is meager)
 
 `smooth_chart_meager` (sorry-free, `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`), in
