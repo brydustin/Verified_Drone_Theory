@@ -705,9 +705,43 @@ lemma prop_KLM_1:
   defines "K \<equiv> det3 s1 s2 s3 (u1 * c1) (u2 * c2) (u3 * c3) (v1 * c1) (v2 * c2) (v3 * c3)"
       and "L \<equiv> det3 c1 c2 c3 s1 s2 s3 (v1 * c1) (v2 * c2) (v3 * c3)"
       and "M \<equiv> det3 c1 c2 c3 s1 s2 s3 (u1 * c1) (u2 * c2) (u3 * c3)"
-  assumes "c1 * c2 * c3 \<noteq> 0"
+  assumes c0: "c1 * c2 * c3 \<noteq> 0"
+    and AT0: "det3 1 1 1 u1 u2 u3 v1 v2 v3 \<noteq> 0"
+      \<comment> \<open>good-triple noncollinearity (\<open>A\<^sub>T \<noteq> 0\<close>); the \<open>\<Longrightarrow>\<close> direction is FALSE without
+          it --- a collinear triple gives \<open>\<tau> = c\<cdot>(1,1,1)\<close>, i.e. \<open>s \<noteq> 0\<close> yet \<open>K=L=M=0\<close>\<close>
   shows "(K = 0 \<and> L = 0 \<and> M = 0) \<longleftrightarrow> (s1 = 0 \<and> s2 = 0 \<and> s3 = 0)"
-  sorry
+proof
+  assume "K = 0 \<and> L = 0 \<and> M = 0"
+  then have K0: "K = 0" and L0: "L = 0" and M0: "M = 0" by simp_all
+  from c0 have c1n: "c1 \<noteq> 0" and c2n: "c2 \<noteq> 0" and c3n: "c3 \<noteq> 0" by auto
+  \<comment> \<open>Cramer identities \<open>s\<^sub>i (\<Prod>\<^sub>j\<^sub>\<noteq>\<^sub>i c\<^sub>j) A\<^sub>T = K + u\<^sub>i L - v\<^sub>i M\<close> (pure \<open>det3\<close> algebra)\<close>
+  have id1: "s1 * c2 * c3 * det3 1 1 1 u1 u2 u3 v1 v2 v3 = K + u1 * L - v1 * M"
+    unfolding K_def L_def M_def det3_def by (simp add: algebra_simps)
+  have id2: "s2 * c1 * c3 * det3 1 1 1 u1 u2 u3 v1 v2 v3 = K + u2 * L - v2 * M"
+    unfolding K_def L_def M_def det3_def by (simp add: algebra_simps)
+  have id3: "s3 * c1 * c2 * det3 1 1 1 u1 u2 u3 v1 v2 v3 = K + u3 * L - v3 * M"
+    unfolding K_def L_def M_def det3_def by (simp add: algebra_simps)
+  have "s1 = 0"
+  proof -
+    from id1 K0 L0 M0 have "s1 * c2 * c3 * det3 1 1 1 u1 u2 u3 v1 v2 v3 = 0" by simp
+    with c2n c3n AT0 show "s1 = 0" by simp
+  qed
+  moreover have "s2 = 0"
+  proof -
+    from id2 K0 L0 M0 have "s2 * c1 * c3 * det3 1 1 1 u1 u2 u3 v1 v2 v3 = 0" by simp
+    with c1n c3n AT0 show "s2 = 0" by simp
+  qed
+  moreover have "s3 = 0"
+  proof -
+    from id3 K0 L0 M0 have "s3 * c1 * c2 * det3 1 1 1 u1 u2 u3 v1 v2 v3 = 0" by simp
+    with c1n c2n AT0 show "s3 = 0" by simp
+  qed
+  ultimately show "s1 = 0 \<and> s2 = 0 \<and> s3 = 0" by simp
+next
+  assume "s1 = 0 \<and> s2 = 0 \<and> s3 = 0"
+  then show "K = 0 \<and> L = 0 \<and> M = 0"
+    unfolding K_def L_def M_def det3_def by simp
+qed
 
 lemma prop_KLM_2:
   fixes \<kappa> u1 u2 u3 v1 v2 v3 :: real
@@ -715,11 +749,77 @@ lemma prop_KLM_2:
       and "s1 \<equiv> sin (\<kappa> * u1)" and "s2 \<equiv> sin (\<kappa> * u2)" and "s3 \<equiv> sin (\<kappa> * u3)"
   defines "L \<equiv> det3 c1 c2 c3 s1 s2 s3 (v1 * c1) (v2 * c2) (v3 * c3)"
       and "M \<equiv> det3 c1 c2 c3 s1 s2 s3 (u1 * c1) (u2 * c2) (u3 * c3)"
-  assumes "(c1 = 0 \<and> c2 \<noteq> 0 \<and> c3 \<noteq> 0)
-         \<or> (c2 = 0 \<and> c1 \<noteq> 0 \<and> c3 \<noteq> 0)
-         \<or> (c3 = 0 \<and> c1 \<noteq> 0 \<and> c2 \<noteq> 0)"
+  assumes cz: "(c1 = 0 \<and> c2 \<noteq> 0 \<and> c3 \<noteq> 0)
+             \<or> (c2 = 0 \<and> c1 \<noteq> 0 \<and> c3 \<noteq> 0)
+             \<or> (c3 = 0 \<and> c1 \<noteq> 0 \<and> c2 \<noteq> 0)"
+    and d12: "(u1, v1) \<noteq> (u2, v2)" and d13: "(u1, v1) \<noteq> (u3, v3)"
+    and d23: "(u2, v2) \<noteq> (u3, v3)"
+      \<comment> \<open>distinct array points: needed --- if the two \<open>cos \<noteq> 0\<close> points coincided the
+          relevant minor would vanish, giving \<open>L = M = 0\<close>\<close>
   shows "L \<noteq> 0 \<or> M \<noteq> 0"
-  sorry
+proof -
+  have sin1: "\<And>(w::real). cos w = 0 \<Longrightarrow> sin w \<noteq> 0"
+  proof -
+    fix w :: real
+    assume "cos w = 0"
+    hence "(sin w)\<^sup>2 = 1" using sin_cos_squared_add[of w] by simp
+    thus "sin w \<noteq> 0" by auto
+  qed
+  from cz consider
+      (A) "c1 = 0" "c2 \<noteq> 0" "c3 \<noteq> 0"
+    | (B) "c2 = 0" "c1 \<noteq> 0" "c3 \<noteq> 0"
+    | (C) "c3 = 0" "c1 \<noteq> 0" "c2 \<noteq> 0" by blast
+  then show ?thesis
+  proof cases
+    case A
+    have s1n: "s1 \<noteq> 0" using sin1[OF A(1)[unfolded c1_def]] by (simp add: s1_def)
+    have Lc: "L = s1 * c2 * c3 * (v2 - v3)"
+      unfolding L_def det3_def using A(1) by (simp add: algebra_simps)
+    have Mc: "M = s1 * c2 * c3 * (u2 - u3)"
+      unfolding M_def det3_def using A(1) by (simp add: algebra_simps)
+    from d23 have "v2 \<noteq> v3 \<or> u2 \<noteq> u3" by auto
+    thus ?thesis
+    proof
+      assume "v2 \<noteq> v3" hence "L \<noteq> 0" using Lc s1n A(2) A(3) by simp
+      thus ?thesis ..
+    next
+      assume "u2 \<noteq> u3" hence "M \<noteq> 0" using Mc s1n A(2) A(3) by simp
+      thus ?thesis ..
+    qed
+  next
+    case B
+    have s2n: "s2 \<noteq> 0" using sin1[OF B(1)[unfolded c2_def]] by (simp add: s2_def)
+    have Lc: "L = s2 * c1 * c3 * (v3 - v1)"
+      unfolding L_def det3_def using B(1) by (simp add: algebra_simps)
+    have Mc: "M = s2 * c1 * c3 * (u3 - u1)"
+      unfolding M_def det3_def using B(1) by (simp add: algebra_simps)
+    from d13 have "v3 \<noteq> v1 \<or> u3 \<noteq> u1" by auto
+    thus ?thesis
+    proof
+      assume "v3 \<noteq> v1" hence "L \<noteq> 0" using Lc s2n B(2) B(3) by simp
+      thus ?thesis ..
+    next
+      assume "u3 \<noteq> u1" hence "M \<noteq> 0" using Mc s2n B(2) B(3) by simp
+      thus ?thesis ..
+    qed
+  next
+    case C
+    have s3n: "s3 \<noteq> 0" using sin1[OF C(1)[unfolded c3_def]] by (simp add: s3_def)
+    have Lc: "L = s3 * c1 * c2 * (v1 - v2)"
+      unfolding L_def det3_def using C(1) by (simp add: algebra_simps)
+    have Mc: "M = s3 * c1 * c2 * (u1 - u2)"
+      unfolding M_def det3_def using C(1) by (simp add: algebra_simps)
+    from d12 have "v1 \<noteq> v2 \<or> u1 \<noteq> u2" by auto
+    thus ?thesis
+    proof
+      assume "v1 \<noteq> v2" hence "L \<noteq> 0" using Lc s3n C(2) C(3) by simp
+      thus ?thesis ..
+    next
+      assume "u1 \<noteq> u2" hence "M \<noteq> 0" using Mc s3n C(2) C(3) by simp
+      thus ?thesis ..
+    qed
+  qed
+qed
 
 
 subsection \<open>The generic geometric reduction engine (connectable)\<close>

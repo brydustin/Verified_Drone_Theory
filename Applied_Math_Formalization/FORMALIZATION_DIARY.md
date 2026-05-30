@@ -8,6 +8,29 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (KLM minors) — prop_KLM_1 + prop_KLM_2 via Cramer / cofactor identities
+
+Both `prop:KLM` minors PROVED; appendix down to 3 real sorries (`prop_uphi_codim3`,
+`prop_Lambda_common`, `lem_h0res_a1a2`).
+
+- `prop_KLM_1` (`K=L=M=0 \<longleftrightarrow> s=0` on `c\<^sub>1c\<^sub>2c\<^sub>3\<noteq>0`): the \<open>\<Longrightarrow>\<close> direction is FALSE as
+  originally stated --- a collinear triple has `\<tau> = s/c = const\<cdot>(1,1,1)`, giving
+  `K=L=M=0` with `s\<noteq>0`. Added the good-triple hypothesis `A\<^sub>T = det3 1 1 1 u v \<noteq> 0`.
+  Then the clean route is three **Cramer identities**, each a pure `det3` polynomial
+  identity (`simp add: det3_def algebra_simps`):
+    `s\<^sub>i \<cdot> (\<Prod>\<^sub>j\<^sub>\<noteq>\<^sub>i c\<^sub>j) \<cdot> A\<^sub>T = K + u\<^sub>i L - v\<^sub>i M`.
+  Verified out of band via the scalar triple product: `(u\<times>v) + u\<^sub>1(v\<times>\<one>) - v\<^sub>1(u\<times>\<one>) =
+  (A\<^sub>T,0,0)`. So `K=L=M=0` forces `s\<^sub>i (\<Prod>c) A\<^sub>T = 0`, and `c\<^sub>j\<noteq>0`, `A\<^sub>T\<noteq>0` give `s\<^sub>i=0`.
+- `prop_KLM_2` (one `cos=0 \<Longrightarrow> L\<noteq>0 \<or> M\<noteq>0`): needs the array points pairwise
+  DISTINCT (else the relevant minor vanishes). Per case `c\<^sub>i=0`: `c\<^sub>i=0 \<Longrightarrow> s\<^sub>i\<noteq>0`
+  (Pythagoras), and `L = s\<^sub>i (\<Prod>c) (v\<^sub>j - v\<^sub>k)`, `M = s\<^sub>i (\<Prod>c) (u\<^sub>j - u\<^sub>k)`, so distinctness
+  of points `j,k` gives `L\<noteq>0 \<or> M\<noteq>0`.
+
+GOTCHA (cost a build): a `have sin1: "\<And>w. cos w = 0 \<Longrightarrow> sin w \<noteq> 0"` leaves `w`
+POLYMORPHIC (`sin`/`cos` are over `'a::{banach,...}`), so a `fix w :: real` body
+mismatches and the `show` fails with the misleading "Failed to refine any pending
+goal". Fix: annotate the binder in the statement --- `\<And>(w::real). ...`.
+
 ## 2026-05-30 (even later) — astar strict-monotonicity (the double-root injectivity)
 
 `prop_double_param_mono` (`strict_mono_on UNIV (astar \<kappa>)`, \<kappa>\<noteq>0) now PROVED, plus its
