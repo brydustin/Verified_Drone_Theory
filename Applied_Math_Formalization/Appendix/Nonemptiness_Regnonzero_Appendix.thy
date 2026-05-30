@@ -115,12 +115,70 @@ text \<open>TeX \<open>prop:double-param\<close> (L5755): \<open>(\<alpha>\<^sub
 
 lemma prop_double_param_solves:
   fixes \<kappa> u :: real
-  assumes "\<kappa> \<noteq> 0"
+  assumes \<kappa>: "\<kappa> \<noteq> 0"
   shows "Fparam \<kappa> u (astar \<kappa> u) (bstar \<kappa> u) = 0"
-  \<comment> \<open>True (the double-root parameterization); the proof is a fiddly double-angle
-      identity --- \<open>field_simps\<close> reorders \<open>2\<kappa>u\<close> to \<open>\<kappa>(u\<cdot>2)\<close> so \<open>sin_double\<close>/\<open>cos_double\<close>
-      do not fire. Deferred (needs explicit \<open>sin(2\<kappa>u)\<close>/\<open>cos(2\<kappa>u)\<close> rewrites first).\<close>
-  sorry
+proof -
+  let ?s = "sin (\<kappa> * u)" and ?c = "cos (\<kappa> * u)"
+  have D0: "1 + ?s\<^sup>2 \<noteq> 0" by (smt (verit) zero_le_power2)
+  have Dn0: "\<kappa>\<^sup>2 * (1 + ?s\<^sup>2) \<noteq> 0" using \<kappa> D0 by simp
+  have sd: "sin (2 * \<kappa> * u) = 2 * ?s * ?c"
+    using sin_double[of "\<kappa> * u"] by (simp add: mult.assoc)
+  have cd: "cos (2 * \<kappa> * u) = 1 - 2 * ?s\<^sup>2"
+    using cos_double_sin[of "\<kappa> * u"] by (simp add: mult.assoc)
+  \<comment> \<open>\<open>astar - u\<close> as one factored fraction: \<open>-sc/(\<kappa>(1+s\<^sup>2))\<close>\<close>
+  have amu: "astar \<kappa> u - u = - (?s * ?c) / (\<kappa> * (1 + ?s\<^sup>2))"
+  proof -
+    have "astar \<kappa> u - u = - (sin (2 * \<kappa> * u) / (2 * \<kappa> * (1 + ?s\<^sup>2)))"
+      by (simp add: astar_def)
+    also have "\<dots> = - ((2 * ?s * ?c) / (2 * \<kappa> * (1 + ?s\<^sup>2)))" by (simp add: sd)
+    also have "\<dots> = - (?s * ?c) / (\<kappa> * (1 + ?s\<^sup>2))" by simp
+    finally show ?thesis .
+  qed
+  \<comment> \<open>cleared-numerator identity (double-angle + Pythagoras); pure polynomial\<close>
+  have cs: "?c * ?c + ?s * ?s = 1"
+    using sin_cos_squared_add[of "\<kappa> * u"] by (simp add: power2_eq_square)
+  have key: "(- (1/2) * \<kappa>\<^sup>2 * u\<^sup>2 * cos (2 * \<kappa> * u) + (3/2) * \<kappa>\<^sup>2 * u\<^sup>2
+                - \<kappa> * u * sin (2 * \<kappa> * u) + cos (2 * \<kappa> * u) + 1)
+             - u\<^sup>2 * (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2)) = 2 * ?c * (?c - \<kappa> * u * ?s)"
+    using cs by (simp only: sd cd, simp add: algebra_simps power2_eq_square, argo)
+  \<comment> \<open>\<open>bstar - u\<^sup>2\<close> as one factored fraction: \<open>2c(c-\<kappa>us)/(\<kappa>\<^sup>2(1+s\<^sup>2))\<close>; clear the
+      denominator with \<open>nonzero_eq_divide_eq\<close> and finish with \<open>key\<close>\<close>
+  have bmu: "bstar \<kappa> u - u\<^sup>2 = (2 * ?c * (?c - \<kappa> * u * ?s)) / (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2))"
+  proof -
+    have b: "bstar \<kappa> u * (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2))
+             = - (1/2) * \<kappa>\<^sup>2 * u\<^sup>2 * cos (2 * \<kappa> * u) + (3/2) * \<kappa>\<^sup>2 * u\<^sup>2
+                - \<kappa> * u * sin (2 * \<kappa> * u) + cos (2 * \<kappa> * u) + 1"
+      unfolding bstar_def using Dn0 by simp
+    have "(bstar \<kappa> u - u\<^sup>2) * (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2))
+          = bstar \<kappa> u * (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2)) - u\<^sup>2 * (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2))"
+      by (simp add: left_diff_distrib)
+    also have "\<dots> = (- (1/2) * \<kappa>\<^sup>2 * u\<^sup>2 * cos (2 * \<kappa> * u) + (3/2) * \<kappa>\<^sup>2 * u\<^sup>2
+                - \<kappa> * u * sin (2 * \<kappa> * u) + cos (2 * \<kappa> * u) + 1)
+                - u\<^sup>2 * (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2))"
+      by (simp add: b)
+    also have "\<dots> = 2 * ?c * (?c - \<kappa> * u * ?s)" by (rule key)
+    finally have *: "(bstar \<kappa> u - u\<^sup>2) * (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2)) = 2 * ?c * (?c - \<kappa> * u * ?s)" .
+    show ?thesis using * Dn0 by (simp add: nonzero_eq_divide_eq)
+  qed
+  \<comment> \<open>the two \<open>Fparam\<close> terms are exact negatives\<close>
+  have "Fparam \<kappa> u (astar \<kappa> u) (bstar \<kappa> u)
+        = 2 * (astar \<kappa> u - u) * (?c - \<kappa> * u * ?s) + \<kappa> * ?s * (bstar \<kappa> u - u\<^sup>2)"
+    by (simp add: Fparam_def)
+  also have "\<dots> = 2 * (- (?s * ?c) / (\<kappa> * (1 + ?s\<^sup>2))) * (?c - \<kappa> * u * ?s)
+                  + \<kappa> * ?s * ((2 * ?c * (?c - \<kappa> * u * ?s)) / (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2)))"
+    by (simp only: amu bmu)
+  also have "\<dots> = 0"
+  proof -
+    have e2: "\<kappa> * ?s * ((2 * ?c * (?c - \<kappa> * u * ?s)) / (\<kappa>\<^sup>2 * (1 + ?s\<^sup>2)))
+              = (2 * ?s * ?c * (?c - \<kappa> * u * ?s)) / (\<kappa> * (1 + ?s\<^sup>2))"
+      using \<kappa> by (simp add: power2_eq_square)
+    have e1: "2 * (- (?s * ?c) / (\<kappa> * (1 + ?s\<^sup>2))) * (?c - \<kappa> * u * ?s)
+              = - ((2 * ?s * ?c * (?c - \<kappa> * u * ?s)) / (\<kappa> * (1 + ?s\<^sup>2)))"
+      by simp
+    show ?thesis using e1 e2 by simp
+  qed
+  finally show ?thesis.
+qed
 
 lemma prop_double_param_mono:
   fixes \<kappa> :: real

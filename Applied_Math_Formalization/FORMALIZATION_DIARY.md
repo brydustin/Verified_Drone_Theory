@@ -8,6 +8,36 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (later still) — Appendix leaves: lem_Fij, the algebra corollaries, prop_double_param_solves
+
+Cleared four more `sorry` leaves in `Nonemptiness_Regnonzero_Appendix.thy` (now 6 real
+sorries left):
+- `cor_pairambiguity`, `cor_H0subcase`, `cor_vpair22_nonzero` — pure algebra from the
+  factorizations (`d\<^sub>ij = -2\<Delta>\<^sub>ij K`, etc.); `mult_eq_0_iff` / `field_simps`.
+- `upair_minor_nowhere_dense` — added the missing `continuous_on UNIV` hyp, routed through
+  `lines_entire_slice_nowhere_dense`.
+- `lem_Fij` — restated noncollinearity as `A\<^sub>T \<noteq> 0` (= `det3 1 1 1 u v`, cleaner than the
+  `\<exists>`-line form) and proved via the cancellation identity `F\<^sub>1\<^sub>2 - F\<^sub>1\<^sub>3 + F\<^sub>2\<^sub>3 = a\<cdot>A\<^sub>T`
+  (the `a\<^sub>1,a\<^sub>2` terms cancel identically; the `a`-term is exactly the triple determinant).
+
+**`prop_double_param_solves` — the rational-trig identity, now fully proved.** Statement
+gets the honest `\<kappa> \<noteq> 0`. The two `Fparam` terms are exact negatives: with `s=sin\<kappa>u`,
+`c=cos\<kappa>u`, `astar-u = -sc/(\<kappa>(1+s\<^sup>2))` (term 1 `= -2sc(c-\<kappa>us)/(\<kappa>(1+s\<^sup>2))`) and
+`bstar-u\<^sup>2 = 2c(c-\<kappa>us)/(\<kappa>\<^sup>2(1+s\<^sup>2))` (term 2 `= +2sc(c-\<kappa>us)/(\<kappa>(1+s\<^sup>2))`). Key
+Isabelle lessons that finally cracked it:
+- `field_simps` is the WRONG tool here: it *distributes* `2\<kappa>(1+s\<^sup>2)` into `\<kappa>\<cdot>2 + \<kappa>\<cdot>2s\<^sup>2`,
+  loses the factored form, and can no longer discharge `\<noteq> 0` to cross-multiply. Keep
+  denominators factored instead.
+- Compute `astar-u` and `bstar-u\<^sup>2` as single factored fractions (`amu`, `bmu`); for `bmu`
+  clear the denominator with `nonzero_eq_divide_eq` (atomic in `Dn`) rather than
+  `diff_divide_distrib` (which explodes the long numerator).
+- The cleared-numerator identity `key` must rewrite the double angles with `simp only: sd cd`
+  FIRST (exact `sin(2\<kappa>u)`/`cos(2\<kappa>u)` match) BEFORE `algebra_simps`, because `algebra_simps`
+  reorders `2\<kappa>u \<rightarrow> \<kappa>(u\<cdot>2)` and then `sin_double`/`cos_double` no longer fire. The leftover
+  `2c\<^sup>2+2s\<^sup>2 = 2` is linear in the atoms `c\<cdot>c`,`s\<cdot>s` and closes with the product-form
+  Pythagorean `cs` via `argo`: `using cs by (simp only: sd cd, simp add: algebra_simps
+  power2_eq_square, argo)`.
+
 ## 2026-05-30 (later) — Regnonzero appendix: full skeleton + capstone + first real proofs
 
 New theory `Appendix/Nonemptiness_Regnonzero_Appendix.thy` (session
