@@ -8,6 +8,43 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (later) — Regnonzero appendix: full skeleton + capstone + first real proofs
+
+New theory `Appendix/Nonemptiness_Regnonzero_Appendix.thy` (session
+`Applied_Math_Appendix`, parent `Applied_Math_Nonemptiness`) states EVERY appendix
+obligation of `prop:regnonzero` (Appendix A–I), and `Appendix/Nonemptiness_Capstone.thy`
+closes START→FINISH: `odd_N_nonemptiness` is *proved* by feeding the four concrete
+bad sets (defined from `af`) + feasibility + X0-soundness into the sorry-free
+`nonemptiness_from_meager_branches`. So no unstated gaps remain.
+
+Design rule (after corrections): NO locales; lemmas connect either as concrete/universal
+facts (real moment map / `det3` / plain reals) or as parametric facts carrying the real
+structural hypothesis the concrete object satisfies (`rline_entire`, a chart cover) — like
+`nonemptiness_from_branches`. Bugs caught by *trying to prove*:
+- `prop:upair`'s global strict-monotonicity of `R(t)` is FALSE (R has poles / is U-shaped);
+  restated with an `inj_on` (single-branch) hypothesis.
+- `analytic_cut_meager_proj` (single cut ⇒ meager projection) was FALSE (codim-1 cut
+  projects ONTO V); replaced by the dimension-drop engine `proj_lowdim_meager` (via
+  `rank_deficient_C1_image_meager`).
+- `prop:vmixed` was off by a factor 2 (third row is `2vⱼcⱼ`, the `∂_v a₂₂` derivative).
+
+PROVED sorry-free this session: `R_even`, `prop_upair`, `x_plus_sin_pos`, `Num_pos`
+(corrected SOS `2Num = t²(2t+sin2t)+2(2t−sin2t)+4t sin²t`), `R_strict_mono_first_branch`,
+`ab_eq_R`, `alpha_beta_inj_on_branch` (u-pair branch closed end-to-end); `analytic_cut_nowhere_dense`,
+`proj_lowdim_meager`; templates `threecos_meager_in_V`, `Bbranch_meager_in_V`;
+`lem_h0res_Bcuts` (β′≠0 transversality); `prop_vcos/vsin/vmixed`; `lem_block` (7 J₅ partials),
+`lem_3x3` (3 rank-3 minors); `cor_pairambiguity`, `cor_H0subcase`, `cor_vpair22_nonzero`;
+`upair_minor_nowhere_dense`. Down to ~8 real sorries (calculus/transcendental:
+`prop_double_param_*`, `prop_uphi_codim3`, `prop_Lambda_common`, `lem_Fij`, `prop_KLM_*`,
+`lem_h0res_a1a2`) + the IFT chart keystone + the `(ℝ²)ⁿ ≅ ℝ²ᴺ` wiring.
+
+Traps logged: `*s`/`*v` are cartesian operators (`*sin` lexes as `*s`+`in`) — use variable
+`t` and natural spacing; `DERIV_divide` gives `g x * g x` not `(g x)²`; simp distributes
+`−(a+b)` before cancelling `(−a)/(−b)` — group/use `divide_minus_right`; `\<^const>` only on
+genuine constants (not lemma names); `real^('m::{finite,wellorder})` must annotate the index
+sort at EVERY occurrence; non-greedy `lemma (\w+):.*?` regex spans across lemmas
+(use `(?:(?!\nlemma ).)*?`).
+
 ## 2026-05-30 — Transversality MEAGER stub: blocked on one σ-compact ∃-discharge (full record of dead ends)
 
 **Stop point for the night.** One — and only one — proof step is blocking the whole

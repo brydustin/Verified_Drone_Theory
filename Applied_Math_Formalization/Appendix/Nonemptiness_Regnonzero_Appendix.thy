@@ -450,9 +450,10 @@ text \<open>
 
 lemma upair_minor_nowhere_dense:
   fixes W :: "'w::euclidean_space set" and Du :: "'w \<Rightarrow> real"
-  assumes "rline_entire Du" and "\<exists>x. Du x \<noteq> 0"
+  assumes "rline_entire Du" and "continuous_on UNIV Du" and "\<exists>x. Du x \<noteq> 0"
   shows "nowhere_dense {x \<in> W. Du x = 0}"
-  sorry
+  using assms(1,2,3) lines_entire_slice_nowhere_dense rline_entire_def by fastforce
+
 
 text \<open>TeX \<open>prop:vcos\<close> (L1583), \<open>prop:vsin\<close> (L1605), \<open>prop:vmixed\<close> (L1621):
   the cosine/sine/mixed \<open>v\<close>-block determinants, with the Vandermonde factor and
