@@ -749,7 +749,12 @@ lemma cor_pairambiguity:
     and "d13 x = - 2 * Delu13 x * Kf x"
     and "d23 x = - 2 * Delu23 x * Kf x"
   shows "(d12 x = 0 \<and> d13 x = 0 \<and> d23 x = 0) \<longleftrightarrow> Kf x = 0"
-  sorry
+proof -
+  have "d12 x = 0 \<longleftrightarrow> Kf x = 0" using assms(1) assms(4) by (auto simp: mult_eq_0_iff)
+  moreover have "d13 x = 0 \<longleftrightarrow> Kf x = 0" using assms(2) assms(5) by (auto simp: mult_eq_0_iff)
+  moreover have "d23 x = 0 \<longleftrightarrow> Kf x = 0" using assms(3) assms(6) by (auto simp: mult_eq_0_iff)
+  ultimately show ?thesis by blast
+qed
 
 text \<open>TeX \<open>prop:direct5alt\<close> (L1955), \<open>cor:H0subcase\<close> (L1996): alternative
   factorizations \<open>= -2\<Delta>\<^sup>(\<^sup>u\<^sup>)L\<close>, \<open>= -\<Delta>\<^sup>(\<^sup>u\<^sup>)M\<close>, and the closed \<open>H\<equiv>0\<close> subcase
@@ -761,7 +766,7 @@ lemma cor_H0subcase:
     and "dL x = - 2 * Delu x * Lf x" and "dM x = - 1 * Delu x * Mf x"
     and "Lf x \<noteq> 0 \<or> Mf x \<noteq> 0"
   shows "dL x \<noteq> 0 \<or> dM x \<noteq> 0"
-  sorry
+  using assms by (auto simp: mult_eq_0_iff)
 
 
 subsection \<open>Appendix D --- all-sine-zero \<open>H\<equiv>0\<close> subcase\<close>
@@ -1006,7 +1011,7 @@ lemma cor_vpair22_nonzero:
   assumes "H12 x \<noteq> 0" "H22 x \<noteq> 0" "Mf x \<noteq> 0"
     and "H22 x * Mf x - H12 x * Lf x = 0"
   shows "Lf x / Mf x = H22 x / H12 x"
-  sorry
+  using assms by (auto simp: field_simps)
 
 text \<open>TeX \<open>prop:H12zero\<close> (L5447)/\<open>cor:H12zero\<close> (L5529): \<open>H\<^sub>1\<^sub>2=0\<close> block factorization
   \<open>det \<partial>(\<Phi>)/\<partial>(u\<^sub>i,u\<^sub>j,v\<^sub>k) = 2ag s\<^sub>k H\<^sub>2\<^sub>2 \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<close>; rank 3 if \<open>s\<^sub>k\<noteq>0, \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<noteq>0\<close>.
