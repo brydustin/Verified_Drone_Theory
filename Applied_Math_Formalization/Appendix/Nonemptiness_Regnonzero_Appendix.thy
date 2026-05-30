@@ -225,9 +225,9 @@ lemma R_even:
 proof -
   have mm: "\<And>a b::real. (- a) / (- b) = a / b" by simp
   have num: "- t * (- t * sin (- t) - 2 * cos (- t)) = - (t * (t * sin t - 2 * cos t))"
-    by (simp add: sin_minus cos_minus algebra_simps)
+    by (simp only: sin_minus cos_minus algebra_simps)
   have den: "- t * cos (- t) + sin (- t) = - (t * cos t + sin t)"
-    by (simp add: sin_minus cos_minus algebra_simps)
+    by (simp only: sin_minus cos_minus algebra_simps)
   have "Rratio (- t) = - (t * (t * sin t - 2 * cos t)) / (- (t * cos t + sin t))"
     by (simp only: Rratio_def num den)
   also have "\<dots> = t * (t * sin t - 2 * cos t) / (t * cos t + sin t)"
@@ -237,21 +237,155 @@ proof -
   finally show ?thesis .
 qed
 
+text \<open>Two real-analysis facts behind the branch monotonicity.\<close>
+
+lemma x_plus_sin_pos:
+  fixes x :: real assumes "0 < x" shows "0 < x + sin x"
+proof (cases "x \<le> pi")
+  case True
+  have "0 \<le> sin x" by (rule sin_ge_zero[OF order_less_imp_le[OF assms] True])
+  thus ?thesis using assms by linarith
+next
+  case False
+  have "- 1 \<le> sin x" by simp
+  thus ?thesis using False pi_gt3 by linarith
+qed
+
+text \<open>The \<^emph>\<open>correct\<close> positivity of the derivative numerator (the paper's claimed
+  sum-of-squares was wrong).  Key division-free decomposition:
+  \<open>2\<cdot>Num = s\<^sup>2(2s + sin 2s) + 2(2s - sin 2s) + 4s sin\<^sup>2 s\<close>, all terms \<open>\<ge> 0\<close> with
+  the first \<open>> 0\<close> (using \<open>sin x \<le> x\<close> and \<open>x + sin x > 0\<close>).\<close>
+
+lemma Num_pos:
+  fixes t :: real assumes t0: "0 < t"
+  shows "0 < ((t * t - 2) * cos t + 4 * t * sin t) * (t * cos t + sin t)
+            - t * (t * sin t - 2 * cos t) * (2 * cos t - t * sin t)"
+proof -
+  have pyth: "cos t * cos t = 1 - sin t * sin t"
+    using sin_cos_squared_add[of t] by (simp only: power2_eq_square)
+  have a1: "0 < 2 * t + sin (2 * t)" using x_plus_sin_pos[of "2 * t"] t0 by simp
+  have a2: "sin (2 * t) \<le> 2 * t" using sin_x_le_x[of "2 * t"] t0 by simp
+  have decomp:
+    "2 * (((t * t - 2) * cos t + 4 * t * sin t) * (t * cos t + sin t)
+          - t * (t * sin t - 2 * cos t) * (2 * cos t - t * sin t))
+     = (t * t) * (2 * t + sin (2 * t)) + 2 * (2 * t - sin (2 * t)) + 4 * t * (sin t * sin t)"
+    by (simp add: sin_double pyth algebra_simps,
+        smt (verit, best) Groups.mult_ac(2) mult_hom.hom_add sin_double)
+  have c1: "0 < (t * t) * (2 * t + sin (2 * t))"
+    by (rule mult_pos_pos[OF mult_pos_pos[OF t0 t0] a1])
+  have c2: "0 \<le> 2 * (2 * t - sin (2 * t))" using a2 by simp
+  have c3: "0 \<le> 4 * t * (sin t * sin t)"
+    using t0 by (simp add: zero_le_mult_iff)
+  from c1 c2 c3
+  have "0 < (t * t) * (2 * t + sin (2 * t)) + 2 * (2 * t - sin (2 * t)) + 4 * t * (sin t * sin t)"
+    by linarith
+  thus ?thesis using decomp by argo
+qed
+
+text \<open>TeX \<open>prop:upair\<close> supporting monotonicity: \<open>R\<close> is strictly increasing on the
+  first branch \<open>(0,B)\<close> (where \<open>t cos t + sin t > 0\<close>), via \<open>R' = Num / (t cos t + sin t)\<^sup>2\<close>
+  with \<open>Num_pos\<close>.\<close>
+
 lemma R_strict_mono_first_branch:
   fixes B :: real
-  assumes "0 < B" and "\<forall>t. 0 < t \<and> t \<le> B \<longrightarrow> t * cos t + sin t > 0"
+  assumes Bpos: "0 < B" and Dpos: "\<forall>t. 0 < t \<and> t \<le> B \<longrightarrow> t * cos t + sin t > 0"
   shows "strict_mono_on {t. 0 < t \<and> t < B} Rratio"
-  sorry
+proof (rule strict_mono_onI)
+  fix p q assume p: "p \<in> {t. 0 < t \<and> t < B}" and q: "q \<in> {t. 0 < t \<and> t < B}"
+    and pq: "p < q"
+  have p0: "0 < p" using p by simp
+  have qB: "q < B" using q by simp
+  show "Rratio p < Rratio q"
+  proof (rule DERIV_pos_imp_increasing[OF pq])
+    fix t assume t1: "p \<le> t" and t2: "t \<le> q"
+    have t0: "0 < t" using p0 t1 by simp
+    have tB: "t \<le> B" using t2 qB by simp
+    have Dt: "0 < t * cos t + sin t" using Dpos t0 tB by blast
+    have Dne: "t * cos t + sin t \<noteq> 0" using Dt by simp
+    have dN: "((\<lambda>x::real. x * (x * sin x - 2 * cos x)) has_real_derivative
+               ((t * t - 2) * cos t + 4 * t * sin t)) (at t)"
+      by (auto intro!: derivative_eq_intros simp: algebra_simps)
+    have dD: "((\<lambda>x::real. x * cos x + sin x) has_real_derivative
+               (2 * cos t - t * sin t)) (at t)"
+      by (auto intro!: derivative_eq_intros simp: algebra_simps)
+    have der: "(Rratio has_real_derivative
+        (( ((t * t - 2) * cos t + 4 * t * sin t) * (t * cos t + sin t)
+           - t * (t * sin t - 2 * cos t) * (2 * cos t - t * sin t))
+          / ((t * cos t + sin t) * (t * cos t + sin t)))) (at t)"
+      unfolding Rratio_def by (rule DERIV_divide[OF dN dD Dne])
+    have Numpos: "0 < ((t * t - 2) * cos t + 4 * t * sin t) * (t * cos t + sin t)
+                     - t * (t * sin t - 2 * cos t) * (2 * cos t - t * sin t)"
+      by (rule Num_pos[OF t0])
+    have Dsq: "0 < (t * cos t + sin t) * (t * cos t + sin t)"
+      by (rule mult_pos_pos[OF Dt Dt])
+    show "\<exists>z. (Rratio has_real_derivative z) (at t) \<and> 0 < z"
+    proof (intro exI conjI)
+      show "(Rratio has_real_derivative
+          (( ((t * t - 2) * cos t + 4 * t * sin t) * (t * cos t + sin t)
+             - t * (t * sin t - 2 * cos t) * (2 * cos t - t * sin t))
+            / ((t * cos t + sin t) * (t * cos t + sin t)))) (at t)"
+        by (rule der)
+      show "0 < (( ((t * t - 2) * cos t + 4 * t * sin t) * (t * cos t + sin t)
+             - t * (t * sin t - 2 * cos t) * (2 * cos t - t * sin t))
+            / ((t * cos t + sin t) * (t * cos t + sin t)))"
+        using Numpos Dsq by (simp add: zero_less_divide_iff)
+    qed
+  qed
+qed
 
 text \<open>Hence \<open>\<alpha>/\<beta>\<close> is injective on a single branch \<open>(0,B)\<close> (with \<open>\<kappa>B\<close> inside the
   first branch) --- exactly the hypothesis \<open>prop_upair\<close> consumes.\<close>
 
+text \<open>The key identity tying \<open>\<alpha>/\<beta>\<close> to \<open>R\<close>: \<open>\<alpha>(u)/\<beta>(u) = R(\<kappa>u)/\<kappa>\<close> (total division,
+  holding even at the poles where both sides are \<open>0\<close>).\<close>
+
+lemma ab_eq_R:
+  fixes \<kappa> u :: real assumes "\<kappa> \<noteq> 0"
+  shows "alphaU \<kappa> u / betaU \<kappa> u = Rratio (\<kappa>*u) / \<kappa>"
+proof (cases "\<kappa>*u*cos (\<kappa>*u) + sin (\<kappa>*u) = 0")
+  case True
+  hence "betaU \<kappa> u = 0" by (simp add: betaU_def)
+  moreover have "Rratio (\<kappa>*u) = 0" using True by (simp add: Rratio_def)
+  ultimately show ?thesis by simp
+next
+  case False
+  have nr: "\<kappa> * u * (\<kappa> * u * sin (\<kappa> * u) - 2 * cos (\<kappa> * u)) = \<kappa> * (- alphaU \<kappa> u)"
+    by (simp add: alphaU_def algebra_simps power2_eq_square)
+  have "Rratio (\<kappa> * u) / \<kappa>
+        = \<kappa> * (- alphaU \<kappa> u) / (\<kappa> * u * cos (\<kappa> * u) + sin (\<kappa> * u)) / \<kappa>"
+    by (simp only: Rratio_def nr)
+  also have "\<dots> = - alphaU \<kappa> u / (\<kappa> * u * cos (\<kappa> * u) + sin (\<kappa> * u))"
+    using assms by simp
+  also have "\<dots> = alphaU \<kappa> u / betaU \<kappa> u"
+    unfolding betaU_def by (simp only: divide_minus_right)
+  finally show ?thesis by simp
+qed
+
 lemma alpha_beta_inj_on_branch:
   fixes \<kappa> B :: real
-  assumes "\<kappa> > 0" and "0 < B"
-    and "\<forall>t. 0 < t \<and> t \<le> \<kappa> * B \<longrightarrow> t * cos t + sin t > 0"
+  assumes \<kappa>: "\<kappa> > 0" and B: "0 < B"
+    and Dpos: "\<forall>t. 0 < t \<and> t \<le> \<kappa> * B \<longrightarrow> t * cos t + sin t > 0"
   shows "inj_on (\<lambda>u. alphaU \<kappa> u / betaU \<kappa> u) {u. 0 < u \<and> u < B}"
-  sorry
+proof (rule inj_onI)
+  fix u w assume u: "u \<in> {u. 0 < u \<and> u < B}" and w: "w \<in> {u. 0 < u \<and> u < B}"
+    and eq: "alphaU \<kappa> u / betaU \<kappa> u = alphaU \<kappa> w / betaU \<kappa> w"
+  have \<kappa>0: "\<kappa> \<noteq> 0" using \<kappa> by simp
+  have "Rratio (\<kappa>*u) / \<kappa> = Rratio (\<kappa>*w) / \<kappa>"
+    using eq by (simp add: ab_eq_R[OF \<kappa>0])
+  hence Req: "Rratio (\<kappa>*u) = Rratio (\<kappa>*w)" using \<kappa>0 by simp
+  have mono: "strict_mono_on {t. 0 < t \<and> t < \<kappa>*B} Rratio"
+    by (rule R_strict_mono_first_branch[OF mult_pos_pos[OF \<kappa> B] Dpos])
+  have inj: "inj_on Rratio {t. 0 < t \<and> t < \<kappa>*B}"
+    by (rule strict_mono_on_imp_inj_on[OF mono])
+  have u0: "0 < u" "u < B" using u by auto
+  have w0: "0 < w" "w < B" using w by auto
+  have mu: "\<kappa>*u \<in> {t. 0 < t \<and> t < \<kappa>*B}"
+    using u0 \<kappa> by (auto intro: mult_pos_pos mult_strict_left_mono)
+  have mw: "\<kappa>*w \<in> {t. 0 < t \<and> t < \<kappa>*B}"
+    using w0 \<kappa> by (auto intro: mult_pos_pos mult_strict_left_mono)
+  have "\<kappa>*u = \<kappa>*w" by (rule inj_onD[OF inj Req mu mw])
+  thus "u = w" using \<kappa>0 by simp
+qed
 
 text \<open>
   \<^bold>\<open>The robust, Baire-compatible form\<close> (route 2).  As a function of the working
