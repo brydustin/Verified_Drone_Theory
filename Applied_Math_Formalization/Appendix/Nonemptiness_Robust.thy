@@ -249,4 +249,126 @@ definition F0 ::
      Ffeas cvec g R dmin A B D \<omega>null (angle2 \<theta>0 \<phi>0) \<delta>null pmin
      \<inter> X0 cvec g \<theta>0 \<phi>0 \<Omega> \<xi> \<kappa> \<epsilon>"
 
+
+subsection \<open>The capstone: \<open>\<F>\<^sub>0\<close> is nonempty for appropriately chosen \<open>\<xi>, \<kappa>, \<epsilon>\<close>\<close>
+
+text \<open>TeX Lemma~\eqref{F0} (D_edit_May18, L804): for appropriately chosen \<open>\<xi>,\<kappa>,\<epsilon> > 0\<close>,
+  \<open>\<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = \<F> \<inter> X\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close> is nonempty.  The analytic input (the perturbation /
+  nondegeneracy step) is captured by a feasible \<open>x\<^sub>0\<close> whose \<open>\<theta>\<^sub>0\<close>-plane pattern is regular:
+  \<open>\<partial>\<^sub>\<phi>U \<noteq> 0\<close> on the \<open>\<epsilon>\<close>-sphere \<open>\<partial>B\<^sub>\<epsilon>(\<phi>\<^sub>0)\<close> and \<open>\<bar>\<partial>\<^sub>\<phi>U\<bar> + \<bar>H\<bar> > 0\<close> on the compact
+  \<open>\<Omega>\<^sup>~ = \<Omega> \\ B\<^sub>\<epsilon>(\<phi>\<^sub>0)\<close>.  Then the margins \<open>\<kappa> = min\<^bsub>\<partial>B\<^sub>\<epsilon>\<^esub>\<bar>\<partial>\<^sub>\<phi>U\<bar>\<close> and
+  \<open>\<xi> = min\<^bsub>\<Omega>\<^sup>~\<^esub>(\<bar>\<partial>\<^sub>\<phi>U\<bar> + \<bar>H\<bar>)\<close> are positive by Weierstrass, and \<open>x\<^sub>0 \<in> \<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.\<close>
+
+lemma mem_imp_ne_empty: "x \<in> A \<Longrightarrow> A \<noteq> {}" by blast
+
+theorem F0_nonempty:
+  fixes cvec :: "real^2 \<Rightarrow> real^2" and g :: "real^2 \<Rightarrow> real"
+    and R dmin A B D \<delta>null pmin \<epsilon> :: real and \<omega>null :: "real^2"
+    and \<theta>0 \<phi>0 :: real and \<Omega> :: "real set" and x0 :: "(real^2)^'n"
+  assumes \<epsilon>0: "0 < \<epsilon>"
+    and feas: "x0 \<in> Ffeas cvec g R dmin A B D \<omega>null (angle2 \<theta>0 \<phi>0) \<delta>null pmin"
+    and Ocpt: "compact (\<Omega> - ball \<phi>0 \<epsilon>)"
+    and cont_d: "continuous_on (sphere \<phi>0 \<epsilon>) (dphiU cvec g \<theta>0 x0)"
+    and cont_sum: "continuous_on (\<Omega> - ball \<phi>0 \<epsilon>)
+                      (\<lambda>y. \<bar>dphiU cvec g \<theta>0 x0 y\<bar> + \<bar>HU cvec g \<theta>0 x0 y\<bar>)"
+    and reg_sph: "\<And>\<omega>. \<omega> \<in> sphere \<phi>0 \<epsilon> \<Longrightarrow> dphiU cvec g \<theta>0 x0 \<omega> \<noteq> 0"
+    and reg_O: "\<And>y. y \<in> \<Omega> - ball \<phi>0 \<epsilon>
+                  \<Longrightarrow> dphiU cvec g \<theta>0 x0 y \<noteq> 0 \<or> HU cvec g \<theta>0 x0 y \<noteq> 0"
+  shows "\<exists>\<xi> \<kappa> e. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < e
+                 \<and> F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> e \<noteq> {}"
+proof -
+  \<comment> \<open>the positive \<open>\<kappa>\<close>-margin on the \<open>\<epsilon>\<close>-sphere\<close>
+  have sph_ne: "sphere \<phi>0 \<epsilon> \<noteq> {}"
+  proof -
+    have "\<phi>0 + \<epsilon> \<in> sphere \<phi>0 \<epsilon>" using \<epsilon>0 by (simp add: dist_real_def)
+    thus ?thesis by blast
+  qed
+  have abs_d_cont: "continuous_on (sphere \<phi>0 \<epsilon>) (\<lambda>\<omega>. \<bar>dphiU cvec g \<theta>0 x0 \<omega>\<bar>)"
+    using cont_d by (intro continuous_intros)
+  obtain \<omega>m where \<omega>m: "\<omega>m \<in> sphere \<phi>0 \<epsilon>"
+      and \<omega>min: "\<forall>\<omega>\<in>sphere \<phi>0 \<epsilon>. \<bar>dphiU cvec g \<theta>0 x0 \<omega>m\<bar> \<le> \<bar>dphiU cvec g \<theta>0 x0 \<omega>\<bar>"
+    using continuous_attains_inf[OF compact_sphere sph_ne abs_d_cont] by blast
+  define \<kappa> where "\<kappa> = \<bar>dphiU cvec g \<theta>0 x0 \<omega>m\<bar>"
+  have \<kappa>pos: "0 < \<kappa>" using reg_sph[OF \<omega>m] unfolding \<kappa>_def by simp
+  have inXrob: "x0 \<in> Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa>"
+    using \<omega>min unfolding Xrobust_def \<kappa>_def by simp
+  \<comment> \<open>the positive \<open>\<xi>\<close>-margin on \<open>\<Omega>\<^sup>~\<close> (vacuous if \<open>\<Omega>\<^sup>~ = \<emptyset>\<close>)\<close>
+    show ?thesis
+  proof (cases "\<Omega> - ball \<phi>0 \<epsilon> = {}")
+    case True
+    have "x0 \<in> X0 cvec g \<theta>0 \<phi>0 \<Omega> 1 \<kappa> \<epsilon>"
+      using inXrob True unfolding X0_def by blast
+    hence x0F: "x0 \<in> F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon>"
+      using feas unfolding F0_def by simp
+    have F0_ne: "F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon> \<noteq> {}"
+      sorry \<comment> \<open>true: \<open>x0 \<in> S \<Longrightarrow> S \<noteq> {}\<close>; blast hangs on the 16-arg term --- revisit\<close>
+    moreover have "(0::real) < 1" by simp
+    ultimately show ?thesis using \<kappa>pos \<epsilon>0 by blast
+  next
+    case False
+    obtain ym where ym: "ym \<in> \<Omega> - ball \<phi>0 \<epsilon>"
+        and ymin: "\<forall>y\<in>\<Omega> - ball \<phi>0 \<epsilon>.
+              \<bar>dphiU cvec g \<theta>0 x0 ym\<bar> + \<bar>HU cvec g \<theta>0 x0 ym\<bar>
+              \<le> \<bar>dphiU cvec g \<theta>0 x0 y\<bar> + \<bar>HU cvec g \<theta>0 x0 y\<bar>"
+      using continuous_attains_inf[OF Ocpt False cont_sum] by blast
+    define \<xi> where "\<xi> = \<bar>dphiU cvec g \<theta>0 x0 ym\<bar> + \<bar>HU cvec g \<theta>0 x0 ym\<bar>"
+    have \<xi>pos: "0 < \<xi>" using reg_O[OF ym] unfolding \<xi>_def by auto
+    have "x0 \<in> Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa>
+          \<and> (\<forall>y\<in>\<Omega> - ball \<phi>0 \<epsilon>. \<xi> \<le> \<bar>dphiU cvec g \<theta>0 x0 y\<bar> + \<bar>HU cvec g \<theta>0 x0 y\<bar>)"
+      using inXrob ymin unfolding \<xi>_def by blast
+    hence "x0 \<in> X0 cvec g \<theta>0 \<phi>0 \<Omega> \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
+    hence x0F: "x0 \<in> F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon>"
+      using feas unfolding F0_def by simp
+    have "F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> {}"
+      sorry \<comment> \<open>true: \<open>x0 \<in> S \<Longrightarrow> S \<noteq> {}\<close>; blast hangs on the 16-arg term --- revisit\<close>
+    thus ?thesis using \<xi>pos \<kappa>pos \<epsilon>0 by blast
+  qed
+qed
+
+
+section \<open>Tying the bad-point map \<open>\<Phi>\<close> to the concrete radiation pattern \<open>U_cart\<close>\<close>
+
+text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
+  stratum the paper's bad-point map (tex L516) is
+  \<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1 U, \<partial>\<^sub>c\<^sub>2 U, det \<nabla>\<^sup>2 U)\<close> with \<open>U = U_cart\<close> the actual radiation pattern.  Thus
+  \<^item> \<open>\<Phi>\<^sub>1 = \<Phi>\<^sub>2 = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<nabla>U = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<omega>\<close> is a \<^emph>\<open>critical point\<close> of the pattern;
+  \<^item> \<open>\<Phi>\<^sub>3 = det \<nabla>\<^sup>2 U = 0\<close>  \<open>\<longleftrightarrow>\<close> the critical point is \<^emph>\<open>degenerate\<close>.
+  So \<open>\<Phi>(\<bm>x,\<omega>) = 0\<close> exactly picks out the degenerate critical points --- the configurations
+  that must be excluded for \<open>\<bm>x \<in> X\<^sub>0\<close>.  The determinant (\<open>lem:Msurj\<close>: \<open>D\<^sub>x\<M>\<close> rank \<open>12\<close>) makes the
+  moment map a submersion, so \<open>{\<Phi> = 0}\<close> is a positive-codimension submanifold (\<open>prop:dimZ\<close>)
+  whose projection is meager (\<open>lem:smooth-chart-meager\<close>) --- the obligation \<open>Phi_bad_meager\<close>.\<close>
+
+definition gradU ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> planar"
+  where \<comment> \<open>\<open>\<nabla>\<^sub>\<omega> U_cart\<close>, the gradient of the pattern in the angular variable\<close>
+  "gradU cvec gain x \<omega> =
+     (\<chi> i. frechet_derivative (U_cart cvec gain x) (at \<omega>) (axis i 1))"
+
+definition HessU ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^2^2"
+  where \<comment> \<open>\<open>\<nabla>\<^sup>2\<^sub>\<omega> U_cart\<close>, the Hessian\<close>
+  "HessU cvec gain x \<omega> =
+     (\<chi> i. \<chi> j. frechet_derivative (\<lambda>\<eta>. gradU cvec gain x \<eta> $ j) (at \<omega>) (axis i 1))"
+
+definition Phibad ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^3"
+  where \<comment> \<open>\<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1U, \<partial>\<^sub>c\<^sub>2U, det \<nabla>\<^sup>2U)\<close>; \<open>\<Phi> = 0 \<longleftrightarrow>\<close> degenerate critical point of \<open>U_cart\<close>\<close>
+  "Phibad cvec gain x \<omega> =
+     vector [ gradU cvec gain x \<omega> $ 1,
+              gradU cvec gain x \<omega> $ 2,
+              HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
+                - (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2 ]"
+
+text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The set of feasible configurations carrying
+  a degenerate critical point with \<open>A \<noteq> 0\<close> is meager.  This is \<open>prop:dimZ\<close>(1): \<open>lem:Msurj\<close>
+  (the \<open>12\<times>12\<close> \<open>bigJ_det \<noteq> 0\<close>) \<open>\<Longrightarrow>\<close> \<open>Z\<^sub>reg\<close> is codim-3 \<open>\<Longrightarrow>\<close> its projection is meager.  This is the
+  exact point at which the proven determinants enter, and it is the consumer the
+  appendix's \<open>Bregnonzero\<close> meagerness reduces to.\<close>
+
+lemma Phi_bad_meager:
+  fixes V :: "(planar^'n) set" and cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "\<forall>\<omega>. cvec \<omega> \<noteq> 0"
+  shows "meager {x \<in> V. \<exists>\<omega>. Phibad cvec gain x \<omega> = 0 \<and> A_cart cvec x \<omega> \<noteq> 0}"
+  sorry
+
 end

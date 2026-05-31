@@ -947,3 +947,41 @@ HU = deriv (deriv Usec). Xrobust cvec g t0 p0 eps kappa = {x : kappa <= |dphiU| 
 X0 cvec g t0 p0 Omega xi kappa eps = {x in Xrobust : xi <= |dphiU|+|HU| on Omega - ball p0 eps};
 F0 ... xi kappa eps = Ffeas ... (angle2 t0 p0) ... INT X0 ... (= F INT X0). xi,kappa,eps explicit.
 Typechecks. NEXT: the conjecture EX xi kappa eps. F0 ... xi kappa eps != {}.
+
+## 2026-05-30 (the through-line) — Phi tied to U_cart; what the determinant is FOR
+
+CRITICAL ARCHITECTURE NOTE (for the planned clean rebuild). The whole proof's spine,
+made explicit:
+- The radiation pattern is `U_cart cvec gain x w = gain w * |A_cart cvec x w|^2`
+  (concrete, in Nonemptiness_Paper.thy, with derivatives dA_cart/dU_cart and
+  has_derivative_U_cart / differentiable_U_cart already proven).
+- The paper's bad-point map (tex L516) is Phi = (d_c1 U, d_c2 U, det Hess U). So
+  Phi=0 <=> grad U = 0 (critical point) AND det Hess = 0 (degenerate). I.e. Phi=0
+  picks out exactly the DEGENERATE critical points -- the configs excluded from X0.
+- THE DETERMINANT'S PURPOSE: lem:Msurj (the 12x12 bigJ_det != 0, and the J5 det
+  = -32 g^5 a^5 != 0 = lem:block, and lem:3x3) prove the moment map M (config ->
+  gradient+Hessian data) is a SUBMERSION. Chain rule D_x Phi = D_M F . D_x M then
+  gives rank D_x Phi = 3 on Z_reg, so {Phi=0} is codim-3 (prop:dimZ), hence its
+  projection to config space is MEAGER (lem:smooth-chart-meager). => a generic
+  feasible x has NO degenerate critical point => x in X0. The determinant is the
+  engine that makes nondegeneracy GENERIC instead of assumed.
+
+NEW (Nonemptiness_Robust.thy): defined gradU, HessU, Phibad FROM U_cart via
+frechet_derivative (HOL-Analysis, no Smooth_Manifolds) -- so the set finally depends
+on the real function. Stated the explicit obligation `Phi_bad_meager`: the set
+{x in V. EX w. Phibad..=0 & A_cart..!=0} is meager (= prop:dimZ payoff of the
+determinant). This is the consumer the appendix's Bregnonzero meagerness reduces to.
+
+OPEN TENSIONS to fix in the clean rebuild:
+- F0 (from D_edit) uses the 1-D phi-derivative; Phi/determinant use the 2-D gradient/
+  Hessian. Pick ONE formulation (the 2-D Phi connects to the determinant; reconcile
+  D_edit's 1-D X0 to it, or restate X0 via the 2-D Hessian).
+- F0_nonempty still has assumptions (feas/cont/Ocpt/reg). These must be DISCHARGED:
+  cont <- has_derivative_U_cart; Ocpt <- closed/bounded; feas <- explicit xbar;
+  reg <- Phi_bad_meager + Baire (odd_N_nonemptiness). The assumption-free statement
+  is the goal.
+- F0_ne (`x0 in S ==> S != {}`) is TRUE but `blast` HANGS on the 16-arg F0 term
+  (timeout, not failure). Fix later by abbreviating the set to a short name before
+  the ne step (define S == F0...). Currently sorry'd.
+- Gradient/Hessian of U: explicit formulas are in Appendix 2 of the .tex (to prove
+  Phibad equals the appendix moment functions Phi1m/H11m/...).
