@@ -37,6 +37,8 @@ session Applied_Math_Nonemptiness in "." = Applied_Math_MomentJac +
 
 session Applied_Math_Appendix in "Appendix" = Applied_Math_Nonemptiness +
   options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_HigherDiff
   theories
     Nonemptiness_Regnonzero_Appendix
     Nonemptiness_Capstone

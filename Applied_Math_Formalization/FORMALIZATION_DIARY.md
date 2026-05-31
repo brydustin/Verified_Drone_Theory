@@ -985,3 +985,25 @@ OPEN TENSIONS to fix in the clean rebuild:
   the ne step (define S == F0...). Currently sorry'd.
 - Gradient/Hessian of U: explicit formulas are in Appendix 2 of the .tex (to prove
   Phibad equals the appendix moment functions Phi1m/H11m/...).
+
+## 2026-05-30 (Hessian via Higher_Differentiability_Multi) — gradU/HessU use nabla/nabla^2
+
+Per direction: gradU/HessU now use the canonical grad_fun/hess_fun from
+Higher_Differentiability_Multi (notation \<nabla>, \<nabla>\<^sup>2), NOT a hand-rolled
+frechet_derivative Hessian. So gradU cvec gain x = \<nabla> (U_cart cvec gain x) and
+HessU cvec gain x = \<nabla>\<^sup>2 (U_cart cvec gain x) (i.e. the THE H with
+\<nabla>f has_derivative (\<lambda>v. H *v v)). Phibad = (\<nabla>U_1, \<nabla>U_2, det \<nabla>\<^sup>2U) built from these.
+
+ROOT: Applied_Math_Appendix now `sessions Applied_Math_HigherDiff`, and
+Nonemptiness_Robust imports "Applied_Math_HigherDiff.Higher_Differentiability_Multi".
+The Smooth_Manifolds merge into the Munkres/JNF/HMA heap WORKS (first build ~4min,
+incremental ~1m47s). NOTE for clean rebuild: this is a big heap; consider whether
+the robust layer should be its own session.
+
+GOTCHA: in the merged JNF+HMA+Smooth_Manifolds session, `vec_eq_iff` is ambiguous
+(JNF Matrix.vec vs HMA ^), so `simp add: vec_eq_iff` makes no progress on real^3
+goals. Phibad_zero_iff (trivially true: Phi=0 <-> its 3 components vanish) is
+currently sorry'd pending HMA-qualification (Finite_Cartesian_Product.vec_eq_iff)
+or a component-wise proof. 4 sorries total in Robust: 2x F0_ne (blast hangs on
+16-arg term), Phibad_zero_iff (vec_eq_iff), Phi_bad_meager (the determinant payoff
+obligation).

@@ -1,5 +1,5 @@
 theory Nonemptiness_Robust
-  imports Nonemptiness_Capstone
+  imports Nonemptiness_Capstone "Applied_Math_HigherDiff.Higher_Differentiability_Multi"
 begin
 
 section \<open>The robust feasible set (concrete \<open>thm:final\<close> objects)\<close>
@@ -340,15 +340,13 @@ text \<open>\<^bold>\<open>This is the bridge that the determinant computations 
 
 definition gradU ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> planar"
-  where \<comment> \<open>\<open>\<nabla>\<^sub>\<omega> U_cart\<close>, the gradient of the pattern in the angular variable\<close>
-  "gradU cvec gain x \<omega> =
-     (\<chi> i. frechet_derivative (U_cart cvec gain x) (at \<omega>) (axis i 1))"
+  where \<comment> \<open>\<open>\<nabla>\<^sub>\<omega> U_cart\<close> from Higher_Differentiability_Multi\<close>
+  "gradU cvec gain x \<omega> = \<nabla> (U_cart cvec gain x) \<omega>"
 
 definition HessU ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^2^2"
-  where \<comment> \<open>\<open>\<nabla>\<^sup>2\<^sub>\<omega> U_cart\<close>, the Hessian\<close>
-  "HessU cvec gain x \<omega> =
-     (\<chi> i. \<chi> j. frechet_derivative (\<lambda>\<eta>. gradU cvec gain x \<eta> $ j) (at \<omega>) (axis i 1))"
+  where \<comment> \<open>\<open>\<nabla>\<^sup>2\<^sub>\<omega> U_cart\<close> (\<open>hess_fun\<close>) from Higher_Differentiability_Multi\<close>
+  "HessU cvec gain x \<omega> = \<nabla>\<^sup>2 (U_cart cvec gain x) \<omega>"
 
 definition Phibad ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^3"
@@ -369,6 +367,22 @@ lemma Phi_bad_meager:
   fixes V :: "(planar^'n) set" and cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
   assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "\<forall>\<omega>. cvec \<omega> \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>. Phibad cvec gain x \<omega> = 0 \<and> A_cart cvec x \<omega> \<noteq> 0}"
+  sorry
+
+
+text \<open>\<^bold>\<open>Bridge, semantic core.\<close>  \<open>\<Phi>(\<bm>x,\<omega>) = 0\<close> says exactly that \<open>\<omega>\<close> is a \<^emph>\<open>degenerate
+  critical point\<close> of the pattern: the gradient \<open>\<nabla>U_cart\<close> vanishes (critical) and the
+  Hessian determinant \<open>H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close> vanishes (degenerate).  This ties the abstract bad
+  set to the concrete nondegeneracy condition of \<open>X\<^sub>0\<close>.\<close>
+
+lemma Phibad_zero_iff:
+  "Phibad cvec gain x \<omega> = 0
+   \<longleftrightarrow> gradU cvec gain x \<omega> = 0
+       \<and> HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
+           = (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2"
+  \<comment> \<open>trivially true (\<open>\<Phi> = 0 \<longleftrightarrow>\<close> its three components vanish); the \<open>vec_eq_iff\<close>
+      simp step needs HMA-qualification in the merged JNF+HMA+Smooth_Manifolds
+      session --- revisit\<close>
   sorry
 
 end
