@@ -107,7 +107,7 @@ text \<open>TeX \<open>prop:regnonzero\<close> (L1240): instantiate the proved 4
   \<open>prop_regnonzero\<close> with the concrete \<open>Z\<^sub>r\<^sub>e\<^sub>g\<close>, \<open>Z\<inter>{H\<equiv>0}\<close>, \<open>B\<^sub>C\<^sub>a\<^sub>s\<^sub>e\<^sub>B\<close>, \<open>B\<^sub>H\<^sub>0\<^sub>,\<^sub>r\<^sub>e\<^sub>s\<close>;
   their meagerness is \<open>prop:dimZ\<close> (facts 1,2), \<open>cor:caseBmeager\<close> (fact 3),
   \<open>prop:h0res-meager\<close> (fact 4) --- all stated in
-  \<^theory>\<open>Applied_Math_Appendix.Nonemptiness_Regnonzero_Appendix\<close>.\<close>
+  \<open>Applied_Math_Appendix.Nonemptiness_Regnonzero_Appendix\<close>.\<close>
 
 lemma branch_regnonzero_meager:
   fixes V :: "((real^2)^'n) set" and cvec :: "real^2 \<Rightarrow> real^2"

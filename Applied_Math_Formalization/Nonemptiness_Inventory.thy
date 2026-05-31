@@ -9,7 +9,7 @@ section \<open>Paper Theorem Inventory\<close>
 
 text \<open>
   This theory is the authoritative checklist for
-  @{file \<open>../Applied Math/nonemptiness_unified_singlefile_complete.tex\<close>}.
+  {file \<open>../Applied Math/nonemptiness_unified_singlefile_complete.tex\<close>}.
 
   Policy:
   \<^item> Every named Lemma / Proposition / Theorem in the TeX file appears here as a

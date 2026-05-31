@@ -365,7 +365,9 @@ lemma regular_zero_set_projection_charts_core_2d:
            (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
               ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)) \<and>
            (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
-              rank (matrix (blinfun_apply (D0 i x))) < CARD('m))"
+              rank (matrix (blinfun_apply (D0 i x))) < CARD('m)) \<and>
+           (\<forall>i. \<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set.
+              (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n))"
   sorry
 
 text \<open>
@@ -850,7 +852,8 @@ proof -
               ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)) \<and>
            (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
               rank (matrix (blinfun_apply (D0 i x))) < CARD('m))"
-    using regular_zero_set_projection_charts_core_2d[OF assms] by blast
+    using regular_zero_set_projection_charts_core_2d[OF assms]
+    by auto 
   then obtain
     charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec)))"
     and Crit0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
@@ -1118,6 +1121,67 @@ proof (rule rank_deficient_C1_image_meager[OF less_imp_le[OF mn] U der])
   with mn show "rank (matrix (F' x)) < CARD('n)" by linarith
 qed
 
+text \<open>
+  Meager analog of @{thm negligible_critical_values_from_charts}.  The extra
+  hypothesis is that each critical set \<open>Crit i\<close> is \<^emph>\<open>\<sigma>-compact\<close> (a countable union
+  of compacts) --- which holds for the IFT critical sets, being relatively closed in
+  an open chart domain.  Then each compact piece has a closed (compact) negligible
+  image (\<open>baby_Sard\<close>), hence nowhere dense, and a countable union of nowhere-dense
+  sets is meager.  This is the meager upgrade the parametric-transversality step needs
+  (Lebesgue-negligible alone does not give meager).
+\<close>
+
+lemma meager_critical_values_from_charts:
+  fixes charts ::
+    "nat \<Rightarrow> (real ^ 'm::{finite,wellorder}) \<Rightarrow> ((real ^ 'm::{finite,wellorder}) \<times> (real ^ 'n::{finite,wellorder}))"
+    and Crit :: "nat \<Rightarrow> (real ^ 'm::{finite,wellorder}) set"
+    and D :: "nat \<Rightarrow> (real ^ 'm::{finite,wellorder}) \<Rightarrow> ((real ^ 'm::{finite,wellorder}) \<Rightarrow>\<^sub>L (real ^ 'm::{finite,wellorder}))"
+  defines "proj \<equiv> fst"
+  assumes der:
+    "\<And>i x. x \<in> Crit i \<Longrightarrow>
+      ((proj \<circ> charts i) has_derivative blinfun_apply (D i x)) (at x within Crit i)"
+    and rank_defect:
+      "\<And>i x. x \<in> Crit i \<Longrightarrow> rank (matrix (blinfun_apply (D i x))) < CARD('m)"
+    and sigma:
+      "\<forall>i. \<exists>K::nat \<Rightarrow> (real ^ 'm::{finite,wellorder}) set.
+              (\<forall>n. compact (K n)) \<and> Crit i = (\<Union>n. K n)"
+  shows "meager (\<Union>i. (proj \<circ> charts i) ` (Crit i))"
+proof (rule meager_Union_nat)
+  fix i
+  obtain K :: "nat \<Rightarrow> _ set"
+    where Kc: "\<And>n. compact (K n)" and KCrit: "Crit i = (\<Union>n. K n)"
+    using sigma[rule_format] by blast
+  have KsubCrit: "K n \<subseteq> Crit i" for n using KCrit by blast
+  have contpc: "continuous_on (Crit i) (proj \<circ> charts i)"
+  proof (rule has_derivative_continuous_on)
+    fix x assume "x \<in> Crit i"
+    then show "((proj \<circ> charts i) has_derivative blinfun_apply (D i x)) (at x within Crit i)"
+      by (rule der)
+  qed
+  have piece_meager: "meager ((proj \<circ> charts i) ` (K n))" for n
+  proof -
+    have cpt: "compact ((proj \<circ> charts i) ` (K n))"
+      using compact_continuous_image[OF continuous_on_subset[OF contpc KsubCrit] Kc] .
+    have neg: "negligible ((proj \<circ> charts i) ` (K n))"
+    proof (rule baby_Sard[where f = "proj \<circ> charts i" and S = "K n"
+              and f' = "\<lambda>x. blinfun_apply (D i x)"])
+      show "CARD('m) \<le> CARD('m)" by simp
+      show "\<And>x. x \<in> K n \<Longrightarrow>
+          ((proj \<circ> charts i) has_derivative blinfun_apply (D i x)) (at x within K n)"
+        using der KsubCrit has_derivative_subset by blast
+      show "\<And>x. x \<in> K n \<Longrightarrow> rank (matrix (blinfun_apply (D i x))) < CARD('m)"
+        using rank_defect KsubCrit by blast
+    qed
+    show ?thesis
+      by (rule meager_nowhere_dense[OF
+            nowhere_dense_closed_negligible[OF compact_imp_closed[OF cpt] neg]])
+  qed
+  have "(proj \<circ> charts i) ` (Crit i) = (\<Union>n. (proj \<circ> charts i) ` (K n))"
+    by (auto simp: KCrit)
+  then show "meager ((proj \<circ> charts i) ` (Crit i))"
+    using meager_Union_nat[OF piece_meager] by simp
+qed
+
 theorem parametric_transversality_meager_euclidean_stub:
   fixes V :: "(real^'m::{finite,wellorder}) set"
     and \<Omega> :: "(real^2) set"
@@ -1127,6 +1191,42 @@ theorem parametric_transversality_meager_euclidean_stub:
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
   shows "meager {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
                  (\<not> (\<exists>D. ((\<lambda>u. G (x,u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D))}"
-  sorry
+proof -
+  let ?bad = "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+                (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}"
+  from regular_zero_set_projection_charts_core_2d[OF assms] show ?thesis
+  proof (elim exE conjE)
+    fix charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec)))"
+      and Crit0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
+      and D0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder})
+                         \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L (real^'m::{finite,wellorder}))"
+    assume cover: "?bad \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit0 i))"
+      and der: "\<forall>i x. x \<in> Crit0 i \<longrightarrow>
+                  ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)"
+      and rk: "\<forall>i x. x \<in> Crit0 i \<longrightarrow> rank (matrix (blinfun_apply (D0 i x))) < CARD('m)"
+      and sig: "\<forall>i. \<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set.
+                  (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n)"
+    \<comment> \<open>The four chart conjuncts (now \<^emph>\<open>directly named\<close> via \<open>elim exE conjE\<close>, so there
+        is no monolithic \<open>H\<close> in context and no \<open>conjunct\<close> projection) feed
+        @{thm meager_critical_values_from_charts}.  In particular \<open>sig\<close> is the
+        lemma's \<open>sigma\<close> hypothesis verbatim --- no separate \<open>\<sigma>\<close>-discharge needed.\<close>
+    have meag: "meager (\<Union>i. (fst \<circ> charts i) ` (Crit0 i))"
+    proof (rule meager_critical_values_from_charts[where D = D0])
+      show "\<And>i x. x \<in> Crit0 i \<Longrightarrow>
+              ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x)))
+                (at x within Crit0 i)"
+        using der by auto
+      show "\<And>i x. x \<in> Crit0 i \<Longrightarrow>
+              rank (matrix (blinfun_apply (D0 i x))) < CARD('m)"
+        using rk by auto
+      show "\<forall>i. \<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set.
+              (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n)"
+        using sig by blast
+    qed
+    show "meager ?bad"
+      by (rule meager_subset[OF cover meag])
+  qed
+qed
+
 
 end
