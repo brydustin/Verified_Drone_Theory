@@ -199,4 +199,54 @@ proof -
   thus ?thesis using subF by blast
 qed
 
+
+subsection \<open>The robust sets \<open>X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t(\<epsilon>,\<kappa>)\<close>, \<open>X\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>, and \<open>\<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>\<close>
+
+text \<open>TeX (D_edit_May18, L716 / \eqref{X0def} / \eqref{F0}).  With the \<open>\<phi>\<close>-section
+  \<open>U(\<bm>x,(\<theta>\<^sub>0,\<cdot>))\<close>, its first \<open>\<phi>\<close>-derivative \<open>\<partial>\<^sub>\<phi>U\<close> and second \<open>H = \<partial>\<^sub>\<phi>\<^sup>2U\<close>:
+  \<^item> \<open>X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t(\<epsilon>,\<kappa>) = {\<bm>x : \<bar>\<partial>\<^sub>\<phi>U(\<bm>x,(\<theta>\<^sub>0,\<omega>))\<bar> \<ge> \<kappa> \<forall> \<omega> \<in> \<partial>B\<^sub>\<epsilon>(\<phi>\<^sub>0)}\<close>;
+  \<^item> \<open>X\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = {\<bm>x \<in> X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t : \<bar>\<partial>\<^sub>\<phi>U\<bar> + \<bar>H\<bar> \<ge> \<xi> on \<Omega>\<^sup>~ = \<Omega> \\ B\<^sub>\<epsilon>(\<phi>\<^sub>0)}\<close>;
+  \<^item> \<open>\<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = \<F> \<inter> X\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.
+  Here \<open>\<partial>\<^sub>\<phi>\<close> is a one-dimensional derivative, so we use HOL's \<^const>\<open>deriv\<close>, and \<open>\<bar>\<cdot>\<bar>\<close>
+  is the one-dimensional norm.  \<open>\<partial>B\<^sub>\<epsilon>(\<phi>\<^sub>0) = sphere \<phi>\<^sub>0 \<epsilon>\<close>, \<open>B\<^sub>\<epsilon>(\<phi>\<^sub>0) = ball \<phi>\<^sub>0 \<epsilon>\<close>.\<close>
+
+definition angle2 :: "real \<Rightarrow> real \<Rightarrow> real^2" where
+  \<comment> \<open>the angle point \<open>(\<theta>,\<phi>)\<close>\<close>
+  "angle2 \<theta> \<phi> = (\<chi> i. if i = 1 then \<theta> else \<phi>)"
+
+definition Usec :: "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow> real"
+  where \<comment> \<open>the \<open>\<phi>\<close>-section \<open>\<phi> \<mapsto> U(\<bm>x,(\<theta>\<^sub>0,\<phi>))\<close>\<close>
+  "Usec cvec g \<theta>0 x \<phi> = Upow cvec g x (angle2 \<theta>0 \<phi>)"
+
+definition dphiU :: "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow> real"
+  where \<comment> \<open>\<open>\<partial>\<^sub>\<phi>U(\<bm>x,(\<theta>\<^sub>0,\<phi>))\<close>\<close>
+  "dphiU cvec g \<theta>0 x \<phi> = deriv (Usec cvec g \<theta>0 x) \<phi>"
+
+definition HU :: "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow> real"
+  where \<comment> \<open>\<open>H = \<partial>\<^sub>\<phi>\<^sup>2 U(\<bm>x,(\<theta>\<^sub>0,\<phi>))\<close>\<close>
+  "HU cvec g \<theta>0 x \<phi> = deriv (deriv (Usec cvec g \<theta>0 x)) \<phi>"
+
+definition Xrobust ::
+  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
+  where
+  "Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa> =
+     {x. \<forall>\<omega>\<in>sphere \<phi>0 \<epsilon>. \<kappa> \<le> \<bar>dphiU cvec g \<theta>0 x \<omega>\<bar>}"
+
+definition X0 ::
+  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real set
+     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
+  where
+  "X0 cvec g \<theta>0 \<phi>0 \<Omega> \<xi> \<kappa> \<epsilon> =
+     {x \<in> Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa>.
+        \<forall>y \<in> \<Omega> - ball \<phi>0 \<epsilon>. \<xi> \<le> \<bar>dphiU cvec g \<theta>0 x y\<bar> + \<bar>HU cvec g \<theta>0 x y\<bar>}"
+
+definition F0 ::
+  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real set \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
+  where
+  "F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> =
+     Ffeas cvec g R dmin A B D \<omega>null (angle2 \<theta>0 \<phi>0) \<delta>null pmin
+     \<inter> X0 cvec g \<theta>0 \<phi>0 \<Omega> \<xi> \<kappa> \<epsilon>"
+
 end

@@ -936,3 +936,14 @@ cmod_af_le_card (|A| <= N via norm_sum + |cis|=1), Upow_nonneg, and Upow_le_max
 (P <= |e(t0)|^2 N^2 everywhere, so the upper power bound never binds). Gotchas:
 Upow_nonneg/Upow_le_max cited with [OF ...] hit OF multiple-unifiers on g(omega);
 pin g and omega via [where g=g and omega=...] (or inline via mult_nonneg_nonneg).
+
+## 2026-05-30 (robust set, Part 2a) — X_robust, X_0, F_0 defined (1-D phi-derivatives)
+
+Defined the robust sets faithfully to D_edit_May18 (L716/X0def/F0). KEY: D_edit uses
+the 1-D phi-derivative d_phi U and H = d^2_phi U (NOT the multi-dim gradient), so we use
+HOL's deriv (no Higher_Differentiability/Smooth_Manifolds import needed) and |.| is the
+1-D norm. angle2 t p = (t,p); Usec = phi-section phi |-> U(x,(t0,phi)); dphiU = deriv Usec;
+HU = deriv (deriv Usec). Xrobust cvec g t0 p0 eps kappa = {x : kappa <= |dphiU| on sphere p0 eps};
+X0 cvec g t0 p0 Omega xi kappa eps = {x in Xrobust : xi <= |dphiU|+|HU| on Omega - ball p0 eps};
+F0 ... xi kappa eps = Ffeas ... (angle2 t0 p0) ... INT X0 ... (= F INT X0). xi,kappa,eps explicit.
+Typechecks. NEXT: the conjecture EX xi kappa eps. F0 ... xi kappa eps != {}.
