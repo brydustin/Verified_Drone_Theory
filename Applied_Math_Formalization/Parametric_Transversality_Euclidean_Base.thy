@@ -1081,6 +1081,34 @@ next
   show ?thesis using that[of K] cpt sub cov by blast
 qed
 
+text \<open>
+  \<^bold>\<open>The determinant's role, as pure linear algebra.\<close>  Composing a linear map \<open>A\<close>
+  with a \<^emph>\<open>surjective\<close> linear map \<open>B\<close> on the right does not change the rank:
+  \<open>rank (A ** B) = rank A\<close>.  This is exactly the chain-rule step of the paper's
+  \<open>prop:dimZ\<close>: with \<open>\<Phi> = F \<circ> \<M>\<close> (the bad-point map factored through the moment map),
+  \<open>D\<^bsub>x\<^esub>\<Phi> = D\<^bsub>\<M>\<^esub>F \<cdot> D\<^bsub>x\<^esub>\<M>\<close>, and the \<^emph>\<open>nonzero moment-map Jacobian determinant\<close>
+  (\<open>bigJ_det \<noteq> 0\<close> \<Longrightarrow> \<open>surj (D\<^bsub>x\<^esub>\<M>)\<close>, i.e.\ \<open>lem:Msurj\<close>) makes
+  \<open>rank (D\<^bsub>x\<^esub>\<Phi>) = rank (D\<^bsub>\<M>\<^esub>F) = 3\<close> (\<open>lem:3x3\<close>).  The determinant enters \<^emph>\<open>here\<close>.
+\<close>
+
+lemma rank_matrix_comp_surj:
+  fixes A :: "real^'m::finite^'k::finite" and B :: "real^'n::finite^'m::finite"
+  assumes "surj ((*v) B)"
+  shows "rank (A ** B) = rank A"
+proof -
+  have "range ((*v) (A ** B)) = range ((*v) A)"
+  proof -
+    have "range ((*v) (A ** B)) = (\<lambda>x. A *v (B *v x)) ` UNIV"
+      by (simp add: matrix_vector_mul_assoc)
+    also have "\<dots> = ((*v) A) ` (range ((*v) B))"
+      by (simp add: image_image)
+    also have "\<dots> = ((*v) A) ` UNIV"
+      using assms by simp
+    finally show ?thesis by simp
+  qed
+  thus ?thesis by (simp add: rank_dim_range)
+qed
+
 lemma rank_deficient_C1_image_meager:
   fixes F :: "(real^'m::{finite,wellorder}) \<Rightarrow> (real^'n::{finite,wellorder})"
   assumes mlen: "CARD('m) \<le> CARD('n)"
