@@ -1007,3 +1007,56 @@ currently sorry'd pending HMA-qualification (Finite_Cartesian_Product.vec_eq_iff
 or a component-wise proof. 4 sorries total in Robust: 2x F0_ne (blast hangs on
 16-arg term), Phibad_zero_iff (vec_eq_iff), Phi_bad_meager (the determinant payoff
 obligation).
+
+## 2026-05-31 — Capstone restructure: assumption-free F0_nonempty, 2-D Φ, Ω defined+compact
+
+### What we achieved this session
+The capstone theory `Appendix/Nonemptiness_Robust.thy` now has the RIGHT SHAPE end-to-end
+(builds green, quick_and_dirty; incremental ~1m, full heap ~4m on first Smooth_Manifolds merge):
+
+1. **Hessian via Higher_Differentiability_Multi.** `gradU cvec gain x = ∇ (U_cart cvec gain x)`
+   and `HessU cvec gain x = ∇² (U_cart cvec gain x)` (the canonical grad_fun/hess_fun, NOT a
+   hand-rolled frechet_derivative). ROOT: Applied_Math_Appendix now `sessions
+   Applied_Math_HigherDiff`; the Smooth_Manifolds merge into the Munkres/JNF/HMA heap WORKS.
+
+2. **2-D Φ formulation (not the 1-D ∂_φ).** Replaced dphiU/HU with:
+   - `Xrobust cvec g ctr ε κ = {x. ∀ω∈sphere ctr ε. κ ≤ norm (gradU cvec g x ω)}`
+   - `X0 cvec g ctr Ω ξ κ ε = {x∈Xrobust. ∀y∈Ω-ball ctr ε. ξ ≤ norm(gradU…)+sigma_min(HessU…)}`
+   - `sigma_min H = (INF v∈sphere 0 1. norm (H *v v))` (operator-norm char.; sigma_min_nonneg,
+     sphere01_ne proven). This is the σ_min(H) > 0 ⟺ det∇²U ≠ 0 nondegeneracy the determinant
+     secures. Matches D_edit L1281/L1288 exactly.
+
+3. **Ω is DEFINED and PROVEN compact (no assumption).** `Omega ctr = cbox (ctr - vector[π/2,π])
+   (ctr + vector[π/2,π])` = the paper's box [θ0±π/2]×[φ0±π] (D_edit L1253). `Omega_compact`
+   (compact_cbox) and `Omega_minus_ball_compact` (compact_Int_closed + closed_Compl[OF open_ball])
+   are real lemmas. F0_nonempty now carries ONLY the hypothesis `c6: 6 ≤ CARD('n)`.
+
+4. **Φ moved upstream of the capstone.** Phibad / Phibad_zero_iff / Phi_bad_meager now sit
+   BEFORE regular_feasible_witness + F0_nonempty (they previously dangled after the theorem,
+   feeding nothing). So the determinant payoff is structurally upstream now.
+
+5. **F0_nonempty is assumption-free and its margin extraction is fully proven.** Given a regular
+   feasible witness, Weierstrass gives κ = min‖∇U‖ on the sphere and ξ = min(‖∇U‖+σ_min) on the
+   annulus, both > 0, and x0 ∈ F0. The regularity/feasibility/continuity that the OLD version
+   ASSUMED are now packaged as ONE obligation `regular_feasible_witness` (to be proved from
+   Phi_bad_meager + Baire), NOT hypotheses of the theorem.
+
+### Current sorries in Nonemptiness_Robust.thy (6) — by nature
+- L324 `Phibad_zero_iff`  — TRIVIAL (Φ=0 ⟺ 3 components 0); needs HMA-qualified vec_eq_iff
+  (Finite_Cartesian_Product.vec_eq_iff) in the merged JNF+HMA+Smooth_Manifolds session.
+- L336 `Phi_bad_meager`   — THE DEEP OBLIGATION (determinant payoff: lem:Msurj ⟹ Z_reg codim-3
+  ⟹ projection meager). Fed by the Capstone/MomentJac/BlockDet chain.
+- L378 `regular_feasible_witness` — bundles Phi_bad_meager + Baire + C²-continuity of ∇U/σ_min.
+- L398 witness `obtain` inside F0_nonempty — MECHANICAL (just instantiate regular_feasible_witness
+  [OF c6]; the positional `of` mis-ordered fixes-vs-occurrence; use `where` or let blast match).
+- L425, L456 the two `F0 … ≠ {}` steps — MECHANICAL (x∈S ⟹ S≠{} via mem_imp_ne_empty; blast
+  hangs on the 15-arg term, plain `by (rule mem_imp_ne_empty)` should work — RETRY that).
+
+(Upstream: Nonemptiness_Capstone.thy still 10 sorries; Nonemptiness_Regnonzero_Appendix.thy 1.)
+
+### How we move forward (clean rebuild plan)
+The through-line is now legible: `determinant (bigJ_det/J5/lem:3x3) → lem:Msurj → prop:dimZ →
+Phi_bad_meager → regular_feasible_witness → F0_nonempty`. When we START OVER in the new focused
+directory, mirror THIS order: U_cart + ∇/∇² first, then sigma_min + Φ + Ω(box), then
+Phi_bad_meager (the meagerness keystone), then the Baire witness, then the assumption-free
+capstone LAST. Keep the robust layer possibly its own session (the Smooth_Manifolds heap is big).
