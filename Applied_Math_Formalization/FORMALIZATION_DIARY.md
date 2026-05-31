@@ -8,6 +8,23 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-05-30 (robust set, Part 1b) — 𝓕 RE-defined faithfully (c,N,P) and compact
+
+Corrected `Ffeas` to the actual paper definition (`D_edit_May18(3).tex`,
+§Existence of Global Minimizer): `𝓕 = c⁻¹({0}) ∩ N⁻¹([0,δ_null]) ∩
+P⁻¹([p_min, |e(θ₀)|²N²]) ∩ B_R` (the earlier version used the single-file tex's
+simpler spacing+null+ball form). Now in preimage notation:
+- `spdist A B D p q` = inter-element distance with beam-focusing `z=(Ax+By)/D`;
+- `cpen dmin A B D x = Σ_{n≠m} max{0, dmin − spdist…}` — spacing penalty `c`;
+- `N(x)=Upow … ω_null`, `P(x)=Upow … ω₀`;
+- `Ffeas … = cpen⁻¹{0} ∩ (Upow·ω_null)⁻¹{0..δ} ∩ (Upow·ω₀)⁻¹{pmin..g ω₀·N²} ∩ cball 0 R`.
+`Ffeas_compact`: `c,N,P` continuous ⟹ preimages closed (`closed_vimage`); their
+intersection is closed (`closed_Int`); `∩ cball` is compact (`closed_Int_compact` +
+`compact_cball`). Clean structured proof (no `apply`). GOTCHA: `/D` for constant `D`
+triggers a `D≠0` side-goal under `continuous_intros` — rewrite via `divide_inverse`
+(continuous unconditionally). NEXT: Part 2 conjecture `∃ξ κ ε. 𝓕₀(ξ,κ,ε) ≠ ∅` with
+explicit `ξ,κ,ε` dependence and `\<nabla>`/`‖·‖` (importing `Higher_Differentiability_Multi`).
+
 ## 2026-05-30 (robust set, Part 1) — concrete U, 𝓕, and 𝓕 compact
 
 New theory `Appendix/Nonemptiness_Robust.thy` begins the concrete, paper-faithful

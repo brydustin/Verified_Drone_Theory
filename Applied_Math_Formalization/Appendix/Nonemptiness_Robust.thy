@@ -34,51 +34,74 @@ lemma continuous_on_Upow_config:
   by (intro continuous_intros continuous_on_af_config)
 
 
-subsection \<open>The feasible set \<open>\<F>\<close> and its compactness\<close>
+subsection \<open>The feasibility constraints \<open>c\<close>, \<open>N\<close>, \<open>P\<close>\<close>
 
-text \<open>TeX (L192): \<open>\<F> := {\<bm>x \<in> B\<^sub>R : \<bar>r\<^sub>n - r\<^sub>m\<bar> \<ge> d\<^sub>min \<forall> n \<noteq> m, U(\<bm>x,\<omega>\<^sub>N) \<le> \<delta>\<^sub>null}\<close>.
-  The spacing and null constraints are closed and \<open>B\<^sub>R\<close> is a bounded ball, so \<open>\<F>\<close>
-  is compact.\<close>
+text \<open>TeX \<S>``Existence of Global Minimizer'' (L426):
+  \<open>\<F> = c\<^sup>-\<^sup>1({0}) \<inter> N\<^sup>-\<^sup>1([0,\<delta>\<^sub>null]) \<inter> P\<^sup>-\<^sup>1([p\<^sub>m\<^sub>i\<^sub>n, \<bar>e(\<theta>\<^sub>0)\<bar>\<^sup>2N\<^sup>2]) \<inter> B\<^sub>R\<close>, with the spacing
+  penalty \<open>c(\<bm>x) = \<Sum>\<^sub>n\<^sub>\<noteq>\<^sub>m max{0, d\<^sub>min - \<bar>r'\<^sub>n - r'\<^sub>m\<bar>}\<close> (so \<open>c(\<bm>x)=0\<close> iff every spacing
+  \<open>\<ge> d\<^sub>min\<close>), the null power \<open>N(\<bm>x) = U(\<bm>x,\<omega>\<^sub>null)\<close> and the main-beam power
+  \<open>P(\<bm>x) = U(\<bm>x,\<omega>\<^sub>0)\<close>.  The inter-element distance uses the beam-focusing height
+  \<open>z = (Ax + By)/D\<close>.\<close>
 
-definition Ffeas ::
-  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real^2
-     \<Rightarrow> ((real^2)^'n) set"
-  where
-  "Ffeas cvec g R dmin \<delta>null \<omega>N =
-     {x. x \<in> cball 0 R
-       \<and> (\<forall>n m. n \<noteq> m \<longrightarrow> dmin \<le> dist (x $ n) (x $ m))
-       \<and> Upow cvec g x \<omega>N \<le> \<delta>null}"
+definition spdist :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  \<comment> \<open>\<open>\<bar>r'\<^sub>n - r'\<^sub>m\<bar>\<close> with \<open>z = (Ax + By)/D\<close>\<close>
+  "spdist A B D p q =
+     sqrt ((p $ 1 - q $ 1)\<^sup>2 + (p $ 2 - q $ 2)\<^sup>2
+            + ((A * (p $ 1 - q $ 1) + B * (p $ 2 - q $ 2)) / D)\<^sup>2)"
 
-lemma closed_spacing:
-  "closed {x::(real^2)^'n. \<forall>n m. n \<noteq> m \<longrightarrow> dmin \<le> dist (x $ n) (x $ m)}"
-proof -
-  have "{x::(real^2)^'n. \<forall>n m. n \<noteq> m \<longrightarrow> dmin \<le> dist (x $ n) (x $ m)}
-        = (\<Inter>n. \<Inter>m. (if n = m then UNIV else {x. dmin \<le> dist (x $ n) (x $ m)}))"
-    by auto
-  moreover have "closed \<dots>"
-  proof (intro closed_INT)
-    fix n m :: 'n
-    show " \<forall>n\<in>UNIV. closed (\<Inter>m. if n = m then UNIV else {x. dmin \<le> dist (x $h n) (x $h m)})"
-      by (cases "n = m", auto intro!: closed_Collect_le continuous_intros)
-  qed
-  ultimately show ?thesis by simp
+definition cpen :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
+  \<comment> \<open>the spacing penalty \<open>c\<close>\<close>
+  "cpen dmin A B D x =
+     (\<Sum>p \<in> {p. fst p \<noteq> snd p}. max 0 (dmin - spdist A B D (x $ fst p) (x $ snd p)))"
+
+lemma continuous_on_spdist_config:
+  fixes n m :: "'n::finite"
+  shows "continuous_on UNIV (\<lambda>x::(real^2)^'n. spdist A B D (x $ n) (x $ m))"
+  \<comment> \<open>\<open>/D\<close> rewritten as \<open>\<cdot> inverse D\<close>, so no \<open>D \<noteq> 0\<close> side-condition arises\<close>
+  unfolding spdist_def divide_inverse by (intro continuous_intros)
+
+lemma continuous_on_cpen:
+  "continuous_on UNIV (\<lambda>x::(real^2)^'n. cpen dmin A B D x)"
+  unfolding cpen_def
+proof (intro continuous_on_sum)
+  fix p :: "'n \<times> 'n"
+  show "continuous_on UNIV
+          (\<lambda>x::(real^2)^'n. max 0 (dmin - spdist A B D (x $ fst p) (x $ snd p)))"
+    by (intro continuous_intros continuous_on_spdist_config)
 qed
 
-lemma closed_null:
-  "closed {x::(real^2)^'n. Upow cvec g x \<omega>N \<le> \<delta>null}"
-  by (rule closed_Collect_le[OF continuous_on_Upow_config continuous_on_const])
+
+subsection \<open>The feasible set \<open>\<F>\<close> and its compactness\<close>
+
+definition Ffeas ::
+  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
+  where
+  "Ffeas cvec g R dmin A B D \<omega>null \<omega>0 \<delta>null pmin =
+       (cpen dmin A B D) -` {0}
+     \<inter> (\<lambda>x. Upow cvec g x \<omega>null) -` {0 .. \<delta>null}
+     \<inter> (\<lambda>x. Upow cvec g x \<omega>0) -` {pmin .. g \<omega>0 * (real CARD('n))\<^sup>2}
+     \<inter> cball 0 R"
 
 theorem Ffeas_compact:
-  "compact (Ffeas cvec g R dmin \<delta>null \<omega>N :: ((real^2)^'n) set)"
+  "compact (Ffeas cvec g R dmin A B D \<omega>null \<omega>0 \<delta>null pmin :: ((real^2)^'n) set)"
 proof -
-  have eq: "Ffeas cvec g R dmin \<delta>null \<omega>N
-        = cball 0 R
-          \<inter> {x. \<forall>n m. n \<noteq> m \<longrightarrow> dmin \<le> dist (x $ n) (x $ m)}
-          \<inter> {x. Upow cvec g x \<omega>N \<le> \<delta>null}"
-    unfolding Ffeas_def by auto
+  \<comment> \<open>each constraint is the preimage of a closed set under a continuous map\<close>
+  have cc: "closed ((cpen dmin A B D :: (real^2)^'n \<Rightarrow> real) -` {0})"
+    by (intro closed_vimage continuous_on_cpen closed_singleton)
+  have cN: "closed ((\<lambda>x::(real^2)^'n. Upow cvec g x \<omega>null) -` {0 .. \<delta>null})"
+    by (intro closed_vimage continuous_on_Upow_config closed_atLeastAtMost)
+  have cP: "closed ((\<lambda>x::(real^2)^'n. Upow cvec g x \<omega>0)
+                     -` {pmin .. g \<omega>0 * (real CARD('n))\<^sup>2})"
+    by (intro closed_vimage continuous_on_Upow_config closed_atLeastAtMost)
+  \<comment> \<open>the three constraints intersect to a closed set\<close>
+  have clo: "closed ((cpen dmin A B D :: (real^2)^'n \<Rightarrow> real) -` {0}
+                    \<inter> (\<lambda>x. Upow cvec g x \<omega>null) -` {0 .. \<delta>null}
+                    \<inter> (\<lambda>x. Upow cvec g x \<omega>0) -` {pmin .. g \<omega>0 * (real CARD('n))\<^sup>2})"
+    by (intro closed_Int cc cN cP)
+  \<comment> \<open>\<open>\<F>\<close> is that closed set intersected with the compact ball \<open>B\<^sub>R\<close>\<close>
   show ?thesis
-    unfolding eq
-    by (intro compact_Int_closed compact_cball closed_spacing closed_null)
+    unfolding Ffeas_def by (rule closed_Int_compact[OF clo compact_cball])
 qed
 
 end
