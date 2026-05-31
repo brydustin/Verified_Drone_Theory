@@ -1060,3 +1060,31 @@ Phi_bad_meager → regular_feasible_witness → F0_nonempty`. When we START OVER
 directory, mirror THIS order: U_cart + ∇/∇² first, then sigma_min + Φ + Ω(box), then
 Phi_bad_meager (the meagerness keystone), then the Baire witness, then the assumption-free
 capstone LAST. Keep the robust layer possibly its own session (the Smooth_Manifolds heap is big).
+
+## 2026-05-31 (σ-discharge RESOLVED) — parametric_transversality_meager_euclidean_stub proved
+
+The "stub 2" σ-compactness blocker (12+ failed approaches, see prior entry) is
+CLOSED. `parametric_transversality_meager_euclidean_stub` is now sorry-free;
+Applied_Math_Nonemptiness + Applied_Math_Appendix build green (BUILD_EXIT=0,
+~21s + 34s incremental). Committed 0a124c2, pushed.
+
+ROOT CAUSE (finally diagnosed by turning on `declare [[show_types,show_sorts]]`
+and noting that `insert sig, assumption` FAILED — and `assumption` always closes
+`A ⟹ A`, so `sig` was provably NOT the goal despite printing identically): the
+monolithic `assume H: "A ∧ B ∧ C ∧ D"` + `note sig = conjunct2[OF conjunct2[OF
+conjunct2[OF H]]]` left a `sig` term the matcher silently rejected, and
+`blast`/`auto`/`meson` hung/failed because the whole giant `H` (incl. the `?bad ⊆
+…` comprehension) sat in the proof context and exploded the search.
+
+THE FIX (one structural change): `proof (elim exE)` → `proof (elim exE conjE)`
+with FOUR directly-named assumptions `cover/der/rk/sig` (no monolithic `H`, no
+`conjunct` projection). With a clean context the σ goal closes via
+`using sig by blast`. Generalizable lesson saved to memory
+(elim-exe-conje-named-assumptions): destructure multi-conjunct existentials with
+`elim exE conjE` + named conjuncts, never `assume H` + projection.
+
+Also landed this session: the meager analog `meager_critical_values_from_charts`
+(σ-compact pieces → `baby_Sard` negligible → closed ⇒ nowhere dense → meager
+countable union), and the σ-compactness conjunct threaded through the core lemma
+`regular_zero_set_projection_charts_core_2d` (still the lone real `sorry` in the
+Base file, L371 — the IFT/regular-value chart cover, the next deep target there).
