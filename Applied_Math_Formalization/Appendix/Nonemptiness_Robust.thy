@@ -392,10 +392,10 @@ proof -
       and cdN: "continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))"
       and cdsum: "continuous_on (Omega ctr - ball ctr \<epsilon>)
                     (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
-      and rsph: "\<And>\<omega>. \<omega> \<in> sphere ctr \<epsilon> \<Longrightarrow> gradU cvec g x0 \<omega> \<noteq> 0"
-      and rO: "\<And>y. y \<in> Omega ctr - ball ctr \<epsilon>
-                  \<Longrightarrow> gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y)"
-    sorry
+      and rsph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU cvec g x0 \<omega> \<noteq> 0"
+      and rO: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                  gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y)"
+    using regular_feasible_witness[OF c6] by blast
   \<comment> \<open>the positive \<open>\<kappa>\<close>-margin on the \<open>\<epsilon>\<close>-sphere (Weierstrass)\<close>
   have sph_ne: "sphere ctr \<epsilon> \<noteq> {}"
   proof -
@@ -410,7 +410,7 @@ proof -
                     norm (gradU cvec g x0 \<omega>m) \<le> norm (gradU cvec g x0 \<omega>)"
     using continuous_attains_inf[OF compact_sphere sph_ne cdN] by blast
   define \<kappa> where "\<kappa> = norm (gradU cvec g x0 \<omega>m)"
-  have \<kappa>pos: "0 < \<kappa>" using rsph[OF \<omega>m] unfolding \<kappa>_def by simp
+  have \<kappa>pos: "0 < \<kappa>" using bspec[OF rsph \<omega>m] unfolding \<kappa>_def by simp
   have inXrob: "x0 \<in> Xrobust cvec g ctr \<epsilon> \<kappa>"
     using \<omega>min unfolding Xrobust_def \<kappa>_def by simp
   \<comment> \<open>the positive \<open>\<xi>\<close>-margin on \<open>\<Omega>\<^sup>~\<close> (vacuous if \<open>\<Omega>\<^sup>~ = \<emptyset>\<close>)\<close>
@@ -421,8 +421,9 @@ proof -
       using inXrob True unfolding X0_def by blast
     hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin 1 \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin 1 \<kappa> \<epsilon> \<noteq> {}"
-      sorry
+    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin 1 \<kappa> \<epsilon>
+             \<noteq> ({}::(planar^'n) set)"
+      by (rule mem_imp_ne_empty)
     moreover have "(0::real) < 1" by simp
     ultimately show ?thesis using \<kappa>pos \<epsilon>0 by blast
   next
@@ -436,7 +437,7 @@ proof -
     have \<xi>pos: "0 < \<xi>"
     proof (cases "gradU cvec g x0 ym = 0")
       case True
-      with rO[OF ym] have "0 < sigma_min (HessU cvec g x0 ym)" by simp
+      with bspec[OF rO ym] have "0 < sigma_min (HessU cvec g x0 ym)" by simp
       thus ?thesis unfolding \<xi>_def
         using norm_ge_zero[of "gradU cvec g x0 ym"] by linarith
     next
@@ -452,8 +453,9 @@ proof -
     hence "x0 \<in> X0 cvec g ctr (Omega ctr) \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
     hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> {}"
-      sorry
+    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
+             \<noteq> ({}::(planar^'n) set)"
+      by (rule mem_imp_ne_empty)
     thus ?thesis using \<xi>pos \<kappa>pos \<epsilon>0 by blast
   qed
 qed
