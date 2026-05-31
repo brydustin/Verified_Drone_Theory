@@ -926,3 +926,13 @@ nothing in the chart cover. Three `sorry`s remain in `Nonemptiness_Paper.thy`:
 The fold-*nonzero* branch's analytic input (`dU_cart` nowhere-density via the
 entire-line-restriction identity theorem and `lem_Efinite`) was completed in
 earlier sessions; what remains there is the non-analytic nontriviality input.
+## 2026-05-30 (robust set, Part 1c) — F has nonempty interior (ball_inside_F)
+
+Proved the remark `ball_inside_F`: for a strictly feasible point x* (all spacings
+> dmin, N(x*) < dnull, pmin < P(x*), ||x*|| < R), there is rho>0 with ball x* rho subset F.
+Route: the open set U = {strict spacing} cap {N<dnull} cap {pmin<P} cap ball 0 R
+contains x* and U subset F; openE gives the ball. Global helpers added:
+cmod_af_le_card (|A| <= N via norm_sum + |cis|=1), Upow_nonneg, and Upow_le_max
+(P <= |e(t0)|^2 N^2 everywhere, so the upper power bound never binds). Gotchas:
+Upow_nonneg/Upow_le_max cited with [OF ...] hit OF multiple-unifiers on g(omega);
+pin g and omega via [where g=g and omega=...] (or inline via mult_nonneg_nonneg).
