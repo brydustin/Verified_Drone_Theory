@@ -318,10 +318,21 @@ lemma Phibad_zero_iff:
    \<longleftrightarrow> gradU cvec gain x \<omega> = 0
        \<and> HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
            = (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2"
-  \<comment> \<open>trivially true (\<open>\<Phi> = 0 \<longleftrightarrow>\<close> its three components vanish); the \<open>vec_eq_iff\<close>
-      simp step needs HMA-qualification in the merged JNF+HMA+Smooth_Manifolds
-      session --- revisit\<close>
-  sorry
+proof -
+  \<comment> \<open>\<open>\<Phi> = 0\<close> iff its three components vanish (HMA-qualified \<open>vec_eq_iff\<close> +
+      \<open>forall_3\<close>/\<open>vector_3\<close>; the third component is \<open>H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close>).\<close>
+  have L: "Phibad cvec gain x \<omega> = 0
+           \<longleftrightarrow> gradU cvec gain x \<omega> $ 1 = 0 \<and> gradU cvec gain x \<omega> $ 2 = 0
+             \<and> HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
+                 - (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2 = 0"
+    unfolding Phibad_def
+    by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_3 vector_3)
+  \<comment> \<open>the 2-D gradient vanishes iff both its components do.\<close>
+  have G: "gradU cvec gain x \<omega> = 0
+           \<longleftrightarrow> gradU cvec gain x \<omega> $ 1 = 0 \<and> gradU cvec gain x \<omega> $ 2 = 0"
+    by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2)
+  show ?thesis using L G by (auto simp: algebra_simps)
+qed
 
 text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The set of feasible configurations carrying
   a degenerate critical point with \<open>A \<noteq> 0\<close> is meager.  This is \<open>prop:dimZ\<close>(1): \<open>lem:Msurj\<close>
