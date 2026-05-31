@@ -1088,3 +1088,37 @@ Also landed this session: the meager analog `meager_critical_values_from_charts`
 countable union), and the σ-compactness conjunct threaded through the core lemma
 `regular_zero_set_projection_charts_core_2d` (still the lone real `sorry` in the
 Base file, L371 — the IFT/regular-value chart cover, the next deep target there).
+
+## 2026-05-31 (Robust mechanical sweep) — F0_nonempty sorry-free; Phibad_zero_iff proved
+
+Cleared 4 sorries in `Appendix/Nonemptiness_Robust.thy` (6 → 2). All builds green
+(Applied_Math_Appendix BUILD_EXIT=0); committed 8b20273 + fba5044, pushed.
+
+1. **Witness obtain (was sorry).** `using regular_feasible_witness[OF c6] by blast`
+   failed because `blast` had to BOTH eliminate the 2-var ∃ AND convert the lemma's
+   bounded `∀ω∈sphere. P` into the `⋀ω. ω∈sphere ⟹ P` meta-form of the `where`
+   clauses. Fix: state the `where` clauses in the lemma's bounded-∀ form (so blast
+   does pure exE+conjE), and switch the 2 downstream uses `rsph[OF ωm]`/`rO[OF ym]`
+   to `bspec[OF rsph ωm]`/`bspec[OF rO ym]`.
+
+2. **Both `F0 … ≠ {}` steps (were sorry).** `by (rule mem_imp_ne_empty)` failed on
+   terms that print IDENTICALLY. ROOT CAUSE (found via `declare [[show_types,
+   show_sorts]]`): `F0`'s result type `(planar^'n) set` has 'n NOT pinned by its
+   value args (phantom). The bare `hence "F0 … ≠ {}"` gave `{}` a FRESH type var
+   `'a`, while `this : x0 ∈ F0 …` pinned it to the real 'n — so
+   `mem_imp_ne_empty[OF this]` (a `(planar^'n) set ≠ {}`) couldn't match the goal's
+   `(planar^'a) set ≠ {}`. Fix: `hence "F0 … ≠ ({}::(planar^'n) set)"`. Saved to
+   memory (phantom-result-type-pin-empty-set). SAME show_types diagnostic cracked
+   both this and the σ-discharge — the lesson: when rule/OF/fact fail on
+   identical-printing terms, turn on show_types/show_sorts FIRST.
+
+3. **Phibad_zero_iff (was sorry, "trivial").** `Φ = vector[g₁,g₂, H₁₁H₂₂−H₁₂²]`, so
+   `Φ=0 ⟺` all 3 components vanish: `Finite_Cartesian_Product.vec_eq_iff`
+   (HMA-qualified to dodge the JNF/HMA ambiguity in the merged session) + `forall_3`
+   + `vector_3` for the real^3 side; `forall_2` for `gradU = 0 ⟺ gradU$1=0 ∧ gradU$2=0`;
+   `algebra_simps` for `det = 0 ⟺ H₁₁H₂₂ = H₁₂²`.
+
+Robust now has 2 sorries, both DEEP: `regular_feasible_witness` (Phi_bad_meager +
+Baire + C²-continuity bundle) and `Phi_bad_meager` (the determinant payoff:
+lem:Msurj ⟹ Z_reg codim-3 ⟹ projection meager). The capstone shape is complete;
+what remains there is genuine mathematics, not plumbing.
