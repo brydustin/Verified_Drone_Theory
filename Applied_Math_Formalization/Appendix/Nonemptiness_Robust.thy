@@ -263,6 +263,79 @@ definition F0 ::
      \<inter> X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon>"
 
 
+subsection \<open>The angular scan domain \<open>\<Omega>\<close> (paper L1253) and its compactness\<close>
+
+text \<open>The paper fixes the angular domain as the box
+  \<open>\<Omega> = [\<theta>\<^sub>0-\<pi>/2,\<theta>\<^sub>0+\<pi>/2] \<times> [\<phi>\<^sub>0-\<pi>,\<phi>\<^sub>0+\<pi>]\<close> (D_edit L1253), i.e. centred at the design
+  direction \<open>ctr = (\<theta>\<^sub>0,\<phi>\<^sub>0)\<close> with half-widths \<open>(\<pi>/2,\<pi>)\<close>.  As a closed box it is \<^emph>\<open>compact\<close>,
+  and so is the annulus \<open>\<Omega>\<^sup>~ = \<Omega> \\ B\<^sub>\<epsilon>(ctr)\<close> --- both are \<^emph>\<open>proved\<close>, not assumed.\<close>
+
+definition Omega :: "planar \<Rightarrow> planar set" where
+  \<comment> \<open>\<open>[\<theta>\<^sub>0-\<pi>/2,\<theta>\<^sub>0+\<pi>/2] \<times> [\<phi>\<^sub>0-\<pi>,\<phi>\<^sub>0+\<pi>]\<close>, the box centred at \<open>ctr\<close>\<close>
+  "Omega ctr = cbox (ctr - vector [pi/2, pi]) (ctr + vector [pi/2, pi])"
+
+lemma Omega_compact: "compact (Omega ctr)"
+  unfolding Omega_def by (rule compact_cbox)
+
+lemma Omega_minus_ball_compact: "compact (Omega ctr - ball c \<epsilon>)"
+proof -
+  have "Omega ctr - ball c \<epsilon> = Omega ctr \<inter> (- ball c \<epsilon>)" by auto
+  moreover have "compact (Omega ctr \<inter> (- ball c \<epsilon>))"
+    by (rule compact_Int_closed[OF Omega_compact closed_Compl[OF open_ball]])
+  ultimately show ?thesis by simp
+qed
+
+
+subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
+
+text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
+  stratum the paper's bad-point map (tex L516) is
+  \<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1 U, \<partial>\<^sub>c\<^sub>2 U, det \<nabla>\<^sup>2 U)\<close> with \<open>U = U_cart\<close> the actual radiation pattern.  Thus
+  \<^item> \<open>\<Phi>\<^sub>1 = \<Phi>\<^sub>2 = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<nabla>U = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<omega>\<close> is a \<^emph>\<open>critical point\<close> of the pattern;
+  \<^item> \<open>\<Phi>\<^sub>3 = det \<nabla>\<^sup>2 U = 0\<close>  \<open>\<longleftrightarrow>\<close> the critical point is \<^emph>\<open>degenerate\<close>.
+  So \<open>\<Phi>(\<bm>x,\<omega>) = 0\<close> exactly picks out the degenerate critical points --- the configurations
+  that must be excluded for \<open>\<bm>x \<in> X\<^sub>0\<close>.  The determinant (\<open>lem:Msurj\<close>: \<open>D\<^sub>x\<M>\<close> rank \<open>12\<close>) makes the
+  moment map a submersion, so \<open>{\<Phi> = 0}\<close> is a positive-codimension submanifold (\<open>prop:dimZ\<close>)
+  whose projection is meager (\<open>lem:smooth-chart-meager\<close>) --- the obligation \<open>Phi_bad_meager\<close>,
+  which feeds \<open>regular_feasible_witness\<close> below.\<close>
+
+definition Phibad ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^3"
+  where \<comment> \<open>\<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1U, \<partial>\<^sub>c\<^sub>2U, det \<nabla>\<^sup>2U)\<close>; \<open>\<Phi> = 0 \<longleftrightarrow>\<close> degenerate critical point of \<open>U_cart\<close>\<close>
+  "Phibad cvec gain x \<omega> =
+     vector [ gradU cvec gain x \<omega> $ 1,
+              gradU cvec gain x \<omega> $ 2,
+              HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
+                - (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2 ]"
+
+text \<open>\<^bold>\<open>Bridge, semantic core.\<close>  \<open>\<Phi>(\<bm>x,\<omega>) = 0\<close> says exactly that \<open>\<omega>\<close> is a \<^emph>\<open>degenerate
+  critical point\<close> of the pattern: the gradient \<open>\<nabla>U_cart\<close> vanishes (critical) and the
+  Hessian determinant \<open>H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close> vanishes (degenerate).  This ties the abstract bad
+  set to the concrete nondegeneracy condition of \<open>X\<^sub>0\<close>.\<close>
+
+lemma Phibad_zero_iff:
+  "Phibad cvec gain x \<omega> = 0
+   \<longleftrightarrow> gradU cvec gain x \<omega> = 0
+       \<and> HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
+           = (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2"
+  \<comment> \<open>trivially true (\<open>\<Phi> = 0 \<longleftrightarrow>\<close> its three components vanish); the \<open>vec_eq_iff\<close>
+      simp step needs HMA-qualification in the merged JNF+HMA+Smooth_Manifolds
+      session --- revisit\<close>
+  sorry
+
+text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The set of feasible configurations carrying
+  a degenerate critical point with \<open>A \<noteq> 0\<close> is meager.  This is \<open>prop:dimZ\<close>(1): \<open>lem:Msurj\<close>
+  (the \<open>12\<times>12\<close> \<open>bigJ_det \<noteq> 0\<close>) \<open>\<Longrightarrow>\<close> \<open>Z\<^sub>reg\<close> is codim-3 \<open>\<Longrightarrow>\<close> its projection is meager.  This is the
+  exact point at which the proven determinants enter, and it is the consumer the
+  appendix's \<open>Bregnonzero\<close> meagerness reduces to.\<close>
+
+lemma Phi_bad_meager:
+  fixes V :: "(planar^'n) set" and cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "\<forall>\<omega>. cvec \<omega> \<noteq> 0"
+  shows "meager {x \<in> V. \<exists>\<omega>. Phibad cvec gain x \<omega> = 0 \<and> A_cart cvec x \<omega> \<noteq> 0}"
+  sorry
+
+
 subsection \<open>The capstone: \<open>\<F>\<^sub>0\<close> is nonempty for appropriately chosen \<open>\<xi>, \<kappa>, \<epsilon>\<close>\<close>
 
 text \<open>TeX Lemma~\eqref{F0} (D_edit_May18, the 2-D version, L1288/F0\_nonempty\_proof\_2D):
@@ -290,35 +363,37 @@ text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff, packaged for th
 
 lemma regular_feasible_witness:
   fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
-    and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar and \<Omega> :: "planar set"
-  assumes "6 \<le> CARD('n)" and "compact \<Omega>"
-  shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon> \<and> compact (\<Omega> - ball ctr \<epsilon>)
+    and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar
+  assumes "6 \<le> CARD('n)"
+  shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))
-            \<and> continuous_on (\<Omega> - ball ctr \<epsilon>)
+            \<and> continuous_on (Omega ctr - ball ctr \<epsilon>)
                   (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))
             \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU cvec g x0 \<omega> \<noteq> 0)
-            \<and> (\<forall>y\<in>\<Omega> - ball ctr \<epsilon>.
+            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
                   gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y))"
+  \<comment> \<open>downstream of \<open>Phi_bad_meager\<close>: degenerate configs are meager, so the regular
+      witness exists inside the feasible interior by Baire --- to be wired in\<close>
   sorry
 
 theorem F0_nonempty:
   fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
-    and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar and \<Omega> :: "planar set"
-  assumes c6: "6 \<le> CARD('n)" and cO: "compact \<Omega>"
+    and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar
+  assumes c6: "6 \<le> CARD('n)"
   shows "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
-            \<and> F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
+            \<and> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
+                \<noteq> ({}::(planar^'n) set)"
 proof -
   \<comment> \<open>the regular feasible witness --- consequence of the meagerness of degenerate configs\<close>
   obtain x0 :: "planar^'n" and \<epsilon> :: real
     where \<epsilon>0: "0 < \<epsilon>"
-      and Ocpt: "compact (\<Omega> - ball ctr \<epsilon>)"
       and feas: "x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin"
       and cdN: "continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))"
-      and cdsum: "continuous_on (\<Omega> - ball ctr \<epsilon>)
+      and cdsum: "continuous_on (Omega ctr - ball ctr \<epsilon>)
                     (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
       and rsph: "\<And>\<omega>. \<omega> \<in> sphere ctr \<epsilon> \<Longrightarrow> gradU cvec g x0 \<omega> \<noteq> 0"
-      and rO: "\<And>y. y \<in> \<Omega> - ball ctr \<epsilon>
+      and rO: "\<And>y. y \<in> Omega ctr - ball ctr \<epsilon>
                   \<Longrightarrow> gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y)"
     sorry
   \<comment> \<open>the positive \<open>\<kappa>\<close>-margin on the \<open>\<epsilon>\<close>-sphere (Weierstrass)\<close>
@@ -340,23 +415,23 @@ proof -
     using \<omega>min unfolding Xrobust_def \<kappa>_def by simp
   \<comment> \<open>the positive \<open>\<xi>\<close>-margin on \<open>\<Omega>\<^sup>~\<close> (vacuous if \<open>\<Omega>\<^sup>~ = \<emptyset>\<close>)\<close>
   show ?thesis
-  proof (cases "\<Omega> - ball ctr \<epsilon> = {}")
+  proof (cases "Omega ctr - ball ctr \<epsilon> = {}")
     case True
-    have "x0 \<in> X0 cvec g ctr \<Omega> 1 \<kappa> \<epsilon>"
+    have "x0 \<in> X0 cvec g ctr (Omega ctr) 1 \<kappa> \<epsilon>"
       using inXrob True unfolding X0_def by blast
-    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon>"
+    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin 1 \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    hence "F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon> \<noteq> {}"
+    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin 1 \<kappa> \<epsilon> \<noteq> {}"
       sorry
     moreover have "(0::real) < 1" by simp
     ultimately show ?thesis using \<kappa>pos \<epsilon>0 by blast
   next
     case False
-    obtain ym where ym: "ym \<in> \<Omega> - ball ctr \<epsilon>"
-        and ymin: "\<forall>y\<in>\<Omega> - ball ctr \<epsilon>.
+    obtain ym where ym: "ym \<in> Omega ctr - ball ctr \<epsilon>"
+        and ymin: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
               norm (gradU cvec g x0 ym) + sigma_min (HessU cvec g x0 ym)
               \<le> norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y)"
-      using continuous_attains_inf[OF Ocpt False cdsum] by blast
+      using continuous_attains_inf[OF Omega_minus_ball_compact False cdsum] by blast
     define \<xi> where "\<xi> = norm (gradU cvec g x0 ym) + sigma_min (HessU cvec g x0 ym)"
     have \<xi>pos: "0 < \<xi>"
     proof (cases "gradU cvec g x0 ym = 0")
@@ -371,66 +446,17 @@ proof -
         using sigma_min_nonneg[of "HessU cvec g x0 ym"] by linarith
     qed
     have "x0 \<in> Xrobust cvec g ctr \<epsilon> \<kappa>
-          \<and> (\<forall>y\<in>\<Omega> - ball ctr \<epsilon>.
+          \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
                 \<xi> \<le> norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
       using inXrob ymin unfolding \<xi>_def by blast
-    hence "x0 \<in> X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
-    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon>"
+    hence "x0 \<in> X0 cvec g ctr (Omega ctr) \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
+    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    hence "F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> {}"
+    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> {}"
       sorry
     thus ?thesis using \<xi>pos \<kappa>pos \<epsilon>0 by blast
   qed
 qed
 
-
-section \<open>Tying the bad-point map \<open>\<Phi>\<close> to the concrete radiation pattern \<open>U_cart\<close>\<close>
-
-text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
-  stratum the paper's bad-point map (tex L516) is
-  \<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1 U, \<partial>\<^sub>c\<^sub>2 U, det \<nabla>\<^sup>2 U)\<close> with \<open>U = U_cart\<close> the actual radiation pattern.  Thus
-  \<^item> \<open>\<Phi>\<^sub>1 = \<Phi>\<^sub>2 = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<nabla>U = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<omega>\<close> is a \<^emph>\<open>critical point\<close> of the pattern;
-  \<^item> \<open>\<Phi>\<^sub>3 = det \<nabla>\<^sup>2 U = 0\<close>  \<open>\<longleftrightarrow>\<close> the critical point is \<^emph>\<open>degenerate\<close>.
-  So \<open>\<Phi>(\<bm>x,\<omega>) = 0\<close> exactly picks out the degenerate critical points --- the configurations
-  that must be excluded for \<open>\<bm>x \<in> X\<^sub>0\<close>.  The determinant (\<open>lem:Msurj\<close>: \<open>D\<^sub>x\<M>\<close> rank \<open>12\<close>) makes the
-  moment map a submersion, so \<open>{\<Phi> = 0}\<close> is a positive-codimension submanifold (\<open>prop:dimZ\<close>)
-  whose projection is meager (\<open>lem:smooth-chart-meager\<close>) --- the obligation \<open>Phi_bad_meager\<close>.\<close>
-
-definition Phibad ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^3"
-  where \<comment> \<open>\<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1U, \<partial>\<^sub>c\<^sub>2U, det \<nabla>\<^sup>2U)\<close>; \<open>\<Phi> = 0 \<longleftrightarrow>\<close> degenerate critical point of \<open>U_cart\<close>\<close>
-  "Phibad cvec gain x \<omega> =
-     vector [ gradU cvec gain x \<omega> $ 1,
-              gradU cvec gain x \<omega> $ 2,
-              HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
-                - (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2 ]"
-
-text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The set of feasible configurations carrying
-  a degenerate critical point with \<open>A \<noteq> 0\<close> is meager.  This is \<open>prop:dimZ\<close>(1): \<open>lem:Msurj\<close>
-  (the \<open>12\<times>12\<close> \<open>bigJ_det \<noteq> 0\<close>) \<open>\<Longrightarrow>\<close> \<open>Z\<^sub>reg\<close> is codim-3 \<open>\<Longrightarrow>\<close> its projection is meager.  This is the
-  exact point at which the proven determinants enter, and it is the consumer the
-  appendix's \<open>Bregnonzero\<close> meagerness reduces to.\<close>
-
-lemma Phi_bad_meager:
-  fixes V :: "(planar^'n) set" and cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "\<forall>\<omega>. cvec \<omega> \<noteq> 0"
-  shows "meager {x \<in> V. \<exists>\<omega>. Phibad cvec gain x \<omega> = 0 \<and> A_cart cvec x \<omega> \<noteq> 0}"
-  sorry
-
-
-text \<open>\<^bold>\<open>Bridge, semantic core.\<close>  \<open>\<Phi>(\<bm>x,\<omega>) = 0\<close> says exactly that \<open>\<omega>\<close> is a \<^emph>\<open>degenerate
-  critical point\<close> of the pattern: the gradient \<open>\<nabla>U_cart\<close> vanishes (critical) and the
-  Hessian determinant \<open>H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close> vanishes (degenerate).  This ties the abstract bad
-  set to the concrete nondegeneracy condition of \<open>X\<^sub>0\<close>.\<close>
-
-lemma Phibad_zero_iff:
-  "Phibad cvec gain x \<omega> = 0
-   \<longleftrightarrow> gradU cvec gain x \<omega> = 0
-       \<and> HessU cvec gain x \<omega> $ 1 $ 1 * HessU cvec gain x \<omega> $ 2 $ 2
-           = (HessU cvec gain x \<omega> $ 1 $ 2)\<^sup>2"
-  \<comment> \<open>trivially true (\<open>\<Phi> = 0 \<longleftrightarrow>\<close> its three components vanish); the \<open>vec_eq_iff\<close>
-      simp step needs HMA-qualification in the merged JNF+HMA+Smooth_Manifolds
-      session --- revisit\<close>
-  sorry
 
 end
