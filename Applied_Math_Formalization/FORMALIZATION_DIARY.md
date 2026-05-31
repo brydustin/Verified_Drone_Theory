@@ -1158,3 +1158,43 @@ REMAINING reconciliation gaps:
    discharge prop:dimZ ⇒ Phi_bad_meager. This IS the central remaining appendix math.
  - Decide the concrete cvec/gain to instantiate the capstone at (candidates in
    Paper: cvec0 = beam-lift steered, or cvec_steered ∘ kvec). PENDING user steer.
+
+## 2026-05-31 (connecting the determinant, part 2) — chain-rule keystone + the ∂ω/∂c discovery
+
+User directive: final results must be about OUR concrete function (general theorems
+OK as intermediates); connect the determinant to the meagerness argument.
+
+Mapped the FULL chain from the tex (nonemptiness_unified_singlefile_complete.tex):
+ - Concrete cvec = beam-lift steered wavevector: c(θ,φ) = (Δkx+Dx·Δkz, Δky+Dy·Δkz),
+   = Isabelle `cvec0 ω0 ωs` (Paper L942). NOTE: cvec0 : ... ⇒ real×real, but U_cart
+   wants angle⇒real^2 — needs a vector[fst,snd] adapter.
+ - Determinant chain (tex prop:dimZ / lem:Msurj / lem:3x3):
+     bigJ_det = -5π⁸/3 ≠ 0  (PROVEN: bigJ_det, m_star_x0_nonzero, surj_iff_m_star)
+       ⟹ surj(D_x M) on open-dense W_surj  (lem:Msurj = DM_paper_open_dense_surjective, PROVEN)
+     D_M F has rank 3  (lem:3x3/lem_block, PROVEN in Regnonzero_Appendix: deriv minors = ±2ga)
+     chain rule D_x Φ = D_M F · D_x M  ⟹ rank D_x Φ = 3  ⟹ Z_reg codim 3 ⟹ proj meager.
+ - Φ in moment coords (tex Appendix-2) = the appendix's Phi1m/Phi2m/H11m/H12m/H22m
+   (Regnonzero_Appendix L54-78): Φ1=g1(a²+b²)+2g(b1 a−a1 b), etc. ALREADY DEFINED there.
+
+DOWN-PAYMENT (committed 64e38ea): `rank_matrix_comp_surj` — surj((*v)B) ⟹
+rank(A**B)=rank A. The pure-LA core of the chain-rule step: this is EXACTLY where the
+determinant enters (D_x M surjective ⟹ rank D_x Φ = rank D_M F = 3).
+
+CRUCIAL DISCOVERY (a real disconnect, beyond the user's original worry):
+ Robust's `Phibad` uses gradU = ∇_ω U (ANGLE derivative; U_cart depends on ω through
+ BOTH gain ω and cvec ω). The appendix's Φ and the WHOLE determinant machinery use
+ ∂_c U (WAVEVECTOR derivative, c free). These DIFFER by the cvec Jacobian:
+ ∇_ω U = Jcvec^T ∇_c U (+ gain-ω terms). They agree as critical/degenerate sets only
+ where cvec is a local diffeo, i.e. det Jcvec ≠ 0 — which is exactly `det_Jcvec`
+ (PROVEN, Paper L2933) on the regular/fold stratum. So connecting Phibad to the
+ determinant needs a change-of-variables bridge through Jcvec, OR reformulating the
+ bad set in c-coordinates and pulling back. The physical final result is in ω (the
+ pattern's look-direction), so c-coords are the computational intermediate.
+
+REMAINING to connect determinant → Phi_bad_meager (about our function):
+ (a) HessU 2nd-derivative bridge (Paper only has 1st-order dU_cart). [prereq for (b)]
+ (b) Phibad components = Phi1m/H11m/... in c-coords (via gradU_explicit + moment algebra).
+ (c) ∂ω↔∂c change of variables via Jcvec (det≠0 = det_Jcvec).
+ (d) the chain-rule rank-3 + codim-3 chart cover + projection-meager (needs an ℝ³
+     analog of regular_zero_set_projection_charts; the ℝ² version is the lone Base sorry).
+ (e) instantiate cvec := cvec0-adapter, gain := |e|², discharge the cvec≠0 / diff hyps.
