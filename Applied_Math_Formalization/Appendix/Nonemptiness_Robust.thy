@@ -229,6 +229,31 @@ definition HessU ::
   where \<comment> \<open>\<open>\<nabla>\<^sup>2\<^sub>\<omega> U_cart\<close> (\<open>hess_fun\<close>) from Higher_Differentiability_Multi\<close>
   "HessU cvec gain x \<omega> = \<nabla>\<^sup>2 (U_cart cvec gain x) \<omega>"
 
+text \<open>\<^bold>\<open>Bridge: \<open>gradU\<close> is the genuine gradient of the concrete \<open>U_cart\<close>.\<close>  The abstract
+  \<open>\<nabla>\<close> (\<open>grad_fun\<close>) is a \<open>THE\<close>-value, well-defined only where \<open>U_cart\<close> is differentiable
+  in \<open>\<omega>\<close>.  Under differentiability of \<open>cvec\<close> and \<open>gain\<close> at \<open>\<omega>\<close> --- which the \<^emph>\<open>proven\<close>
+  @{thm has_derivative_U_cart} turns into a Fréchet derivative \<open>dU_cart\<close> --- the gradient
+  is the explicit vector assembled from \<open>dU_cart\<close>'s action on the coordinate axes.  This
+  ties \<open>gradU\<close> (hence \<open>Phibad\<close>) to the actual array-factor derivatives, not a floating
+  \<open>THE\<close>.\<close>
+
+lemma gradU_explicit:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and dc :: "angle \<Rightarrow> planar" and dgain :: "angle \<Rightarrow> real"
+    and x :: "planar^'n" and \<omega> :: angle
+  assumes "(cvec has_derivative dc) (at \<omega>)"
+    and "(gain has_derivative dgain) (at \<omega>)"
+  shows "gradU cvec gain x \<omega>
+           = (\<Sum>i\<in>UNIV. dU_cart cvec dc gain dgain x \<omega> (axis i 1) *\<^sub>R axis i 1)"
+proof -
+  have "((U_cart cvec gain x) has_derivative dU_cart cvec dc gain dgain x \<omega>) (at \<omega>)"
+    using has_derivative_U_cart[OF assms, where x = x] by simp
+  from has_derivative_to_gradient[OF this]
+  have "GRAD (U_cart cvec gain x) \<omega>
+          :> (\<Sum>i\<in>UNIV. dU_cart cvec dc gain dgain x \<omega> (axis i 1) *\<^sub>R axis i 1)" .
+  thus ?thesis unfolding gradU_def by (rule grad_fun_eq)
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
