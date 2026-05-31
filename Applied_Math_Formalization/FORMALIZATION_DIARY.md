@@ -1122,3 +1122,39 @@ Robust now has 2 sorries, both DEEP: `regular_feasible_witness` (Phi_bad_meager 
 Baire + C²-continuity bundle) and `Phi_bad_meager` (the determinant payoff:
 lem:Msurj ⟹ Z_reg codim-3 ⟹ projection meager). The capstone shape is complete;
 what remains there is genuine mathematics, not plumbing.
+
+## 2026-05-31 (definition reconciliation, part 1) — gradU bridged to the proven dU_cart
+
+User flagged (correctly) that Robust's gradU/HessU (abstract ∇/∇² from
+Higher_Differentiability_Multi) compete with the explicit, PROVEN derivative
+dU_cart + has_derivative_U_cart in Nonemptiness_Paper, and that the capstone
+`fixes cvec g` abstractly — divorced from the concrete physical wavevector and the
+concrete moment map (M_paper/bigJ) the determinant is about.
+
+DIAGNOSIS (no NAME clash — Robust imports U_cart/A_cart/dU_cart, defines fresh
+gradU/HessU/Phibad). Two real semantic disconnects:
+ (1) ∇/∇² track never bridged to the dU_cart track. CRUCIAL: `\<nabla> f x = THE g.
+     GRAD f x :> g`, so gradU is a THE over a FALSE predicate (junk) unless U_cart
+     is differentiable in ω — which needs cvec, gain differentiable. So for
+     arbitrary fixed cvec/g, gradU/HessU are meaningless and the capstone is vacuous.
+ (2) Phi_bad_meager/regular_feasible_witness/F0_nonempty `fixes cvec g` — the
+     determinant facts (bigJ_det≠0, m_star x0_paper≠0 at c0_paper=(1,0)) can't
+     discharge them because nothing ties this abstract cvec/x to x0_paper/M_paper.
+     This is SYSTEMIC: Bregnonzero and thm_final's conditional form defer concrete
+     cvec too.
+
+FIX part 1 (committed 07a1b5e): `gradU_explicit` — under (cvec has_derivative dc)
+(gain has_derivative dgain) at ω, has_derivative_U_cart + has_derivative_to_gradient
++ grad_fun_eq give
+  gradU cvec gain x ω = (∑i. dU_cart cvec dc gain dgain x ω (axis i 1) *⇩R axis i 1).
+gradU is now the genuine gradient of the real U_cart. (Gotcha: has_derivative_U_cart
+leaves x schematic — pin via [where x=x] or simp can't match the local x.)
+
+REMAINING reconciliation gaps:
+ - HessU bridge needs a SECOND derivative of U_cart; Paper only has first-order
+   (dU_cart). Must prove has_derivative (dU_cart …) … or a Hessian lemma. New work.
+ - The deep one: tie Phibad's components to M_paper's moments (Appendix-2 explicit
+   gradient/Hessian formulas) at the concrete steered cvec, so bigJ_det/m_star
+   discharge prop:dimZ ⇒ Phi_bad_meager. This IS the central remaining appendix math.
+ - Decide the concrete cvec/gain to instantiate the capstone at (candidates in
+   Paper: cvec0 = beam-lift steered, or cvec_steered ∘ kvec). PENDING user steer.
