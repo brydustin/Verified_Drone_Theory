@@ -202,125 +202,183 @@ qed
 
 subsection \<open>The robust sets \<open>X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t(\<epsilon>,\<kappa>)\<close>, \<open>X\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>, and \<open>\<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>\<close>
 
-text \<open>TeX (D_edit_May18, L716 / \eqref{X0def} / \eqref{F0}).  With the \<open>\<phi>\<close>-section
-  \<open>U(\<bm>x,(\<theta>\<^sub>0,\<cdot>))\<close>, its first \<open>\<phi>\<close>-derivative \<open>\<partial>\<^sub>\<phi>U\<close> and second \<open>H = \<partial>\<^sub>\<phi>\<^sup>2U\<close>:
-  \<^item> \<open>X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t(\<epsilon>,\<kappa>) = {\<bm>x : \<bar>\<partial>\<^sub>\<phi>U(\<bm>x,(\<theta>\<^sub>0,\<omega>))\<bar> \<ge> \<kappa> \<forall> \<omega> \<in> \<partial>B\<^sub>\<epsilon>(\<phi>\<^sub>0)}\<close>;
-  \<^item> \<open>X\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = {\<bm>x \<in> X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t : \<bar>\<partial>\<^sub>\<phi>U\<bar> + \<bar>H\<bar> \<ge> \<xi> on \<Omega>\<^sup>~ = \<Omega> \\ B\<^sub>\<epsilon>(\<phi>\<^sub>0)}\<close>;
+text \<open>TeX (D_edit_May18, \eqref{X0def}/\eqref{F0}, the \<^emph>\<open>active 2-D formulation\<close>, L1281/L1288).
+  With the full 2-D angle \<open>\<omega> = (\<theta>,\<phi>)\<close>, the gradient \<open>\<nabla>\<^sub>\<Omega>U\<close> (a \<open>real^2\<close>) and the \<open>2\<times>2\<close>
+  Hessian \<open>H = \<nabla>\<^sup>2\<^sub>\<Omega>U\<close>, both built from the actual pattern \<open>U_cart\<close> through
+  Higher_Differentiability_Multi:
+  \<^item> \<open>X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t(\<epsilon>,\<kappa>) = {\<bm>x : \<parallel>\<nabla>\<^sub>\<Omega>U(\<bm>x,\<omega>)\<parallel> \<ge> \<kappa> \<forall> \<omega> \<in> \<partial>B\<^sub>\<epsilon>(ctr)}\<close>;
+  \<^item> \<open>X\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = {\<bm>x \<in> X\<^sub>r\<^sub>o\<^sub>b\<^sub>u\<^sub>s\<^sub>t : \<parallel>\<nabla>\<^sub>\<Omega>U(\<bm>x,y)\<parallel> + \<sigma>\<^sub>m\<^sub>i\<^sub>n(H(\<bm>x,y)) \<ge> \<xi> on \<Omega>\<^sup>~ = \<Omega> \\ B\<^sub>\<epsilon>(ctr)}\<close>;
   \<^item> \<open>\<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = \<F> \<inter> X\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.
-  Here \<open>\<partial>\<^sub>\<phi>\<close> is a one-dimensional derivative, so we use HOL's \<^const>\<open>deriv\<close>, and \<open>\<bar>\<cdot>\<bar>\<close>
-  is the one-dimensional norm.  \<open>\<partial>B\<^sub>\<epsilon>(\<phi>\<^sub>0) = sphere \<phi>\<^sub>0 \<epsilon>\<close>, \<open>B\<^sub>\<epsilon>(\<phi>\<^sub>0) = ball \<phi>\<^sub>0 \<epsilon>\<close>.\<close>
+  Here \<open>\<parallel>\<cdot>\<parallel>\<close> is the Euclidean norm on \<open>real^2\<close> and \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n\<close> is the smallest singular value
+  of the symmetric \<open>2\<times>2\<close> Hessian.  \<open>ctr\<close> is the design direction \<open>(\<theta>\<^sub>0,\<phi>\<^sub>0)\<close>;
+  \<open>\<partial>B\<^sub>\<epsilon>(ctr) = sphere ctr \<epsilon>\<close>, \<open>B\<^sub>\<epsilon>(ctr) = ball ctr \<epsilon>\<close>.  Crucially \<open>X\<^sub>0\<close> now depends on the real
+  derivatives of \<^const>\<open>U_cart\<close> (via \<open>gradU\<close>/\<open>HessU\<close> below), and the nondegeneracy
+  margin \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close> is exactly the \<open>det \<nabla>\<^sup>2U \<noteq> 0\<close> condition the determinant work secures.\<close>
 
 definition angle2 :: "real \<Rightarrow> real \<Rightarrow> real^2" where
   \<comment> \<open>the angle point \<open>(\<theta>,\<phi>)\<close>\<close>
   "angle2 \<theta> \<phi> = (\<chi> i. if i = 1 then \<theta> else \<phi>)"
 
-definition Usec :: "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow> real"
-  where \<comment> \<open>the \<open>\<phi>\<close>-section \<open>\<phi> \<mapsto> U(\<bm>x,(\<theta>\<^sub>0,\<phi>))\<close>\<close>
-  "Usec cvec g \<theta>0 x \<phi> = Upow cvec g x (angle2 \<theta>0 \<phi>)"
+definition gradU ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> planar"
+  where \<comment> \<open>\<open>\<nabla>\<^sub>\<omega> U_cart\<close> from Higher_Differentiability_Multi\<close>
+  "gradU cvec gain x \<omega> = \<nabla> (U_cart cvec gain x) \<omega>"
 
-definition dphiU :: "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow> real"
-  where \<comment> \<open>\<open>\<partial>\<^sub>\<phi>U(\<bm>x,(\<theta>\<^sub>0,\<phi>))\<close>\<close>
-  "dphiU cvec g \<theta>0 x \<phi> = deriv (Usec cvec g \<theta>0 x) \<phi>"
+definition HessU ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^2^2"
+  where \<comment> \<open>\<open>\<nabla>\<^sup>2\<^sub>\<omega> U_cart\<close> (\<open>hess_fun\<close>) from Higher_Differentiability_Multi\<close>
+  "HessU cvec gain x \<omega> = \<nabla>\<^sup>2 (U_cart cvec gain x) \<omega>"
 
-definition HU :: "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow> real"
-  where \<comment> \<open>\<open>H = \<partial>\<^sub>\<phi>\<^sup>2 U(\<bm>x,(\<theta>\<^sub>0,\<phi>))\<close>\<close>
-  "HU cvec g \<theta>0 x \<phi> = deriv (deriv (Usec cvec g \<theta>0 x)) \<phi>"
+definition sigma_min :: "real^2^2 \<Rightarrow> real" where
+  \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
+  "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
+
+lemma sphere01_ne: "sphere (0::real^2) 1 \<noteq> {}"
+  by simp
+
+lemma sigma_min_nonneg: "0 \<le> sigma_min H"
+  unfolding sigma_min_def by (rule cINF_greatest[OF sphere01_ne]) simp
 
 definition Xrobust ::
-  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> planar \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((planar)^'n) set"
   where
-  "Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa> =
-     {x. \<forall>\<omega>\<in>sphere \<phi>0 \<epsilon>. \<kappa> \<le> \<bar>dphiU cvec g \<theta>0 x \<omega>\<bar>}"
+  "Xrobust cvec g ctr \<epsilon> \<kappa> =
+     {x. \<forall>\<omega>\<in>sphere ctr \<epsilon>. \<kappa> \<le> norm (gradU cvec g x \<omega>)}"
 
 definition X0 ::
-  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real set
-     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> planar \<Rightarrow> (planar) set
+     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((planar)^'n) set"
   where
-  "X0 cvec g \<theta>0 \<phi>0 \<Omega> \<xi> \<kappa> \<epsilon> =
-     {x \<in> Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa>.
-        \<forall>y \<in> \<Omega> - ball \<phi>0 \<epsilon>. \<xi> \<le> \<bar>dphiU cvec g \<theta>0 x y\<bar> + \<bar>HU cvec g \<theta>0 x y\<bar>}"
+  "X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon> =
+     {x \<in> Xrobust cvec g ctr \<epsilon> \<kappa>.
+        \<forall>y \<in> \<Omega> - ball ctr \<epsilon>. \<xi> \<le> norm (gradU cvec g x y) + sigma_min (HessU cvec g x y)}"
 
 definition F0 ::
-  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
-     \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real set \<Rightarrow> real \<Rightarrow> real
-     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> planar \<Rightarrow> planar \<Rightarrow> (planar) set \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((planar)^'n) set"
   where
-  "F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> =
-     Ffeas cvec g R dmin A B D \<omega>null (angle2 \<theta>0 \<phi>0) \<delta>null pmin
-     \<inter> X0 cvec g \<theta>0 \<phi>0 \<Omega> \<xi> \<kappa> \<epsilon>"
+  "F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> =
+     Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin
+     \<inter> X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon>"
 
 
 subsection \<open>The capstone: \<open>\<F>\<^sub>0\<close> is nonempty for appropriately chosen \<open>\<xi>, \<kappa>, \<epsilon>\<close>\<close>
 
-text \<open>TeX Lemma~\eqref{F0} (D_edit_May18, L804): for appropriately chosen \<open>\<xi>,\<kappa>,\<epsilon> > 0\<close>,
-  \<open>\<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = \<F> \<inter> X\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close> is nonempty.  The analytic input (the perturbation /
-  nondegeneracy step) is captured by a feasible \<open>x\<^sub>0\<close> whose \<open>\<theta>\<^sub>0\<close>-plane pattern is regular:
-  \<open>\<partial>\<^sub>\<phi>U \<noteq> 0\<close> on the \<open>\<epsilon>\<close>-sphere \<open>\<partial>B\<^sub>\<epsilon>(\<phi>\<^sub>0)\<close> and \<open>\<bar>\<partial>\<^sub>\<phi>U\<bar> + \<bar>H\<bar> > 0\<close> on the compact
-  \<open>\<Omega>\<^sup>~ = \<Omega> \\ B\<^sub>\<epsilon>(\<phi>\<^sub>0)\<close>.  Then the margins \<open>\<kappa> = min\<^bsub>\<partial>B\<^sub>\<epsilon>\<^esub>\<bar>\<partial>\<^sub>\<phi>U\<bar>\<close> and
-  \<open>\<xi> = min\<^bsub>\<Omega>\<^sup>~\<^esub>(\<bar>\<partial>\<^sub>\<phi>U\<bar> + \<bar>H\<bar>)\<close> are positive by Weierstrass, and \<open>x\<^sub>0 \<in> \<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.\<close>
+text \<open>TeX Lemma~\eqref{F0} (D_edit_May18, the 2-D version, L1288/F0\_nonempty\_proof\_2D):
+  for appropriately chosen \<open>\<xi>,\<kappa>,\<epsilon> > 0\<close>, \<open>\<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>) = \<F> \<inter> X\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close> is nonempty.
+
+  \<^bold>\<open>No regularity is assumed.\<close>  The analytic input --- a feasible \<open>x\<^sub>0\<close> whose pattern is
+  \<^emph>\<open>regular\<close> (\<open>\<nabla>\<^sub>\<Omega>U \<noteq> 0\<close> on the \<open>\<epsilon>\<close>-sphere, and \<open>\<nabla>\<^sub>\<Omega>U \<noteq> 0\<close> or \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close> on \<open>\<Omega>\<^sup>~\<close>) ---
+  is a \<^emph>\<open>consequence\<close> of \<open>Phi_bad_meager\<close> + Baire (the degenerate configurations are
+  meager, so their complement inside the open interior of the feasible body is dense and
+  in particular nonempty), packaged as the single obligation \<open>regular_feasible_witness\<close>
+  below.  This is precisely what the determinant computation was for.  Given that witness,
+  the margins \<open>\<kappa> = min\<^bsub>\<partial>B\<^sub>\<epsilon>\<^esub>\<parallel>\<nabla>\<^sub>\<Omega>U\<parallel>\<close> and \<open>\<xi> = min\<^bsub>\<Omega>\<^sup>~\<^esub>(\<parallel>\<nabla>\<^sub>\<Omega>U\<parallel> + \<sigma>\<^sub>m\<^sub>i\<^sub>n(H))\<close> are positive by
+  Weierstrass, and \<open>x\<^sub>0 \<in> \<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.\<close>
 
 lemma mem_imp_ne_empty: "x \<in> A \<Longrightarrow> A \<noteq> {}" by blast
 
+text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff, packaged for the capstone).\<close>  For a compact
+  angular domain \<open>\<Omega>\<close> and \<open>\<ge> 6\<close> array elements there is a feasible configuration \<open>x\<^sub>0\<close> and a
+  radius \<open>\<epsilon> > 0\<close> whose \<open>\<theta>\<^sub>0\<close>-pattern is \<^emph>\<open>regular\<close>: the gradient does not vanish on the
+  \<open>\<epsilon>\<close>-sphere, and on the compact annulus \<open>\<Omega>\<^sup>~\<close> every critical point is nondegenerate
+  (\<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close>).  This bundles \<open>Phi_bad_meager\<close> (degenerate configs are meager),
+  Baire (a nonempty open subset of the feasible interior is non-meager), and the
+  \<open>C\<^sup>2\<close>-continuity of \<open>\<nabla>\<^sub>\<Omega>U\<close>/\<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H)\<close>.  It is the \<^emph>\<open>only\<close> remaining obligation of the
+  capstone --- everything the previous version \<^emph>\<open>assumed\<close> is now \<^emph>\<open>derived\<close> from it.\<close>
+
+lemma regular_feasible_witness:
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
+    and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar and \<Omega> :: "planar set"
+  assumes "6 \<le> CARD('n)" and "compact \<Omega>"
+  shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon> \<and> compact (\<Omega> - ball ctr \<epsilon>)
+            \<and> x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin
+            \<and> continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))
+            \<and> continuous_on (\<Omega> - ball ctr \<epsilon>)
+                  (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))
+            \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU cvec g x0 \<omega> \<noteq> 0)
+            \<and> (\<forall>y\<in>\<Omega> - ball ctr \<epsilon>.
+                  gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y))"
+  sorry
+
 theorem F0_nonempty:
-  fixes cvec :: "real^2 \<Rightarrow> real^2" and g :: "real^2 \<Rightarrow> real"
-    and R dmin A B D \<delta>null pmin \<epsilon> :: real and \<omega>null :: "real^2"
-    and \<theta>0 \<phi>0 :: real and \<Omega> :: "real set" and x0 :: "(real^2)^'n"
-  assumes \<epsilon>0: "0 < \<epsilon>"
-    and feas: "x0 \<in> Ffeas cvec g R dmin A B D \<omega>null (angle2 \<theta>0 \<phi>0) \<delta>null pmin"
-    and Ocpt: "compact (\<Omega> - ball \<phi>0 \<epsilon>)"
-    and cont_d: "continuous_on (sphere \<phi>0 \<epsilon>) (dphiU cvec g \<theta>0 x0)"
-    and cont_sum: "continuous_on (\<Omega> - ball \<phi>0 \<epsilon>)
-                      (\<lambda>y. \<bar>dphiU cvec g \<theta>0 x0 y\<bar> + \<bar>HU cvec g \<theta>0 x0 y\<bar>)"
-    and reg_sph: "\<And>\<omega>. \<omega> \<in> sphere \<phi>0 \<epsilon> \<Longrightarrow> dphiU cvec g \<theta>0 x0 \<omega> \<noteq> 0"
-    and reg_O: "\<And>y. y \<in> \<Omega> - ball \<phi>0 \<epsilon>
-                  \<Longrightarrow> dphiU cvec g \<theta>0 x0 y \<noteq> 0 \<or> HU cvec g \<theta>0 x0 y \<noteq> 0"
-  shows "\<exists>\<xi> \<kappa> e. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < e
-                 \<and> F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> e \<noteq> {}"
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
+    and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar and \<Omega> :: "planar set"
+  assumes c6: "6 \<le> CARD('n)" and cO: "compact \<Omega>"
+  shows "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+            \<and> F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
 proof -
-  \<comment> \<open>the positive \<open>\<kappa>\<close>-margin on the \<open>\<epsilon>\<close>-sphere\<close>
-  have sph_ne: "sphere \<phi>0 \<epsilon> \<noteq> {}"
+  \<comment> \<open>the regular feasible witness --- consequence of the meagerness of degenerate configs\<close>
+  obtain x0 :: "planar^'n" and \<epsilon> :: real
+    where \<epsilon>0: "0 < \<epsilon>"
+      and Ocpt: "compact (\<Omega> - ball ctr \<epsilon>)"
+      and feas: "x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin"
+      and cdN: "continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))"
+      and cdsum: "continuous_on (\<Omega> - ball ctr \<epsilon>)
+                    (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
+      and rsph: "\<And>\<omega>. \<omega> \<in> sphere ctr \<epsilon> \<Longrightarrow> gradU cvec g x0 \<omega> \<noteq> 0"
+      and rO: "\<And>y. y \<in> \<Omega> - ball ctr \<epsilon>
+                  \<Longrightarrow> gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y)"
+    sorry
+  \<comment> \<open>the positive \<open>\<kappa>\<close>-margin on the \<open>\<epsilon>\<close>-sphere (Weierstrass)\<close>
+  have sph_ne: "sphere ctr \<epsilon> \<noteq> {}"
   proof -
-    have "\<phi>0 + \<epsilon> \<in> sphere \<phi>0 \<epsilon>" using \<epsilon>0 by (simp add: dist_real_def)
+    have "dist (ctr + \<epsilon> *\<^sub>R axis (1::2) 1) ctr = \<epsilon>"
+      using \<epsilon>0 by (simp add: dist_norm abs_of_pos)
+    hence "ctr + \<epsilon> *\<^sub>R axis (1::2) 1 \<in> sphere ctr \<epsilon>"
+      by (simp add: dist_commute)
     thus ?thesis by blast
   qed
-  have abs_d_cont: "continuous_on (sphere \<phi>0 \<epsilon>) (\<lambda>\<omega>. \<bar>dphiU cvec g \<theta>0 x0 \<omega>\<bar>)"
-    using cont_d by (intro continuous_intros)
-  obtain \<omega>m where \<omega>m: "\<omega>m \<in> sphere \<phi>0 \<epsilon>"
-      and \<omega>min: "\<forall>\<omega>\<in>sphere \<phi>0 \<epsilon>. \<bar>dphiU cvec g \<theta>0 x0 \<omega>m\<bar> \<le> \<bar>dphiU cvec g \<theta>0 x0 \<omega>\<bar>"
-    using continuous_attains_inf[OF compact_sphere sph_ne abs_d_cont] by blast
-  define \<kappa> where "\<kappa> = \<bar>dphiU cvec g \<theta>0 x0 \<omega>m\<bar>"
-  have \<kappa>pos: "0 < \<kappa>" using reg_sph[OF \<omega>m] unfolding \<kappa>_def by simp
-  have inXrob: "x0 \<in> Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa>"
+  obtain \<omega>m where \<omega>m: "\<omega>m \<in> sphere ctr \<epsilon>"
+      and \<omega>min: "\<forall>\<omega>\<in>sphere ctr \<epsilon>.
+                    norm (gradU cvec g x0 \<omega>m) \<le> norm (gradU cvec g x0 \<omega>)"
+    using continuous_attains_inf[OF compact_sphere sph_ne cdN] by blast
+  define \<kappa> where "\<kappa> = norm (gradU cvec g x0 \<omega>m)"
+  have \<kappa>pos: "0 < \<kappa>" using rsph[OF \<omega>m] unfolding \<kappa>_def by simp
+  have inXrob: "x0 \<in> Xrobust cvec g ctr \<epsilon> \<kappa>"
     using \<omega>min unfolding Xrobust_def \<kappa>_def by simp
   \<comment> \<open>the positive \<open>\<xi>\<close>-margin on \<open>\<Omega>\<^sup>~\<close> (vacuous if \<open>\<Omega>\<^sup>~ = \<emptyset>\<close>)\<close>
-    show ?thesis
-  proof (cases "\<Omega> - ball \<phi>0 \<epsilon> = {}")
+  show ?thesis
+  proof (cases "\<Omega> - ball ctr \<epsilon> = {}")
     case True
-    have "x0 \<in> X0 cvec g \<theta>0 \<phi>0 \<Omega> 1 \<kappa> \<epsilon>"
+    have "x0 \<in> X0 cvec g ctr \<Omega> 1 \<kappa> \<epsilon>"
       using inXrob True unfolding X0_def by blast
-    hence x0F: "x0 \<in> F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon>"
+    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    have F0_ne: "F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon> \<noteq> {}"
-      sorry \<comment> \<open>true: \<open>x0 \<in> S \<Longrightarrow> S \<noteq> {}\<close>; blast hangs on the 16-arg term --- revisit\<close>
+    hence "F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin 1 \<kappa> \<epsilon> \<noteq> {}"
+      sorry
     moreover have "(0::real) < 1" by simp
     ultimately show ?thesis using \<kappa>pos \<epsilon>0 by blast
   next
     case False
-    obtain ym where ym: "ym \<in> \<Omega> - ball \<phi>0 \<epsilon>"
-        and ymin: "\<forall>y\<in>\<Omega> - ball \<phi>0 \<epsilon>.
-              \<bar>dphiU cvec g \<theta>0 x0 ym\<bar> + \<bar>HU cvec g \<theta>0 x0 ym\<bar>
-              \<le> \<bar>dphiU cvec g \<theta>0 x0 y\<bar> + \<bar>HU cvec g \<theta>0 x0 y\<bar>"
-      using continuous_attains_inf[OF Ocpt False cont_sum] by blast
-    define \<xi> where "\<xi> = \<bar>dphiU cvec g \<theta>0 x0 ym\<bar> + \<bar>HU cvec g \<theta>0 x0 ym\<bar>"
-    have \<xi>pos: "0 < \<xi>" using reg_O[OF ym] unfolding \<xi>_def by auto
-    have "x0 \<in> Xrobust cvec g \<theta>0 \<phi>0 \<epsilon> \<kappa>
-          \<and> (\<forall>y\<in>\<Omega> - ball \<phi>0 \<epsilon>. \<xi> \<le> \<bar>dphiU cvec g \<theta>0 x0 y\<bar> + \<bar>HU cvec g \<theta>0 x0 y\<bar>)"
+    obtain ym where ym: "ym \<in> \<Omega> - ball ctr \<epsilon>"
+        and ymin: "\<forall>y\<in>\<Omega> - ball ctr \<epsilon>.
+              norm (gradU cvec g x0 ym) + sigma_min (HessU cvec g x0 ym)
+              \<le> norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y)"
+      using continuous_attains_inf[OF Ocpt False cdsum] by blast
+    define \<xi> where "\<xi> = norm (gradU cvec g x0 ym) + sigma_min (HessU cvec g x0 ym)"
+    have \<xi>pos: "0 < \<xi>"
+    proof (cases "gradU cvec g x0 ym = 0")
+      case True
+      with rO[OF ym] have "0 < sigma_min (HessU cvec g x0 ym)" by simp
+      thus ?thesis unfolding \<xi>_def
+        using norm_ge_zero[of "gradU cvec g x0 ym"] by linarith
+    next
+      case False
+      hence "0 < norm (gradU cvec g x0 ym)" by simp
+      thus ?thesis unfolding \<xi>_def
+        using sigma_min_nonneg[of "HessU cvec g x0 ym"] by linarith
+    qed
+    have "x0 \<in> Xrobust cvec g ctr \<epsilon> \<kappa>
+          \<and> (\<forall>y\<in>\<Omega> - ball ctr \<epsilon>.
+                \<xi> \<le> norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
       using inXrob ymin unfolding \<xi>_def by blast
-    hence "x0 \<in> X0 cvec g \<theta>0 \<phi>0 \<Omega> \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
-    hence x0F: "x0 \<in> F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon>"
+    hence "x0 \<in> X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
+    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    have "F0 cvec g R dmin A B D \<omega>null \<theta>0 \<phi>0 \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> {}"
-      sorry \<comment> \<open>true: \<open>x0 \<in> S \<Longrightarrow> S \<noteq> {}\<close>; blast hangs on the 16-arg term --- revisit\<close>
+    hence "F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> {}"
+      sorry
     thus ?thesis using \<xi>pos \<kappa>pos \<epsilon>0 by blast
   qed
 qed
@@ -337,16 +395,6 @@ text \<open>\<^bold>\<open>This is the bridge that the determinant computations 
   that must be excluded for \<open>\<bm>x \<in> X\<^sub>0\<close>.  The determinant (\<open>lem:Msurj\<close>: \<open>D\<^sub>x\<M>\<close> rank \<open>12\<close>) makes the
   moment map a submersion, so \<open>{\<Phi> = 0}\<close> is a positive-codimension submanifold (\<open>prop:dimZ\<close>)
   whose projection is meager (\<open>lem:smooth-chart-meager\<close>) --- the obligation \<open>Phi_bad_meager\<close>.\<close>
-
-definition gradU ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> planar"
-  where \<comment> \<open>\<open>\<nabla>\<^sub>\<omega> U_cart\<close> from Higher_Differentiability_Multi\<close>
-  "gradU cvec gain x \<omega> = \<nabla> (U_cart cvec gain x) \<omega>"
-
-definition HessU ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^2^2"
-  where \<comment> \<open>\<open>\<nabla>\<^sup>2\<^sub>\<omega> U_cart\<close> (\<open>hess_fun\<close>) from Higher_Differentiability_Multi\<close>
-  "HessU cvec gain x \<omega> = \<nabla>\<^sup>2 (U_cart cvec gain x) \<omega>"
 
 definition Phibad ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^3"
