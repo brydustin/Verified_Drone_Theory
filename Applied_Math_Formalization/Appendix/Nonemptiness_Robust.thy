@@ -730,6 +730,73 @@ proof -
               higher_differentiable_on_const comp1 comp2 open_UNIV)
 qed
 
+text \<open>\<^bold>\<open>The explicit Jacobian of the steering map.\<close>  Since \<open>k\<close> is explicit, the
+  Fréchet derivatives of \<open>kx,ky,kz\<close> and of \<open>cvec_dip\<close> are explicit (\<open>sin/cos\<close> of the
+  angle components) --- not a \<open>frechet_derivative\<close> placeholder.\<close>
+
+lemma has_derivative_proj:
+  "((\<lambda>\<omega>::real^2. \<omega> $ i) has_derivative (\<lambda>h. h $ i)) (at \<omega>)"
+  by (auto intro!: bounded_linear.has_derivative[OF bounded_linear_vec_nth]
+                   has_derivative_ident)
+
+lemma has_derivative_kx:
+  "(kx has_derivative (\<lambda>h. cos (\<omega>$1) * cos (\<omega>$2) * (h$1) - sin (\<omega>$1) * sin (\<omega>$2) * (h$2)))
+     (at \<omega>)"
+  unfolding kx_def[abs_def]
+  by (auto intro!: derivative_eq_intros has_derivative_proj simp: algebra_simps)
+
+lemma has_derivative_ky:
+  "(ky has_derivative (\<lambda>h. cos (\<omega>$1) * sin (\<omega>$2) * (h$1) + sin (\<omega>$1) * cos (\<omega>$2) * (h$2)))
+     (at \<omega>)"
+  unfolding ky_def[abs_def]
+  by (auto intro!: derivative_eq_intros has_derivative_proj simp: algebra_simps)
+
+lemma has_derivative_kz:
+  "(kz has_derivative (\<lambda>h. - sin (\<omega>$1) * (h$1))) (at \<omega>)"
+  unfolding kz_def[abs_def]
+  by (auto intro!: derivative_eq_intros has_derivative_proj simp: algebra_simps)
+
+definition Dcvec_dip :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real^2 \<Rightarrow> real^2" where
+  \<comment> \<open>The explicit Jacobian of @{const cvec_dip}.  \<^bold>\<open>Why \<^const>\<open>vec_nth\<close> instead of the \<open>$\<close>
+      notation:\<close> in this merged JNF+HMA+Smooth_Manifolds session, parsing the infix \<open>$\<close>
+      is super-linearly expensive (notation/type disambiguation), so a single term with
+      \<open>\<approx>12\<close> occurrences of \<open>$\<close> takes \<^emph>\<open>minutes\<close> (or hangs) to elaborate, whereas the
+      identical term written with the constant \<^const>\<open>vec_nth\<close> elaborates in \<open>< 0.5 s\<close>.
+      \<^const>\<open>vec_nth\<close> still \<^emph>\<open>prints\<close> as \<open>\<omega> $ i\<close>, so the displayed maths is unchanged.\<close>
+  "Dcvec_dip \<omega>0 \<omega>s \<omega> =
+     (\<lambda>h. ((cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2) * (vec_nth h 1)
+              - sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2) * (vec_nth h 2))
+              + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (- sin (vec_nth \<omega> 1) * (vec_nth h 1))) *\<^sub>R axis 1 1
+          + ((cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2) * (vec_nth h 1)
+              + sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2) * (vec_nth h 2))
+              + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (- sin (vec_nth \<omega> 1) * (vec_nth h 1))) *\<^sub>R axis 2 1)"
+
+lemma has_derivative_cvec_dip:
+  "(cvec_dip \<omega>0 \<omega>s has_derivative Dcvec_dip \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+  \<comment> \<open>Deterministic, \<^emph>\<open>fast\<close> proof: build the derivative tree \<^emph>\<open>bottom-up\<close> by explicit
+      \<open>[OF]\<close> composition of the \<^emph>\<open>specific\<close> non-eq \<open>has_derivative\<close> rules --- pure first-order
+      resolution, \<^bold>\<open>no\<close> \<open>auto\<close>/\<open>rule+\<close> backtracking and \<^bold>\<open>no\<close> higher-order unification search
+      against \<open>derivative_eq_intros\<close>.  @{thm has_derivative_eq_rhs} lets us state the clean
+      derivative; one \<open>simp\<close> clears the \<open>- 0\<close> cruft.\<close>
+  unfolding cvec_dip_def[abs_def] Dcvec_dip_def[abs_def]
+  by (rule has_derivative_eq_rhs[OF
+        has_derivative_add[OF
+          has_derivative_scaleR_left[OF
+            has_derivative_add[OF
+              has_derivative_diff[OF has_derivative_kx has_derivative_const]
+              has_derivative_mult_right[OF
+                has_derivative_diff[OF has_derivative_kz has_derivative_const]]]]
+          has_derivative_scaleR_left[OF
+            has_derivative_add[OF
+              has_derivative_diff[OF has_derivative_ky has_derivative_const]
+              has_derivative_mult_right[OF
+                has_derivative_diff[OF has_derivative_kz has_derivative_const]]]]]])
+     (simp add: algebra_simps fun_eq_iff)
+
+lemma frechet_derivative_cvec_dip:
+  "frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) = Dcvec_dip \<omega>0 \<omega>s \<omega>"
+  by (rule frechet_derivative_at[symmetric, OF has_derivative_cvec_dip])
+
 text \<open>\<^bold>\<open>Step 3: the objective \<open>U\<close>, DEFINED FROM the smooth \<open>e\<^sup>2\<close>, is \<open>C\<^sup>\<infinity>\<close> globally.\<close>
   \<open>U_dip = U_cart (cvec_dip \<omega>\<^sub>0 \<omega>\<^sub>s) gain_dip\<close> --- the radiation intensity
   \<open>g(\<omega>)\<bar>A(\<bm>x,\<omega>)\<bar>\<^sup>2\<close> with the steered wavevector and the \<^emph>\<open>smooth\<close> dipole gain
