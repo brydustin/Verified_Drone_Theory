@@ -497,6 +497,41 @@ qed
 lemma gsinc_higher_differentiable_on: "higher_differentiable_on UNIV gsinc n"
   using Jsinc_higher_differentiable_on[of 0 n] by (simp add: Jsinc_0)
 
+text \<open>\<^bold>\<open>The concrete dipole element pattern and its gain.\<close>  \<open>edip \<theta> = cos(\<pi>/2 cos\<theta>)/sin\<theta>\<close>
+  (tex D_edit L238) is the raw half-wave-dipole pattern, \<open>0/0\<close> at \<open>\<theta>=k\<pi>\<close>.  Its \<^emph>\<open>gain\<close>
+  \<open>gdip = \<bar>edip\<bar>\<^sup>2\<close> is given the manifestly-smooth \<open>sinc\<close>-factored form, which is \<open>C\<^sup>\<infinity>\<close>
+  everywhere (composition of the smooth \<open>gsinc\<close>), and below is shown to equal \<open>edip\<^sup>2\<close>.\<close>
+
+definition edip :: "real \<Rightarrow> real" where
+  "edip \<theta> = cos (pi/2 * cos \<theta>) / sin \<theta>"
+
+definition gdip :: "real \<Rightarrow> real" where
+  "gdip \<theta> = (pi^2/4) * (gsinc ((pi/2)*(1 - cos \<theta>)) * gsinc ((pi/2)*(1 + cos \<theta>)))"
+
+lemma gdip_higher_differentiable_on: "higher_differentiable_on UNIV gdip n"
+proof -
+  have cosn: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
+    using sin_cos_higher_differentiable_on by (rule conjunct2)
+  have am: "higher_differentiable_on UNIV (\<lambda>\<theta>::real. (pi/2)*(1 - cos \<theta>)) n"
+    by (intro higher_differentiable_on_mult higher_differentiable_on_minus
+              higher_differentiable_on_const cosn open_UNIV)
+  have ap: "higher_differentiable_on UNIV (\<lambda>\<theta>::real. (pi/2)*(1 + cos \<theta>)) n"
+    by (intro higher_differentiable_on_mult higher_differentiable_on_add
+              higher_differentiable_on_const cosn open_UNIV)
+  have gm: "higher_differentiable_on UNIV (\<lambda>\<theta>. gsinc ((pi/2)*(1 - cos \<theta>))) n"
+    using higher_differentiable_on_compose
+            [OF gsinc_higher_differentiable_on am _ open_UNIV open_UNIV]
+    by (simp add: o_def)
+  have gp: "higher_differentiable_on UNIV (\<lambda>\<theta>. gsinc ((pi/2)*(1 + cos \<theta>))) n"
+    using higher_differentiable_on_compose
+            [OF gsinc_higher_differentiable_on ap _ open_UNIV open_UNIV]
+    by (simp add: o_def)
+  show ?thesis
+    unfolding gdip_def
+    by (intro higher_differentiable_on_mult higher_differentiable_on_const
+              gm gp open_UNIV)
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
