@@ -617,6 +617,42 @@ next
   finally show ?thesis .
 qed
 
+text \<open>\<^bold>\<open>The literal pattern-squared is smooth, and the gain as a function of the angle.\<close>
+  The raw \<open>0/0\<close> function \<open>(cos(\<pi>/2 cos\<theta>)/sin\<theta>)\<^sup>2\<close> \<^emph>\<open>is\<close> \<open>C\<^sup>\<infinity>\<close> --- it equals the smooth
+  \<open>gdip\<close> (extensionally), so the smooth extension is genuine, not assumed.  We then take
+  the radiation gain to be this extension as a function of \<open>\<omega> = (\<theta>,\<phi>)\<close> (\<open>\<theta> = \<omega>$1\<close>):
+  \<open>gain_dip \<omega> = gdip(\<omega>$1) = \<bar>e(\<theta>)\<bar>\<^sup>2\<close>, \<open>C\<^sup>\<infinity>\<close> on \<open>\<real>\<^sup>2\<close>.  \<^bold>\<open>This is the extension that
+  defines \<open>U\<close>\<close> --- so \<open>U\<close>'s global derivative facts follow.\<close>
+
+lemma edip_sq_higher_differentiable_on:
+  "higher_differentiable_on UNIV (\<lambda>\<theta>. (edip \<theta>)\<^sup>2) n"
+proof -
+  have "(\<lambda>\<theta>. (edip \<theta>)\<^sup>2) = gdip"
+    by (rule ext) (rule gdip_eq_edip_sq[symmetric])
+  thus ?thesis by (simp add: gdip_higher_differentiable_on)
+qed
+
+definition gain_dip :: "real^2 \<Rightarrow> real" where
+  "gain_dip \<omega> = gdip (\<omega> $ 1)"
+
+lemma gain_dip_higher_differentiable_on: "higher_differentiable_on UNIV gain_dip n"
+proof -
+  have proj: "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. \<omega> $ 1) n"
+  proof -
+    have "(\<lambda>\<omega>::real^2. \<omega> $ 1) = (\<lambda>\<omega>. inner \<omega> (axis 1 1))"
+      by (rule ext) (simp add: inner_axis)
+    thus ?thesis
+      using higher_differentiable_on_inner[OF higher_differentiable_on_id
+              higher_differentiable_on_const open_UNIV]
+      by simp
+  qed
+  have "higher_differentiable_on UNIV (gdip \<circ> (\<lambda>\<omega>::real^2. \<omega> $ 1)) n"
+    by (rule higher_differentiable_on_compose
+          [OF gdip_higher_differentiable_on proj _ open_UNIV open_UNIV]) auto
+  thus ?thesis
+    by (metis (no_types, lifting) ext comp_def gain_dip_def) 
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
