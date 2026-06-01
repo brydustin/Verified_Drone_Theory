@@ -650,7 +650,19 @@ proof -
     by (rule higher_differentiable_on_compose
           [OF gdip_higher_differentiable_on proj _ open_UNIV open_UNIV]) auto
   thus ?thesis
-    by (metis (no_types, lifting) ext comp_def gain_dip_def) 
+    by (metis (no_types, lifting) ext comp_def gain_dip_def)
+qed
+
+text \<open>\<^bold>\<open>The gain derivatives.\<close>  \<open>gain_dip \<omega> = gdip(\<omega>\<^sub>1)\<close> depends only on \<open>\<theta> = \<omega>\<^sub>1\<close>, so its
+  Fréchet derivative is \<open>\<partial>\<^bsub>\<theta>\<^esub>gdip \<cdot> h\<^sub>1\<close> (chain rule through the projection) --- the genuine,
+  assumption-free derivative of our dipole gain (the \<open>gdip\<close> jet is a fact, \<open>gdip\<close> being \<open>C\<^sup>\<infinity>\<close>).\<close>
+
+lemma gdip_differentiable: "gdip differentiable (at (x::real))"
+proof -
+  have "gdip differentiable_on UNIV"
+    using gdip_higher_differentiable_on[of 1]
+    by (rule higher_differentiable_on_imp_differentiable_on) simp
+  thus ?thesis by (simp add: differentiable_on_def)
 qed
 
 text \<open>\<^bold>\<open>Step 2: the concrete steered wavevector \<open>cvec\<^sub>0\<close> is \<open>C\<^sup>\<infinity>\<close>.\<close>  \<open>kx,ky,kz\<close> are \<open>sin/cos\<close>
@@ -738,6 +750,20 @@ lemma has_derivative_proj:
   "((\<lambda>\<omega>::real^2. \<omega> $ i) has_derivative (\<lambda>h. h $ i)) (at \<omega>)"
   by (auto intro!: bounded_linear.has_derivative[OF bounded_linear_vec_nth]
                    has_derivative_ident)
+
+lemma gain_dip_has_derivative:
+  \<comment> \<open>\<open>gain_dip \<omega> = gdip(\<omega>\<^sub>1)\<close> depends only on \<open>\<theta> = \<omega>\<^sub>1\<close>; chain rule through the projection
+      gives the genuine, assumption-free Fréchet derivative of our dipole gain.\<close>
+  "(gain_dip has_derivative
+      (\<lambda>v. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth v 1))) (at \<omega>)"
+proof -
+  have "((gdip \<circ> (\<lambda>\<omega>. vec_nth \<omega> 1)) has_derivative
+          (frechet_derivative gdip (at (vec_nth \<omega> 1)) \<circ> (\<lambda>v. vec_nth v 1))) (at \<omega>)"
+    by (rule diff_chain_at[OF has_derivative_proj
+          frechet_derivative_works[THEN iffD1, OF gdip_differentiable]])
+  thus ?thesis
+    by (metis (no_types, lifting) ext gain_dip_def o_def)
+qed
 
 lemma has_derivative_kx:
   "(kx has_derivative (\<lambda>h. cos (\<omega>$1) * cos (\<omega>$2) * (h$1) - sin (\<omega>$1) * sin (\<omega>$2) * (h$2)))
@@ -936,6 +962,38 @@ lemma gradU_dip_has_derivative:
   "(gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x
       has_derivative (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v v)) (at \<omega>)"
   by (rule gradU_has_derivative_of_C2[OF U_dip_Ck2 UNIV_I])
+
+text \<open>\<^bold>\<open>The dipole gradient field is continuous in \<open>\<omega>\<close>.\<close>  Since @{thm gradU_dip_has_derivative}
+  gives a (Fréchet) derivative of \<open>gradU\<close> at \<^emph>\<open>every\<close> \<open>\<omega>\<close>, the gradient field is differentiable
+  everywhere, hence continuous on any set --- the genuine, assumption-free continuity of the
+  actual dipole gradient (this is one Weierstrass input for the capstone's \<open>\<kappa>\<close>-margin).\<close>
+
+lemma gradU_dip_continuous_on:
+  "continuous_on S (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x)"
+proof (rule continuous_at_imp_continuous_on, rule ballI)
+  fix \<omega> assume "\<omega> \<in> S"
+  show "continuous (at \<omega>) (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x)"
+    by (rule has_derivative_continuous[OF gradU_dip_has_derivative])
+qed
+
+lemma norm_gradU_dip_continuous_on:
+  "continuous_on S (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+  by (intro continuous_on_norm gradU_dip_continuous_on)
+
+text \<open>\<^bold>\<open>The dipole Hessian is continuous in \<open>\<omega>\<close>.\<close>  \<open>U_dip\<close> is \<open>C\<^sup>2\<close> everywhere
+  (@{thm U_dip_Ck2}), so its Hessian \<open>\<nabla>\<^sup>2 = HessU\<close> is continuous (the \<open>C\<^sup>2\<close>-continuity of
+  second derivatives, @{thm Ck_2_imp_hessian_continuous}) --- the second Weierstrass input
+  (continuity of \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H)\<close> on the annulus) for the capstone's \<open>\<xi>\<close>-margin.\<close>
+
+lemma HessU_dip_continuous_on:
+  "continuous_on S (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x)"
+proof -
+  have eq: "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x = \<nabla>\<^sup>2 (U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x)"
+    by (rule ext) (simp add: HessU_def)
+  have "continuous_on UNIV (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x)"
+    unfolding eq by (rule Ck_2_imp_hessian_continuous[OF U_dip_Ck2])
+  thus ?thesis by (rule continuous_on_subset) simp
+qed
 
 subsection \<open>First contact with the determinant: the moments appear in \<open>dA\<close>\<close>
 
@@ -1210,6 +1268,85 @@ lemma sphere01_ne: "sphere (0::real^2) 1 \<noteq> {}"
 
 lemma sigma_min_nonneg: "0 \<le> sigma_min H"
   unfolding sigma_min_def by (rule cINF_greatest[OF sphere01_ne]) simp
+
+text \<open>\<^bold>\<open>\<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n\<close> is (4-Lipschitz, hence) continuous.\<close>  As an infimum over the unit sphere of
+  \<open>\<parallel>H v\<parallel>\<close>, the smallest singular value differs between two matrices by at most the operator
+  norm of their difference: for each unit \<open>v\<close>, \<open>\<parallel>H\<^sub>1v\<parallel> \<le> \<parallel>H\<^sub>2v\<parallel> + \<parallel>(H\<^sub>1-H\<^sub>2)v\<parallel> \<le> \<parallel>H\<^sub>2v\<parallel> + \<parallel>H\<^sub>1-H\<^sub>2\<parallel>\<^bsub>op\<^esub>\<close>,
+  so \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n H\<^sub>1 - \<sigma>\<^sub>m\<^sub>i\<^sub>n H\<^sub>2 \<le> \<parallel>H\<^sub>1-H\<^sub>2\<parallel>\<^bsub>op\<^esub> \<le> 4\<parallel>H\<^sub>1-H\<^sub>2\<parallel>\<close>.  Continuity then composes with
+  @{thm HessU_dip_continuous_on} to give continuity of \<open>\<omega> \<mapsto> \<sigma>\<^sub>m\<^sub>i\<^sub>n(H(\<omega>))\<close>.\<close>
+
+lemma sigma_min_diff_le:
+  fixes H1 H2 :: "real^2^2"
+  shows "sigma_min H1 - sigma_min H2 \<le> onorm ((*v) (H1 - H2))"
+proof -
+  let ?L = "onorm ((*v) (H1 - H2))"
+  have bdd: "bdd_below ((\<lambda>v. norm (H1 *v v)) ` sphere 0 1)"
+    by (rule bdd_belowI[of _ 0]) auto
+  have step: "sigma_min H1 - ?L \<le> norm (H2 *v v)" if v: "v \<in> sphere (0::real^2) 1" for v
+  proof -
+    have nv: "norm v = 1" using v by (simp add: dist_norm)
+    have le1: "sigma_min H1 \<le> norm (H1 *v v)"
+      unfolding sigma_min_def by (rule cINF_lower[OF bdd v])
+    have tri: "norm (H1 *v v) \<le> norm (H2 *v v) + norm ((H1 - H2) *v v)"
+      using norm_triangle_sub[of "H1 *v v" "H2 *v v"]
+      by (simp add: matrix_vector_mult_diff_rdistrib)
+    have onb: "norm ((H1 - H2) *v v) \<le> ?L"
+      using onorm[OF matrix_vector_mul_bounded_linear, of "H1 - H2" v] nv by simp
+    from le1 tri onb show ?thesis by linarith
+  qed
+  have main: "sigma_min H1 - ?L \<le> sigma_min H2"
+  proof -
+    have "sigma_min H1 - ?L \<le> (INF v\<in>sphere (0::real^2) 1. norm (H2 *v v))"
+      by (rule cINF_greatest[OF sphere01_ne]) (rule step)
+    thus ?thesis by (simp add: sigma_min_def)
+  qed
+  thus ?thesis by linarith
+qed
+
+lemma onorm_mv_le4:
+  fixes M :: "real^2^2"
+  shows "onorm ((*v) M) \<le> 4 * norm M"
+proof -
+  have "onorm ((*v) M) \<le> (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. \<bar>M $ i $ j\<bar>)"
+    by (rule onorm_le_matrix_component_sum)
+  also have "\<dots> \<le> (\<Sum>i\<in>(UNIV::2 set). \<Sum>j\<in>(UNIV::2 set). norm M)"
+    by (intro sum_mono)
+       (rule order_trans[OF component_le_norm_cart Finite_Cartesian_Product.norm_nth_le])
+  also have "\<dots> = 4 * norm M" by simp
+  finally show ?thesis .
+qed
+
+lemma sigma_min_continuous_on:
+  "continuous_on (S::(real^2^2) set) sigma_min"
+proof -
+  have "4-lipschitz_on UNIV (sigma_min :: real^2^2 \<Rightarrow> real)"
+  proof (rule lipschitz_onI)
+    show "(0::real) \<le> 4" by simp
+    fix H1 H2 :: "real^2^2"
+    have b1: "sigma_min H1 - sigma_min H2 \<le> onorm ((*v) (H1 - H2))"
+      by (rule sigma_min_diff_le)
+    have b2: "sigma_min H2 - sigma_min H1 \<le> onorm ((*v) (H2 - H1))"
+      by (rule sigma_min_diff_le)
+    have nc: "norm (H2 - H1) = norm (H1 - H2)" by (simp add: norm_minus_commute)
+    have "\<bar>sigma_min H1 - sigma_min H2\<bar> \<le> 4 * norm (H1 - H2)"
+      using b1 b2 onorm_mv_le4[of "H1 - H2"] onorm_mv_le4[of "H2 - H1"] nc
+      by (simp add: abs_le_iff)
+    thus "dist (sigma_min H1) (sigma_min H2) \<le> 4 * dist H1 H2"
+      by (simp add: dist_norm dist_real_def)
+  qed
+  hence "continuous_on UNIV (sigma_min :: real^2^2 \<Rightarrow> real)"
+    by (rule lipschitz_on_continuous_on)
+  thus ?thesis by (rule continuous_on_subset) simp
+qed
+
+text \<open>\<^bold>\<open>The dipole nondegeneracy margin \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H(\<omega>))\<close> is continuous in \<open>\<omega>\<close>\<close> ---
+  composition of the continuous \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n\<close> with the continuous dipole Hessian.\<close>
+
+lemma sigma_min_HessU_dip_continuous_on:
+  "continuous_on S (\<lambda>\<omega>. sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+  using continuous_on_compose[OF HessU_dip_continuous_on
+          continuous_on_subset[OF sigma_min_continuous_on subset_UNIV]]
+  by (simp add: o_def)
 
 definition Xrobust ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> planar \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((planar)^'n) set"

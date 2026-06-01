@@ -8,6 +8,35 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-01 (robust set) — Weierstrass continuity inputs for the capstone (actual dipole)
+
+Toward discharging `regular_feasible_witness` *with the actual function* `cvec_dip`/`gain_dip`
+(it is UNprovable as stated for arbitrary `cvec`/`g` — the usual abstract-placeholder trap),
+proved the two analytic conjuncts the capstone needs as standalone, sorry-free facts:
+- `gradU_dip_continuous_on` / `norm_gradU_dip_continuous_on`: the dipole gradient field is
+  continuous in ω (differentiable *everywhere* by `gradU_dip_has_derivative`, so
+  `has_derivative_continuous` + `continuous_at_imp_continuous_on`). This is the κ-margin input.
+- `HessU_dip_continuous_on`: `U_dip` is C² everywhere (`U_dip_Ck2`), so its Hessian
+  `∇²=HessU` is continuous (`Ck_2_imp_hessian_continuous`).
+- `sigma_min` continuity (the ξ-margin input). σ_min is 4-Lipschitz: `sigma_min_diff_le`
+  shows `σ_min H₁ − σ_min H₂ ≤ ‖(*v)(H₁−H₂)‖_op` (for each unit v, `‖H₁v‖ ≤ ‖H₂v‖ + ‖(H₁−H₂)v‖`
+  via `norm_triangle_sub` + `matrix_vector_mult_diff_rdistrib`, then `cINF_lower`/`cINF_greatest`
+  over the unit sphere); `onorm_mv_le4` bounds `‖(*v)M‖_op ≤ 4‖M‖` (via
+  `onorm_le_matrix_component_sum`, `|M$i$j| ≤ ‖M‖`); combine ⟹ `lipschitz_onI 4` ⟹
+  `lipschitz_on_continuous_on`. Then `sigma_min_HessU_dip_continuous_on` = σ_min ∘ HessU.
+
+GOTCHAS: (i) `norm_nth_le` is OVERLOADED — the `inner`-product version
+(`norm (x∙i) ≤ norm x`) shadows the cartesian one; qualify as
+`Finite_Cartesian_Product.norm_nth_le` to get `norm (x$i) ≤ norm x`. (ii) After
+`unfolding sigma_min_def` a hypothesis still mentioning `sigma_min H1` no longer matches
+the now-unfolded goal — keep the INF↔σ_min rewrite local (rewrite only the H₂ side via a
+nested `have … by (simp add: sigma_min_def)`).
+
+NEXT: refactor `F0_nonempty` to a witness-parametric core `F0_nonempty_of_witness`, then a
+concrete `regular_feasible_witness_dip` (continuity conjuncts now PROVED, residual hole =
+existence of a regular feasible config, downstream of `Phi_bad_meager`+Baire) and the
+paper-faithful `F0_dip_nonempty`.
+
 ## 2026-05-30 (robust set, Part 1b) — 𝓕 RE-defined faithfully (c,N,P) and compact
 
 Corrected `Ffeas` to the actual paper definition (`D_edit_May18(3).tex`,
