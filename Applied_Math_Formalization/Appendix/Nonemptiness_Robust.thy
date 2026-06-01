@@ -1553,6 +1553,108 @@ proof -
   qed
 qed
 
+lemma gain_dip_nonneg: "0 \<le> gain_dip \<omega>"
+  by (simp add: gain_dip_def gdip_eq_edip_sq)
+
+text \<open>\<^bold>\<open>Parameterised witness construction.\<close>  For any target spacing \<open>s>0\<close> there is a
+  configuration that exactly nulls the array factor at \<open>\<omega>\<^sub>null\<close> and whose elements are
+  pairwise \<open>\<ge> s\<close> apart (in the \<open>spdist\<close> metric).  Both the closed-feasibility nonemptiness
+  (\<open>s = d\<^sub>min\<close>) and the open-interior result (\<open>s > d\<^sub>min\<close>, giving \<^emph>\<open>strict\<close> spacing) specialise
+  this.  Construction: enumerate by a bijection \<open>f\<close> of \<open>{..<N}\<close>, place element \<open>f k\<close> to
+  solve \<open>\<Q>x'+\<P>y' = 2\<pi>k/N\<close> along the axis with nonzero coefficient, spreading the other
+  coordinate as \<open>s\<cdot>k\<close>.\<close>
+
+lemma feasible_witness_exists:
+  fixes \<omega>0 \<omega>s \<omega>n :: angle and s A B D :: real
+  assumes N: "CARD('n) > 1"
+    and cn: "cvec_dip \<omega>0 \<omega>s \<omega>n \<noteq> 0"
+    and spos: "0 < s"
+  shows "\<exists>x::(real^2)^'n. af (cvec_dip \<omega>0 \<omega>s) x \<omega>n = 0
+            \<and> (\<forall>m m'. m \<noteq> m' \<longrightarrow> s \<le> spdist A B D (x $ m) (x $ m'))"
+proof -
+  define c1 where "c1 = cvec_dip \<omega>0 \<omega>s \<omega>n $ 1"
+  define c2 where "c2 = cvec_dip \<omega>0 \<omega>s \<omega>n $ 2"
+  define t where "t = (\<lambda>k::nat. 2 * pi * real k / real CARD('n))"
+  obtain f where "bij_betw f {0..<CARD('n)} (UNIV::'n set)"
+    using ex_bij_betw_nat_finite[of "UNIV::'n set"] N card.infinite gr_implies_not0 by blast
+  hence bijf: "bij_betw f {..<CARD('n)} (UNIV::'n set)" by (simp add: atLeast0LessThan)
+  define idx where "idx = inv_into {..<CARD('n)} f"
+  have idx_inj: "inj idx"
+    unfolding idx_def by (metis bijf bij_betw_imp_surj_on inj_on_inv_into order_refl)
+  have idx_f: "idx (f k) = k" if "k < CARD('n)" for k
+    using that bijf by (simp add: idx_def bij_betw_imp_inj_on inv_into_f_f)
+  have ex_p: "\<exists>p::nat \<Rightarrow> real^2.
+       (\<forall>k. c1 * (p k $ 1) + c2 * (p k $ 2) = t k)
+     \<and> (\<forall>k j. k \<noteq> j \<longrightarrow> s \<le> \<bar>p k $ 1 - p j $ 1\<bar> \<or> s \<le> \<bar>p k $ 2 - p j $ 2\<bar>)"
+  proof (cases "c2 = 0")
+    case False
+    define p where "p = (\<lambda>k. vector [s * real k, (t k - c1 * (s * real k)) / c2] :: real^2)"
+    have ph: "c1 * (p k $ 1) + c2 * (p k $ 2) = t k" for k
+      using False by (simp add: p_def)
+    have sp: "s \<le> \<bar>p k $ 1 - p j $ 1\<bar>" if "k \<noteq> j" for k j
+    proof -
+      have "p k $ 1 - p j $ 1 = s * (real k - real j)"
+        by (simp add: p_def right_diff_distrib)
+      hence "\<bar>p k $ 1 - p j $ 1\<bar> = s * \<bar>real k - real j\<bar>"
+        using spos by (simp add: abs_mult abs_of_pos)
+      moreover have "s * 1 \<le> s * \<bar>real k - real j\<bar>"
+        using spos nat_real_abs_diff_ge1[OF that] by (intro mult_left_mono) auto
+      ultimately show ?thesis by simp
+    qed
+    show ?thesis by (intro exI[of _ p] conjI allI impI) (use ph sp in blast)+
+  next
+    case True
+    hence c1ne: "c1 \<noteq> 0"
+    proof -
+      have "c1 \<noteq> 0 \<or> c2 \<noteq> 0"
+        using cn by (auto simp: c1_def c2_def vec_eq_iff forall_2,
+          metis (mono_tags, opaque_lifting) Finite_Cartesian_Product.vec_eq_iff exhaust_2 zero_index)
+      thus ?thesis using True by simp
+    qed
+    define p where "p = (\<lambda>k. vector [t k / c1, s * real k] :: real^2)"
+    have ph: "c1 * (p k $ 1) + c2 * (p k $ 2) = t k" for k
+      using True c1ne by (simp add: p_def)
+    have sp: "s \<le> \<bar>p k $ 2 - p j $ 2\<bar>" if "k \<noteq> j" for k j
+    proof -
+      have "p k $ 2 - p j $ 2 = s * (real k - real j)"
+        by (simp add: p_def right_diff_distrib)
+      hence "\<bar>p k $ 2 - p j $ 2\<bar> = s * \<bar>real k - real j\<bar>"
+        using spos by (simp add: abs_mult abs_of_pos)
+      moreover have "s * 1 \<le> s * \<bar>real k - real j\<bar>"
+        using spos nat_real_abs_diff_ge1[OF that] by (intro mult_left_mono) auto
+      ultimately show ?thesis by simp
+    qed
+    show ?thesis by (intro exI[of _ p] conjI allI impI) (use ph sp in blast)+
+  qed
+  obtain p :: "nat \<Rightarrow> real^2"
+    where pphase: "\<And>k. c1 * (p k $ 1) + c2 * (p k $ 2) = t k"
+      and pspace: "\<And>k j. k \<noteq> j \<Longrightarrow> s \<le> \<bar>p k $ 1 - p j $ 1\<bar> \<or> s \<le> \<bar>p k $ 2 - p j $ 2\<bar>"
+    using ex_p by blast
+  define xbar where "xbar = (\<chi> m. p (idx m))"
+  have xbar_m: "xbar $ m = p (idx m)" for m by (simp add: xbar_def)
+  have afz: "af (cvec_dip \<omega>0 \<omega>s) xbar \<omega>n = 0"
+  proof (rule af_null_zero[OF N bijf])
+    fix k assume k: "k < CARD('n)"
+    have "xbar $ f k = p k" using k by (simp add: xbar_m idx_f)
+    thus "cvec_dip \<omega>0 \<omega>s \<omega>n \<bullet> (xbar $ f k) = 2 * pi * real k / real CARD('n)"
+      using pphase[of k]
+      by (simp add: inner_real2 c1_def[symmetric] c2_def[symmetric] t_def)
+  qed
+  have spac: "s \<le> spdist A B D (xbar $ m) (xbar $ m')" if mm: "m \<noteq> m'" for m m'
+  proof -
+    have "idx m \<noteq> idx m'" using mm idx_inj by (auto dest: injD)
+    hence disj: "s \<le> \<bar>p (idx m) $ 1 - p (idx m') $ 1\<bar>
+               \<or> s \<le> \<bar>p (idx m) $ 2 - p (idx m') $ 2\<bar>"
+      by (rule pspace)
+    have d1: "\<bar>p (idx m) $ 1 - p (idx m') $ 1\<bar> \<le> spdist A B D (xbar $ m) (xbar $ m')"
+      using spdist_ge_abs1[of "xbar $ m" "xbar $ m'" A B D] by (simp add: xbar_m)
+    have d2: "\<bar>p (idx m) $ 2 - p (idx m') $ 2\<bar> \<le> spdist A B D (xbar $ m) (xbar $ m')"
+      using spdist_ge_abs2[of "xbar $ m" "xbar $ m'" A B D] by (simp add: xbar_m)
+    from disj d1 d2 show ?thesis by auto
+  qed
+  from afz spac show ?thesis by (intro exI[of _ xbar]) blast
+qed
+
 text \<open>\<^bold>\<open>The feasible set is nonempty (D_edit Prop.~openfeas / L450--566).\<close>  Under the
   standing well-posedness conditions --- \<open>cvec\<^sub>dip(\<omega>\<^sub>null) \<noteq> 0\<close> (i.e.\ \<open>(\<Q>,\<P>) \<noteq> 0\<close>),
   \<open>N>1\<close>, \<open>d\<^sub>min>0\<close>, \<open>\<delta>\<^sub>null\<ge>0\<close>, \<open>p\<^sub>min \<le> N\<^sup>2\<bar>e(\<theta>\<^sub>0)\<bar>\<^sup>2\<close>, and \<open><cos\<theta>\<^sub>s \<noteq> <cos\<theta>\<^sub>0\<close> --- there is a
@@ -1575,120 +1677,86 @@ lemma Ffeas_dip_nonempty:
   shows "\<exists>R. \<exists>x::(real^2)^'n. 0 < R
             \<and> x \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>n \<omega>0 \<delta>null pmin"
 proof -
-  define c1 where "c1 = cvec_dip \<omega>0 \<omega>s \<omega>n $ 1"
-  define c2 where "c2 = cvec_dip \<omega>0 \<omega>s \<omega>n $ 2"
-  define t where "t = (\<lambda>k::nat. 2 * pi * real k / real CARD('n))"
-  \<comment> \<open>enumerate the elements\<close>
-  obtain f where "bij_betw f {0..<CARD('n)} (UNIV::'n set)"
-    using ex_bij_betw_nat_finite[of "UNIV::'n set"] N card.infinite gr_implies_not0 by blast
-  hence bijf: "bij_betw f {..<CARD('n)} (UNIV::'n set)" by (simp add: atLeast0LessThan)
-  define idx where "idx = inv_into {..<CARD('n)} f"
-  have idx_inj: "inj idx"
-    unfolding idx_def
-    by (metis bijf bij_betw_imp_surj_on inj_on_inv_into order_refl)
-  have idx_f: "idx (f k) = k" if "k < CARD('n)" for k
-    using that bijf
-    by (simp add: idx_def bij_betw_imp_inj_on inv_into_f_f)
-  \<comment> \<open>the per-index positions: solve \<open>c1 x + c2 y = t k\<close>, spread the free axis by \<open>dmin\<close>\<close>
-  have ex_p: "\<exists>p::nat \<Rightarrow> real^2.
-       (\<forall>k. c1 * (p k $ 1) + c2 * (p k $ 2) = t k)
-     \<and> (\<forall>k j. k \<noteq> j \<longrightarrow> dmin \<le> \<bar>p k $ 1 - p j $ 1\<bar> \<or> dmin \<le> \<bar>p k $ 2 - p j $ 2\<bar>)"
-  proof (cases "c2 = 0")
-    case False
-    define p where "p = (\<lambda>k. vector [dmin * real k, (t k - c1 * (dmin * real k)) / c2] :: real^2)"
-    have ph: "c1 * (p k $ 1) + c2 * (p k $ 2) = t k" for k
-      using False by (simp add: p_def)
-    have sp: "dmin \<le> \<bar>p k $ 1 - p j $ 1\<bar>" if "k \<noteq> j" for k j
-    proof -
-      have "p k $ 1 - p j $ 1 = dmin * (real k - real j)"
-        by (simp add: p_def right_diff_distrib)
-      hence "\<bar>p k $ 1 - p j $ 1\<bar> = dmin * \<bar>real k - real j\<bar>"
-        using dpos by (simp add: abs_mult abs_of_pos)
-      moreover have "dmin * 1 \<le> dmin * \<bar>real k - real j\<bar>"
-        using dpos nat_real_abs_diff_ge1[OF that] by (intro mult_left_mono) auto
-      ultimately show ?thesis by simp
-    qed
-    show ?thesis by (intro exI[of _ p] conjI allI impI) (use ph sp in blast)+
-  next
-    case True
-    hence c1ne: "c1 \<noteq> 0"
-    proof -
-      have "c1 \<noteq> 0 \<or> c2 \<noteq> 0"
-        using cn by(auto simp: c1_def c2_def vec_eq_iff forall_2,
-         metis (mono_tags, opaque_lifting) Finite_Cartesian_Product.vec_eq_iff exhaust_2 zero_index)
-      thus ?thesis using True by simp
-    qed
-    define p where "p = (\<lambda>k. vector [t k / c1, dmin * real k] :: real^2)"
-    have ph: "c1 * (p k $ 1) + c2 * (p k $ 2) = t k" for k
-      using True c1ne by (simp add: p_def)
-    have sp: "dmin \<le> \<bar>p k $ 2 - p j $ 2\<bar>" if "k \<noteq> j" for k j
-    proof -
-      have "p k $ 2 - p j $ 2 = dmin * (real k - real j)"
-        by (simp add: p_def right_diff_distrib)
-      hence "\<bar>p k $ 2 - p j $ 2\<bar> = dmin * \<bar>real k - real j\<bar>"
-        using dpos by (simp add: abs_mult abs_of_pos)
-      moreover have "dmin * 1 \<le> dmin * \<bar>real k - real j\<bar>"
-        using dpos nat_real_abs_diff_ge1[OF that] by (intro mult_left_mono) auto
-      ultimately show ?thesis by simp
-    qed
-    show ?thesis by (intro exI[of _ p] conjI allI impI) (use ph sp in blast)+
-  qed
-  obtain p :: "nat \<Rightarrow> real^2"
-    where pphase: "\<And>k. c1 * (p k $ 1) + c2 * (p k $ 2) = t k"
-      and pspace: "\<And>k j. k \<noteq> j \<Longrightarrow> dmin \<le> \<bar>p k $ 1 - p j $ 1\<bar> \<or> dmin \<le> \<bar>p k $ 2 - p j $ 2\<bar>"
-    using ex_p by blast
-  \<comment> \<open>the explicit witness\<close>
-  define xbar where "xbar = (\<chi> m. p (idx m))"
-  have xbar_m: "xbar $ m = p (idx m)" for m by (simp add: xbar_def)
-  \<comment> \<open>null: \<open>A(\<bar>x,\<omega>\<^sub>null) = 0\<close>\<close>
-  have afz: "af (cvec_dip \<omega>0 \<omega>s) xbar \<omega>n = 0"
-  proof (rule af_null_zero[OF N bijf])
-    fix k assume k: "k < CARD('n)"
-    have "xbar $ f k = p k" using k by (simp add: xbar_m idx_f)
-    thus "cvec_dip \<omega>0 \<omega>s \<omega>n \<bullet> (xbar $ f k) = 2 * pi * real k / real CARD('n)"
-      using pphase[of k]
-      by (simp add: inner_real2 c1_def[symmetric] c2_def[symmetric] t_def)
-  qed
-  \<comment> \<open>spacing: \<open>c(\<bar>x) = 0\<close>\<close>
-  have spac: "dmin \<le> spdist A B D (xbar $ m) (xbar $ m')" if mm: "m \<noteq> m'" for m m'
-  proof -
-    have "idx m \<noteq> idx m'" using mm idx_inj by (auto dest: injD)
-    hence disj: "dmin \<le> \<bar>p (idx m) $ 1 - p (idx m') $ 1\<bar>
-               \<or> dmin \<le> \<bar>p (idx m) $ 2 - p (idx m') $ 2\<bar>"
-      by (rule pspace)
-    have d1: "\<bar>p (idx m) $ 1 - p (idx m') $ 1\<bar> \<le> spdist A B D (xbar $ m) (xbar $ m')"
-      using spdist_ge_abs1[of "xbar $ m" "xbar $ m'" A B D] by (simp add: xbar_m)
-    have d2: "\<bar>p (idx m) $ 2 - p (idx m') $ 2\<bar> \<le> spdist A B D (xbar $ m) (xbar $ m')"
-      using spdist_ge_abs2[of "xbar $ m" "xbar $ m'" A B D] by (simp add: xbar_m)
-    from disj d1 d2 show ?thesis by auto
-  qed
-  have cpen0: "cpen dmin A B D xbar = 0"
+  obtain x :: "(real^2)^'n"
+    where afz: "af (cvec_dip \<omega>0 \<omega>s) x \<omega>n = 0"
+      and spac: "\<forall>m m'. m \<noteq> m' \<longrightarrow> dmin \<le> spdist A B D (x $ m) (x $ m')"
+    using feasible_witness_exists[OF N cn dpos, of A B D] by blast
+  \<comment> \<open>spacing \<open>\<Longrightarrow> c(\<bar>x) = 0\<close>\<close>
+  have cpen0: "cpen dmin A B D x = 0"
     unfolding cpen_def
   proof (intro sum.neutral ballI)
     fix q :: "'n \<times> 'n" assume "q \<in> {q. fst q \<noteq> snd q}"
-    hence "dmin \<le> spdist A B D (xbar $ fst q) (xbar $ snd q)" by (intro spac) simp
-    thus "max 0 (dmin - spdist A B D (xbar $ fst q) (xbar $ snd q)) = 0" by simp
+    hence "fst q \<noteq> snd q" by simp
+    hence "dmin \<le> spdist A B D (x $ fst q) (x $ snd q)" using spac by blast
+    thus "max 0 (dmin - spdist A B D (x $ fst q) (x $ snd q)) = 0" by simp
   qed
-  \<comment> \<open>power constraints and the ball\<close>
-  have nullpow: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip xbar \<omega>n = 0"
+  \<comment> \<open>null power \<open>= 0\<close>, main-beam power \<open>= g(\<omega>\<^sub>0)N\<^sup>2\<close>, and a containing ball\<close>
+  have nullpow: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>n = 0"
     by (simp add: Upow_def afz)
-  have mainpow: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip xbar \<omega>0 = gain_dip \<omega>0 * (real CARD('n))\<^sup>2"
+  have mainpow: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0 = gain_dip \<omega>0 * (real CARD('n))\<^sup>2"
     by (rule Upow_at_main[OF hsep])
-  define R where "R = norm xbar + 1"
+  define R where "R = norm x + 1"
   have R0: "0 < R" by (simp add: R_def add_nonneg_pos)
-  have inball: "xbar \<in> cball 0 R" by (simp add: R_def dist_norm)
+  have inball: "x \<in> cball 0 R" by (simp add: R_def dist_norm)
   \<comment> \<open>assemble membership in \<open>\<F>\<close>\<close>
-  have "xbar \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>n \<omega>0 \<delta>null pmin"
+  have "x \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>n \<omega>0 \<delta>null pmin"
     unfolding Ffeas_def
   proof (intro IntI)
-    show "xbar \<in> cpen dmin A B D -` {0}" using cpen0 by simp
-    show "xbar \<in> (\<lambda>x. Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>n) -` {0..\<delta>null}"
+    show "x \<in> cpen dmin A B D -` {0}" using cpen0 by simp
+    show "x \<in> (\<lambda>x. Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>n) -` {0..\<delta>null}"
       using nullpow dnull by simp
-    show "xbar \<in> (\<lambda>x. Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0)
+    show "x \<in> (\<lambda>x. Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0)
                   -` {pmin .. gain_dip \<omega>0 * (real CARD('n))\<^sup>2}"
       using mainpow pmain by simp
-    show "xbar \<in> cball 0 R" by (rule inball)
+    show "x \<in> cball 0 R" by (rule inball)
   qed
+  thus ?thesis using R0 by blast
+qed
+
+text \<open>\<^bold>\<open>The feasible set has nonempty interior (D_edit Remark~ball\_inside\_F / L566).\<close>  With
+  \<^emph>\<open>strict\<close> margins --- a spacing target \<open>s>d\<^sub>min\<close>, \<open>\<delta>\<^sub>null>0\<close>, \<open>p\<^sub>min < N\<^sup>2\<bar>e(\<theta>\<^sub>0)\<bar>\<^sup>2\<close> --- the
+  explicit witness is \<^emph>\<open>strictly\<close> feasible, so a whole ball lies in \<open>\<F>\<close> (@{thm
+  ball_inside_Ffeas}).  This open feasible body is the Baire arena into which the
+  meagerness of degenerate configurations is intersected to extract a \<^emph>\<open>regular\<close> feasible
+  point (the remaining step of \<open>regular_feasible_point_dip\<close>).\<close>
+
+lemma Ffeas_dip_has_interior:
+  fixes \<omega>0 \<omega>s \<omega>n :: angle and dmin \<delta>null pmin A B D :: real
+  assumes N: "CARD('n) > 1"
+    and cn: "cvec_dip \<omega>0 \<omega>s \<omega>n \<noteq> 0"
+    and dpos: "0 < dmin"
+    and dnull: "0 < \<delta>null"
+    and pmain: "pmin < gain_dip \<omega>0 * (real CARD('n))\<^sup>2"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+  shows "\<exists>R. \<exists>x::(real^2)^'n. \<exists>\<rho>>0. 0 < R
+            \<and> ball x \<rho> \<subseteq> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>n \<omega>0 \<delta>null pmin"
+proof -
+  \<comment> \<open>build the witness with strict spacing target \<open>s = d\<^sub>min + 1 > d\<^sub>min\<close>\<close>
+  have spos: "0 < dmin + 1" using dpos by simp
+  obtain x :: "(real^2)^'n"
+    where afz: "af (cvec_dip \<omega>0 \<omega>s) x \<omega>n = 0"
+      and spac: "\<forall>m m'. m \<noteq> m' \<longrightarrow> dmin + 1 \<le> spdist A B D (x $ m) (x $ m')"
+    using feasible_witness_exists[OF N cn spos, of A B D] by blast
+  have spac_strict: "\<forall>p\<in>{p. fst p \<noteq> snd p}. dmin < spdist A B D (x $ fst p) (x $ snd p)"
+  proof (intro ballI)
+    fix p :: "'n \<times> 'n" assume "p \<in> {p. fst p \<noteq> snd p}"
+    hence "fst p \<noteq> snd p" by simp
+    hence "dmin + 1 \<le> spdist A B D (x $ fst p) (x $ snd p)" using spac by blast
+    thus "dmin < spdist A B D (x $ fst p) (x $ snd p)" by simp
+  qed
+  \<comment> \<open>strict null and main-beam margins\<close>
+  have Nlt: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>n < \<delta>null"
+    using dnull by (simp add: Upow_def afz)
+  have Pgt: "pmin < Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0"
+    using pmain by (simp add: Upow_at_main[OF hsep])
+  define R where "R = norm x + 1"
+  have R0: "0 < R" by (simp add: R_def add_nonneg_pos)
+  have inball: "x \<in> ball 0 R" by (simp add: R_def dist_norm)
+  \<comment> \<open>a strictly feasible point has a feasible ball around it\<close>
+  obtain \<rho> where "0 < \<rho>"
+      and "ball x \<rho> \<subseteq> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>n \<omega>0 \<delta>null pmin"
+    using ball_inside_Ffeas[OF gain_dip_nonneg gain_dip_nonneg spac_strict Nlt Pgt inball]
+    by blast
   thus ?thesis using R0 by blast
 qed
 
