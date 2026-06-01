@@ -532,6 +532,91 @@ proof -
               gm gp open_UNIV)
 qed
 
+lemma gdip_eq_edip_sq: "gdip \<theta> = (edip \<theta>)\<^sup>2"
+proof (cases "sin \<theta> = 0")
+  case True
+  have "(cos \<theta>)\<^sup>2 = 1" using sin_cos_squared_add[of \<theta>] True by simp
+  hence cc: "cos \<theta> = 1 \<or> cos \<theta> = - 1" by (simp add: power2_eq_1_iff)
+  hence num0: "cos (pi/2 * cos \<theta>) = 0" by (auto simp: cos_pi_half)
+  have E: "(edip \<theta>)\<^sup>2 = 0" using True num0 by (simp add: edip_def)
+  have z0: "gsinc 0 = 1" by (simp add: gsinc_def)
+  have p0: "gsinc pi = 0" using pi_gt_zero by (simp add: gsinc_def)
+  have G: "gdip \<theta> = 0"
+    using cc by (auto simp: gdip_def z0 p0)
+  show ?thesis using E G by simp
+next
+  case False
+  have sineq: "sin \<theta> * sin \<theta> = 1 - cos \<theta> * cos \<theta>"
+    using sin_cos_squared_add[of \<theta>] by (simp add: power2_eq_square algebra_simps)
+  have c1: "cos \<theta> \<noteq> 1"
+  proof
+    assume "cos \<theta> = 1"
+    with sineq have "sin \<theta> * sin \<theta> = 0" by simp
+    hence "sin \<theta> = 0" by simp
+    with False show False ..
+  qed
+  have cm1: "cos \<theta> \<noteq> - 1"
+  proof
+    assume "cos \<theta> = - 1"
+    with sineq have "sin \<theta> * sin \<theta> = 0" by simp
+    hence "sin \<theta> = 0" by simp
+    with False show False ..
+  qed
+  have A0: "(pi/2)*(1 - cos \<theta>) \<noteq> 0"
+  proof
+    assume "(pi/2)*(1 - cos \<theta>) = 0"
+    hence "1 - cos \<theta> = 0" using pi_gt_zero by simp
+    with c1 show False by simp
+  qed
+  have B0: "(pi/2)*(1 + cos \<theta>) \<noteq> 0"
+  proof
+    assume "(pi/2)*(1 + cos \<theta>) = 0"
+    hence "1 + cos \<theta> = 0" using pi_gt_zero by simp
+    with cm1 show False by simp
+  qed
+  \<comment> \<open>product-to-sum + double angle: \<open>sin A sin B = cos\<^sup>2(\<pi>/2 cos\<theta>)\<close> with \<open>A+B=\<pi>\<close>, \<open>A-B=-\<pi>cos\<theta>\<close>\<close>
+  have prod: "sin ((pi/2)*(1 - cos \<theta>)) * sin ((pi/2)*(1 + cos \<theta>)) = (cos (pi/2 * cos \<theta>))\<^sup>2"
+  proof -
+    have e1: "(pi/2)*(1 - cos \<theta>) - (pi/2)*(1 + cos \<theta>) = - (pi * cos \<theta>)"
+      by (simp add: field_simps)
+    have e2: "(pi/2)*(1 - cos \<theta>) + (pi/2)*(1 + cos \<theta>) = pi"
+      by (simp add: field_simps)
+    have "sin ((pi/2)*(1 - cos \<theta>)) * sin ((pi/2)*(1 + cos \<theta>))
+          = (cos ((pi/2)*(1 - cos \<theta>) - (pi/2)*(1 + cos \<theta>))
+             - cos ((pi/2)*(1 - cos \<theta>) + (pi/2)*(1 + cos \<theta>))) / 2"
+      by (simp add: cos_diff cos_add)
+    also have "\<dots> = (cos (- (pi * cos \<theta>)) - cos pi) / 2"
+      by (simp only: e1 e2)
+    also have "\<dots> = (cos (pi * cos \<theta>) + 1) / 2"
+      by simp
+    also have "\<dots> = (cos (pi/2 * cos \<theta>))\<^sup>2"
+      using cos_double_cos[of "pi/2 * cos \<theta>"] by (simp add: algebra_simps)
+    finally show ?thesis .
+  qed
+  have AB: "((pi/2)*(1 - cos \<theta>)) * ((pi/2)*(1 + cos \<theta>)) = (pi\<^sup>2/4) * (sin \<theta>)\<^sup>2"
+  proof -
+    have s: "(sin \<theta>)\<^sup>2 = 1 - (cos \<theta>)\<^sup>2"
+      using sin_cos_squared_add[of \<theta>] by (simp add: algebra_simps)
+    have "((pi/2)*(1 - cos \<theta>)) * ((pi/2)*(1 + cos \<theta>)) = (pi\<^sup>2/4) * (1 - (cos \<theta>)\<^sup>2)"
+      by (simp add: power2_eq_square field_simps)
+    also have "\<dots> = (pi\<^sup>2/4) * (sin \<theta>)\<^sup>2" using s by simp
+    finally show ?thesis .
+  qed
+  have "gdip \<theta> = (pi\<^sup>2/4)
+          * ((sin ((pi/2)*(1 - cos \<theta>)) * sin ((pi/2)*(1 + cos \<theta>)))
+             / (((pi/2)*(1 - cos \<theta>)) * ((pi/2)*(1 + cos \<theta>))))"
+    unfolding gdip_def
+    using A0 B0 gsinc_def by fastforce  
+    
+  also have "\<dots> = (pi\<^sup>2/4) * ((cos (pi/2 * cos \<theta>))\<^sup>2 / ((pi\<^sup>2/4) * (sin \<theta>)\<^sup>2))"
+    using AB prod by presburger
+  also have "\<dots> = (cos (pi/2 * cos \<theta>))\<^sup>2 / (sin \<theta>)\<^sup>2"
+    using pi_gt_zero False by simp
+  also have "\<dots> = (edip \<theta>)\<^sup>2"
+    by (simp add: edip_def power_divide)
+  finally show ?thesis .
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
