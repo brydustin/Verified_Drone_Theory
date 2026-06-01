@@ -32,10 +32,30 @@ GOTCHAS: (i) `norm_nth_le` is OVERLOADED — the `inner`-product version
 the now-unfolded goal — keep the INF↔σ_min rewrite local (rewrite only the H₂ side via a
 nested `have … by (simp add: sigma_min_def)`).
 
-NEXT: refactor `F0_nonempty` to a witness-parametric core `F0_nonempty_of_witness`, then a
-concrete `regular_feasible_witness_dip` (continuity conjuncts now PROVED, residual hole =
-existence of a regular feasible config, downstream of `Phi_bad_meager`+Baire) and the
-paper-faithful `F0_dip_nonempty`.
+Then refactored the capstone to USE these on the actual function:
+- `F0_nonempty_of_witness`: the purely-analytic Weierstrass core (sorry-free), parametric in
+  the 6 regular-witness facts (feasible x₀, ε>0, two `continuous_on`, gradient nonvanishing on
+  ∂B_ε, gradient-or-nondegenerate on Ω̃) ⟹ `∃ξ κ ε>0. 𝓕₀ ≠ ∅`. This is the old `F0_nonempty`
+  body with the `obtain … regular_feasible_witness` lifted out to hypotheses.
+- `regular_feasible_point_dip` (the genuine remaining hole, sorry): for `cvec_dip ω₀ ωs`,
+  `gain_dip`, ∃ feasible x₀ and ε>0 with gradient nonvanishing on ∂B_ε and gradient-or-
+  nondegenerate on Ω̃ — NO continuity (that's now proven), so a strictly smaller & TRUE
+  obligation = the `Phi_bad_meager`+Baire payoff.
+- `regular_feasible_witness_dip`: bolts the proven `norm_gradU_dip_continuous_on` and
+  `continuous_on_add … sigma_min_HessU_dip_continuous_on` onto `regular_feasible_point_dip`.
+- `F0_dip_nonempty`: the paper-faithful headline — `𝓕₀` for the ACTUAL dipole pattern
+  `U_dip = g(ω)|A|²` (steered `cvec_dip`, smooth `gain_dip=|e(θ)|²`) is nonempty, via
+  `F0_nonempty_of_witness` + `regular_feasible_witness_dip`.
+
+REMOVED the abstract `F0_nonempty`/`regular_feasible_witness` (parametric in arbitrary
+`cvec`/`g`): the latter is UNprovable as stated (gain could be negative ⟹ `𝓕` empty) and
+assumed continuity — the exact placeholder trap. Net: the file's 2 sorries are now both
+honest & true — `Phi_bad_meager` (determinant submersion) and `regular_feasible_point_dip`
+(regular feasible point for the dipole). Builds clean (BUILD_EXIT=0, ~50s).
+
+NEXT: `regular_feasible_point_dip` — wire in `Phi_bad_meager` + Baire (degenerate configs
+meager ⟹ a regular point exists in the feasible interior); and discharge `Phi_bad_meager`
+itself via the proven 12×12 `bigJ_det`/`W_surj` submersion ⟹ codim-3 ⟹ meager projection.
 
 ## 2026-05-30 (robust set, Part 1b) — 𝓕 RE-defined faithfully (c,N,P) and compact
 

@@ -1465,57 +1465,41 @@ text \<open>TeX Lemma~\eqref{F0} (D_edit_May18, the 2-D version, L1288/F0\_nonem
   \<^emph>\<open>regular\<close> (\<open>\<nabla>\<^sub>\<Omega>U \<noteq> 0\<close> on the \<open>\<epsilon>\<close>-sphere, and \<open>\<nabla>\<^sub>\<Omega>U \<noteq> 0\<close> or \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close> on \<open>\<Omega>\<^sup>~\<close>) ---
   is a \<^emph>\<open>consequence\<close> of \<open>Phi_bad_meager\<close> + Baire (the degenerate configurations are
   meager, so their complement inside the open interior of the feasible body is dense and
-  in particular nonempty), packaged as the single obligation \<open>regular_feasible_witness\<close>
-  below.  This is precisely what the determinant computation was for.  Given that witness,
-  the margins \<open>\<kappa> = min\<^bsub>\<partial>B\<^sub>\<epsilon>\<^esub>\<parallel>\<nabla>\<^sub>\<Omega>U\<parallel>\<close> and \<open>\<xi> = min\<^bsub>\<Omega>\<^sup>~\<^esub>(\<parallel>\<nabla>\<^sub>\<Omega>U\<parallel> + \<sigma>\<^sub>m\<^sub>i\<^sub>n(H))\<close> are positive by
-  Weierstrass, and \<open>x\<^sub>0 \<in> \<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.\<close>
+  in particular nonempty), packaged for the actual pattern as the obligation
+  \<open>regular_feasible_point_dip\<close> below.  This is precisely what the determinant computation was
+  for.  Given that point, the margins \<open>\<kappa> = min\<^bsub>\<partial>B\<^sub>\<epsilon>\<^esub>\<parallel>\<nabla>\<^sub>\<Omega>U\<parallel>\<close> and
+  \<open>\<xi> = min\<^bsub>\<Omega>\<^sup>~\<^esub>(\<parallel>\<nabla>\<^sub>\<Omega>U\<parallel> + \<sigma>\<^sub>m\<^sub>i\<^sub>n(H))\<close> are positive by Weierstrass, and \<open>x\<^sub>0 \<in> \<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.
+  We split the analytic core (\<open>F0_nonempty_of_witness\<close>) from the witness, so the concrete
+  dipole capstone \<open>F0_dip_nonempty\<close> discharges the \<^emph>\<open>continuity\<close> half from proven facts and
+  leaves only the genuine existence-of-a-regular-feasible-point hole.\<close>
 
 lemma mem_imp_ne_empty: "x \<in> A \<Longrightarrow> A \<noteq> {}" by blast
 
-text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff, packaged for the capstone).\<close>  For a compact
-  angular domain \<open>\<Omega>\<close> and \<open>\<ge> 6\<close> array elements there is a feasible configuration \<open>x\<^sub>0\<close> and a
-  radius \<open>\<epsilon> > 0\<close> whose \<open>\<theta>\<^sub>0\<close>-pattern is \<^emph>\<open>regular\<close>: the gradient does not vanish on the
-  \<open>\<epsilon>\<close>-sphere, and on the compact annulus \<open>\<Omega>\<^sup>~\<close> every critical point is nondegenerate
-  (\<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close>).  This bundles \<open>Phi_bad_meager\<close> (degenerate configs are meager),
-  Baire (a nonempty open subset of the feasible interior is non-meager), and the
-  \<open>C\<^sup>2\<close>-continuity of \<open>\<nabla>\<^sub>\<Omega>U\<close>/\<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H)\<close>.  It is the \<^emph>\<open>only\<close> remaining obligation of the
-  capstone --- everything the previous version \<^emph>\<open>assumed\<close> is now \<^emph>\<open>derived\<close> from it.\<close>
+text \<open>\<^bold>\<open>The capstone core, parametrised by the regular feasible witness.\<close>  Given a feasible
+  \<open>x\<^sub>0\<close> and radius \<open>\<epsilon>>0\<close> whose pattern is regular --- gradient nonvanishing on the
+  \<open>\<epsilon>\<close>-sphere, gradient-or-nondegenerate on the annulus, with the relevant norms continuous
+  --- the positive margins \<open>\<kappa>,\<xi>\<close> exist by Weierstrass and \<open>x\<^sub>0 \<in> \<F>\<^sub>0(\<xi>,\<kappa>,\<epsilon>)\<close>.  This is the
+  purely analytic half of \<open>F0_nonempty\<close>; the witness itself (the determinant/Baire payoff)
+  is the separate obligation.  Isolating it lets the \<^emph>\<open>concrete dipole\<close> capstone discharge
+  the continuity conjuncts from the proven @{thm norm_gradU_dip_continuous_on} /
+  @{thm sigma_min_HessU_dip_continuous_on}, rather than assuming them.\<close>
 
-lemma regular_feasible_witness:
+lemma F0_nonempty_of_witness:
   fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
     and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar
-  assumes "6 \<le> CARD('n)"
-  shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
-            \<and> x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin
-            \<and> continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))
-            \<and> continuous_on (Omega ctr - ball ctr \<epsilon>)
-                  (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))
-            \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU cvec g x0 \<omega> \<noteq> 0)
-            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
-                  gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y))"
-  \<comment> \<open>downstream of \<open>Phi_bad_meager\<close>: degenerate configs are meager, so the regular
-      witness exists inside the feasible interior by Baire --- to be wired in\<close>
-  sorry
-
-theorem F0_nonempty:
-  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
-    and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar
-  assumes c6: "6 \<le> CARD('n)"
+    and x0 :: "planar^'n" and \<epsilon> :: real
+  assumes \<epsilon>0: "0 < \<epsilon>"
+    and feas: "x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin"
+    and cdN: "continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))"
+    and cdsum: "continuous_on (Omega ctr - ball ctr \<epsilon>)
+                  (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
+    and rsph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU cvec g x0 \<omega> \<noteq> 0"
+    and rO: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y)"
   shows "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
             \<and> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
                 \<noteq> ({}::(planar^'n) set)"
 proof -
-  \<comment> \<open>the regular feasible witness --- consequence of the meagerness of degenerate configs\<close>
-  obtain x0 :: "planar^'n" and \<epsilon> :: real
-    where \<epsilon>0: "0 < \<epsilon>"
-      and feas: "x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin"
-      and cdN: "continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))"
-      and cdsum: "continuous_on (Omega ctr - ball ctr \<epsilon>)
-                    (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
-      and rsph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU cvec g x0 \<omega> \<noteq> 0"
-      and rO: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
-                  gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y)"
-    using regular_feasible_witness[OF c6] by blast
   \<comment> \<open>the positive \<open>\<kappa>\<close>-margin on the \<open>\<epsilon>\<close>-sphere (Weierstrass)\<close>
   have sph_ne: "sphere ctr \<epsilon> \<noteq> {}"
   proof -
@@ -1579,6 +1563,83 @@ proof -
     thus ?thesis using \<xi>pos \<kappa>pos \<epsilon>0 by blast
   qed
 qed
+
+subsection \<open>The capstone for the ACTUAL dipole pattern \<open>U_dip\<close>\<close>
+
+text \<open>\<^bold>\<open>The genuine remaining obligation, for the actual function.\<close>  Specialised to the
+  concrete steered dipole \<open>cvec = cvec\<^sub>dip \<omega>\<^sub>0 \<omega>\<^sub>s\<close>, \<open>g = gain\<^sub>dip\<close>: there is a feasible
+  configuration \<open>x\<^sub>0\<close> and radius \<open>\<epsilon>>0\<close> whose pattern is regular (gradient nonvanishing on
+  \<open>\<partial>B\<^sub>\<epsilon>\<close>, gradient-or-nondegenerate on \<open>\<Omega>\<^sup>~\<close>).  This is \<^emph>\<open>exactly\<close> the determinant/Baire
+  payoff (degenerate configs meager, @{thm Phi_bad_meager} + Baire inside the feasible
+  interior); crucially the \<^emph>\<open>continuity\<close> half is no longer part of this hole --- it is
+  discharged below from the proven dipole facts.\<close>
+
+lemma regular_feasible_point_dip:
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  assumes c6: "6 \<le> CARD('n)"
+  shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
+            \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+            \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
+            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                  gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
+                  \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
+  \<comment> \<open>downstream of \<open>Phi_bad_meager\<close>: degenerate configs are meager, so the regular
+      witness exists inside the feasible interior by Baire --- to be wired in\<close>
+  sorry
+
+text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with continuity DISCHARGED.\<close>  We bolt the
+  two Weierstrass continuity conjuncts --- proven sorry-free in
+  @{thm norm_gradU_dip_continuous_on} and @{thm sigma_min_HessU_dip_continuous_on} --- onto
+  the regular feasible point, so what remains assumed is purely the existence of that point.\<close>
+
+lemma regular_feasible_witness_dip:
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  assumes c6: "6 \<le> CARD('n)"
+  shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
+            \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+            \<and> continuous_on (sphere ctr \<epsilon>)
+                  (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))
+            \<and> continuous_on (Omega ctr - ball ctr \<epsilon>)
+                  (\<lambda>y. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)
+                       + sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))
+            \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
+            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                  gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
+                  \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
+proof -
+  obtain x0 :: "planar^'n" and \<epsilon> :: real
+    where \<epsilon>0: "0 < \<epsilon>"
+      and feas: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
+      and rsph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
+      and rO: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                  gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
+                  \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
+    using regular_feasible_point_dip[OF c6] by blast
+  have c1: "continuous_on (sphere ctr \<epsilon>)
+              (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))"
+    by (rule norm_gradU_dip_continuous_on)
+  have c2: "continuous_on (Omega ctr - ball ctr \<epsilon>)
+              (\<lambda>y. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)
+                   + sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
+    by (intro continuous_on_add norm_gradU_dip_continuous_on
+              sigma_min_HessU_dip_continuous_on)
+  show ?thesis using \<epsilon>0 feas c1 c2 rsph rO by blast
+qed
+
+text \<open>\<^bold>\<open>The concrete capstone: \<open>\<F>\<^sub>0\<close> for the ACTUAL dipole pattern is nonempty.\<close>  This is
+  \<open>thm:final\<close>'s nonemptiness for the real radiation intensity \<open>U_dip = g(\<omega>)\<bar>A(\<bm>x,\<omega>)\<bar>\<^sup>2\<close>
+  with the steered wavevector \<open>cvec\<^sub>dip\<close> and the smooth dipole gain \<open>gain\<^sub>dip = \<bar>e(\<theta>)\<bar>\<^sup>2\<close>
+  --- no abstract \<open>cvec\<close>/\<open>g\<close>.  The continuity half is fully proven; the only assumption is
+  the regular feasible point (the determinant/Baire payoff, @{thm regular_feasible_point_dip}).\<close>
+
+theorem F0_dip_nonempty:
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  assumes c6: "6 \<le> CARD('n)"
+  shows "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+            \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
+                \<noteq> ({}::(planar^'n) set)"
+  using regular_feasible_witness_dip[OF c6]
+  by (blast intro: F0_nonempty_of_witness)
 
 
 end
