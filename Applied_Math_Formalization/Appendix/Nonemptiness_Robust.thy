@@ -254,6 +254,56 @@ proof -
   thus ?thesis unfolding gradU_def by (rule grad_fun_eq)
 qed
 
+text \<open>\<^bold>\<open>Bridge: \<open>HessU\<close> is the genuine Hessian (the Jacobian of the gradient field).\<close>
+  Like \<open>\<nabla>\<close>, the abstract \<open>\<nabla>\<^sup>2\<close> (\<open>hess_fun\<close>) is a \<open>THE\<close>-value, meaningful only where the
+  gradient field \<open>gradU cvec gain x = \<nabla>(U_cart cvec gain x)\<close> is itself differentiable in
+  \<open>\<omega>\<close> --- i.e. where \<open>U_cart\<close> is \<open>C\<^sup>2\<close>.  Given that derivative \<open>G\<close> (a consequence of \<open>C\<^sup>2\<close>
+  smoothness of the concrete \<open>cvec\<close>/\<open>gain\<close>), \<open>HessU\<close> is exactly its matrix.  This ties
+  \<open>HessU\<close> (hence the Hessian-determinant component of \<open>Phibad\<close>) to the genuine second
+  derivative of the real pattern, not a floating \<open>THE\<close>.\<close>
+
+lemma HessU_explicit:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and x :: "planar^'n" and \<omega> :: angle and G :: "planar \<Rightarrow> planar"
+  assumes "(gradU cvec gain x has_derivative G) (at \<omega>)"
+  shows "HessU cvec gain x \<omega> = matrix G"
+proof -
+  have linG: "linear G"
+    using has_derivative_bounded_linear[OF assms] bounded_linear.linear by blast
+  have fun_eq: "\<nabla> (U_cart cvec gain x) = gradU cvec gain x"
+    by (rule ext) (simp add: gradU_def)
+  have mg: "(\<lambda>v. matrix G *v v) = G"
+    by (simp add: linG)
+  have "(\<nabla> (U_cart cvec gain x) has_derivative (\<lambda>v. matrix G *v v)) (at \<omega>)"
+    using assms unfolding fun_eq mg .
+  hence "HESS (U_cart cvec gain x) \<omega> :> matrix G" unfolding has_hessian_def .
+  thus ?thesis unfolding HessU_def by (rule hess_fun_eq)
+qed
+
+text \<open>\<^bold>\<open>Dropping the assumption, step 1.\<close>  The per-point hypothesis of @{thm HessU_explicit}
+  (that the gradient field has a derivative at \<open>\<omega>\<close>) is \<^emph>\<open>false\<close> for an arbitrary \<open>cvec\<close>/\<open>gain\<close>
+  but holds wherever \<open>U_cart\<close> is \<open>C\<^sup>2\<close>.  Under \<open>U_cart \<in> C\<^sup>2\<close> on a neighbourhood the gradient
+  field \<^emph>\<open>is\<close> differentiable, with derivative the Hessian matrix --- so \<open>gradU\<close> is
+  differentiable everywhere on the \<open>C\<^sup>2\<close> locus and \<open>HessU\<close> is the genuine Hessian there.
+  The remaining drops are \<open>U_cart \<in> C\<^sup>2 \<Longleftarrow> cvec, gain \<in> C\<^sup>2\<close> (AFP closure lemmas) and,
+  for the concrete pattern, \<open>cvec\<^sub>0, \<bar>e\<bar>\<^sup>2\<close> smooth --- leaving no assumption at all.\<close>
+
+lemma gradU_has_derivative_of_C2:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and x :: "planar^'n" and \<omega> :: angle
+  assumes "Ck_on 2 (U_cart cvec gain x) U" and "\<omega> \<in> U"
+  shows "(gradU cvec gain x has_derivative (\<lambda>v. HessU cvec gain x \<omega> *v v)) (at \<omega>)"
+proof -
+  have H: "HESS (U_cart cvec gain x) \<omega> :> \<nabla>\<^sup>2 (U_cart cvec gain x) \<omega>"
+    by (rule Ck_2_imp_hessian_exists[OF assms])
+  have gfun: "gradU cvec gain x = \<nabla> (U_cart cvec gain x)"
+    by (rule ext) (simp add: gradU_def)
+  from H have D: "(\<nabla> (U_cart cvec gain x)
+                    has_derivative (\<lambda>v. \<nabla>\<^sup>2 (U_cart cvec gain x) \<omega> *v v)) (at \<omega>)"
+    unfolding has_hessian_def .
+  show ?thesis unfolding gfun HessU_def by (rule D)
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"

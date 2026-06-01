@@ -1198,3 +1198,29 @@ REMAINING to connect determinant → Phi_bad_meager (about our function):
  (d) the chain-rule rank-3 + codim-3 chart cover + projection-meager (needs an ℝ³
      analog of regular_zero_set_projection_charts; the ℝ² version is the lone Base sorry).
  (e) instantiate cvec := cvec0-adapter, gain := |e|², discharge the cvec≠0 / diff hyps.
+
+## 2026-05-31 (dropping the differentiability assumption, step 1)
+
+User question: is gradU differentiable everywhere — should we prove it and drop the
+HessU assumption? Answer: FALSE for arbitrary cvec/gain (e.g. cvec ω = (|ω₁|,0) makes
+U non-differentiable, gradU a junk THE), TRUE for our concrete function (cvec0 = sin/cos
+with CONSTANT lift coeffs Dx,Dy — denominator cosθs−cosθ0 is a fixed constant, no
+ω-singularity; cis entire; gain=|e|² smooth ⟹ U_cart C^∞ ⟹ gradU C^∞). So the
+assumption is exactly input-smoothness: it can't vanish while cvec/gain are arbitrary
+fixed, but becomes a THEOREM once we use the concrete smooth function.
+
+Plan to turn the assumption into a theorem (drop one level at a time):
+  gradU-derivative assm ⟸ U_cart∈C² ⟸ cvec,gain∈C² ⟸ (concrete) cvec0,|e|² smooth.
+
+STEP 1 done (user fixed HessU_explicit's `mg` to `by (simp add: linG)`; added
+`gradU_has_derivative_of_C2`): under `Ck_on 2 (U_cart cvec gain x) U` and ω∈U,
+`(gradU cvec gain x has_derivative (λv. HessU cvec gain x ω *v v)) (at ω)`. Via the
+proven `Ck_2_imp_hessian_exists` + has_hessian_def + gradU_def/HessU_def. So gradU is
+differentiable everywhere on the C² locus and HessU is the genuine Hessian there.
+
+REMAINING drops (both tractable):
+ - `cvec,gain ∈ C² ⟹ Ck_on 2 (U_cart cvec gain x) UNIV`: build via AFP Smooth.thy
+   closure (higher_differentiable_on_{const,id,add,mult,inner,scaleR,sum,compose,
+   uminus}) — U = gain·|A|², |A|²=inner A A, A=∑ cis(-(cvec·x_n)), cis via cos+i·sin.
+   (Ck_on ⟷ higher_differentiable_on, line 227.)
+ - concrete: cvec0-adapter (real×real→real^2) and |e|² are smooth ⟹ zero assumptions.
