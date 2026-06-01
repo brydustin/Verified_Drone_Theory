@@ -378,6 +378,41 @@ proof -
   thus ?thesis by (simp add: eq)
 qed
 
+text \<open>\<^bold>\<open>Reusable kernel for removable smoothness.\<close>  A family \<open>J\<close> of real functions that is
+  \<^emph>\<open>closed under differentiation\<close> --- \<open>(J k)' = J (k+1)\<close> everywhere --- is \<open>C\<^sup>\<infinity>\<close> at every
+  member.  (\<open>sin\<close>/\<open>cos\<close> are an instance; below we use it for the \<open>sinc\<close> integral family,
+  whose derivative chain comes from the Leibniz rule, with \<^emph>\<open>no\<close> \<open>0/0\<close> limit.)\<close>
+
+lemma hdo_real_deriv_chain:
+  fixes J :: "nat \<Rightarrow> real \<Rightarrow> real"
+  assumes ch: "\<And>k x. (J k has_real_derivative J (Suc k) x) (at x)"
+  shows "higher_differentiable_on UNIV (J k) n"
+proof (induction n arbitrary: k)
+  case 0
+  have "continuous_on UNIV (J k)"
+    by (auto intro: continuous_at_imp_continuous_on DERIV_isCont[OF ch])
+  thus ?case by (simp add: higher_differentiable_on.simps(1))
+next
+  case (Suc n)
+  have d: "J k differentiable (at x)" for x
+    using ch[of k x] by (blast intro: differentiableI has_field_derivative_imp_has_derivative)
+  have fd: "higher_differentiable_on UNIV (\<lambda>x. frechet_derivative (J k) (at x) v) n" for v :: real
+  proof -
+    have "(\<lambda>x. frechet_derivative (J k) (at x) v) = (\<lambda>x. J (Suc k) x * v)"
+    proof (rule ext)
+      fix x :: real
+      have "frechet_derivative (J k) (at x) = (*) (J (Suc k) x)"
+        by (rule frechet_derivative_at[symmetric,
+              OF has_field_derivative_imp_has_derivative[OF ch]])
+      thus "frechet_derivative (J k) (at x) v = J (Suc k) x * v" by simp
+    qed
+    moreover have "higher_differentiable_on UNIV (\<lambda>x. J (Suc k) x * v) n"
+      by (rule higher_differentiable_on_mult[OF Suc.IH higher_differentiable_on_const open_UNIV])
+    ultimately show ?thesis by simp
+  qed
+  show ?case using d fd by (simp add: higher_differentiable_on.simps(2))
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
