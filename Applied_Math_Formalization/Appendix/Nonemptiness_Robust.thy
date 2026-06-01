@@ -952,6 +952,39 @@ proof -
   show ?thesis by (simp only: G cmod2 reterm)
 qed
 
+text \<open>\<^bold>\<open>Nothing is assumed: the derivatives of the concrete \<open>cvec\<close>/\<open>gain\<close> are facts.\<close>
+  \<open>cvec_dip\<close> and \<open>gain_dip\<close> are \<open>C\<^sup>\<infinity>\<close> (proved), hence differentiable, so the \<open>has_derivative\<close>
+  hypotheses of the moment lemmas are \<^emph>\<open>discharged\<close> for our function --- the moment form
+  of \<open>gradU\<close> holds for \<open>U_dip\<close> with no hypotheses at all.\<close>
+
+lemma cvec_dip_differentiable: "cvec_dip \<omega>0 \<omega>s differentiable (at \<omega>)"
+proof -
+  have "cvec_dip \<omega>0 \<omega>s differentiable_on UNIV"
+    using cvec_dip_higher_differentiable_on[of \<omega>0 \<omega>s 1]
+    by (rule higher_differentiable_on_imp_differentiable_on) simp
+  thus ?thesis by (simp add: differentiable_on_def)
+qed
+
+lemma gain_dip_differentiable: "gain_dip differentiable (at \<omega>)"
+proof -
+  have "gain_dip differentiable_on UNIV"
+    using gain_dip_higher_differentiable_on[of 1]
+    by (rule higher_differentiable_on_imp_differentiable_on) simp
+  thus ?thesis by (simp add: differentiable_on_def)
+qed
+
+lemma gradU_dip_real_moments:
+  "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ j
+   = frechet_derivative gain_dip (at \<omega>) (axis j 1)
+       * ((Re (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2 + (Im (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2)
+     + gain_dip \<omega> * (2 * (\<Sum>k\<in>UNIV.
+           (frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) (axis j 1))$k
+             * (Re (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>) * Im (Mmom (cvec_dip \<omega>0 \<omega>s) x \<omega> k)
+                - Im (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>) * Re (Mmom (cvec_dip \<omega>0 \<omega>s) x \<omega> k))))"
+  by (rule gradU_component_real_moments
+        [OF frechet_derivative_works[THEN iffD1, OF cvec_dip_differentiable]
+            frechet_derivative_works[THEN iffD1, OF gain_dip_differentiable]])
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
