@@ -814,9 +814,11 @@ text \<open>\<^bold>\<open>The \<^emph>\<open>second\<close> derivative of \<ope
   form (\<^bold>\<open>not\<close> a \<open>frechet_derivative\<close> placeholder and \<^bold>\<open>nothing assumed\<close>); it discharges the
   second-order hypothesis \<open>cD2\<close> of \<open>has_derivative_dA_via_M2\<close> for our steering map.\<close>
 
-lemma has_derivative_Dcvec_dip:
-  "((\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) has_derivative
-      (\<lambda>h'. ((- vec_nth h 1 * sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
+definition D2cvec_dip :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> planar \<Rightarrow> planar \<Rightarrow> planar" where
+  \<comment> \<open>the explicit Hessian (second derivative) of \<open>cvec_dip\<close> --- a \<open>sin/cos\<close> bilinear form
+      in the directions \<open>h, h'\<close>; \<open>vec_nth\<close> (not \<open>$\<close>) for fast parsing, still prints as \<open>$\<close>.\<close>
+  "D2cvec_dip \<omega>0 \<omega>s \<omega> h =
+     (\<lambda>h'. ((- vec_nth h 1 * sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
               - vec_nth h 2 * cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
               - ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * vec_nth h 1 * cos (vec_nth \<omega> 1)) * vec_nth h' 1
             + (- vec_nth h 1 * cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
@@ -825,8 +827,10 @@ lemma has_derivative_Dcvec_dip:
               + vec_nth h 2 * cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
               - ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * vec_nth h 1 * cos (vec_nth \<omega> 1)) * vec_nth h' 1
             + (vec_nth h 1 * cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
-              - vec_nth h 2 * sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)) * vec_nth h' 2) *\<^sub>R axis 2 1))
-     (at \<omega>)"
+              - vec_nth h 2 * sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)) * vec_nth h' 2) *\<^sub>R axis 2 1)"
+
+lemma has_derivative_Dcvec_dip:
+  "((\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) has_derivative D2cvec_dip \<omega>0 \<omega>s \<omega> h) (at \<omega>)"
 proof -
   \<comment> \<open>The beam-lift coefficients are \<^emph>\<open>constants\<close> in \<open>\<omega>\<close>; naming them with \<open>define\<close> stops
       \<open>auto\<close> from applying the quotient rule (which would spawn a spurious
@@ -854,10 +858,14 @@ proof -
                      - vec_nth h 2 * sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)) * vec_nth h' 2)) (at \<omega>)"
     by (auto intro!: derivative_eq_intros has_derivative_proj simp: algebra_simps)
   show ?thesis
-    unfolding Dcvec_dip_def[abs_def] Dx_def[symmetric] Dy_def[symmetric]
+    unfolding D2cvec_dip_def[abs_def] Dcvec_dip_def[abs_def] Dx_def[symmetric] Dy_def[symmetric]
     by (rule has_derivative_add[OF has_derivative_scaleR_left[OF dP1]
                                    has_derivative_scaleR_left[OF dP2]])
 qed
+
+lemma frechet_derivative_Dcvec_dip:
+  "frechet_derivative (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) (at \<omega>) = D2cvec_dip \<omega>0 \<omega>s \<omega> h"
+  by (rule frechet_derivative_at[symmetric, OF has_derivative_Dcvec_dip])
 
 text \<open>\<^bold>\<open>Step 3: the objective \<open>U\<close>, DEFINED FROM the smooth \<open>e\<^sup>2\<close>, is \<open>C\<^sup>\<infinity>\<close> globally.\<close>
   \<open>U_dip = U_cart (cvec_dip \<omega>\<^sub>0 \<omega>\<^sub>s) gain_dip\<close> --- the radiation intensity
