@@ -782,6 +782,24 @@ proof -
   thus ?thesis by (simp add: U_dip_def[abs_def] U_cart_def[abs_def])
 qed
 
+text \<open>\<^bold>\<open>The global \<open>\<omega>\<close>-derivative facts.\<close>  Since the objective \<open>U_dip\<close> --- built from the
+  \<^emph>\<open>smooth\<close> \<open>e\<^sup>2\<close> --- is \<open>C\<^sup>2\<close> everywhere, its gradient field is differentiable at \<^emph>\<open>every\<close>
+  \<open>\<omega>\<close> with derivative the Hessian, and the Hessian is the genuine second derivative.
+  No assumption, no excluded poles.\<close>
+
+lemma U_dip_Ck2: "Ck_on 2 (U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x) UNIV"
+proof -
+  have "higher_differentiable_on UNIV (U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x) 2"
+    using U_dip_higher_differentiable_on[of \<omega>0 \<omega>s x 2]
+    by (simp add: U_dip_def[abs_def])
+  thus ?thesis by (simp add: Ck_on_iff_higher_differentiable_on)
+qed
+
+lemma gradU_dip_has_derivative:
+  "(gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x
+      has_derivative (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v v)) (at \<omega>)"
+  by (rule gradU_has_derivative_of_C2[OF U_dip_Ck2 UNIV_I])
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
