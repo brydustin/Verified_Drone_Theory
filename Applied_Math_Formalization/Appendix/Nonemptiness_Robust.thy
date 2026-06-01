@@ -730,6 +730,58 @@ proof -
               higher_differentiable_on_const comp1 comp2 open_UNIV)
 qed
 
+text \<open>\<^bold>\<open>Step 3: the objective \<open>U\<close>, DEFINED FROM the smooth \<open>e\<^sup>2\<close>, is \<open>C\<^sup>\<infinity>\<close> globally.\<close>
+  \<open>U_dip = U_cart (cvec_dip \<omega>\<^sub>0 \<omega>\<^sub>s) gain_dip\<close> --- the radiation intensity
+  \<open>g(\<omega>)\<bar>A(\<bm>x,\<omega>)\<bar>\<^sup>2\<close> with the steered wavevector and the \<^emph>\<open>smooth\<close> dipole gain
+  \<open>g = gain_dip = \<bar>e\<bar>\<^sup>2\<close>.  Because every ingredient is \<open>C\<^sup>\<infinity>\<close> in \<open>\<omega>\<close> (\<open>cis\<close>, \<open>cvec_dip\<close>,
+  \<open>gain_dip\<close>), \<open>U_dip\<close> is \<open>C\<^sup>\<infinity>\<close> on all of \<open>\<real>\<^sup>2\<close> --- so its \<open>\<omega>\<close>-gradient and Hessian are
+  genuine, global objects (no assumption, dipole nulls included).\<close>
+
+definition U_dip :: "angle \<Rightarrow> angle \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real" where
+  "U_dip \<omega>0 \<omega>s x \<omega> = U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>"
+
+lemma A_cart_dip_higher_differentiable_on:
+  "higher_differentiable_on UNIV (\<lambda>\<omega>. A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>) n"
+proof -
+  have summand: "higher_differentiable_on UNIV
+                (\<lambda>\<omega>. cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) n" for j
+  proof -
+    have arg: "higher_differentiable_on UNIV
+                 (\<lambda>\<omega>. - ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j))) n"
+      by (intro higher_differentiable_on_uminus higher_differentiable_on_inner
+                cvec_dip_higher_differentiable_on higher_differentiable_on_const open_UNIV)
+    have "higher_differentiable_on UNIV
+            (cis \<circ> (\<lambda>\<omega>. - ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) n"
+      by (rule higher_differentiable_on_compose
+            [OF cis_higher_differentiable_on arg _ open_UNIV open_UNIV]) auto
+    thus ?thesis by (simp add: o_def)
+  qed
+  have "higher_differentiable_on UNIV
+          (\<lambda>\<omega>. \<Sum>j\<in>UNIV. cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) n"
+    by (intro higher_differentiable_on_sum summand open_UNIV)
+  thus ?thesis by (simp add: A_cart_def)
+qed
+
+lemma U_dip_higher_differentiable_on:
+  "higher_differentiable_on UNIV (U_dip \<omega>0 \<omega>s x) n"
+proof -
+  have AA: "higher_differentiable_on UNIV
+              (\<lambda>\<omega>. (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2) n"
+  proof -
+    have "(\<lambda>\<omega>. (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2)
+          = (\<lambda>\<omega>. inner (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>) (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))"
+      by (rule ext) (simp add: power2_norm_eq_inner)
+    thus ?thesis
+      using higher_differentiable_on_inner[OF A_cart_dip_higher_differentiable_on
+              A_cart_dip_higher_differentiable_on open_UNIV] by simp
+  qed
+  have "higher_differentiable_on UNIV
+          (\<lambda>\<omega>. gain_dip \<omega> * (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2) n"
+    by (rule higher_differentiable_on_mult
+          [OF gain_dip_higher_differentiable_on AA open_UNIV])
+  thus ?thesis by (simp add: U_dip_def[abs_def] U_cart_def[abs_def])
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
