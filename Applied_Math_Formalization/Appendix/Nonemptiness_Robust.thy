@@ -756,6 +756,18 @@ lemma has_derivative_kz:
   unfolding kz_def[abs_def]
   by (auto intro!: derivative_eq_intros has_derivative_proj simp: algebra_simps)
 
+text \<open>\<^bold>\<open>Building blocks for the \<^emph>\<open>second\<close> derivative\<close> --- the explicit Fréchet derivatives of
+  \<open>cos(\<omega>\<^sub>i)\<close> and \<open>sin(\<omega>\<^sub>i)\<close>, used to differentiate the explicit Jacobian \<open>Dcvec_dip\<close> once
+  more (giving the genuine, assumption-free second derivative of \<open>cvec_dip\<close>).\<close>
+
+lemma has_derivative_cos_proj:
+  "((\<lambda>\<omega>::real^2. cos (\<omega>$i)) has_derivative (\<lambda>h. - sin (\<omega>$i) * (h$i))) (at \<omega>)"
+  by (auto intro!: derivative_eq_intros has_derivative_proj)
+
+lemma has_derivative_sin_proj:
+  "((\<lambda>\<omega>::real^2. sin (\<omega>$i)) has_derivative (\<lambda>h. cos (\<omega>$i) * (h$i))) (at \<omega>)"
+  by (auto intro!: derivative_eq_intros has_derivative_proj)
+
 definition Dcvec_dip :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real^2 \<Rightarrow> real^2" where
   \<comment> \<open>The explicit Jacobian of @{const cvec_dip}.  \<^bold>\<open>Why \<^const>\<open>vec_nth\<close> instead of the \<open>$\<close>
       notation:\<close> in this merged JNF+HMA+Smooth_Manifolds session, parsing the infix \<open>$\<close>
@@ -796,6 +808,56 @@ lemma has_derivative_cvec_dip:
 lemma frechet_derivative_cvec_dip:
   "frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) = Dcvec_dip \<omega>0 \<omega>s \<omega>"
   by (rule frechet_derivative_at[symmetric, OF has_derivative_cvec_dip])
+
+text \<open>\<^bold>\<open>The \<^emph>\<open>second\<close> derivative of \<open>cvec_dip\<close>\<close> --- differentiate the explicit Jacobian
+  \<open>Dcvec_dip\<close> once more.  This is the genuine \<open>D\<^sup>2cvec\<^sub>0\<close>, an explicit \<open>sin/cos\<close> bilinear
+  form (\<^bold>\<open>not\<close> a \<open>frechet_derivative\<close> placeholder and \<^bold>\<open>nothing assumed\<close>); it discharges the
+  second-order hypothesis \<open>cD2\<close> of \<open>has_derivative_dA_via_M2\<close> for our steering map.\<close>
+
+lemma has_derivative_Dcvec_dip:
+  "((\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) has_derivative
+      (\<lambda>h'. ((- vec_nth h 1 * sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
+              - vec_nth h 2 * cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
+              - ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * vec_nth h 1 * cos (vec_nth \<omega> 1)) * vec_nth h' 1
+            + (- vec_nth h 1 * cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
+              - vec_nth h 2 * sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)) * vec_nth h' 2) *\<^sub>R axis 1 1
+          + ((- vec_nth h 1 * sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
+              + vec_nth h 2 * cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
+              - ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * vec_nth h 1 * cos (vec_nth \<omega> 1)) * vec_nth h' 1
+            + (vec_nth h 1 * cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
+              - vec_nth h 2 * sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)) * vec_nth h' 2) *\<^sub>R axis 2 1))
+     (at \<omega>)"
+proof -
+  \<comment> \<open>The beam-lift coefficients are \<^emph>\<open>constants\<close> in \<open>\<omega>\<close>; naming them with \<open>define\<close> stops
+      \<open>auto\<close> from applying the quotient rule (which would spawn a spurious
+      \<open>kz \<omega>\<^sub>s \<noteq> kz \<omega>\<^sub>0\<close> side-condition).  We fold them back in the final assembly.\<close>
+  define Dx where "Dx = (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  define Dy where "Dy = (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  have dP1: "((\<lambda>y. (cos (vec_nth y 1) * cos (vec_nth y 2) * (vec_nth h 1)
+                     - sin (vec_nth y 1) * sin (vec_nth y 2) * (vec_nth h 2))
+                   + Dx * (- sin (vec_nth y 1) * (vec_nth h 1)))
+              has_derivative
+              (\<lambda>h'. (- vec_nth h 1 * sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
+                     - vec_nth h 2 * cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
+                     - Dx * vec_nth h 1 * cos (vec_nth \<omega> 1)) * vec_nth h' 1
+                   + (- vec_nth h 1 * cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
+                     - vec_nth h 2 * sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)) * vec_nth h' 2)) (at \<omega>)"
+    by (auto intro!: derivative_eq_intros has_derivative_proj simp: algebra_simps)
+  have dP2: "((\<lambda>y. (cos (vec_nth y 1) * sin (vec_nth y 2) * (vec_nth h 1)
+                     + sin (vec_nth y 1) * cos (vec_nth y 2) * (vec_nth h 2))
+                   + Dy * (- sin (vec_nth y 1) * (vec_nth h 1)))
+              has_derivative
+              (\<lambda>h'. (- vec_nth h 1 * sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)
+                     + vec_nth h 2 * cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
+                     - Dy * vec_nth h 1 * cos (vec_nth \<omega> 1)) * vec_nth h' 1
+                   + (vec_nth h 1 * cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)
+                     - vec_nth h 2 * sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)) * vec_nth h' 2)) (at \<omega>)"
+    by (auto intro!: derivative_eq_intros has_derivative_proj simp: algebra_simps)
+  show ?thesis
+    unfolding Dcvec_dip_def[abs_def] Dx_def[symmetric] Dy_def[symmetric]
+    by (rule has_derivative_add[OF has_derivative_scaleR_left[OF dP1]
+                                   has_derivative_scaleR_left[OF dP2]])
+qed
 
 text \<open>\<^bold>\<open>Step 3: the objective \<open>U\<close>, DEFINED FROM the smooth \<open>e\<^sup>2\<close>, is \<open>C\<^sup>\<infinity>\<close> globally.\<close>
   \<open>U_dip = U_cart (cvec_dip \<omega>\<^sub>0 \<omega>\<^sub>s) gain_dip\<close> --- the radiation intensity
