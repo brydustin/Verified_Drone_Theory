@@ -910,6 +910,48 @@ proof -
   show ?thesis by (rule sumderiv[unfolded dform])
 qed
 
+text \<open>\<^bold>\<open>\<open>gradU\<close> IS the appendix \<open>\<Phi>\<close>-formula.\<close>  Writing \<open>a = Re A\<close>, \<open>b = Im A\<close>,
+  \<open>a\<^sub>k = Re M\<^sub>k\<close>, \<open>b\<^sub>k = Im M\<^sub>k\<close>, the angular partial is
+  \<open>\<partial>U/\<partial>\<omega>\<^sub>j = \<dot>g\<^sub>j(a\<^sup>2+b\<^sup>2) + 2g \<Sum>\<^sub>k (dc e\<^sub>j)\<^sub>k (b\<^sub>k a - a\<^sub>k b)\<close> --- exactly \<open>Phi1m\<close>/\<open>Phi2m\<close>
+  (in \<open>c\<close>-coordinates, where \<open>dc = id\<close>, this is literally \<open>g\<^sub>j(a\<^sup>2+b\<^sup>2)+2g(b\<^sub>j a-a\<^sub>j b)\<close>).
+  So the first two components of \<open>\<Phi>\<close> are functions of the moment map \<open>(A,M\<^sub>1,M\<^sub>2)\<close>.\<close>
+
+lemma gradU_component_real_moments:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and dc :: "angle \<Rightarrow> planar" and dgain :: "angle \<Rightarrow> real"
+    and x :: "planar^'n" and \<omega> :: angle
+  assumes dcvec: "(cvec has_derivative dc) (at \<omega>)"
+    and dgn: "(gain has_derivative dgain) (at \<omega>)"
+  shows "gradU cvec gain x \<omega> $ j
+         = dgain (axis j 1) * ((Re (A_cart cvec x \<omega>))\<^sup>2 + (Im (A_cart cvec x \<omega>))\<^sup>2)
+           + gain \<omega> * (2 * (\<Sum>k\<in>UNIV. (dc (axis j 1))$k
+                  * (Re (A_cart cvec x \<omega>) * Im (Mmom cvec x \<omega> k)
+                     - Im (A_cart cvec x \<omega>) * Re (Mmom cvec x \<omega> k))))"
+proof -
+  let ?A = "A_cart cvec x \<omega>"
+  have cmod2: "(cmod ?A)\<^sup>2 = (Re ?A)\<^sup>2 + (Im ?A)\<^sup>2"
+    by (simp add: cmod_power2)
+  have reterm:
+    "Re (cnj ?A * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k))
+     = (\<Sum>k\<in>UNIV. (dc (axis j 1))$k
+            * (Re ?A * Im (Mmom cvec x \<omega> k) - Im ?A * Re (Mmom cvec x \<omega> k)))"
+  proof -
+    have "Re (cnj ?A * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k))
+        = (\<Sum>k\<in>UNIV. Re (cnj ?A * ((- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+      by (simp add: sum_distrib_left Re_sum)
+    also have "\<dots> = (\<Sum>k\<in>UNIV. (dc (axis j 1))$k
+            * (Re ?A * Im (Mmom cvec x \<omega> k) - Im ?A * Re (Mmom cvec x \<omega> k)))"
+      by (simp add: algebra_simps)
+    finally show ?thesis .
+  qed
+  have G: "gradU cvec gain x \<omega> $ j
+        = dgain (axis j 1) * (cmod ?A)\<^sup>2
+          + gain \<omega> * (2 * Re (cnj ?A
+                * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+    by (rule gradU_component_via_moments[OF dcvec dgn])
+  show ?thesis by (simp only: G cmod2 reterm)
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
