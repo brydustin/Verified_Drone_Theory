@@ -653,6 +653,83 @@ proof -
     by (metis (no_types, lifting) ext comp_def gain_dip_def) 
 qed
 
+text \<open>\<^bold>\<open>Step 2: the concrete steered wavevector \<open>cvec\<^sub>0\<close> is \<open>C\<^sup>\<infinity>\<close>.\<close>  \<open>kx,ky,kz\<close> are \<open>sin/cos\<close>
+  of the angle components (smooth); the beam-lift coefficients \<open>(k\<bullet>\<omega>\<^sub>0 - k\<bullet>\<omega>\<^sub>s)/(kz \<omega>\<^sub>s - kz \<omega>\<^sub>0)\<close>
+  are \<^emph>\<open>constants\<close> in \<open>\<omega>\<close> (finite by the secant hypothesis), so the planar steered wavevector
+  is \<open>C\<^sup>\<infinity>\<close> on \<open>\<real>\<^sup>2\<close>.  \<open>cvec_dip\<close> is the \<open>\<real>\<^sup>2\<close>-valued form feeding \<open>U_cart\<close>.\<close>
+
+lemma proj_higher_differentiable_on:
+  "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. \<omega> $ i) n"
+proof -
+  have "(\<lambda>\<omega>::real^2. \<omega> $ i) = (\<lambda>\<omega>. inner \<omega> (axis i 1))"
+    by (rule ext) (simp add: inner_axis)
+  thus ?thesis
+    using higher_differentiable_on_inner[OF higher_differentiable_on_id
+            higher_differentiable_on_const open_UNIV] by simp
+qed
+
+lemma sin_proj_higher_differentiable_on:
+  "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. sin (\<omega> $ i)) n"
+proof -
+  have sinc: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n"
+    using sin_cos_higher_differentiable_on by (rule conjunct1)
+  have "higher_differentiable_on UNIV (sin \<circ> (\<lambda>\<omega>::real^2. \<omega> $ i)) n"
+    by (rule higher_differentiable_on_compose
+          [OF sinc proj_higher_differentiable_on _ open_UNIV open_UNIV]) auto
+  thus ?thesis by (simp add: o_def)
+qed
+
+lemma cos_proj_higher_differentiable_on:
+  "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. cos (\<omega> $ i)) n"
+proof -
+  have cosc: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
+    using sin_cos_higher_differentiable_on by (rule conjunct2)
+  have "higher_differentiable_on UNIV (cos \<circ> (\<lambda>\<omega>::real^2. \<omega> $ i)) n"
+    by (rule higher_differentiable_on_compose
+          [OF cosc proj_higher_differentiable_on _ open_UNIV open_UNIV]) auto
+  thus ?thesis by (simp add: o_def)
+qed
+
+lemma kx_higher_differentiable_on: "higher_differentiable_on UNIV kx n"
+  unfolding kx_def[abs_def]
+  by (rule higher_differentiable_on_mult[OF sin_proj_higher_differentiable_on
+        cos_proj_higher_differentiable_on open_UNIV])
+
+lemma ky_higher_differentiable_on: "higher_differentiable_on UNIV ky n"
+  unfolding ky_def[abs_def]
+  by (rule higher_differentiable_on_mult[OF sin_proj_higher_differentiable_on
+        sin_proj_higher_differentiable_on open_UNIV])
+
+lemma kz_higher_differentiable_on: "higher_differentiable_on UNIV kz n"
+  unfolding kz_def[abs_def]
+  by (rule cos_proj_higher_differentiable_on)
+
+definition cvec_dip :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real^2" where
+  \<comment> \<open>the planar steered wavevector \<open>cvec\<^sub>0\<close> as a \<open>\<real>\<^sup>2\<close> vector (axis form, so smoothness
+      is immediate); its components are the two entries of @{const cvec0}.\<close>
+  "cvec_dip \<omega>0 \<omega>s \<omega> =
+     ((kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) *\<^sub>R axis 1 1
+   + ((ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) *\<^sub>R axis 2 1"
+
+lemma cvec_dip_higher_differentiable_on:
+  "higher_differentiable_on UNIV (cvec_dip \<omega>0 \<omega>s) n"
+proof -
+  have comp1: "higher_differentiable_on UNIV
+      (\<lambda>\<omega>. (kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) n"
+    by (intro higher_differentiable_on_add higher_differentiable_on_minus
+              higher_differentiable_on_mult higher_differentiable_on_const
+              kx_higher_differentiable_on kz_higher_differentiable_on open_UNIV)
+  have comp2: "higher_differentiable_on UNIV
+      (\<lambda>\<omega>. (ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) n"
+    by (intro higher_differentiable_on_add higher_differentiable_on_minus
+              higher_differentiable_on_mult higher_differentiable_on_const
+              ky_higher_differentiable_on kz_higher_differentiable_on open_UNIV)
+  show ?thesis
+    unfolding cvec_dip_def[abs_def]
+    by (intro higher_differentiable_on_add higher_differentiable_on_scaleR
+              higher_differentiable_on_const comp1 comp2 open_UNIV)
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
