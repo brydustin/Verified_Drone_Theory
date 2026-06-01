@@ -800,6 +800,39 @@ lemma gradU_dip_has_derivative:
       has_derivative (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v v)) (at \<omega>)"
   by (rule gradU_has_derivative_of_C2[OF U_dip_Ck2 UNIV_I])
 
+subsection \<open>First contact with the determinant: the moments appear in \<open>dA\<close>\<close>
+
+text \<open>\<^bold>\<open>The moment map enters here.\<close>  The first moments of the configuration,
+  \<open>M\<^sub>k(\<bm>x,\<omega>) = \<Sum>\<^sub>n (x\<^sub>n)\<^sub>k e\<^bsup>-\<ii> c(\<omega>)\<bullet>x\<^sub>n\<^esup>\<close>, are exactly the objects the \<open>12\<times>12\<close>
+  determinant \<open>bigJ\<close> is the Jacobian of.  The array-factor derivative \<open>dA\<close> is a \<^emph>\<open>linear
+  combination of these moments\<close>: \<open>dA(h) = -\<ii> \<Sum>\<^sub>k (dc\,h)\<^sub>k M\<^sub>k\<close>.  This is the first place
+  the determinant's world (the moments) literally appears inside our function's
+  derivatives --- the on-ramp to \<open>prop:dimZ\<close>/\<open>Phi_bad_meager\<close>.\<close>
+
+definition Mmom :: "(angle \<Rightarrow> planar) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> 2 \<Rightarrow> complex" where
+  \<comment> \<open>the \<open>k\<close>-th first moment of the array, \<open>M\<^sub>k = \<Sum>\<^sub>n (x\<^sub>n)\<^sub>k cis(-c\<bullet>x\<^sub>n)\<close>\<close>
+  "Mmom cvec x \<omega> k = (\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k) * cis (-(cvec \<omega> \<bullet> (x$n))))"
+
+lemma dA_cart_via_moments:
+  "dA_cart cvec dc x \<omega> h
+     = (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$k) * Mmom cvec x \<omega> k)"
+proof -
+  have "dA_cart cvec dc x \<omega> h
+      = (\<Sum>n\<in>UNIV. \<Sum>k\<in>UNIV.
+           (- \<i>) * complex_of_real ((dc h)$k) * complex_of_real ((x$n)$k)
+             * cis (-(cvec \<omega> \<bullet> (x$n))))"
+    unfolding dA_cart_def
+    by (simp add: inner_vec_def of_real_sum of_real_mult
+                  sum_distrib_left sum_distrib_right mult.assoc)
+  also have "\<dots> = (\<Sum>k\<in>UNIV. \<Sum>n\<in>UNIV.
+           (- \<i>) * complex_of_real ((dc h)$k) * complex_of_real ((x$n)$k)
+             * cis (-(cvec \<omega> \<bullet> (x$n))))"
+    by (rule sum.swap)
+  also have "\<dots> = (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$k) * Mmom cvec x \<omega> k)"
+    by (simp add: Mmom_def sum_distrib_left mult.assoc)
+  finally show ?thesis .
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
