@@ -1479,6 +1479,63 @@ proof -
   thus ?thesis by (simp add: Upow_def)
 qed
 
+text \<open>\<^bold>\<open>Inner product on \<open>\<real>\<^sup>2\<close> and the spacing lower bounds.\<close>  The full inter-element
+  distance \<open>spdist\<close> dominates each planar coordinate gap, \<open>\<bar>\<Delta>x\<bar>, \<bar>\<Delta>y\<bar> \<le> spdist\<close> (a square
+  root of a sum of squares is \<open>\<ge>\<close> the root of one of them) --- so it suffices to spread the
+  elements along \<^emph>\<open>one\<close> coordinate to satisfy the spacing constraint.\<close>
+
+lemma inner_real2: "(a::real^2) \<bullet> b = a$1 * b$1 + a$2 * b$2"
+  by (simp add: inner_vec_def sum_2)
+
+lemma spdist_ge_abs1: "\<bar>p$1 - q$1\<bar> \<le> spdist A B D p q"
+proof -
+  have le: "(p $ 1 - q $ 1)\<^sup>2 \<le> (p $ 1 - q $ 1)\<^sup>2 + (p $ 2 - q $ 2)\<^sup>2
+              + ((A * (p $ 1 - q $ 1) + B * (p $ 2 - q $ 2)) / D)\<^sup>2"
+    using zero_le_power2[of "p$2-q$2"]
+          zero_le_power2[of "(A*(p$1-q$1)+B*(p$2-q$2))/D"] by linarith
+  have "\<bar>p$1-q$1\<bar> = sqrt ((p$1-q$1)\<^sup>2)" by simp
+  also have "\<dots> \<le> spdist A B D p q"
+    unfolding spdist_def by (rule real_sqrt_le_mono[OF le])
+  finally show ?thesis .
+qed
+
+lemma spdist_ge_abs2: "\<bar>p$2 - q$2\<bar> \<le> spdist A B D p q"
+proof -
+  have le: "(p $ 2 - q $ 2)\<^sup>2 \<le> (p $ 1 - q $ 1)\<^sup>2 + (p $ 2 - q $ 2)\<^sup>2
+              + ((A * (p $ 1 - q $ 1) + B * (p $ 2 - q $ 2)) / D)\<^sup>2"
+    using zero_le_power2[of "p$1-q$1"]
+          zero_le_power2[of "(A*(p$1-q$1)+B*(p$2-q$2))/D"] by linarith
+  have "\<bar>p$2-q$2\<bar> = sqrt ((p$2-q$2)\<^sup>2)" by simp
+  also have "\<dots> \<le> spdist A B D p q"
+    unfolding spdist_def by (rule real_sqrt_le_mono[OF le])
+  finally show ?thesis .
+qed
+
+text \<open>\<^bold>\<open>The null vanishes once the phases are the \<open>N\<close>th roots of unity.\<close>  If the array
+  positions, enumerated by a bijection \<open>f\<close> of \<open>{..<N}\<close>, give phase
+  \<open>cvec\<^sub>dip(\<omega>\<^sub>null)\<cdot>x\<^bsub>f k\<^esub> = 2\<pi>k/N\<close>, then \<open>A(\<bm>x,\<omega>\<^sub>null) = \<Sum>\<^bsub>k<N\<^esub> e\<^bsup>-2\<pi>\<ii>k/N\<^esup> = 0\<close>
+  (reindexing by \<open>f\<close> + @{thm sum_cis_neg_roots_unity}).\<close>
+
+lemma af_null_zero:
+  fixes x :: "(real^2)^'n" and f :: "nat \<Rightarrow> 'n"
+  assumes N: "CARD('n) > 1"
+    and bij: "bij_betw f {..<CARD('n)} (UNIV::'n set)"
+    and phase: "\<And>k. k < CARD('n) \<Longrightarrow>
+                 cvec_dip \<omega>0 \<omega>s \<omega>n \<bullet> (x $ f k) = 2 * pi * real k / real CARD('n)"
+  shows "af (cvec_dip \<omega>0 \<omega>s) x \<omega>n = 0"
+proof -
+  have "af (cvec_dip \<omega>0 \<omega>s) x \<omega>n
+          = (\<Sum>m\<in>UNIV. cis (- (cvec_dip \<omega>0 \<omega>s \<omega>n \<bullet> (x $ m))))"
+    by (simp add: af_def)
+  also have "\<dots> = (\<Sum>k<CARD('n). cis (- (cvec_dip \<omega>0 \<omega>s \<omega>n \<bullet> (x $ f k))))"
+    by (rule sum.reindex_bij_betw[OF bij,
+          where g = "\<lambda>m. cis (- (cvec_dip \<omega>0 \<omega>s \<omega>n \<bullet> (x $ m)))", symmetric])
+  also have "\<dots> = (\<Sum>k<CARD('n). cis (- (2 * pi * real k / real CARD('n))))"
+    using phase by (intro sum.cong refl) simp
+  also have "\<dots> = 0" by (rule sum_cis_neg_roots_unity[OF N])
+  finally show ?thesis .
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
