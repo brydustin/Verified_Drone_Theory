@@ -80,11 +80,24 @@ for that `'n` is then derivable but we obtain `f` via `ex_bij_betw_nat_finite` +
 `finite` from `CARD('n)>1` (`card.infinite`, `gr_implies_not0`). (iii) `(𝒬,𝒫)≠0` from
 `cvec_dip(ωn)≠0` via `vec_eq_iff`+`forall_2`+`zero_index`.
 
-NEXT: `regular_feasible_point_dip` — needs an *open* feasible set for Baire, so first
-strengthen the witness to STRICT spacing (paper's `L>dmin`, giving a `ball_inside_Ffeas`
-neighbourhood), then wire `Phi_bad_meager`+Baire (degenerate configs meager ⟹ a regular point
-in the feasible interior). And discharge `Phi_bad_meager` via the proven 12×12 `bigJ_det`/
-`W_surj` submersion ⟹ codim-3 ⟹ meager projection.
+Then (same session) factored the construction into `feasible_witness_exists` (parameterised
+by a spacing target `s>0`: nulls A at ωn and spaces elements ≥ s) and re-derived
+`Ffeas_dip_nonempty` from it (no duplication). Added the OPEN-feasibility results:
+- `Ffeas_dip_has_interior`: with STRICT margins (s=dmin+1>dmin, δnull>0, pmin<g·N²) the
+  witness is strictly feasible, so `ball_inside_Ffeas` ⟹ `∃R x ρ>0. ball x ρ ⊆ 𝓕`.
+- `Ffeas_dip_open_feasible`: the paper's **prop:openfeas** — `∃R, nonempty open V ⊆ 𝓕`
+  (V = ball x ρ). Also `gain_dip_nonneg` (g=|e|²≥0, from `gdip_eq_edip_sq`).
+All sorry-free. So the entire FEASIBILITY layer (closed nonempty + open nonempty interior)
+is DONE for the actual dipole. Builds clean (BUILD_EXIT=0).
+
+REMAINING (2 sorries): `Phi_bad_meager` (the 12×12-determinant submersion ⟹ codim-3 ⟹ meager
+projection — the deep core) and `regular_feasible_point_dip`. The latter now has its open
+Baire arena (`Ffeas_dip_open_feasible`); to finish it: intersect that open V with the
+co-meager regular set (from `Phi_bad_meager` + Baire on the complete space ℝ^{2N}) to get a
+config with no degenerate critical point on the annulus, plus an ε-sphere avoiding the
+(finitely/discretely many) critical points. Both steps are substantial and bottom out at
+`Phi_bad_meager`, which needs the Sard/meager-projection machinery
+(`Applied_Math_Sard.Sard_Negligible`) wired to the proven `bigJ_det`/`W_surj`.
 
 ## 2026-05-30 (robust set, Part 1b) — 𝓕 RE-defined faithfully (c,N,P) and compact
 

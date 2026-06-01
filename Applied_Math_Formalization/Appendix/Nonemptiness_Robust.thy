@@ -1760,6 +1760,32 @@ proof -
   thus ?thesis using R0 by blast
 qed
 
+text \<open>\<^bold>\<open>Open feasible family (D_edit / unified Prop.~openfeas).\<close>  Packaging the interior as
+  the paper's statement: there is a \<^emph>\<open>nonempty open\<close> \<open>U\<^sub>feas \<subseteq> \<F>\<close> for the actual dipole.
+  This is the exact arena for the Baire step of \<open>regular_feasible_point_dip\<close>: degenerate
+  configurations are meager (the determinant payoff \<open>Phi_bad_meager\<close>), so their complement
+  inside this nonempty open set is dense, hence contains a regular feasible configuration.\<close>
+
+lemma Ffeas_dip_open_feasible:
+  fixes \<omega>0 \<omega>s \<omega>n :: angle and dmin \<delta>null pmin A B D :: real
+  assumes N: "CARD('n) > 1"
+    and cn: "cvec_dip \<omega>0 \<omega>s \<omega>n \<noteq> 0"
+    and dpos: "0 < dmin"
+    and dnull: "0 < \<delta>null"
+    and pmain: "pmin < gain_dip \<omega>0 * (real CARD('n))\<^sup>2"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+  shows "\<exists>R. \<exists>V::((real^2)^'n) set. 0 < R \<and> open V \<and> V \<noteq> {}
+            \<and> V \<subseteq> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>n \<omega>0 \<delta>null pmin"
+proof -
+  obtain R and x :: "(real^2)^'n" and \<rho> where
+    R0: "0 < R" and \<rho>0: "0 < \<rho>"
+    and sub: "ball x \<rho> \<subseteq> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>n \<omega>0 \<delta>null pmin"
+    using Ffeas_dip_has_interior[OF N cn dpos dnull pmain hsep] by blast
+  have "open (ball x \<rho>)" by simp
+  moreover have "ball x \<rho> \<noteq> {}" using \<rho>0 by auto
+  ultimately show ?thesis using R0 sub by blast
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
