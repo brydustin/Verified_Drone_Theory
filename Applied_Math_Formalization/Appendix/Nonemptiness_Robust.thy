@@ -464,6 +464,39 @@ lemma Jsinc_higher_differentiable_on:
   "higher_differentiable_on UNIV (Jsinc k) n"
   by (intro hdo_real_deriv_chain Jsinc_deriv)
 
+lemma Jsinc_0: "Jsinc 0 = gsinc"
+proof (rule ext)
+  fix x :: real
+  have base: "Jsinc 0 x = integral {0..1} (\<lambda>t. cos (x*t))"
+    by (simp add: Jsinc_def)
+  show "Jsinc 0 x = gsinc x"
+  proof (cases "x = 0")
+    case True
+    have "integral {0..1} (\<lambda>t::real. cos (x*t)) = integral {0..1} (\<lambda>t::real. 1)"
+      using True by simp
+    also have "\<dots> = 1" by simp
+    finally show ?thesis using base True by (simp add: gsinc_def)
+  next
+    case False
+    have "((\<lambda>t. cos (x*t)) has_integral (sin (x*1)/x - sin (x*0)/x)) {0..1}"
+    proof (rule fundamental_theorem_of_calculus)
+      show "(0::real) \<le> 1" by simp
+    next
+      fix t :: real assume "t \<in> {0..1}"
+      have "((\<lambda>t. sin (x*t)/x) has_real_derivative cos (x*t)) (at t)"
+        using False by (auto intro!: derivative_eq_intros)
+      thus "((\<lambda>t. sin (x*t)/x) has_vector_derivative cos (x*t)) (at t within {0..1})"
+        by (simp add: has_real_derivative_iff_has_vector_derivative has_vector_derivative_at_within)
+    qed
+    hence "integral {0..1} (\<lambda>t. cos (x*t)) = sin (x*1)/x - sin (x*0)/x"
+      by (rule integral_unique)
+    thus ?thesis using base False by (simp add: gsinc_def)
+  qed
+qed
+
+lemma gsinc_higher_differentiable_on: "higher_differentiable_on UNIV gsinc n"
+  using Jsinc_higher_differentiable_on[of 0 n] by (simp add: Jsinc_0)
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
