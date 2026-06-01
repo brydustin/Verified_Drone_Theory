@@ -833,6 +833,28 @@ proof -
   finally show ?thesis .
 qed
 
+text \<open>\<^bold>\<open>Second contact: \<open>gradU\<close> in moment coordinates.\<close>  Each angular partial
+  \<open>\<partial>U/\<partial>\<omega>\<^sub>j = gradU \<bullet> e\<^sub>j\<close> is, via the product rule and @{thm dA_cart_via_moments}, an
+  explicit function of the array factor \<open>A\<close> and the first moments \<open>M\<^sub>k\<close> (and the gain
+  data and the \<open>cvec\<close>-Jacobian \<open>dc\<close>).  This is \<open>gradU\<close> expressed through the moment map.\<close>
+
+lemma gradU_component_via_moments:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and dc :: "angle \<Rightarrow> planar" and dgain :: "angle \<Rightarrow> real"
+    and x :: "planar^'n" and \<omega> :: angle
+  assumes dcvec: "(cvec has_derivative dc) (at \<omega>)"
+    and dgn: "(gain has_derivative dgain) (at \<omega>)"
+  shows "gradU cvec gain x \<omega> $ j
+         = dgain (axis j 1) * (cmod (A_cart cvec x \<omega>))\<^sup>2
+           + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+                  * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+proof -
+  have comp: "gradU cvec gain x \<omega> $ j = dU_cart cvec dc gain dgain x \<omega> (axis j 1)"
+    by (simp add: gradU_explicit[OF dcvec dgn] axis_def if_distrib sum.delta cong: if_cong)
+  show ?thesis
+    by (simp add: comp dU_cart_def dA_cart_via_moments)
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
