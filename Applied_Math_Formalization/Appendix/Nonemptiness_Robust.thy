@@ -1052,6 +1052,29 @@ lemma gradU_dip_real_moments:
         [OF frechet_derivative_works[THEN iffD1, OF cvec_dip_differentiable]
             frechet_derivative_works[THEN iffD1, OF gain_dip_differentiable]])
 
+text \<open>\<^bold>\<open>Toward \<open>HessU\<close> in second moments (rung ii).\<close>  For our \<open>C\<^sup>2\<close> function \<open>U_dip\<close> the
+  gradient field is differentiable with derivative the Hessian matrix (@{thm
+  gradU_dip_has_derivative}), so the Fréchet derivative of \<open>gradU\<close> \<^emph>\<open>is\<close> \<open>\<lambda>v. HessU \<cdot> v\<close>,
+  and the \<open>(k,l)\<close> Hessian entry is the \<open>k\<close>-th component of that derivative in the direction
+  \<open>e\<^sub>l\<close>.  This is the entry point for expressing \<open>H\<^sub>k\<^sub>l\<close> through the second moments \<open>M\<^sub>k\<^sub>l\<close>.\<close>
+
+lemma frechet_derivative_gradU_dip:
+  "frechet_derivative (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x) (at \<omega>)
+     = (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v v)"
+  by (rule frechet_derivative_at[symmetric, OF gradU_dip_has_derivative])
+
+lemma HessU_dip_entry:
+  "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k $ l
+     = frechet_derivative (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x) (at \<omega>) (axis l 1) $ k"
+proof -
+  have "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k $ l
+          = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis l 1) $ k"
+    by (simp add: matrix_vector_mult_def axis_def if_distrib sum.delta cong: if_cong)
+  also have "\<dots> = frechet_derivative (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x) (at \<omega>) (axis l 1) $ k"
+    by (simp add: frechet_derivative_gradU_dip)
+  finally show ?thesis .
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
