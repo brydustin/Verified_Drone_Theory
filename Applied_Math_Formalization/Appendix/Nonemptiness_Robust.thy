@@ -304,6 +304,80 @@ proof -
   show ?thesis unfolding gfun HessU_def by (rule D)
 qed
 
+text \<open>\<^bold>\<open>Dropping the assumption, step 2: smoothness of the building blocks.\<close>  Toward
+  \<open>U_cart \<in> C\<^sup>2\<close> (hence \<open>gradU\<close> differentiable everywhere) for our actual function, we first
+  record that the trigonometric building blocks of the array factor are \<open>C\<^sup>\<infinity>\<close>.  \<open>sin\<close> and
+  \<open>cos\<close> are \<open>C\<^sup>n\<close> for every \<open>n\<close> (mutual induction: \<open>sin' = cos\<close>, \<open>cos' = -sin\<close>); hence so is
+  \<open>cis t = cos t \<cdot> 1 + sin t \<cdot> \<ii>\<close>.\<close>
+
+lemma sin_cos_higher_differentiable_on:
+  "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n
+   \<and> higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
+proof (induction n)
+  case 0
+  have a: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) 0"
+    by (simp only: higher_differentiable_on.simps(1)) (intro continuous_intros)
+  have b: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) 0"
+    by (simp only: higher_differentiable_on.simps(1)) (intro continuous_intros)
+  show ?case using a b by blast
+next
+  case (Suc n)
+  have IHs: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n"
+    using Suc.IH by (rule conjunct1)
+  have IHc: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
+    using Suc.IH by (rule conjunct2)
+  have dsin: "sin differentiable (at x)" for x :: real
+    using has_field_derivative_imp_has_derivative[OF DERIV_sin] by (blast intro: differentiableI)
+  have dcos: "cos differentiable (at x)" for x :: real
+    using has_field_derivative_imp_has_derivative[OF DERIV_cos] by (blast intro: differentiableI)
+  have ms: "higher_differentiable_on UNIV (\<lambda>x. frechet_derivative sin (at x) v) n" for v :: real
+  proof -
+    have "(\<lambda>x::real. frechet_derivative sin (at x) v) = (\<lambda>x. cos x * v)"
+    proof (rule ext)
+      fix x :: real
+      have "frechet_derivative sin (at x) = (*) (cos x)"
+        by (rule frechet_derivative_at[symmetric,
+              OF has_field_derivative_imp_has_derivative[OF DERIV_sin]])
+      thus "frechet_derivative sin (at x) v = cos x * v" by simp
+    qed
+    moreover have "higher_differentiable_on UNIV (\<lambda>x. cos x * v) n"
+      by (rule higher_differentiable_on_mult[OF IHc higher_differentiable_on_const open_UNIV])
+    ultimately show ?thesis by simp
+  qed
+  have mc: "higher_differentiable_on UNIV (\<lambda>x. frechet_derivative cos (at x) v) n" for v :: real
+  proof -
+    have "(\<lambda>x::real. frechet_derivative cos (at x) v) = (\<lambda>x. sin x * (- v))"
+    proof (rule ext)
+      fix x :: real
+      have "frechet_derivative cos (at x) = (*) (- sin x)"
+        by (rule frechet_derivative_at[symmetric,
+              OF has_field_derivative_imp_has_derivative[OF DERIV_cos]])
+      thus "frechet_derivative cos (at x) v = sin x * (- v)" by simp
+    qed
+    moreover have "higher_differentiable_on UNIV (\<lambda>x. sin x * (- v)) n"
+      by (rule higher_differentiable_on_mult[OF IHs higher_differentiable_on_const open_UNIV])
+    ultimately show ?thesis by simp
+  qed
+  show ?case using dsin dcos ms mc by (simp add: higher_differentiable_on_real_Suc)
+qed
+
+lemma cis_higher_differentiable_on: "higher_differentiable_on UNIV cis n"
+proof -
+  have eq: "cis = (\<lambda>t. cos t *\<^sub>R (1::complex) + sin t *\<^sub>R \<i>)"
+    by (rule ext) (simp add: cis.code complex_eq_iff)
+  have s: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n"
+    using sin_cos_higher_differentiable_on by (rule conjunct1)
+  have c: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
+    using sin_cos_higher_differentiable_on by (rule conjunct2)
+  have t1: "higher_differentiable_on UNIV (\<lambda>t. cos t *\<^sub>R (1::complex)) n"
+    by (rule higher_differentiable_on_scaleR[OF c higher_differentiable_on_const open_UNIV])
+  have t2: "higher_differentiable_on UNIV (\<lambda>t. sin t *\<^sub>R \<i>) n"
+    by (rule higher_differentiable_on_scaleR[OF s higher_differentiable_on_const open_UNIV])
+  have "higher_differentiable_on UNIV (\<lambda>t. cos t *\<^sub>R (1::complex) + sin t *\<^sub>R \<i>) n"
+    by (rule higher_differentiable_on_add[OF t1 t2 open_UNIV])
+  thus ?thesis by (simp add: eq)
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
