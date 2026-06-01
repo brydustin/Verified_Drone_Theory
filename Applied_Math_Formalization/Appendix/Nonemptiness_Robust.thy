@@ -1086,6 +1086,23 @@ proof -
   show ?thesis by (rule has_derivative_sum) (rule termderiv)
 qed
 
+text \<open>\<^bold>\<open>Concrete second derivative of the array factor for \<open>cvec_dip\<close>\<close> --- discharge the
+  hypotheses of @{thm has_derivative_dA_via_M2} with the \<^emph>\<open>proven\<close> first and second
+  derivatives of our steering map (@{thm has_derivative_cvec_dip},
+  @{thm has_derivative_Dcvec_dip}).  No assumptions: the array factor's second derivative
+  for \<open>U_dip\<close> is an explicit combination of the first and second moments \<open>M\<^sub>k, M\<^sub>k\<^sub>l\<close> and the
+  \<open>cvec_dip\<close> jet.\<close>
+
+lemma has_derivative_dA_dip:
+  "((\<lambda>y. \<Sum>k\<in>UNIV. complex_of_real ((Dcvec_dip \<omega>0 \<omega>s y h)$k) * Mmom (cvec_dip \<omega>0 \<omega>s) x y k)
+      has_derivative
+      (\<lambda>h'. \<Sum>k\<in>UNIV. complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> h)$k)
+              * (\<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> h')$l)
+                   * M2mom (cvec_dip \<omega>0 \<omega>s) x \<omega> k l)
+            + complex_of_real ((D2cvec_dip \<omega>0 \<omega>s \<omega> h h')$k) * Mmom (cvec_dip \<omega>0 \<omega>s) x \<omega> k))
+     (at \<omega>)"
+  by (rule has_derivative_dA_via_M2[OF has_derivative_cvec_dip has_derivative_Dcvec_dip])
+
 text \<open>\<^bold>\<open>\<open>gradU\<close> IS the appendix \<open>\<Phi>\<close>-formula.\<close>  Writing \<open>a = Re A\<close>, \<open>b = Im A\<close>,
   \<open>a\<^sub>k = Re M\<^sub>k\<close>, \<open>b\<^sub>k = Im M\<^sub>k\<close>, the angular partial is
   \<open>\<partial>U/\<partial>\<omega>\<^sub>j = \<dot>g\<^sub>j(a\<^sup>2+b\<^sup>2) + 2g \<Sum>\<^sub>k (dc e\<^sub>j)\<^sub>k (b\<^sub>k a - a\<^sub>k b)\<close> --- exactly \<open>Phi1m\<close>/\<open>Phi2m\<close>
