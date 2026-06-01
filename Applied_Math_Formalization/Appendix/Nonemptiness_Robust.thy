@@ -413,6 +413,57 @@ next
   show ?case using d fd by (simp add: higher_differentiable_on.simps(2))
 qed
 
+text \<open>\<^bold>\<open>The \<open>sinc\<close> integral family.\<close>  \<open>Jsinc k x = \<integral>\<^sub>0\<^sup>1 t\<^sup>k cos(xt + k\<pi>/2) dt\<close> is the
+  \<open>k\<close>-th \<open>x\<close>-derivative of \<open>\<integral>\<^sub>0\<^sup>1 cos(xt) dt = sinc x\<close>, written as an integral so there is
+  \<^emph>\<open>no\<close> \<open>0/0\<close>.  The family is closed under differentiation (Leibniz), so by
+  @{thm hdo_real_deriv_chain} every \<open>Jsinc k\<close> --- in particular \<open>Jsinc 0 = sinc\<close> --- is
+  \<open>C\<^sup>\<infinity>\<close>.  This is the removable-smoothness kernel: the dipole \<open>e\<close> factors through \<open>sinc\<close>.\<close>
+
+definition gsinc :: "real \<Rightarrow> real" where
+  "gsinc x = (if x = 0 then 1 else sin x / x)"
+
+definition Jsinc :: "nat \<Rightarrow> real \<Rightarrow> real" where
+  "Jsinc k x = integral (cbox 0 1) (\<lambda>t. t^k * cos (x*t + real k * (pi/2)))"
+
+lemma Jsinc_deriv: "(Jsinc k has_real_derivative Jsinc (Suc k) x) (at x)"
+proof -
+  have d: "((\<lambda>x. t^k * cos (x*t + real k * (pi/2))) has_field_derivative
+              (- (t^(Suc k) * sin (x*t + real k * (pi/2))))) (at x within UNIV)"
+    if "x \<in> (UNIV::real set)" "t \<in> cbox (0::real) 1" for x t :: real
+    by (auto intro!: derivative_eq_intros simp: algebra_simps power_Suc)
+  have ib: "(\<lambda>t. t^k * cos (x*t + real k * (pi/2))) integrable_on cbox 0 1"
+    if "x \<in> (UNIV::real set)" for x :: real
+    by (auto intro!: integrable_continuous_real continuous_intros)
+  have cf: "continuous_on (UNIV \<times> cbox 0 1)
+              (\<lambda>(x,t). - (t^(Suc k) * sin (x*t + real k * (pi/2))))"
+    by (auto intro!: continuous_intros simp: case_prod_beta)
+  have L: "(Jsinc k has_real_derivative
+              integral (cbox 0 1) (\<lambda>t. - (t^(Suc k) * sin (x*t + real k * (pi/2)))))
+            (at x within UNIV)"
+    unfolding Jsinc_def
+    by (rule leibniz_rule_field_derivative[OF d ib cf UNIV_I convex_UNIV])
+  have cshift: "cos (a + pi/2) = - sin a" for a :: real
+    by (simp add: cos_add)
+  have eq: "integral (cbox 0 1) (\<lambda>t. - (t^(Suc k) * sin (x*t + real k * (pi/2))))
+            = Jsinc (Suc k) x"
+    unfolding Jsinc_def
+  proof (rule integral_cong)
+    fix t :: real assume "t \<in> cbox 0 1"
+    have phase: "x*t + real (Suc k) * (pi/2) = (x*t + real k * (pi/2)) + pi/2"
+      by (simp add: algebra_simps)
+    have "cos (x*t + real (Suc k) * (pi/2)) = - sin (x*t + real k * (pi/2))"
+      unfolding phase by (rule cshift)
+    thus "- (t^(Suc k) * sin (x*t + real k * (pi/2)))
+            = t^(Suc k) * cos (x*t + real (Suc k) * (pi/2))"
+      by simp
+  qed
+  from L eq show ?thesis by simp
+qed
+
+lemma Jsinc_higher_differentiable_on:
+  "higher_differentiable_on UNIV (Jsinc k) n"
+  by (intro hdo_real_deriv_chain Jsinc_deriv)
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
