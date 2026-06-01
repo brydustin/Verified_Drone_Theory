@@ -53,9 +53,38 @@ assumed continuity — the exact placeholder trap. Net: the file's 2 sorries are
 honest & true — `Phi_bad_meager` (determinant submersion) and `regular_feasible_point_dip`
 (regular feasible point for the dipole). Builds clean (BUILD_EXIT=0, ~50s).
 
-NEXT: `regular_feasible_point_dip` — wire in `Phi_bad_meager` + Baire (degenerate configs
-meager ⟹ a regular point exists in the feasible interior); and discharge `Phi_bad_meager`
-itself via the proven 12×12 `bigJ_det`/`W_surj` submersion ⟹ codim-3 ⟹ meager projection.
+## 2026-06-01 (𝓕 nonempty) — explicit feasibility witness PROVED (sorry-free)
+
+`Ffeas_dip_nonempty` DONE: **the feasible set 𝓕 for the actual dipole pattern is nonempty**
+(`∃R>0, x::(real^2)^'n. x ∈ Ffeas (cvec_dip ω0 ωs) gain_dip R dmin A B D ωn ω0 δnull pmin`),
+under well-posedness hyps (N>1, cvec_dip(ωn)≠0, dmin>0, δnull≥0, pmin ≤ |e(θ0)|²N², cosθs≠cosθ0).
+This is D_edit Prop. openfeas / L450–566, the literal "prove the set is nonempty using the
+actual function and sets."
+
+Construction (sorry-free): enumerate elements by a bijection `f` of `{..<N}`
+(`ex_bij_betw_nat_finite`); place element `f k` to solve the single linear phase equation
+`𝒬·x' + 𝒫·y' = 2πk/N` (where (𝒬,𝒫)=cvec_dip(ωn), split on which coeff ≠0), spreading the
+*other* coordinate as `dmin·k` for spacing. Then:
+- null `A(x̄,ωn)=0` via roots of unity reindexed by `f` (`af_null_zero` + `sum_cis_neg_roots_unity`);
+- spacing `c(x̄)=0`: `spdist ≥ |Δ(one coord)| = dmin·|k−j| ≥ dmin` (`spdist_ge_abs1/2`,
+  `nat_real_abs_diff_ge1`), so every `max 0 (dmin−spdist)` term is 0 (`sum.neutral`);
+- main beam `P(x̄)=g(ω0)·N² ≥ pmin` automatic (`Upow_at_main`, cvec_dip collapses at ω0);
+- ball: take `R = ‖x̄‖+1`.
+
+GOTCHAS (the build fights): (i) HMA `vec` `'a^'n` REQUIRES `'n::finite`; the lemma's `'n`
+came only from `CARD('n)` in the assumptions (sort `type`), while the conclusion's `x` had an
+*independent* finite index — they were never unified, so `χ`/`(real^2)^'n` failed
+("Variable 'n::type not of sort finite"). FIX: pin the conclusion `∃x::(real^2)^'n. …`,
+forcing `'n::finite` lemma-wide and tying the witness to the same index. (ii) `finite UNIV`
+for that `'n` is then derivable but we obtain `f` via `ex_bij_betw_nat_finite` + deriving
+`finite` from `CARD('n)>1` (`card.infinite`, `gr_implies_not0`). (iii) `(𝒬,𝒫)≠0` from
+`cvec_dip(ωn)≠0` via `vec_eq_iff`+`forall_2`+`zero_index`.
+
+NEXT: `regular_feasible_point_dip` — needs an *open* feasible set for Baire, so first
+strengthen the witness to STRICT spacing (paper's `L>dmin`, giving a `ball_inside_Ffeas`
+neighbourhood), then wire `Phi_bad_meager`+Baire (degenerate configs meager ⟹ a regular point
+in the feasible interior). And discharge `Phi_bad_meager` via the proven 12×12 `bigJ_det`/
+`W_surj` submersion ⟹ codim-3 ⟹ meager projection.
 
 ## 2026-05-30 (robust set, Part 1b) — 𝓕 RE-defined faithfully (c,N,P) and compact
 
