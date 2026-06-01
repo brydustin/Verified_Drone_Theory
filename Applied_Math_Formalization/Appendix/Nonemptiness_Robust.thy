@@ -1395,6 +1395,91 @@ proof -
 qed
 
 
+subsection \<open>Building blocks of the explicit feasibility witness \<open>\<bar>x\<close> (D_edit L450--566)\<close>
+
+text \<open>\<^bold>\<open>The vanishing sum of \<open>N\<close>th roots of unity.\<close>  \<open>\<Sum>\<^bsub>k<N\<^esub> cis(-2\<pi>k/N) = 0\<close> for \<open>N>1\<close> ---
+  the analytic heart of the null constraint: the witness phases are arranged to be exactly
+  the \<open>N\<close>th roots of unity, whose sum vanishes (geometric series, @{thm sum_roots_unity}).\<close>
+
+lemma sum_cis_roots_unity:
+  assumes "n > 1"
+  shows "(\<Sum>k<n. cis (2 * pi * real k / real n)) = 0"
+proof -
+  have nn: "real n \<noteq> 0" using assms by simp
+  define w where "w = cis (2 * pi / real n)"
+  have wne: "w \<noteq> 1"
+  proof
+    assume "w = 1"
+    with assms obtain k :: int where "2 * pi / real n = 2 * pi * of_int k"
+      by (auto simp: w_def complex_eq_iff cos_one_2pi_int)
+    with assms have "real n * of_int k = 1" by (simp add: field_simps)
+    also have "real n * of_int k = of_int (int n * k)" by simp
+    also have "1 = (of_int 1 :: real)" by simp
+    also note of_int_eq_iff
+    finally show False using assms by (auto simp: zmult_eq_1_iff)
+  qed
+  have wn1: "w ^ n = 1"
+  proof -
+    have "w ^ n = cis (real n * (2 * pi / real n))"
+      using Complex.DeMoivre w_def by presburger
+    also have "real n * (2 * pi / real n) = 2 * pi" using nn by simp
+    finally show ?thesis by simp
+  qed
+  have "(\<Sum>k<n. cis (2 * pi * real k / real n)) = (\<Sum>k<n. w ^ k)"
+    by (intro sum.cong refl, simp add: Complex.DeMoivre Groups.mult_ac(2) w_def)
+  also have "\<dots> = (w ^ n - 1) / (w - 1)"
+    using wne by (subst geometric_sum) auto
+  also have "\<dots> = 0" using wn1 by simp
+  finally show ?thesis .
+qed
+
+lemma sum_cis_neg_roots_unity:
+  assumes "n > 1"
+  shows "(\<Sum>k<n. cis (- (2 * pi * real k / real n))) = 0"
+proof -
+  have "(\<Sum>k<n. cis (- (2 * pi * real k / real n)))
+          = cnj (\<Sum>k<n. cis (2 * pi * real k / real n))"
+    by (simp add: cnj_sum cis_cnj)
+  also have "\<dots> = cnj 0" by (subst sum_cis_roots_unity[OF assms]) simp
+  finally show ?thesis by simp
+qed
+
+text \<open>\<^bold>\<open>The steering vector collapses at the main beam: \<open>cvec\<^sub>dip \<omega>\<^sub>0 \<omega>\<^sub>s \<omega>\<^sub>0 = 0\<close>.\<close>  The
+  beam-lift coefficient times \<open>(k\<^sub>z\<omega>\<^sub>0 - k\<^sub>z\<omega>\<^sub>s)\<close> exactly cancels \<open>(k\<^sub>x\<omega>\<^sub>0 - k\<^sub>x\<omega>\<^sub>s)\<close> (and the
+  \<open>y\<close>-analogue), so the reduced wavevector vanishes at \<open>\<omega>\<^sub>0\<close> --- whence \<^emph>\<open>every\<close> configuration
+  has full main-beam power (D_edit L413--414: ``maximal main beam power by construction'').\<close>
+
+lemma cvec_dip_at_main:
+  assumes "kz \<omega>s \<noteq> kz \<omega>0"
+  shows "cvec_dip \<omega>0 \<omega>s \<omega>0 = 0"
+proof -
+  have d: "kz \<omega>s - kz \<omega>0 \<noteq> 0" using assms by simp
+  have c1: "(kx \<omega>0 - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega>0 - kz \<omega>s) = 0"
+    using d by (simp add: field_simps)
+  have c2: "(ky \<omega>0 - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega>0 - kz \<omega>s) = 0"
+    using d by (simp add: field_simps)
+  show ?thesis unfolding cvec_dip_def c1 c2 by simp
+qed
+
+text \<open>\<^bold>\<open>Full main-beam power for every configuration.\<close>  Since \<open>cvec\<^sub>dip \<omega>\<^sub>0 \<omega>\<^sub>s \<omega>\<^sub>0 = 0\<close>, all \<open>N\<close>
+  array phases at \<open>\<omega>\<^sub>0\<close> are \<open>0\<close>, so \<open>A(\<bm>x,\<omega>\<^sub>0) = N\<close> and \<open>P(\<bm>x) = g(\<omega>\<^sub>0) N\<^sup>2 = N\<^sup>2\<bar>e(\<theta>\<^sub>0)\<bar>\<^sup>2\<close>
+  for \<^emph>\<open>every\<close> \<open>\<bm>x\<close>; the main-beam constraint reduces to \<open>p\<^sub>min \<le> N\<^sup>2\<bar>e(\<theta>\<^sub>0)\<bar>\<^sup>2\<close>.\<close>
+
+lemma af_at_main:
+  assumes "kz \<omega>s \<noteq> kz \<omega>0"
+  shows "af (cvec_dip \<omega>0 \<omega>s) (x::(real^2)^'n) \<omega>0 = of_nat CARD('n)"
+  by (simp add: af_def cvec_dip_at_main[OF assms])
+
+lemma Upow_at_main:
+  assumes "kz \<omega>s \<noteq> kz \<omega>0"
+  shows "Upow (cvec_dip \<omega>0 \<omega>s) g (x::(real^2)^'n) \<omega>0 = g \<omega>0 * (real CARD('n))\<^sup>2"
+proof -
+  have "cmod (af (cvec_dip \<omega>0 \<omega>s) x \<omega>0) = real CARD('n)"
+    by (simp add: af_at_main[OF assms])
+  thus ?thesis by (simp add: Upow_def)
+qed
+
+
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
 text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
