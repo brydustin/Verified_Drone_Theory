@@ -977,6 +977,45 @@ proof -
   show ?thesis by (rule sumderiv[unfolded dform])
 qed
 
+text \<open>\<^bold>\<open>Second derivative of the array factor (rung ii core).\<close>  The first directional
+  derivative of \<open>A\<close> is \<open>dA(h) = -\<ii> \<Sum>\<^sub>k (dc\,h)\<^sub>k M\<^sub>k\<close>.  Differentiating the map
+  \<open>y \<mapsto> dA\<^bsub>y\<^esub>(h)\<close> once more --- using @{thm has_derivative_Mmom} for \<open>dM\<^sub>k \<rightarrow> M\<^sub>k\<^sub>l\<close> and the
+  \<^emph>\<open>second\<close> derivative \<open>E\<close> of \<open>cvec\<close> --- introduces exactly the second moments \<open>M\<^sub>k\<^sub>l\<close>.
+  Here \<open>DC y\<close> is the derivative of \<open>cvec\<close> at \<open>y\<close> (a family, since the outer derivative
+  varies the base point) and \<open>E = h' \<mapsto> D\<^sup>2cvec(h',h)\<close>.\<close>
+
+lemma has_derivative_dA_via_M2:
+  fixes cvec :: "angle \<Rightarrow> planar" and DC :: "angle \<Rightarrow> planar \<Rightarrow> planar"
+    and E :: "planar \<Rightarrow> planar" and x :: "planar^'n" and \<omega> h :: planar
+  assumes cD: "\<And>y. (cvec has_derivative DC y) (at y)"
+    and cD2: "((\<lambda>y. DC y h) has_derivative E) (at \<omega>)"
+  shows "((\<lambda>y. \<Sum>k\<in>UNIV. complex_of_real ((DC y h)$k) * Mmom cvec x y k)
+            has_derivative
+            (\<lambda>h'. \<Sum>k\<in>UNIV.
+                complex_of_real ((DC \<omega> h)$k)
+                  * (\<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((DC \<omega> h')$l) * M2mom cvec x \<omega> k l)
+                + complex_of_real ((E h')$k) * Mmom cvec x \<omega> k))
+          (at \<omega>)"
+proof -
+  have termderiv:
+    "((\<lambda>y. complex_of_real ((DC y h)$k) * Mmom cvec x y k)
+        has_derivative
+        (\<lambda>h'. complex_of_real ((DC \<omega> h)$k)
+                * (\<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((DC \<omega> h')$l) * M2mom cvec x \<omega> k l)
+              + complex_of_real ((E h')$k) * Mmom cvec x \<omega> k)) (at \<omega>)" for k
+  proof -
+    have d1: "((\<lambda>y. complex_of_real ((DC y h)$k))
+                has_derivative (\<lambda>h'. complex_of_real ((E h')$k))) (at \<omega>)"
+      by (rule bounded_linear.has_derivative[OF bounded_linear_of_real
+            bounded_linear.has_derivative[OF bounded_linear_vec_nth cD2]])
+    have d2: "((\<lambda>y. Mmom cvec x y k) has_derivative
+                (\<lambda>h'. \<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((DC \<omega> h')$l) * M2mom cvec x \<omega> k l)) (at \<omega>)"
+      by (rule has_derivative_Mmom[OF cD])
+    show ?thesis by (rule has_derivative_mult[OF d1 d2])
+  qed
+  show ?thesis by (rule has_derivative_sum) (rule termderiv)
+qed
+
 text \<open>\<^bold>\<open>\<open>gradU\<close> IS the appendix \<open>\<Phi>\<close>-formula.\<close>  Writing \<open>a = Re A\<close>, \<open>b = Im A\<close>,
   \<open>a\<^sub>k = Re M\<^sub>k\<close>, \<open>b\<^sub>k = Im M\<^sub>k\<close>, the angular partial is
   \<open>\<partial>U/\<partial>\<omega>\<^sub>j = \<dot>g\<^sub>j(a\<^sup>2+b\<^sup>2) + 2g \<Sum>\<^sub>k (dc e\<^sub>j)\<^sub>k (b\<^sub>k a - a\<^sub>k b)\<close> --- exactly \<open>Phi1m\<close>/\<open>Phi2m\<close>
