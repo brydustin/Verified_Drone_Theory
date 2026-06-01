@@ -1224,3 +1224,67 @@ REMAINING drops (both tractable):
    uminus}) — U = gain·|A|², |A|²=inner A A, A=∑ cis(-(cvec·x_n)), cis via cos+i·sin.
    (Ck_on ⟷ higher_differentiable_on, line 227.)
  - concrete: cvec0-adapter (real×real→real^2) and |e|² are smooth ⟹ zero assumptions.
+
+## 2026-05-31 (dropping the assumption, step 2: trig smoothness + the e-singularity)
+
+Landed (green, Applied_Math_Appendix BUILD_EXIT=0):
+ - `sin_cos_higher_differentiable_on`: sin, cos ∈ C^∞ on UNIV (real⇒real), mutual
+   induction (sin'=cos, cos'=-sin; frechet_derivative via DERIV_sin/cos +
+   has_field_derivative_imp_has_derivative + frechet_derivative_at). GOTCHAS: pin
+   sin/cos to real⇒real in the STATEMENT (else polymorphic, facts won't match);
+   bilinear closure lemmas (add/mult/scaleR/inner) take `open S` LAST; `for v::real`.
+ - `cis_higher_differentiable_on`: cis ∈ C^∞ via cis = (λt. cos t *⇩R 1 + sin t *⇩R 𝗂).
+ - `gradU_has_derivative_of_C2` (step-1 drop) committed earlier.
+
+KEY: the concrete element pattern (tex D_edit L238) is e(θ,φ)=cos(π/2 cosθ)/sinθ
+(half-wave dipole), gain=|e|². It is 0/0 at θ=kπ (sinθ=0, dipole nulls, L246).
+ - Ω = cbox(ctr±[π/2,π]): θ-range [θ0±π/2], width EXACTLY π. By pigeonhole a closed
+   width-π interval always contains a kπ. So Ω ALWAYS contains a dipole null (θ=0,π
+   for broadside θ0=π/2). Hence gain∉C²(Ω) via the easy quotient-closure.
+ - BUT the singularity is REMOVABLE: cos(π/2 cosθ) has a DOUBLE zero exactly at the
+   SIMPLE zeros of sinθ, so e ~ (π/4)(θ-kπ) extends real-analytically; HOL's 0/0=0
+   matches the limit. So e (hence gain, hence U_cart = gain·|A|² with cvec0 smooth)
+   is genuinely C^∞ EVERYWHERE — U_cart∈C² on all of Ω, UNCONDITIONALLY. This drops
+   the assumption fully for our function (user confirmed: prove removable smoothness).
+ - THE CLEAN EXTENSION (found): using cos²(π/2 u)=(1+cos πu)/2 with u=cosθ,
+     e²(θ) = (π²/4)·sinc(π(1-cosθ)/2)·sinc(π(1+cosθ)/2),   sinc z = sin z/z (entire).
+   Verified at θ=π/2 (=1) and θ=0 (=0). This is the manifestly-smooth form of gain.
+   No `sinc` in HOL/AFP, so the remaining KERNEL is one removable-singularity lemma:
+   sinc ∈ C^∞ (sin t/t at 0), or e² C^∞ via holomorphic removable-singularity. NEXT.
+
+## 2026-05-31 (REMOVABLE SMOOTHNESS PROVEN) — dipole gain |e|^2 is C-infinity everywhere
+
+The removable-smoothness obligation the user asked for is COMPLETE. The half-wave
+dipole element pattern e(theta) = cos(pi/2 cos theta)/sin theta (tex D_edit L238) is
+0/0 at the poles theta=k*pi, but its gain |e|^2 is genuinely C-infinity everywhere.
+Chain (all green, Applied_Math_Appendix, committed up to a87d0d1):
+
+ 1. hdo_real_deriv_chain (42e9ce2): a deriv-closed real family (J k)'=J(Suc k) is
+    higher_differentiable_on UNIV to all orders. Reusable kernel.
+ 2. Jsinc k x = integral {0..1} (t^k cos(xt + k pi/2)) -- the k-th x-derivative of
+    integral cos(xt) = sinc x, as an INTEGRAL (no 0/0). Jsinc_deriv via
+    leibniz_rule_field_derivative; Jsinc_higher_differentiable_on via (1). (fd10376)
+ 3. Jsinc_0 (FTC): integral {0..1} cos(xt) = sinc x; gsinc_higher_differentiable_on:
+    sinc = gsinc is C-infinity on UNIV. (6a0cf90)
+ 4. gdip t = (pi^2/4) gsinc((pi/2)(1-cos t)) gsinc((pi/2)(1+cos t)) -- the gain in
+    manifestly-smooth sinc-factored form; gdip_higher_differentiable_on by composition
+    (intro, not auto, to keep (pi/2)*x un-normalized). (91aae54)
+ 5. gdip_eq_edip_sq: gdip t = (edip t)^2 (= |e|^2), via product-to-sum + double-angle
+    (sin A sin B = cos^2(pi/2 cos t) with A+B=pi, A-B=-pi cos t). (a87d0d1)
+
+So |e|^2 is C-infinity on all of R, dipole nulls included -- NO assumption, NO domain
+restriction. This is the removable extension the user pointed to ("U depends on e^2
+which extends smoothly to zero at the poles").
+
+GOTCHAS this arc: bilinear closure (add/mult/scaleR/inner) take `open S` LAST; pin
+sin/cos to real=>real in lemma statements (else polymorphic, facts won't unify);
+`also` only chains prev-RHS=next (don't interleave unrelated equations); simp
+re-normalizes (pi/2)*(1-cos t) -> (pi-pi cos t)/2, so isolate +pi/2 via a standalone
+cos(a+pi/2)=-sin a rewrite + `unfolding`; gsinc if-conditions normalize to 1∓cos t=0
+so supply those (not just (pi/2)(1∓cos t)≠0).
+
+REMAINING to fully drop the assumption for U_cart (now "downhill" -- composition of
+proven-smooth pieces): (a) gain-of-omega (lambda om. gdip (om$1)) C-infinity on real^2;
+(b) concrete cvec0 C-infinity; (c) assemble U_cart in C^2 (already have U_cart C^2 =>
+gradU/HessU genuine via gradU_has_derivative_of_C2); (d) instantiate the capstone at
+cvec0 + gdip-gain, zero assumptions.
