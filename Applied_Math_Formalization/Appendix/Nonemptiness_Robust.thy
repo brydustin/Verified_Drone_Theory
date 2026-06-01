@@ -855,6 +855,61 @@ proof -
     by (simp add: comp dU_cart_def dA_cart_via_moments)
 qed
 
+text \<open>\<^bold>\<open>Third contact: the second moments appear when we differentiate the first.\<close>
+  \<open>M\<^sub>k\<^sub>l = \<Sum>\<^sub>n (x\<^sub>n)\<^sub>k (x\<^sub>n)\<^sub>l e\<^bsup>-\<ii> c\<bullet>x\<^sub>n\<^esup>\<close> are the second moments (the \<open>M\<^sub>1\<^sub>1,M\<^sub>1\<^sub>2,M\<^sub>2\<^sub>2\<close>
+  entries of the moment map).  Differentiating a first moment yields a combination of
+  them: \<open>dM\<^sub>k(h) = -\<ii> \<Sum>\<^sub>l (dc\,h)\<^sub>l M\<^sub>k\<^sub>l\<close>.  These are the entries that feed \<open>HessU\<close>.\<close>
+
+definition M2mom :: "(angle \<Rightarrow> planar) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> 2 \<Rightarrow> 2 \<Rightarrow> complex" where
+  \<comment> \<open>the \<open>(k,l)\<close> second moment \<open>M\<^sub>k\<^sub>l = \<Sum>\<^sub>n (x\<^sub>n)\<^sub>k (x\<^sub>n)\<^sub>l cis(-c\<bullet>x\<^sub>n)\<close>\<close>
+  "M2mom cvec x \<omega> k l =
+     (\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k) * complex_of_real ((x$n)$l)
+                 * cis (-(cvec \<omega> \<bullet> (x$n))))"
+
+lemma has_derivative_Mmom:
+  assumes dcvec: "(cvec has_derivative dc) (at \<omega>)"
+  shows "((\<lambda>\<omega>. Mmom cvec x \<omega> k) has_derivative
+            (\<lambda>h. \<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$l) * M2mom cvec x \<omega> k l)) (at \<omega>)"
+proof -
+  have termderiv:
+    "((\<lambda>\<omega>. complex_of_real ((x$n)$k) * cis (-(cvec \<omega> \<bullet> (x$n))))
+        has_derivative
+        (\<lambda>h. complex_of_real ((x$n)$k)
+              * ((- \<i>) * complex_of_real (dc h \<bullet> (x$n)) * cis (-(cvec \<omega> \<bullet> (x$n)))))) (at \<omega>)"
+    for n
+    using has_derivative_mult[OF has_derivative_const has_derivative_A_cart_term[OF dcvec]]
+    by simp
+  have sumderiv:
+    "((\<lambda>\<omega>. Mmom cvec x \<omega> k) has_derivative
+        (\<lambda>h. \<Sum>n\<in>UNIV. complex_of_real ((x$n)$k)
+              * ((- \<i>) * complex_of_real (dc h \<bullet> (x$n)) * cis (-(cvec \<omega> \<bullet> (x$n)))))) (at \<omega>)"
+    unfolding Mmom_def by (rule has_derivative_sum) (rule termderiv)
+  have dform:
+    "(\<lambda>h. \<Sum>n\<in>UNIV. complex_of_real ((x$n)$k)
+            * ((- \<i>) * complex_of_real (dc h \<bullet> (x$n)) * cis (-(cvec \<omega> \<bullet> (x$n)))))
+     = (\<lambda>h. \<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$l) * M2mom cvec x \<omega> k l)"
+  proof (rule ext)
+    fix h
+    have "(\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k)
+            * ((- \<i>) * complex_of_real (dc h \<bullet> (x$n)) * cis (-(cvec \<omega> \<bullet> (x$n)))))
+        = (\<Sum>n\<in>UNIV. \<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$l)
+              * (complex_of_real ((x$n)$k) * complex_of_real ((x$n)$l)
+                 * cis (-(cvec \<omega> \<bullet> (x$n)))))"
+      by (simp add: inner_vec_def of_real_sum of_real_mult
+                    sum_distrib_left sum_distrib_right mult.assoc mult.left_commute)
+    also have "\<dots> = (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$l)
+              * (complex_of_real ((x$n)$k) * complex_of_real ((x$n)$l)
+                 * cis (-(cvec \<omega> \<bullet> (x$n)))))"
+      by (rule sum.swap)
+    also have "\<dots> = (\<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$l) * M2mom cvec x \<omega> k l)"
+      by (simp add: M2mom_def sum_distrib_left mult.assoc)
+    finally show "(\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k)
+            * ((- \<i>) * complex_of_real (dc h \<bullet> (x$n)) * cis (-(cvec \<omega> \<bullet> (x$n)))))
+        = (\<Sum>l\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$l) * M2mom cvec x \<omega> k l)" .
+  qed
+  show ?thesis by (rule sumderiv[unfolded dform])
+qed
+
 definition sigma_min :: "real^2^2 \<Rightarrow> real" where
   \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
   "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
