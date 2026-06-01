@@ -1787,6 +1787,37 @@ proof -
 qed
 
 
+subsection \<open>Step 1 of \<open>prop:dimZ\<close>: \<open>\<Phi>\<close> factors through the moment map \<open>M_paper\<close>\<close>
+
+text \<open>\<^bold>\<open>The bad-point map's ingredients ARE the moment map.\<close>  The local first/second
+  moments \<^const>\<open>Mmom\<close>, \<^const>\<open>M2mom\<close> and the array factor \<^const>\<open>A_cart\<close> --- through
+  which \<open>gradU\<close>/\<open>HessU\<close> (hence \<open>\<Phi> = Phibad\<close>) are expressed --- are exactly the six
+  components of the \<^emph>\<open>determinant-side\<close> moment map \<^const>\<open>M_paper\<close> (whose configuration
+  Jacobian is \<open>bigJ\<close>).  This identity is the bridge \<open>\<Phi> = F \<circ> \<M>\<close>: it lets the proven
+  \<open>bigJ\<close>-surjectivity (\<open>lem:Msurj\<close>) act on \<open>\<Phi>\<close>'s derivative.\<close>
+
+lemma M_paper_eq_robust_moments:
+  "M_paper x (cvec \<omega>) = vector
+     [ A_cart cvec x \<omega>, Mmom cvec x \<omega> 1, Mmom cvec x \<omega> 2,
+       M2mom cvec x \<omega> 1 1, M2mom cvec x \<omega> 1 2, M2mom cvec x \<omega> 2 2 ]"
+proof -
+  have a1: "A_moment x (cvec \<omega>) = A_cart cvec x \<omega>"
+    by (simp add: A_moment_def phase_def A_cart_def)
+  have a2: "M1_moment x (cvec \<omega>) = Mmom cvec x \<omega> 1"
+    by (simp add: M1_moment_def phase_def Mmom_def)
+  have a3: "M2_moment x (cvec \<omega>) = Mmom cvec x \<omega> 2"
+    by (simp add: M2_moment_def phase_def Mmom_def)
+  have a4: "M11_moment x (cvec \<omega>) = M2mom cvec x \<omega> 1 1"
+    by (simp add: M11_moment_def phase_def M2mom_def power2_eq_square of_real_mult)
+  have a5: "M12_moment x (cvec \<omega>) = M2mom cvec x \<omega> 1 2"
+    by (simp add: M12_moment_def phase_def M2mom_def w_M12_def of_real_mult)
+  have a6: "M22_moment x (cvec \<omega>) = M2mom cvec x \<omega> 2 2"
+    by (simp add: M22_moment_def phase_def M2mom_def power2_eq_square of_real_mult)
+  show ?thesis
+    unfolding M_paper_def by (simp add: a1 a2 a3 a4 a5 a6)
+qed
+
+
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
 text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
