@@ -8,6 +8,36 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — Phi_bad_meager reduction: bad set ⊆ engine critical-projection set
+
+Pushed the dipole Sard step through its entire *structural* half — the dipole degenerate-critical
+configuration set is now proven (sorry-free) to be contained in exactly the set whose meagerness the
+transversality engine delivers. Bricks landed this session, in order:
+
+- `gradU_dip_differentiable_x` — assemble the two scalar component bricks into the full 2-vector
+  gradient field's differentiability in x, via `differentiable_componentwise_within` (basis `axis j 1`,
+  `∙ b = $ j` by `inner_axis`).
+- `surj_matrix_vector_iff_det` — for a square `A`, `surj ((*v) A) ⟷ det A ≠ 0` (surj ⟹ right-inverse
+  `matrix_right_invertible_surjective` ⟹ two-sided `matrix_left_right_inverse1` ⟹ `invertible` ⟹ det≠0;
+  converse via `invertible_det_nz` + `invertible_eq_bij`). Plus `det_2_symmetric`.
+- `not_surj_omega_deriv_iff_detHess_dip` — for the C² dipole the engine's "no surjective ω-derivative
+  of `gradU`" predicate is *literally* `det (HessU) = 0`: `gradU_dip_has_derivative` gives the unique
+  derivative `(*v) HessU`, then `surj_matrix_vector_iff_det` + `has_derivative_unique`. (Care: convert
+  `at ω within Ω` to `at ω` via `at_within_open` so `has_derivative_unique` applies.)
+- `HessU_dip_symmetric` — Clairaut: `mixed_partials_commute` on the C² `U_dip` (`U_dip_Ck2`).
+- `Phibad_dip_imp_detHess0` — `Φ = 0` ⟹ `gradU = 0 ∧ det (HessU) = 0`, rewriting Φ's slot
+  `H₁₁H₂₂ − H₁₂²` into `det_2` form `H₁₁H₂₂ − H₁₂H₂₁` using symmetry.
+- `Phibad_dip_subset_critical` — the capstone of the half: `{x∈V. ∃ω. Φ=0 ∧ A≠0} ⊆ {x∈V. ∃ω. gradU=0
+  ∧ ¬(∃D surjective derivative at ω)}` (Ω=UNIV; the `A≠0` only shrinks the LHS so the inclusion is free).
+
+Remaining for `Phi_bad_meager` (still two genuine pieces): (2) the transversality input
+`regular_value_on gradU_dip (V×Ω) 0` — D_x gradU = (2×6 moment Jacobian)·`DM_paper_x` is onto ℝ²
+on `{A≠0}` from the rank-12 `bigJ` (lem:Msurj); and the `(real^2)^'n ≅ real^(2·CARD('n))` reshape so the
+engine's `real^'m`-typed `parametric_transversality_meager_euclidean_stub` applies. (3) The engine core
+`regular_zero_set_projection_charts_core_2d` is itself still `sorry`.
+
+---
+
 ## 2026-06-02 (robust set) — Sard step begun: configuration-space smoothness bricks
 
 User chose (a) a dipole-specific `Phi_bad_meager_dip` obligation and (b) building the Sard step
