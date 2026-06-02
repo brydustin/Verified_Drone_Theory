@@ -1817,6 +1817,52 @@ proof -
     unfolding M_paper_def by (simp add: a1 a2 a3 a4 a5 a6)
 qed
 
+text \<open>The six component projections (reusable rewrites \<open>moment \<rightarrow> M_paper\<close> coordinate).\<close>
+
+lemma M_paper_proj_A:   "M_paper x (cvec \<omega>) $ 1 = A_cart cvec x \<omega>"
+  by (simp add: A_moment_def phase_def A_cart_def)
+lemma M_paper_proj_M1:  "M_paper x (cvec \<omega>) $ 2 = Mmom cvec x \<omega> 1"
+  by (simp add: M1_moment_def phase_def Mmom_def)
+lemma M_paper_proj_M2:  "M_paper x (cvec \<omega>) $ 3 = Mmom cvec x \<omega> 2"
+  by (simp add: M2_moment_def phase_def Mmom_def)
+lemma M_paper_proj_M11: "M_paper x (cvec \<omega>) $ 4 = M2mom cvec x \<omega> 1 1"
+  by (simp add: M11_moment_def phase_def M2mom_def power2_eq_square of_real_mult)
+lemma M_paper_proj_M12: "M_paper x (cvec \<omega>) $ 5 = M2mom cvec x \<omega> 1 2"
+  by (simp add: M12_moment_def phase_def M2mom_def w_M12_def of_real_mult)
+lemma M_paper_proj_M22: "M_paper x (cvec \<omega>) $ 6 = M2mom cvec x \<omega> 2 2"
+  by (simp add: M22_moment_def phase_def M2mom_def power2_eq_square of_real_mult)
+
+text \<open>\<^bold>\<open>The gradient half of \<open>\<Phi> = F \<circ> \<M>\<close>.\<close>  The angular partials \<open>\<Phi>\<^sub>1 = \<partial>U/\<partial>\<omega>\<^sub>1\<close>,
+  \<open>\<Phi>\<^sub>2 = \<partial>U/\<partial>\<omega>\<^sub>2\<close> (the first two components of \<open>Phibad\<close>) depend on \<open>(\<bm>x,\<omega>)\<close> \<^emph>\<open>only through\<close>
+  the moment map \<open>M_paper\<close>'s first three coordinates \<open>A, M\<^sub>1, M\<^sub>2\<close> (and the gain/steering
+  jet \<open>gain, dgain, dc\<close>, which are parameters).  This is \<open>\<Phi>\<^sub>1\<^sub>,\<^sub>2\<close> as an explicit function of
+  \<open>\<M>\<close>.\<close>
+
+lemma gradU_component_via_M_paper:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and dc :: "angle \<Rightarrow> planar" and dgain :: "angle \<Rightarrow> real"
+    and x :: "planar^'n" and \<omega> :: angle
+  assumes dcvec: "(cvec has_derivative dc) (at \<omega>)"
+    and dgn: "(gain has_derivative dgain) (at \<omega>)"
+  shows "gradU cvec gain x \<omega> $ j
+         = dgain (axis j 1) * (cmod (M_paper x (cvec \<omega>) $ 1))\<^sup>2
+           + gain \<omega> * (2 * Re (cnj (M_paper x (cvec \<omega>) $ 1)
+                * ((- \<i>) * complex_of_real ((dc (axis j 1))$1) * (M_paper x (cvec \<omega>) $ 2)
+                 + (- \<i>) * complex_of_real ((dc (axis j 1))$2) * (M_paper x (cvec \<omega>) $ 3))))"
+proof -
+  have G: "gradU cvec gain x \<omega> $ j
+        = dgain (axis j 1) * (cmod (A_cart cvec x \<omega>))\<^sup>2
+          + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+                * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+    by (rule gradU_component_via_moments[OF dcvec dgn])
+  have S: "(\<Sum>k\<in>(UNIV::2 set). (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)
+        = (- \<i>) * complex_of_real ((dc (axis j 1))$1) * Mmom cvec x \<omega> 1
+        + (- \<i>) * complex_of_real ((dc (axis j 1))$2) * Mmom cvec x \<omega> 2"
+    by (simp add: sum_2)
+  show ?thesis
+    by (simp only: G S M_paper_proj_A M_paper_proj_M1 M_paper_proj_M2)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
