@@ -131,7 +131,39 @@ above, no jet) yields the c-Hessian as a clean moment polynomial `H_{kl} = 2(Re(
 (bringing in d²c, d²gain as x-constant coefficients). NEXT BRICK: the c-Hessian of `|A|²`
 in moments (differentiate the c-gradient), then the bridge, then `det = poly(M_paper)`.
 
-REMAINING for Step 1 (the Hessian half): `Φ₃ = det∇²U = H₁₁H₂₂−H₁₂²` through `M_paper$4,5,6`
+## 2026-06-01 (prop:dimZ Step 1, the Hessian) — c-Hessian of |A|² computed in moments
+
+**THE HESSIAN IS COMPUTED.** `HessU_c_eq` (sorry-free): in c-coordinates (cvec=id, gain≡1),
+`HessU (λc. c) (λ_. 1) x c = Hcmat x c` where
+`Hcmat x c $ k $ l = 2(Re(cnj M_l · M_k) − Re(cnj A · M_{kl}))` — the moment-space Hessian,
+a polynomial in the six `M_paper` moments. So `Φ₃ = det∇²U = Hcmat₁₁·Hcmat₂₂ − Hcmat₁₂²` is
+now an explicit moment polynomial (the paper's "moment-space form of the bad-point map").
+
+Chain of the computation (all sorry-free), each a committed brick:
+- c-derivatives `∂_c A = −iM`, `∂_c M_k = −iM_{kl}` (`has_derivative_Afun_c/Mcfun_c`).
+- Re/Im pushed through the derivative sums (`ReDAfun/ImDAfun/ReDMfun/ImDMfun`,
+  `Im_M2cfun/Re_M2cfun`): collect into moments.
+- Four piece-derivatives `dRe_Afun/dIm_Afun/dRe_Mcfun/dIm_Mcfun` (bounded_linear Re/Im ∘
+  c-derivative, rewritten to moment form via `has_derivative_eq_rhs`).
+- `has_derivative_gradU_c`: differentiate the c-gradient field componentwise (product rule on
+  `2(Re A Im M_j − Im A Re M_j)`, matched to `(Hcmat *v h)_j` by sum-merge + `Re(cnj·)`).
+- `HessU_c_eq` via `HessU_explicit` + `matrix_of_matrix_vector_mul`.
+
+GOTCHAS (cost real cycles, with brydustin debugging alongside): (i) **`simp` unfolds
+`Im(cis(−θ)) = −sin θ`** injecting negations — keep `cis` opaque: apply per-term reorder
+lemmas via `sum.cong[OF refl] + rule`, NOT `simp add: lemma`. (ii) `of_real_mult[symmetric]`
+LOOPS against the default `of_real_mult`; just `simp` (the `times_complex` selectors are
+`[simp]`, so `Im(of_real a*of_real b*z)` reduces). (iii) `term` is a reserved command — not a
+fact label; use `tderiv`/`perterm`. (iv) `has_derivative_sum` needs explicit `rule` (HO
+unification). (v) `vec_eq_iff`/`subst vec_eq_iff` flaky on `χ`-equations — prove componentwise
+then `simp add: Finite_Cartesian_Product.vec_eq_iff`. (vi) standalone lemmas with free `x` hit
+the JNF-vs-HMA `$` ambiguity — pin `fixes x :: "(real^2)^'n"`.
+
+NEXT: `det Hcmat` as the explicit `Φ₃` moment polynomial (trivial now), then the ω–c bridge
+to the general `cvec_dip`/`gain_dip` HessU (chain rule, d²c/d²gain as x-constant coeffs), then
+`Φ = F∘M_paper` ⟹ `D_xΦ = D_M F · bigJ` ⟹ rank/`smooth_chart_meager` ⟹ `Phi_bad_meager`.
+
+(OLD note) REMAINING for Step 1 (the Hessian half): `Φ₃ = det∇²U = H₁₁H₂₂−H₁₂²` through `M_paper$4,5,6`
 (the second moments). Needs `HessU $ k $ l` as an explicit function of `A,Mmom,M2mom` and the
 **second** jet `d²gain`, `d²c (=E)` — obtained by differentiating the moment form of `gradU`
 (`gradU_component_real_moments`); the M2mom-entry machinery is present (`has_derivative_Mmom`,
