@@ -2741,6 +2741,41 @@ proof (subst differentiable_componentwise_within, intro ballI)
     by (simp add: bj inner_axis)
 qed
 
+text \<open>\<^bold>\<open>Surjectivity of a square linear map \<open>\<longleftrightarrow>\<close> nonzero determinant.\<close>  The chart engine
+  marks \<open>\<omega>\<close> as \<^emph>\<open>bad\<close> when the \<open>\<omega>\<close>-derivative of \<open>G\<close> fails to be surjective.  For \<open>G =
+  \<nabla>\<^sub>\<Omega>U\<close> that derivative is the action \<open>(*v) (\<nabla>\<^sup>2U)\<close> of the Hessian (cf. @{thm
+  has_derivative_gradU_c}, @{thm HessU_c_eq}), so the non-surjectivity test is literally
+  \<open>det (\<nabla>\<^sup>2U) = 0\<close> --- the third component of \<open>\<Phi>\<close>.  This brick is the linear-algebra hinge:
+  for a square matrix \<open>A\<close>, the linear map \<open>h \<mapsto> A *v h\<close> is onto iff \<open>det A \<noteq> 0\<close> (surjective
+  \<open>\<Rightarrow>\<close> right-inverse \<open>\<Rightarrow>\<close> two-sided inverse on the square shape \<open>\<Rightarrow>\<close> invertible \<open>\<Rightarrow>\<close> \<open>det \<noteq> 0\<close>;
+  conversely \<open>det \<noteq> 0 \<Rightarrow>\<close> invertible \<open>\<Rightarrow>\<close> bijective \<open>\<Rightarrow>\<close> surjective).\<close>
+
+lemma surj_matrix_vector_iff_det:
+  fixes A :: "real^'n^'n"
+  shows "surj ((*v) A) \<longleftrightarrow> det A \<noteq> 0"
+proof
+  assume "det A \<noteq> 0"
+  hence "invertible A" by (simp add: invertible_det_nz)
+  hence "bij ((*v) A)" by (simp add: invertible_eq_bij)
+  thus "surj ((*v) A)" by (simp add: bij_betw_def)
+next
+  assume "surj ((*v) A)"
+  then obtain B where AB: "A ** B = mat 1"
+    using matrix_right_invertible_surjective by blast
+  have "B ** A = mat 1" by (rule matrix_left_right_inverse1[OF AB])
+  with AB have "invertible A" unfolding invertible_def by blast
+  thus "det A \<noteq> 0" by (simp add: invertible_det_nz)
+qed
+
+text \<open>\<^bold>\<open>The \<open>2\<times>2\<close> determinant in \<open>\<Phi>\<close>'s coordinates.\<close>  For a \<^emph>\<open>symmetric\<close> Hessian (\<open>H\<^sub>1\<^sub>2 = H\<^sub>2\<^sub>1\<close>)
+  the determinant @{thm det_2} reads \<open>H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close> --- exactly the third slot of \<open>\<Phi>\<close>.\<close>
+
+lemma det_2_symmetric:
+  fixes A :: "real^2^2"
+  assumes "A $ 1 $ 2 = A $ 2 $ 1"
+  shows "det A = A $ 1 $ 1 * A $ 2 $ 2 - (A $ 1 $ 2)\<^sup>2"
+  using assms by (simp add: det_2 power2_eq_square)
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
