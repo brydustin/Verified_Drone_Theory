@@ -2427,6 +2427,44 @@ proof -
   thus ?thesis by (simp add: gradU_def)
 qed
 
+text \<open>\<^bold>\<open>The \<open>k\<close>-th component of the bridge gradient\<close> --- a scalar, easier to differentiate
+  for the Hessian than the full vector.\<close>
+
+lemma gradU_via_c_component:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and x :: "(real^2)^'n" and \<omega> :: angle
+  assumes Dc: "(cvec has_derivative Dcvec) (at \<omega>)"
+    and Dg: "(gain has_derivative dgain) (at \<omega>)"
+  shows "gradU cvec gain x \<omega> $ k
+         = gain \<omega> * (Dcvec (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+           + dgain (axis k 1) * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>)"
+proof -
+  have "gradU cvec gain x \<omega> $ k
+      = (\<Sum>i\<in>UNIV. (gain \<omega> * (Dcvec (axis i 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                     + dgain (axis i 1) * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                   * (axis (i::2) 1 $ k))"
+    by (simp add: gradU_via_c[OF Dc Dg] sum_component)
+  also have "\<dots> = gain \<omega> * (Dcvec (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                   + dgain (axis k 1) * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>)"
+    by (simp add: axis_def if_distrib sum.delta cong: if_cong)
+  finally show ?thesis .
+qed
+
+text \<open>\<^bold>\<open>The gain is \<open>C\<^sup>2\<close> in the \<open>\<omega>\<close> (vec) setting.\<close>  Lift @{thm gdip_deriv_differentiable}
+  through the \<open>\<theta> = \<omega>\<^sub>1\<close> projection: \<open>\<lambda>\<omega>. \<partial>gdip(\<omega>\<^sub>1)\<close> is differentiable.\<close>
+
+lemma gain_dip_deriv_field_differentiable:
+  fixes \<omega> :: "real^2"
+  shows "(\<lambda>\<omega>::real^2. frechet_derivative gdip (at (\<omega>$1)) s) differentiable (at \<omega>)"
+proof -
+  have proj: "(\<lambda>\<omega>::real^2. \<omega>$1) differentiable (at \<omega>)"
+    using has_derivative_proj by (blast intro: differentiableI)
+  have inner: "(\<lambda>t::real. frechet_derivative gdip (at t) s) differentiable (at (\<omega>$1))"
+    by (rule gdip_deriv_differentiable)
+  show ?thesis
+    using differentiable_chain_at[OF proj inner] by (simp add: o_def)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
