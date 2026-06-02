@@ -2010,6 +2010,130 @@ proof -
   finally show ?thesis .
 qed
 
+text \<open>\<^bold>\<open>Pushing \<open>\<real>/\<I>\<close> through the derivative sums.\<close>  The directional \<open>c\<close>-derivatives of
+  \<open>A\<close> and \<open>M\<^sub>k\<close> collect, after \<open>h\<cdot>x\<^sub>n = \<Sum>\<^sub>l h\<^sub>l (x\<^sub>n)\<^sub>l\<close> and a sum swap, into moments.\<close>
+
+lemma Re_neg_i_of_real: "Re ((- \<i>) * complex_of_real r * z) = r * Im z"
+  by simp
+lemma Im_neg_i_of_real: "Im ((- \<i>) * complex_of_real r * z) = - (r * Re z)"
+  by simp
+
+lemma inner_real2_sum: "(h::real^2) \<bullet> (p::real^2) = (\<Sum>l\<in>UNIV. (h$l) * (p$l))"
+  by (simp add: inner_vec_def)
+
+lemma Re_neg_i_of_real2:
+  "Re ((- \<i>) * complex_of_real r * complex_of_real s * z) = (r * s) * Im z"
+  by simp
+lemma Im_neg_i_of_real2:
+  "Im ((- \<i>) * complex_of_real r * complex_of_real s * z) = - ((r * s) * Re z)"
+  by simp
+
+lemma ReDAfun:
+  fixes x :: "(real^2)^'n" and c h :: "real^2"
+  shows "Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+       = (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))"
+proof -
+  have "Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+      = (\<Sum>n\<in>UNIV. \<Sum>l\<in>UNIV. (h$l) * ((x$n)$l * Im (cis (-(c \<bullet> (x$n))))))"
+    by (simp add: Re_sum Re_neg_i_of_real inner_real2_sum sum_distrib_right mult.assoc)
+  also have "\<dots> = (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * ((x$n)$l * Im (cis (-(c \<bullet> (x$n))))))"
+    by (rule sum.swap)
+  also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))"
+    by (simp add: sum_distrib_left Mcfun_def Im_sum)
+  finally show ?thesis .
+qed
+
+lemma ImDAfun:
+  fixes x :: "(real^2)^'n" and c h :: "real^2"
+  shows "Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+       = - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))"
+proof -
+  have "Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+      = - (\<Sum>n\<in>UNIV. \<Sum>l\<in>UNIV. (h$l) * ((x$n)$l * Re (cis (-(c \<bullet> (x$n))))))"
+    by (simp add: Im_sum Im_neg_i_of_real inner_real2_sum sum_distrib_right mult.assoc sum_negf)
+  also have "\<dots> = - (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * ((x$n)$l * Re (cis (-(c \<bullet> (x$n))))))"
+    by (rule arg_cong[where f = uminus]) (rule sum.swap)
+  also have "\<dots> = - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))"
+    by (simp add: sum_distrib_left Mcfun_def Re_sum)
+  finally show ?thesis .
+qed
+
+lemma Im_M2cfun:
+  fixes x :: "(real^2)^'n"
+  shows "Im (M2cfun x c k l) = (\<Sum>n\<in>UNIV. ((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n)))))"
+  by (simp add: M2cfun_def Im_sum)
+
+lemma Re_M2cfun:
+  fixes x :: "(real^2)^'n"
+  shows "Re (M2cfun x c k l) = (\<Sum>n\<in>UNIV. ((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n)))))"
+  by (simp add: M2cfun_def Re_sum)
+
+lemma ReDMfun:
+  fixes x :: "(real^2)^'n" and c h :: "real^2"
+  shows "Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+       = (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))"
+proof -
+  have perterm: "((x$n)$k * (h \<bullet> (x$n))) * Im (cis (-(c \<bullet> (x$n))))
+       = (\<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n))))))" for n
+  proof -
+    have "((x$n)$k * (h \<bullet> (x$n))) * Im (cis (-(c \<bullet> (x$n))))
+        = (\<Sum>l\<in>UNIV. (x$n)$k * ((h$l) * (x$n)$l)) * Im (cis (-(c \<bullet> (x$n))))"
+      by (simp add: inner_real2_sum sum_distrib_left)
+    also have "\<dots> = (\<Sum>l\<in>UNIV. ((x$n)$k * ((h$l) * (x$n)$l)) * Im (cis (-(c \<bullet> (x$n)))))"
+      by (simp add: sum_distrib_right sum_negf)
+    also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n))))))"
+      by (simp add: mult_ac)
+    finally show ?thesis .
+  qed
+  have "Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+      = (\<Sum>n\<in>UNIV. ((x$n)$k * (h \<bullet> (x$n))) * Im (cis (-(c \<bullet> (x$n)))))"
+    by (simp add: Re_sum Re_neg_i_of_real2)
+  also have "\<dots> = (\<Sum>n\<in>UNIV. \<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n))))))"
+    by (rule sum.cong[OF refl]) (rule perterm)
+  also have "\<dots> = (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n))))))"
+    by (rule sum.swap)
+  also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))"
+    by (simp add: sum_distrib_left Im_M2cfun)
+  finally show ?thesis .
+qed
+
+lemma ImDMfun:
+  fixes x :: "(real^2)^'n" and c h :: "real^2"
+  shows "Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+       = - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l))"
+proof -
+  have perterm: "((x$n)$k * (h \<bullet> (x$n))) * Re (cis (-(c \<bullet> (x$n))))
+       = (\<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n))))))" for n
+  proof -
+    have "((x$n)$k * (h \<bullet> (x$n))) * Re (cis (-(c \<bullet> (x$n))))
+        = (\<Sum>l\<in>UNIV. (x$n)$k * ((h$l) * (x$n)$l)) * Re (cis (-(c \<bullet> (x$n))))"
+      by (simp add: inner_real2_sum sum_distrib_left)
+    also have "\<dots> = (\<Sum>l\<in>UNIV. ((x$n)$k * ((h$l) * (x$n)$l)) * Re (cis (-(c \<bullet> (x$n)))))"
+      by (simp add: sum_distrib_right)
+    also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n))))))"
+      by (simp add: mult_ac)
+    finally show ?thesis .
+  qed
+  have "Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+      = - (\<Sum>n\<in>UNIV. ((x$n)$k * (h \<bullet> (x$n))) * Re (cis (-(c \<bullet> (x$n)))))"
+    by (simp add: Im_sum Im_neg_i_of_real2 sum_negf)
+  also have "\<dots> = - (\<Sum>n\<in>UNIV. \<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n))))))"
+    by (rule arg_cong[where f = uminus], rule sum.cong[OF refl], rule perterm)
+  also have "\<dots> = - (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n))))))"
+    by (rule arg_cong[where f = uminus]) (rule sum.swap)
+  also have "\<dots> = - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l))"
+    by (simp add: sum_distrib_left Re_M2cfun)
+  finally show ?thesis .
+qed
+
+definition Hcmat :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> real^2^2" where
+  "Hcmat x c = (\<chi> k. \<chi> l. 2 * (Re (cnj (Mcfun x c l) * Mcfun x c k)
+                               - Re (cnj (Afun x c) * M2cfun x c k l)))"
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
