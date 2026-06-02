@@ -2723,6 +2723,24 @@ proof -
               d)
 qed
 
+text \<open>\<^bold>\<open>Assembling the components into the vector field.\<close>  A map into the euclidean space
+  \<open>real^2\<close> is differentiable iff each coordinate \<open>\<bullet> b\<close> (\<open>b\<close> a basis vector \<open>axis j 1\<close>, so
+  \<open>\<bullet> b = $ j\<close>) is.  The two scalar bricks @{thm gradU_dip_component_differentiable_x} therefore
+  give the full \<open>2\<close>-vector gradient field \<open>\<nabla>\<^sub>\<Omega>U_dip\<close> its differentiability in the configuration
+  \<open>\<bm>x\<close> --- the \<open>C\<^sup>1\<close> regularity (\<open>derG\<close>) the Sard/chart engine needs of \<open>G = gradU_dip\<close>.\<close>
+
+lemma gradU_dip_differentiable_x:
+  fixes x :: "(real^2)^'n" and V :: "((real^2)^'n) set"
+  shows "(\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) differentiable (at x within V)"
+proof (subst differentiable_componentwise_within, intro ballI)
+  fix b :: "real^2" assume "b \<in> Basis"
+  then obtain j where bj: "b = axis j 1" by (auto simp: Basis_vec_def)
+  have "(\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ j) differentiable (at x within V)"
+    by (rule gradU_dip_component_differentiable_x)
+  thus "(\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> \<bullet> b) differentiable (at x within V)"
+    by (simp add: bj inner_axis)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
