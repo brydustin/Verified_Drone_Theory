@@ -2276,6 +2276,49 @@ proof -
   thus ?thesis by (simp add: matrix_of_matrix_vector_mul)
 qed
 
+text \<open>\<^bold>\<open>The explicit moment entries of the \<open>c\<close>-Hessian\<close> --- so its determinant is manifestly
+  a polynomial in the moments \<open>A, M\<^sub>1, M\<^sub>2, M\<^sub>1\<^sub>1, M\<^sub>1\<^sub>2, M\<^sub>2\<^sub>2\<close>.\<close>
+
+lemma Hcmat_11:
+  "Hcmat x c $ 1 $ 1
+     = 2 * (Re (cnj (Mcfun x c 1) * Mcfun x c 1) - Re (cnj (Afun x c) * M2cfun x c 1 1))"
+  by (simp add: Hcmat_def)
+lemma Hcmat_22:
+  "Hcmat x c $ 2 $ 2
+     = 2 * (Re (cnj (Mcfun x c 2) * Mcfun x c 2) - Re (cnj (Afun x c) * M2cfun x c 2 2))"
+  by (simp add: Hcmat_def)
+lemma Hcmat_12:
+  "Hcmat x c $ 1 $ 2
+     = 2 * (Re (cnj (Mcfun x c 2) * Mcfun x c 1) - Re (cnj (Afun x c) * M2cfun x c 1 2))"
+  by (simp add: Hcmat_def)
+
+text \<open>\<^bold>\<open>The Hessian-determinant component \<open>\<Phi>\<^sub>3\<close> in \<open>c\<close>-coordinates IS a moment polynomial.\<close>
+  \<open>det \<nabla>\<^sup>2\<^sub>c U = H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2 = det(Hcmat)\<close>, a polynomial in the six \<open>M_paper\<close> moments
+  --- the third component \<open>F\<^sub>3\<close> of the bad-point map factored through \<open>\<M>\<close> (\<open>\<Phi> = F \<circ> \<M>\<close>).\<close>
+
+lemma detHessU_c:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "HessU (\<lambda>c. c) (\<lambda>_. 1) x c $ 1 $ 1 * HessU (\<lambda>c. c) (\<lambda>_. 1) x c $ 2 $ 2
+           - (HessU (\<lambda>c. c) (\<lambda>_. 1) x c $ 1 $ 2)\<^sup>2
+       = Hcmat x c $ 1 $ 1 * Hcmat x c $ 2 $ 2 - (Hcmat x c $ 1 $ 2)\<^sup>2"
+  by (simp add: HessU_c_eq)
+
+text \<open>The fully-factored moment form \<open>4(AB - C\<^sup>2)\<close> (ring identity over the \<open>Re(cnj\<cdot>)\<close> atoms).\<close>
+
+lemma detHessU_c_moments:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "HessU (\<lambda>c. c) (\<lambda>_. 1) x c $ 1 $ 1 * HessU (\<lambda>c. c) (\<lambda>_. 1) x c $ 2 $ 2
+           - (HessU (\<lambda>c. c) (\<lambda>_. 1) x c $ 1 $ 2)\<^sup>2
+       = 4 * ((Re (cnj (Mcfun x c 1) * Mcfun x c 1) - Re (cnj (Afun x c) * M2cfun x c 1 1))
+              * (Re (cnj (Mcfun x c 2) * Mcfun x c 2) - Re (cnj (Afun x c) * M2cfun x c 2 2))
+              - (Re (cnj (Mcfun x c 2) * Mcfun x c 1) - Re (cnj (Afun x c) * M2cfun x c 1 2))\<^sup>2)"
+proof -
+  have ring: "(2*A) * (2*B) - (2*C)\<^sup>2 = 4 * (A*B - C\<^sup>2)" for A B C :: real
+    by (simp add: power2_eq_square algebra_simps)
+  show ?thesis
+    by (simp only: detHessU_c Hcmat_11 Hcmat_22 Hcmat_12 ring)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
