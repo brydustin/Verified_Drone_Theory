@@ -2797,6 +2797,27 @@ proof -
   thus ?thesis by auto
 qed
 
+text \<open>\<^bold>\<open>The joint derivative restricts to the \<open>\<bm>x\<close>-partial along \<open>(h,0)\<close>.\<close>  Composing the
+  section \<open>y \<mapsto> (y,\<omega>)\<close> (derivative \<open>h \<mapsto> (h,0)\<close>) with \<open>G\<close> and using uniqueness of the Fréchet
+  derivative, the joint derivative \<open>D\<close> of \<open>G\<close> at \<open>(\<bm>x,\<omega>)\<close> satisfies \<open>D(h,0) = D\<^sub>\<bm>x h\<close> for the
+  \<open>\<bm>x\<close>-partial \<open>D\<^sub>\<bm>x\<close>.  This supplies the hypothesis of @{thm surj_partial_imp_surj_joint}.\<close>
+
+lemma joint_deriv_restricts_to_partial:
+  fixes G :: "('a::real_normed_vector \<times> 'b::real_normed_vector) \<Rightarrow> 'c::real_normed_vector"
+  assumes Dj: "(G has_derivative Dj) (at (x, w))"
+    and Dx: "((\<lambda>y. G (y, w)) has_derivative Dx) (at x)"
+  shows "Dj (h, 0) = Dx h"
+proof -
+  have sec: "((\<lambda>y. (y, w)) has_derivative (\<lambda>h. (h, 0))) (at x)"
+    by (auto intro!: derivative_eq_intros)
+  have "((G \<circ> (\<lambda>y. (y, w))) has_derivative (Dj \<circ> (\<lambda>h. (h, 0)))) (at x)"
+    by (rule diff_chain_at[OF sec Dj])
+  hence "((\<lambda>y. G (y, w)) has_derivative (\<lambda>h. Dj (h, 0))) (at x)"
+    by (simp add: o_def)
+  from has_derivative_unique[OF this Dx]
+  show "Dj (h, 0) = Dx h" by (metis fun_cong)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
