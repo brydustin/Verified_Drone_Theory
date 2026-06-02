@@ -3404,7 +3404,84 @@ text \<open>\<^bold>\<open>(C0) A nonzero smallest singular value is exactly inv
 lemma sigma_min_pos_iff_invertible:
   fixes H :: "real^2^2"
   shows "0 < sigma_min H \<longleftrightarrow> det H \<noteq> 0"
-  sorry
+proof -
+  have lin: "linear ((*v) H)" by (rule matrix_vector_mul_linear)
+  have bdd: "bdd_below ((\<lambda>v. norm (H *v v)) ` sphere 0 1)"
+    by (rule bdd_belowI[of _ 0]) auto
+  have cont: "continuous_on (sphere (0::real^2) 1) (\<lambda>v. norm (H *v v))"
+    by (rule continuous_on_norm[OF
+          bounded_linear.continuous_on[OF matrix_vector_mul_bounded_linear continuous_on_id]])
+  \<comment> \<open>Step 1: positivity of the smallest singular value \<open>\<longleftrightarrow>\<close> nonvanishing on the unit sphere.\<close>
+  have nz_iff: "0 < sigma_min H \<longleftrightarrow> (\<forall>v\<in>sphere (0::real^2) 1. H *v v \<noteq> 0)"
+  proof
+    assume pos: "0 < sigma_min H"
+    show "\<forall>v\<in>sphere (0::real^2) 1. H *v v \<noteq> 0"
+    proof
+      fix v assume v: "v \<in> sphere (0::real^2) 1"
+      have "sigma_min H \<le> norm (H *v v)"
+        unfolding sigma_min_def by (rule cINF_lower[OF bdd v])
+      with pos show "H *v v \<noteq> 0" by auto
+    qed
+  next
+    assume nz: "\<forall>v\<in>sphere (0::real^2) 1. H *v v \<noteq> 0"
+    obtain v0 where v0: "v0 \<in> sphere (0::real^2) 1"
+        and v0min: "\<forall>v\<in>sphere (0::real^2) 1. norm (H *v v0) \<le> norm (H *v v)"
+      using continuous_attains_inf[OF compact_sphere sphere01_ne cont] by blast
+    have "sigma_min H = norm (H *v v0)"
+    proof -
+      have "sigma_min H \<le> norm (H *v v0)"
+        unfolding sigma_min_def by (rule cINF_lower[OF bdd v0])
+      moreover have "norm (H *v v0) \<le> sigma_min H"
+        unfolding sigma_min_def by (rule cINF_greatest[OF sphere01_ne]) (rule v0min[rule_format])
+      ultimately show ?thesis by linarith
+    qed
+    moreover have "0 < norm (H *v v0)" using nz v0 by auto
+    ultimately show "0 < sigma_min H" by simp
+  qed
+  \<comment> \<open>Step 2: nonvanishing on the unit sphere \<open>\<longleftrightarrow>\<close> injectivity (normalise an arbitrary nonzero
+      kernel vector to the sphere).\<close>
+  have inj_iff: "(\<forall>v\<in>sphere (0::real^2) 1. H *v v \<noteq> 0) \<longleftrightarrow> inj ((*v) H)"
+  proof
+    assume nz: "\<forall>v\<in>sphere (0::real^2) 1. H *v v \<noteq> 0"
+    show "inj ((*v) H)"
+    proof (rule injI)
+      fix a b assume eq: "H *v a = H *v b"
+      have z: "H *v (a - b) = 0"
+        using eq by (simp add: matrix_vector_mult_diff_distrib)
+      show "a = b"
+      proof (rule ccontr)
+        assume "a \<noteq> b"
+        hence ab: "a - b \<noteq> 0" by simp
+        define u where "u = inverse (norm (a - b)) *\<^sub>R (a - b)"
+        have nu: "norm u = 1"
+        proof -
+          have "norm u = \<bar>inverse (norm (a - b))\<bar> * norm (a - b)"
+            by (simp add: u_def)
+          also have "\<dots> = inverse (norm (a - b)) * norm (a - b)" by simp
+          also have "\<dots> = 1" using ab by simp
+          finally show ?thesis .
+        qed
+        have "u \<in> sphere (0::real^2) 1" using nu by (simp add: dist_norm)
+        moreover have "H *v u = 0"
+          by (simp add: u_def matrix_vector_mult_scaleR z)
+        ultimately show False using nz by auto
+      qed
+    qed
+  next
+    assume inj: "inj ((*v) H)"
+    show "\<forall>v\<in>sphere (0::real^2) 1. H *v v \<noteq> 0"
+    proof
+      fix v assume v: "v \<in> sphere (0::real^2) 1"
+      hence "v \<noteq> 0" by (auto simp: dist_norm)
+      moreover have "H *v (0::real^2) = 0" by simp
+      ultimately show "H *v v \<noteq> 0" using inj by (metis injD)
+    qed
+  qed
+  \<comment> \<open>Step 3: injectivity of a square linear map \<open>\<longleftrightarrow>\<close> nonzero determinant.\<close>
+  have det_iff: "inj ((*v) H) \<longleftrightarrow> det H \<noteq> 0"
+    using det_nz_iff_inj[OF lin] by simp
+  show ?thesis using nz_iff inj_iff det_iff by blast
+qed
 
 text \<open>\<^bold>\<open>(C1) The feasible body has nonempty interior (Slater).\<close>  If \<^emph>\<open>some\<close> configuration satisfies
   every constraint \<^emph>\<open>strictly\<close> --- all spacings exceed \<open>d\<^sub>min\<close>, the null power is below \<open>\<delta>\<^sub>null\<close>,
