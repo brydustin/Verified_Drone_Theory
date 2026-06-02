@@ -3626,7 +3626,24 @@ lemma Ffeas_interior_nonempty:
      \<and> norm x < R"
   shows "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
-  sorry
+proof -
+  from assms obtain x :: "(real^2)^'n"
+    where spac0: "\<forall>p. fst p \<noteq> snd p \<longrightarrow> dmin < spdist A B D (x $ fst p) (x $ snd p)"
+      and Nlt: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>null < \<delta>null"
+      and Pgt: "pmin < Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x ctr"
+      and nx: "norm x < R" by blast
+  have spac: "\<forall>p\<in>{p. fst p \<noteq> snd p}. dmin < spdist A B D (x $ fst p) (x $ snd p)"
+    using spac0 by blast
+  have inR: "x \<in> ball 0 R" using nx by (simp add: dist_norm)
+  obtain \<rho> where \<rho>: "0 < \<rho>"
+      and sub: "ball x \<rho>
+                \<subseteq> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
+    using ball_inside_Ffeas[OF gain_dip_nonneg gain_dip_nonneg spac Nlt Pgt inR] by blast
+  have "ball x \<rho> \<subseteq> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
+    by (rule interior_maximal[OF sub open_ball])
+  moreover have "x \<in> ball x \<rho>" using \<rho> by simp
+  ultimately show ?thesis by blast
+qed
 
 text \<open>\<^bold>\<open>(C2) Baire: a regular configuration exists inside the feasible interior.\<close>  The degenerate
   configurations are meager (@{thm Phi_bad_meager_dip}, the \<^bold>\<open>full\<close> bad set, including \<open>A = 0\<close>), so
