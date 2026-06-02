@@ -1864,6 +1864,65 @@ proof -
 qed
 
 
+subsection \<open>Step 1 Hessian half: the \<open>\<omega>\<close>--\<open>c\<close> bridge and moment-space \<open>c\<close>-derivatives\<close>
+
+text \<open>\<^bold>\<open>The array factor as a function of the wavevector \<open>c\<close>.\<close>  Writing the pattern through
+  \<open>c = cvec \<omega>\<close> makes the moments appear by pure differentiation: \<open>\<partial>\<^bsub>c\<^sub>j\<^esub>A = -\<ii> M\<^sub>j\<close> and
+  \<open>\<partial>\<^bsub>c\<^sub>k\<^esub>\<partial>\<^bsub>c\<^sub>l\<^esub>A = -M\<^sub>k\<^sub>l\<close>, with \<^emph>\<open>no\<close> steering jet --- the clean moment-space form.  The
+  \<open>\<omega>\<close>-derivatives then follow by the chain/product rule through \<open>cvec\<close> and \<open>gain\<close>.\<close>
+
+definition Afun :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> complex" where
+  "Afun x c = (\<Sum>n\<in>UNIV. cis (-(c \<bullet> (x$n))))"
+
+definition Mcfun :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> complex" where
+  "Mcfun x c k = (\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k) * cis (-(c \<bullet> (x$n))))"
+
+definition M2cfun :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> 2 \<Rightarrow> complex" where
+  "M2cfun x c k l =
+     (\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k) * complex_of_real ((x$n)$l) * cis (-(c \<bullet> (x$n))))"
+
+lemma A_cart_eq_Afun: "A_cart cvec x \<omega> = Afun x (cvec \<omega>)"
+  by (simp add: A_cart_def Afun_def)
+lemma Mmom_eq_Mcfun: "Mmom cvec x \<omega> k = Mcfun x (cvec \<omega>) k"
+  by (simp add: Mmom_def Mcfun_def)
+lemma M2mom_eq_M2cfun: "M2mom cvec x \<omega> k l = M2cfun x (cvec \<omega>) k l"
+  by (simp add: M2mom_def M2cfun_def)
+
+text \<open>First \<open>c\<close>-derivative of the array factor: \<open>D\<^sub>c A(h) = -\<ii> \<Sum>\<^sub>n (h\<cdot>x\<^sub>n) e\<^bsup>-\<ii> c\<cdot>x\<^sub>n\<^esup>\<close>.\<close>
+
+lemma has_derivative_Afun_c:
+  "(Afun x has_derivative
+      (\<lambda>h. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))) (at c)"
+proof -
+  have tderiv: "((\<lambda>c. cis (-(c \<bullet> (x$n)))) has_derivative
+                (\<lambda>h. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))) (at c)"
+    for n
+  proof -
+    have inner_d: "((\<lambda>c::real^2. -(c \<bullet> (x$n))) has_derivative (\<lambda>h. -(h \<bullet> (x$n)))) (at c)"
+      by (auto intro!: derivative_eq_intros)
+    have cis_d: "(cis has_derivative (\<lambda>r. r *\<^sub>R (\<i> * cis (-(c \<bullet> (x$n)))))) (at (-(c \<bullet> (x$n))))"
+      by (auto intro!: derivative_eq_intros)
+    have "((\<lambda>c. cis (-(c \<bullet> (x$n)))) has_derivative
+            (\<lambda>h. (-(h \<bullet> (x$n))) *\<^sub>R (\<i> * cis (-(c \<bullet> (x$n)))))) (at c)"
+      using has_derivative_compose[OF inner_d cis_d] by (simp add: o_def)
+    moreover have "(\<lambda>h. (-(h \<bullet> (x$n))) *\<^sub>R (\<i> * cis (-(c \<bullet> (x$n)))))
+                 = (\<lambda>h. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))"
+      by (rule ext) (simp add: scaleR_conv_of_real algebra_simps)
+    ultimately show ?thesis by simp
+  qed
+  show ?thesis unfolding Afun_def
+    by (rule has_derivative_sum) (rule tderiv)
+qed
+
+text \<open>The \<open>j\<close>-th \<open>c\<close>-partial of \<open>A\<close> is \<open>-\<ii>\<close> times the \<open>j\<close>-th moment.\<close>
+
+lemma Afun_c_partial:
+  "(\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((axis j 1) \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+     = (- \<i>) * Mcfun x c j"
+  by (simp add: Mcfun_def inner_axis sum_distrib_left mult.assoc,
+      simp add: cart_eq_inner_axis inner_commute)
+
+
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
 text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
