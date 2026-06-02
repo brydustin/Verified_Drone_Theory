@@ -8,6 +8,39 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — DEFINITIVE remaining-obligation list; A6 corrected; 3-stratum scaffold
+
+Traced the full proof tree of `F0_dip_nonempty` to bedrock. Corrected an earlier under-count:
+finishing the dipole capstone unqualified needs **22 obligations**, not 12. Key structural facts:
+
+- The spine is proven: `F0_nonempty_of_witness` (full), `regular_feasible_witness_dip`, the two
+  Weierstrass continuity lemmas. The ONLY spine sorry is `regular_feasible_point_dip`.
+- **A6 was wrong**: `regular_value_on_gradU_dip` claimed the regular value on `{A≠0 ∧ det(Dcvec)≠0}`,
+  but `gradU_dip_x_partial_surj` also needs `surj(DM_paper_x …)` (the open-dense rank-12 / `m_star≠0`
+  condition), which `A≠0` does NOT imply. Fixed A6 and `open_A_cart_nonzero` to carry that conjunct.
+- Because the regular value only holds where the moment map is a submersion AND the steering map is
+  an immersion, `Phi_bad_meager_dip` needs a **3-stratum decomposition** (regular / rank-deficient
+  `¬surj DM` / steering-singular `det Dcvec=0`) — mirroring the paper's `prop:dimZ`/`prop_regnonzero`
+  (whose strata meagerness are themselves the deep, still-open branch results).
+- The `m_star`/`surj_iff_m_star` submersion machinery is proven ONLY at `c0_paper=(1,0)`, `CARD=6`
+  (`MomentJac/Moment_Jacobian.thy`). The steered wavevector `cvec_dip ω` and general `CARD≥6` need
+  generalising — new lemmas `DM_paper_x_regular_point_exists`, `DM_paper_x_open_dense_surjective_gen`
+  (the latter via the still-open Paper sorry `rank_lower_semicont_open_dense_propagation`).
+- Engine: `Parametric_Transversality_Euclidean_Base` has exactly ONE sorry, the core
+  `regular_zero_set_projection_charts_core_2d`; everything else (local IFT chart, countable cover,
+  `meager_critical_values_from_charts`, σ-compact exhaustion, `rank_deficient_C1_image_meager`) is
+  proven. Caveat: the core's statement likely needs a C¹ hypothesis added to be provable (then
+  `gradU_dip_joint_C1` supplies it). The generic `Phi_bad_meager` is unprovable/superseded by
+  `Phi_bad_meager_dip`.
+
+Added (statements only, typecheck-verified): A6/`open_A_cart_nonzero` fixes; `DM_paper_x_regular_point_exists`,
+`DM_paper_x_open_dense_surjective_gen`, `steering_singular_nowhere_dense`, `meager_bad_regular_stratum`,
+`meager_rank_deficient_stratum`, `meager_steering_singular_stratum`, `Phi_bad_meager_dip`. Plus the
+earlier-this-session A1–A5, B1–B2, C0–C3 statements. Deepest 6: `gradU_dip_x_partial_surj`, M5, M6,
+the two `DM_…_gen`, and the engine core.
+
+---
+
 ## 2026-06-02 (robust set) — Phi_bad_meager reduction: bad set ⊆ engine critical-projection set
 
 Pushed the dipole Sard step through its entire *structural* half — the dipole degenerate-critical
