@@ -2819,6 +2819,86 @@ proof -
 qed
 
 
+subsection \<open>Remaining Sard/transversality obligations (\<^bold>\<open>statements only\<close>; proofs deferred)\<close>
+
+text \<open>\<^bold>\<open>The scaffold for \<open>Phi_bad_meager\<close>, stated against the ACTUAL functions.\<close>  These are the
+  lemmas that, once proven, discharge \<open>regular_value_on gradU_dip\<close> --- the determinant payoff
+  (\<open>lem:Msurj\<close>).  Each carries only the genuinely necessary hypotheses: \<open>A \<noteq> 0\<close> (at \<open>A = 0\<close> every
+  configuration is critical and the gradient Jacobian drops rank), surjectivity of the moment-map
+  derivative \<open>DM_paper_x\<close> (the proven rank-\<open>12\<close> submersion @{thm Moment_Map.has_derivative_M_paper_x}
+  / \<open>bigJ_surj\<close>), and nonsingularity of the steering Jacobian \<open>Dcvec_dip\<close> (the immersion of the
+  steering map on its regular locus).  No hypothesis assumes any part of its own conclusion.\<close>
+
+text \<open>\<^bold>\<open>(A1) Regular value from the configuration partial alone.\<close>  On an open product domain, if at
+  every zero of \<open>G\<close> the configuration partial \<open>D(\<lambda>y. G(y,\<omega>))\<close> is surjective, then \<open>0\<close> is a regular
+  value.  (Pieces @{thm surj_partial_imp_surj_joint}, @{thm joint_deriv_restricts_to_partial}.)\<close>
+
+lemma regular_value_on_via_x_partial:
+  fixes G :: "('a::real_normed_vector \<times> 'b::real_normed_vector) \<Rightarrow> 'c::real_normed_vector"
+  assumes openS: "open S"
+    and partial: "\<And>x w. (x, w) \<in> S \<Longrightarrow> G (x, w) = 0 \<Longrightarrow>
+              (\<exists>Dj Dx. (G has_derivative Dj) (at (x, w))
+                     \<and> ((\<lambda>y. G (y, w)) has_derivative Dx) (at x) \<and> surj Dx)"
+  shows "regular_value_on G S 0"
+  sorry
+
+text \<open>\<^bold>\<open>(A2) The configuration derivative of \<open>gradU_dip\<close> factors through \<open>DM_paper_x\<close>.\<close>  Every
+  \<open>\<bm>x\<close>-dependence of the \<open>\<omega>\<close>-gradient routes through the moment map, so \<open>D\<^sub>\<bm>x \<nabla>\<^sub>\<Omega>U = F \<circ> D\<^sub>\<bm>x\<M>\<close> for a
+  bounded-linear \<open>F : \<complex>\<^sup>6 \<rightarrow> \<real>\<^sup>2\<close> (the gradient-in-moments Jacobian at the steered wavevector).\<close>
+
+lemma has_derivative_gradU_dip_x:
+  fixes x :: "(real^2)^'n" and V :: "((real^2)^'n) set"
+  shows "\<exists>F::complex^6 \<Rightarrow> real^2. bounded_linear F
+            \<and> ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative
+                  (F \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at x within V)"
+  sorry
+
+text \<open>\<^bold>\<open>(A3) The determinant payoff: the configuration partial is onto \<open>\<real>\<^sup>2\<close>.\<close>  When \<open>A \<noteq> 0\<close>, the
+  moment map is a submersion (\<open>surj (DM_paper_x \<dots>)\<close>, \<open>lem:Msurj\<close>), and the steering map is an
+  immersion (\<open>det (Dcvec_dip \<dots>) \<noteq> 0\<close>), the \<open>\<bm>x\<close>-derivative of \<open>\<nabla>\<^sub>\<Omega>U\<close> is surjective.\<close>
+
+lemma gradU_dip_x_partial_surj:
+  fixes x :: "(real^2)^'n"
+  assumes Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
+    and Msurj: "surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))"
+    and steer: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx"
+  sorry
+
+text \<open>\<^bold>\<open>(A4) The regularity locus is open.\<close>  \<open>A_cart\<close> is continuous (jointly in \<open>(\<bm>x,\<omega>)\<close>) and the
+  steering determinant is continuous in \<open>\<omega>\<close>, so the set where both are nonzero is open --- the open
+  \<open>S\<close> on which the regular value lives.\<close>
+
+lemma open_A_cart_nonzero:
+  shows "open {p :: ((real^2)^'n) \<times> (real^2).
+                 A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+  sorry
+
+text \<open>\<^bold>\<open>(A5) The dipole gradient field is jointly \<open>C\<^sup>1\<close> in \<open>(\<bm>x,\<omega>)\<close>.\<close>  \<open>U_dip\<close> is smooth in both
+  arguments, so \<open>G = \<nabla>\<^sub>\<Omega>U\<close> has a continuous (blinfun) derivative field --- the \<open>derG\<close>/\<open>contG'\<close>
+  inputs of the chart engine's local step @{thm regular_zero_set_projection_local_chart_2d}.\<close>
+
+lemma gradU_dip_joint_C1:
+  shows "\<exists>G'::(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2)).
+            (\<forall>z. ((\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
+                     has_derivative blinfun_apply (G' z)) (at z))
+          \<and> continuous_on UNIV G'"
+  sorry
+
+text \<open>\<^bold>\<open>(A6) Assembled regular value of the dipole gradient field.\<close>  On the open locus where
+  \<open>A \<noteq> 0\<close> and the steering Jacobian is nonsingular, \<open>0\<close> is a regular value of the joint map
+  \<open>(\<bm>x,\<omega>) \<mapsto> \<nabla>\<^sub>\<Omega>U_dip\<close>.  Direct input to the transversality engine.\<close>
+
+lemma regular_value_on_gradU_dip:
+  fixes V :: "((real^2)^'n) set"
+  assumes "open V" and "6 \<le> CARD('n)"
+  shows "regular_value_on (\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
+            ({p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+                             \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}) 0"
+  sorry
+
+
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
 text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
@@ -3000,6 +3080,33 @@ text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The s
   exact point at which the proven determinants enter, and it is the consumer the
   appendix's \<open>Bregnonzero\<close> meagerness reduces to.\<close>
 
+text \<open>\<^bold>\<open>(B1) Meagerness transfers across a linear homeomorphism.\<close>  Generic, reusable: under a
+  linear homeomorphism \<open>f\<close> of the whole space, \<open>f ` S\<close> is meager iff \<open>S\<close> is.  This is the engine
+  for moving between the dipole configuration space \<open>(\<real>\<^sup>2)^'n\<close> and the flat \<open>\<real>\<^sup>m\<close> the
+  Euclidean transversality stub is typed for.\<close>
+
+lemma meager_linear_homeo_iff:
+  fixes f :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_vector"
+  assumes "linear f" and "homeomorphism UNIV UNIV f g"
+  shows "meager (f ` S) \<longleftrightarrow> meager S"
+  sorry
+
+text \<open>\<^bold>\<open>(B2) The transversality engine in our ACTUAL configuration type.\<close>  This is
+  @{thm parametric_transversality_meager_euclidean_stub} restated with the configuration space
+  \<open>(\<real>\<^sup>2)^'n\<close> (rather than the flat \<open>\<real>\<^sup>m\<close>); its proof reshapes via @{thm meager_linear_homeo_iff}
+  and the stub.  Hypotheses are exactly the stub's --- open \<open>V\<close>, nonempty \<open>V\<close>, open \<open>\<Omega>\<close>, and the
+  regular value @{thm regular_value_on_gradU_dip}; \<^bold>\<open>nothing else\<close>.\<close>
+
+lemma parametric_transversality_meager_planar_config:
+  fixes V :: "((real^2)^'n) set"
+    and \<Omega> :: "(real^2) set"
+    and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
+  assumes "open V" and "V \<noteq> {}" and "open \<Omega>"
+    and "regular_value_on G (V \<times> \<Omega>) 0"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>\<Omega>. G (x, \<omega>) = 0
+            \<and> \<not> (\<exists>D. ((\<lambda>u. G (x, u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D)}"
+  sorry
+
 lemma Phi_bad_meager:
   fixes V :: "(planar^'n) set" and cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
   assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "\<forall>\<omega>. cvec \<omega> \<noteq> 0"
@@ -3124,6 +3231,68 @@ text \<open>\<^bold>\<open>The genuine remaining obligation, for the actual func
   payoff (degenerate configs meager, @{thm Phi_bad_meager} + Baire inside the feasible
   interior); crucially the \<^emph>\<open>continuity\<close> half is no longer part of this hole --- it is
   discharged below from the proven dipole facts.\<close>
+
+text \<open>\<^bold>\<open>The Baire scaffold for \<open>regular_feasible_point_dip\<close> (\<^bold>\<open>statements only\<close>; proofs deferred).\<close>\<close>
+
+text \<open>\<^bold>\<open>(C0) A nonzero smallest singular value is exactly invertibility.\<close>  For a real \<open>2\<times>2\<close>
+  matrix the smallest singular value @{const sigma_min} is positive iff the determinant is
+  nonzero --- the bridge between the degeneracy slot \<open>det (\<nabla>\<^sup>2U) = 0\<close> and the capstone's
+  \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close> nondegeneracy margin.\<close>
+
+lemma sigma_min_pos_iff_invertible:
+  fixes H :: "real^2^2"
+  shows "0 < sigma_min H \<longleftrightarrow> det H \<noteq> 0"
+  sorry
+
+text \<open>\<^bold>\<open>(C1) The feasible body has nonempty interior (Slater).\<close>  If \<^emph>\<open>some\<close> configuration satisfies
+  every constraint \<^emph>\<open>strictly\<close> --- all spacings exceed \<open>d\<^sub>min\<close>, the null power is below \<open>\<delta>\<^sub>null\<close>,
+  the main power lies strictly between \<open>p\<^sub>min\<close> and the Cauchy--Schwarz cap, and \<open>\<parallel>\<bm>x\<parallel> < R\<close> --- then
+  (each constraint function being continuous) that point is interior to @{const Ffeas}.  The
+  hypothesis is the genuine strict-feasibility input; it does not mention \<open>interior\<close>.\<close>
+
+lemma Ffeas_interior_nonempty:
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  assumes "\<exists>x::(real^2)^'n.
+       (\<forall>p. fst p \<noteq> snd p \<longrightarrow> dmin < spdist A B D (x $ fst p) (x $ snd p))
+     \<and> Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>null < \<delta>null
+     \<and> pmin < Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x ctr
+     \<and> Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x ctr < gain_dip ctr * (real CARD('n))\<^sup>2
+     \<and> norm x < R"
+  shows "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+                    :: ((real^2)^'n) set) \<noteq> {}"
+  sorry
+
+text \<open>\<^bold>\<open>(C2) Baire: a regular configuration exists inside the feasible interior.\<close>  The degenerate
+  configurations are meager (@{thm Phi_bad_meager}), so their complement is comeager, hence dense,
+  hence meets the nonempty open feasible interior --- yielding a feasible \<open>x\<^sub>0\<close> carrying \<^bold>\<open>no\<close>
+  degenerate critical point with \<open>A \<noteq> 0\<close>.\<close>
+
+lemma regular_config_exists:
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  assumes c6: "6 \<le> CARD('n)"
+    and int_ne: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+                    :: ((real^2)^'n) set) \<noteq> {}"
+  shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin).
+            \<forall>\<omega>. \<not> (Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
+                    \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x0 \<omega> \<noteq> 0)"
+  sorry
+
+text \<open>\<^bold>\<open>(C3) From ``no degenerate critical point'' to the sphere/annulus regularity.\<close>  If \<open>x\<^sub>0\<close> has
+  no degenerate critical point in \<open>\<Omega>\<close> (at every \<open>\<omega>\<close>, either \<open>\<nabla>\<^sub>\<Omega>U \<noteq> 0\<close> or \<open>det (\<nabla>\<^sup>2U) \<noteq> 0\<close>), then for
+  a suitable radius \<open>\<epsilon> > 0\<close> the gradient is nonvanishing on the sphere \<open>\<partial>B\<^sub>\<epsilon>\<close> and
+  gradient-or-nondegenerate on the annulus \<open>\<Omega> - B\<^sub>\<epsilon>\<close> --- exactly the conclusion shape of
+  \<open>regular_feasible_point_dip\<close> below.  (Nondegenerate critical points are isolated, so \<open>\<epsilon>\<close> can dodge
+  them; degeneracy \<open>det = 0\<close> is rephrased as \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n > 0\<close> via @{thm sigma_min_pos_iff_invertible}.)\<close>
+
+lemma no_degenerate_to_sphere_annulus:
+  fixes x0 :: "(real^2)^'n" and ctr \<omega>0 \<omega>s :: angle
+  assumes "\<forall>\<omega>\<in>Omega ctr. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
+                              \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>) = 0)"
+  shows "\<exists>\<epsilon>>0. (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
+            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                  gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
+                  \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
+  sorry
 
 lemma regular_feasible_point_dip:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
