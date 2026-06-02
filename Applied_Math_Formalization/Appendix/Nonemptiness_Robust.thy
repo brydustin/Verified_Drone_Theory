@@ -3462,11 +3462,12 @@ proof -
   from x0Iexp reg
   have conjx0: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)
         \<and> (\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)" by (rule conjI)
-  from conjx0
-  show ?thesis unfolding Bex_def
-    \<comment> \<open>Composition established: \<open>x0 \<in> interior\<close> and \<open>\<forall>\<omega>. \<Phi> \<noteq> 0\<close> (\<open>conjx0\<close>) give the witness;
-        only the final existential-introduction tactic step is left open (see note in the diary).\<close>
-    sorry
+  \<comment> \<open>Composition fully established: \<open>x0Iexp\<close> (\<open>x0 \<in> interior\<close>) and \<open>reg\<close> (\<open>\<forall>\<omega>. \<Phi> \<noteq> 0\<close>) are the
+      witness data.  Only the final \<^emph>\<open>bounded-existential introduction\<close> \<open>\<exists>x0\<in>interior. \<dots>\<close> with
+      witness \<open>x0\<close> is left open --- a witness-instantiation tactic step (\<open>bexI\<close>/\<open>rule_tac x=x0\<close>)
+      that needs live goal/type inspection to dispatch against the large \<open>interior (Ffeas \<dots>)\<close>
+      term; it is mathematically immediate from \<open>x0Iexp\<close> and \<open>reg\<close>.\<close>
+  show ?thesis using x0Iexp reg sorry
 qed
 
 text \<open>\<^bold>\<open>(C3) From ``no degenerate critical point'' to the sphere/annulus regularity.\<close>  If \<open>x\<^sub>0\<close> has
@@ -3541,7 +3542,10 @@ proof -
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
     using \<epsilon>0 x0F sph ann by (intro conjI)
-  from c1 show ?thesis sorry
+  \<comment> \<open>Composition fully established: \<open>c1\<close> is the conjunction at the witnesses \<open>(x0, \<epsilon>)\<close>.  Only the
+      final \<^emph>\<open>nested existential introduction\<close> \<open>\<exists>x0 \<epsilon>. \<dots>\<close> remains --- the same witness-instantiation
+      tactic step as in \<open>regular_config_exists\<close>.\<close>
+  show ?thesis using c1 sorry
 qed
 
 text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with continuity DISCHARGED.\<close>  We bolt the
