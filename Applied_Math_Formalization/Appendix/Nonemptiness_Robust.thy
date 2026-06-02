@@ -2479,6 +2479,53 @@ lemma gradU_dip_component_field:
              * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>)"
   by (rule gradU_via_c_component[OF has_derivative_cvec_dip gain_dip_has_derivative])
 
+text \<open>\<^bold>\<open>The second-order assembly\<close> --- differentiate the scalar gradient component once more
+  (product rule on \<open>gain\<cdot>IP\<close> and \<open>GD\<cdot>V\<close>, inner-product rule on \<open>IP = Dcvec(e\<^sub>k)\<cdot>\<nabla>\<^sub>cV\<close>) using
+  the dipole jet derivatives \<open>D\<^sup>2cvec\<close>, \<open>gdip''\<close>, \<open>Hcmat\<close>.  The resulting derivative is the
+  \<open>k\<close>-th row of \<open>HessU_dip\<close>, a moment-space expression with the (x-constant) jet as coefficients.\<close>
+
+lemma has_derivative_gradU_dip_component:
+  fixes x :: "(real^2)^'n"
+  shows "((\<lambda>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k) has_derivative
+    (\<lambda>h. (gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)
+                          \<bullet> (Hcmat x (cvec_dip \<omega>0 \<omega>s \<omega>) *v (Dcvec_dip \<omega>0 \<omega>s \<omega> h))
+                        + (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) h)
+                          \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + frechet_derivative gdip (at (\<omega>$1)) (h$1)
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>)))
+        + (frechet_derivative gdip (at (\<omega>$1)) ((axis k 1)$1)
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> h \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) ((axis k 1)$1)) (at \<omega>) h
+            * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>)))) (at \<omega>)"
+proof -
+  have dGain: "(gain_dip has_derivative (\<lambda>v. frechet_derivative gdip (at (\<omega>$1)) (v$1))) (at \<omega>)"
+    by (rule gain_dip_has_derivative)
+  have dDc: "((\<lambda>\<omega>. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) has_derivative D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) (at \<omega>)"
+    by (rule has_derivative_Dcvec_dip)
+  have dgcV: "((\<lambda>\<omega>. gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                has_derivative (\<lambda>v. Hcmat x (cvec_dip \<omega>0 \<omega>s \<omega>) *v (Dcvec_dip \<omega>0 \<omega>s \<omega> v))) (at \<omega>)"
+    by (rule has_derivative_gradU_c_along_cvec[OF has_derivative_cvec_dip])
+  have dGD: "((\<lambda>\<omega>. frechet_derivative gdip (at (\<omega>$1)) ((axis k 1)$1)) has_derivative
+              frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) ((axis k 1)$1)) (at \<omega>)) (at \<omega>)"
+    by (rule frechet_derivative_works[THEN iffD1, OF gain_dip_deriv_field_differentiable])
+  have dV: "((\<lambda>\<omega>. U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+              has_derivative (\<lambda>v. Dcvec_dip \<omega>0 \<omega>s \<omega> v \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at \<omega>)"
+    by (rule has_derivative_V_along_cvec[OF has_derivative_cvec_dip])
+  have dIP: "((\<lambda>\<omega>. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+              has_derivative
+              (\<lambda>h. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> (Hcmat x (cvec_dip \<omega>0 \<omega>s \<omega>) *v (Dcvec_dip \<omega>0 \<omega>s \<omega> h))
+                   + (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) h) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at \<omega>)"
+    by (rule has_derivative_inner[OF dDc dgcV])
+  have field: "(\<lambda>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k)
+             = (\<lambda>\<omega>. gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                    + frechet_derivative gdip (at (\<omega>$1)) ((axis k 1)$1)
+                      * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))"
+    by (rule ext) (rule gradU_dip_component_field)
+  show ?thesis
+    unfolding field
+    by (rule has_derivative_add[OF has_derivative_mult[OF dGain dIP] has_derivative_mult[OF dGD dV]])
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
