@@ -3099,17 +3099,24 @@ lemma meager_linear_homeo_iff:
   shows "meager (f ` S) \<longleftrightarrow> meager S"
   sorry
 
-text \<open>\<^bold>\<open>(B2) The transversality engine in our ACTUAL configuration type.\<close>  This is
-  @{thm parametric_transversality_meager_euclidean_stub} restated with the configuration space
-  \<open>(\<real>\<^sup>2)^'n\<close> (rather than the flat \<open>\<real>\<^sup>m\<close>); its proof reshapes via @{thm meager_linear_homeo_iff}
-  and the stub.  Hypotheses are exactly the stub's --- open \<open>V\<close>, nonempty \<open>V\<close>, open \<open>\<Omega>\<close>, and the
-  regular value @{thm regular_value_on_gradU_dip}; \<^bold>\<open>nothing else\<close>.\<close>
+text \<open>\<^bold>\<open>(B2) The transversality engine in our ACTUAL configuration type --- with the \<open>C\<^sup>1\<close>
+  hypothesis made explicit.\<close>  This is the Euclidean transversality result restated with the
+  configuration space \<open>(\<real>\<^sup>2)^'n\<close> (rather than the flat \<open>\<real>\<^sup>m\<close>); its proof reshapes via @{thm
+  meager_linear_homeo_iff} and the \<^emph>\<open>sound\<close> chart-assembly lemmas (\<open>regular_zero_set_projection_
+  local_chart_2d\<close>, \<open>countable_chart_cover_of_levelset_2d\<close>, \<open>meager_critical_values_from_charts\<close>).
+  \<^bold>\<open>SOUNDNESS FIX:\<close> it carries the \<open>C\<^sup>1\<close> hypotheses \<open>derG\<close>/\<open>contG'\<close> (a continuous blinfun derivative
+  field) that the local-chart step genuinely requires --- the existing Euclidean \<^emph>\<open>stub\<close>
+  (\<open>regular_value_on\<close> only) is understated and its \<open>sorry\<close> core is not provable without this.  The
+  hypothesis is supplied for our \<open>G = \<nabla>\<^sub>\<Omega>U\<close> by @{thm gradU_dip_joint_C1}.\<close>
 
 lemma parametric_transversality_meager_planar_config:
   fixes V :: "((real^2)^'n) set"
     and \<Omega> :: "(real^2) set"
     and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
+    and G' :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
   assumes "open V" and "V \<noteq> {}" and "open \<Omega>"
+    and derG: "\<And>z. z \<in> V \<times> \<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on (V \<times> \<Omega>) G'"
     and "regular_value_on G (V \<times> \<Omega>) 0"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>\<Omega>. G (x, \<omega>) = 0
             \<and> \<not> (\<exists>D. ((\<lambda>u. G (x, u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D)}"
@@ -3205,17 +3212,32 @@ lemma meager_steering_singular_stratum:
                   \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
   sorry
 
-text \<open>\<^bold>\<open>(M7) The dipole-specific bad set is meager.\<close>  Assemble: by @{thm Phibad_dip_imp_detHess0},
-  \<open>\<Phi> = 0\<close> gives \<open>\<nabla>\<^sub>\<Omega>U = 0 \<and> det (\<nabla>\<^sup>2U) = 0\<close>; then every witnessing \<open>\<omega>\<close> falls into the regular
-  stratum (M4), the rank-deficient stratum (M5), or the steering-singular stratum (M6).  Their
-  union is meager.  \<^bold>\<open>This is the lemma the capstone actually consumes\<close> (in place of the unprovable
-  generic \<open>Phi_bad_meager\<close>).\<close>
+text \<open>\<^bold>\<open>(M6b) The \<open>A = 0\<close> degenerate stratum is meager --- ADDED (soundness).\<close>  The bad set in
+  M4--M6 carries \<open>A \<noteq> 0\<close> (the transversality argument needs it).  But every array-factor null
+  \<open>A_cart = 0\<close> is itself a critical point (\<open>\<nabla>\<^sub>\<Omega>U = g \<nabla>\<bar>A\<bar>\<^sup>2 + \<bar>A\<bar>\<^sup>2 \<nabla>g = 0\<close> at \<open>A = 0\<close>), so a
+  \<^emph>\<open>degenerate\<close> null also breaks regularity and must be excluded.  The locus \<open>{A = 0 \<and> det \<nabla>\<^sup>2U = 0}\<close>
+  is \<open>3\<close> real conditions on \<open>(\<bm>x,\<omega>)\<close> (codim \<open>3\<close>): its \<open>\<bm>x\<close>-projection is meager.\<close>
+
+lemma meager_Azero_degenerate_stratum:
+  fixes V :: "((real^2)^'n) set"
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
+  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
+  sorry
+
+text \<open>\<^bold>\<open>(M7) The dipole-specific bad set is meager --- CORRECTED to the FULL set.\<close>  By @{thm
+  Phibad_dip_imp_detHess0}, \<open>\<Phi> = 0\<close> gives \<open>\<nabla>\<^sub>\<Omega>U = 0 \<and> det (\<nabla>\<^sup>2U) = 0\<close>; then every witnessing \<open>\<omega>\<close> falls
+  into exactly one of \<^bold>\<open>four\<close> strata --- regular (M4), rank-deficient (M5), steering-singular (M6),
+  or array-null \<open>A = 0\<close> (M6b) --- whose union is meager.  \<^bold>\<open>SOUNDNESS FIX:\<close> the conclusion is now the
+  \<^bold>\<open>full\<close> degenerate-critical set \<open>{\<exists>\<omega>. \<Phi> = 0}\<close> (no spurious \<open>A \<noteq> 0\<close>), so its complement gives a point
+  with \<^emph>\<open>no\<close> degenerate critical at any \<open>\<omega>\<close> --- what the capstone actually needs.  \<^bold>\<open>This is the lemma
+  the capstone consumes\<close>, in place of the unprovable generic \<open>Phi_bad_meager\<close>.\<close>
 
 lemma Phi_bad_meager_dip:
   fixes V :: "((real^2)^'n) set"
   assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0}"
+  shows "meager {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
   sorry
 
 
@@ -3368,9 +3390,12 @@ lemma Ffeas_interior_nonempty:
   sorry
 
 text \<open>\<^bold>\<open>(C2) Baire: a regular configuration exists inside the feasible interior.\<close>  The degenerate
-  configurations are meager (@{thm Phi_bad_meager}), so their complement is comeager, hence dense,
-  hence meets the nonempty open feasible interior --- yielding a feasible \<open>x\<^sub>0\<close> carrying \<^bold>\<open>no\<close>
-  degenerate critical point with \<open>A \<noteq> 0\<close>.\<close>
+  configurations are meager (@{thm Phi_bad_meager_dip}, the \<^bold>\<open>full\<close> bad set, including \<open>A = 0\<close>), so
+  their complement is comeager, hence dense, hence meets the nonempty open feasible interior ---
+  yielding a feasible \<open>x\<^sub>0\<close> carrying \<^bold>\<open>no\<close> degenerate critical point at \<^bold>\<open>any\<close> \<open>\<omega>\<close> (\<open>\<Phi> \<noteq> 0\<close> everywhere).
+  \<^bold>\<open>SOUNDNESS FIX:\<close> the conclusion no longer carries the spurious \<open>A \<noteq> 0\<close> --- array-factor nulls
+  (\<open>A = 0\<close>) are critical points (\<open>\<nabla>\<^sub>\<Omega>U = 0\<close>) too, and a \<^emph>\<open>degenerate\<close> null would break the
+  capstone's regularity, so it must also be excluded.\<close>
 
 lemma regular_config_exists:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
@@ -3378,8 +3403,7 @@ lemma regular_config_exists:
     and int_ne: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin).
-            \<forall>\<omega>. \<not> (Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
-                    \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x0 \<omega> \<noteq> 0)"
+            \<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
   sorry
 
 text \<open>\<^bold>\<open>(C3) From ``no degenerate critical point'' to the sphere/annulus regularity.\<close>  If \<open>x\<^sub>0\<close> has
@@ -3402,14 +3426,20 @@ lemma no_degenerate_to_sphere_annulus:
 lemma regular_feasible_point_dip:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
   assumes c6: "6 \<le> CARD('n)"
+    and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+                      :: (planar^'n) set) \<noteq> {}"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
             \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
-  \<comment> \<open>downstream of \<open>Phi_bad_meager\<close>: degenerate configs are meager, so the regular
-      witness exists inside the feasible interior by Baire --- to be wired in\<close>
+  \<comment> \<open>\<^bold>\<open>SOUNDNESS FIX:\<close> requires \<open>feasible\<close> (the feasible body has nonempty interior).  Without
+      it the claim is false for infeasible parameters (e.g.\ \<open>pmin > gain_dip ctr * N\<^sup>2\<close> forces
+      \<open>Ffeas = {}\<close>).  Proof (to write): \<open>regular_config_exists\<close> gives an \<open>x0\<close> in the open feasible
+      interior with no degenerate critical point at \<^emph>\<open>any\<close> \<open>\<omega>\<close> (Baire on \<open>Phi_bad_meager_dip\<close>);
+      \<open>interior_subset\<close> places \<open>x0 \<in> Ffeas\<close>; \<open>no_degenerate_to_sphere_annulus\<close> supplies \<open>\<epsilon>\<close> and the
+      sphere/annulus regularity.\<close>
   sorry
 
 text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with continuity DISCHARGED.\<close>  We bolt the
@@ -3420,6 +3450,8 @@ text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with con
 lemma regular_feasible_witness_dip:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
   assumes c6: "6 \<le> CARD('n)"
+    and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+                      :: (planar^'n) set) \<noteq> {}"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> continuous_on (sphere ctr \<epsilon>)
@@ -3439,7 +3471,7 @@ proof -
       and rO: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
-    using regular_feasible_point_dip[OF c6] by blast
+    using regular_feasible_point_dip[OF c6 feasible] by blast
   have c1: "continuous_on (sphere ctr \<epsilon>)
               (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))"
     by (rule norm_gradU_dip_continuous_on)
@@ -3460,10 +3492,15 @@ text \<open>\<^bold>\<open>The concrete capstone: \<open>\<F>\<^sub>0\<close> fo
 theorem F0_dip_nonempty:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
   assumes c6: "6 \<le> CARD('n)"
+    and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+                      :: (planar^'n) set) \<noteq> {}"
   shows "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
             \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
                 \<noteq> ({}::(planar^'n) set)"
-  using regular_feasible_witness_dip[OF c6]
+  \<comment> \<open>\<^bold>\<open>SOUNDNESS FIX:\<close> the feasibility precondition is now explicit.  It can be discharged from a
+      strict-feasibility (Slater) witness via @{thm Ffeas_interior_nonempty}, or assumed as the
+      design precondition (the paper's ``for appropriately chosen parameters'').\<close>
+  using regular_feasible_witness_dip[OF c6 feasible]
   by (blast intro: F0_nonempty_of_witness)
 
 
