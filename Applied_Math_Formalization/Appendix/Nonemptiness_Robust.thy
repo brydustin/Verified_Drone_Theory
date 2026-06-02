@@ -2871,6 +2871,52 @@ proof -
   qed
 qed
 
+text \<open>\<^bold>\<open>The dipole Hessian is symmetric\<close> (Clairaut/Schwarz): \<open>U_dip\<close> is \<open>C\<^sup>2\<close> everywhere
+  (@{thm U_dip_Ck2}), so its mixed partials commute (@{thm mixed_partials_commute}).\<close>
+
+lemma HessU_dip_symmetric:
+  fixes x :: "(real^2)^'n"
+  shows "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ i $ j
+       = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ j $ i"
+  unfolding HessU_def
+  by (rule mixed_partials_commute[OF open_UNIV UNIV_I U_dip_Ck2])
+
+text \<open>\<^bold>\<open>Degenerate critical point \<open>\<Longrightarrow>\<close> the gradient vanishes and \<open>det (\<nabla>\<^sup>2U) = 0\<close>.\<close>  Combining
+  @{thm Phibad_zero_iff} (whose third slot is \<open>H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close>) with @{thm det_2} and the
+  Hessian symmetry @{thm HessU_dip_symmetric}, \<open>\<Phi> = 0\<close> rewrites exactly to \<open>\<nabla>\<^sub>\<Omega>U = 0\<close> and
+  \<open>det (\<nabla>\<^sup>2U) = 0\<close> --- the form the chart engine consumes (via @{thm
+  not_surj_omega_deriv_iff_detHess_dip}).\<close>
+
+lemma Phibad_dip_imp_detHess0:
+  fixes x :: "(real^2)^'n"
+  assumes "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+  shows "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+       \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+proof -
+  from assms have conj:
+    "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+     \<and> HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 1
+         * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 2
+       = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2)\<^sup>2"
+    using Phibad_zero_iff by blast
+  hence g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
+  from conj have hh:
+    "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 1
+       * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 2
+     = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2)\<^sup>2" by blast
+  have sym: "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2
+           = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 1"
+    by (rule HessU_dip_symmetric)
+  have "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
+        = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 1
+            * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 2
+          - HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2
+            * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 1"
+    by (rule det_2)
+  also have "\<dots> = 0" using hh sym by (simp add: power2_eq_square)
+  finally show ?thesis using g0 by blast
+qed
+
 text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The set of feasible configurations carrying
   a degenerate critical point with \<open>A \<noteq> 0\<close> is meager.  This is \<open>prop:dimZ\<close>(1): \<open>lem:Msurj\<close>
   (the \<open>12\<times>12\<close> \<open>bigJ_det \<noteq> 0\<close>) \<open>\<Longrightarrow>\<close> \<open>Z\<^sub>reg\<close> is codim-3 \<open>\<Longrightarrow>\<close> its projection is meager.  This is the
