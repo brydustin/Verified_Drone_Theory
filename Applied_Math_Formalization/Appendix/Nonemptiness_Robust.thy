@@ -2193,6 +2193,90 @@ proof (rule has_derivative_eq_rhs)
 qed
 
 
+lemma Re_cnj_mult: "Re (cnj a * b) = Re a * Re b + Im a * Im b"
+  by simp
+
+text \<open>\<^bold>\<open>The \<open>c\<close>-Hessian of \<open>\<bar>A\<bar>\<^sup>2\<close> is the moment matrix \<open>Hcmat\<close>.\<close>  Differentiating the
+  \<open>c\<close>-gradient field (@{thm gradU_c_field}) once more --- product rule on
+  \<open>2(Re A Im M\<^sub>j - Im A Re M\<^sub>j)\<close> using the four piece-derivatives --- yields, componentwise,
+  exactly the \<open>j\<close>-th entry of \<open>Hcmat \<cdot> h\<close>.\<close>
+
+lemma has_derivative_gradU_c:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "(gradU (\<lambda>c. c) (\<lambda>_. 1) x has_derivative (\<lambda>h. Hcmat x c *v h)) (at c)"
+proof -
+  have field_eq: "gradU (\<lambda>c. c) (\<lambda>_. 1) x
+        = (\<lambda>c. \<chi> j. 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j)))"
+  proof (rule ext)
+    fix c :: "real^2"
+    have "gradU (\<lambda>c. c) (\<lambda>_. 1) x c $ i
+          = (\<chi> j. 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j))) $ i"
+      for i by (simp add: gradU_c_field)
+    thus "gradU (\<lambda>c. c) (\<lambda>_. 1) x c
+          = (\<chi> j. 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j)))"
+      by (simp add: Finite_Cartesian_Product.vec_eq_iff)
+  qed
+  have comp: "((\<lambda>c. 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j)))
+                has_derivative (\<lambda>h. (Hcmat x c *v h) $ j)) (at c)" for j
+  proof (rule has_derivative_eq_rhs)
+    show "((\<lambda>c. 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j)))
+            has_derivative
+            (\<lambda>h. 2 * ((Re (Afun x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c j l)))
+                       + (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l)) * Im (Mcfun x c j))
+                    - (Im (Afun x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c j l))
+                       + (- (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))) * Re (Mcfun x c j)))
+                 + 0 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j)))) (at c)"
+      by (rule has_derivative_mult[OF has_derivative_const
+                has_derivative_diff[OF has_derivative_mult[OF dRe_Afun dIm_Mcfun]
+                                       has_derivative_mult[OF dIm_Afun dRe_Mcfun]]])
+    show "(\<lambda>h. 2 * ((Re (Afun x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c j l)))
+                       + (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l)) * Im (Mcfun x c j))
+                    - (Im (Afun x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c j l))
+                       + (- (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))) * Re (Mcfun x c j)))
+                 + 0 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j)))
+          = (\<lambda>h. (Hcmat x c *v h) $ j)"
+    proof (rule ext)
+      fix h :: "real^2"
+      have "(Hcmat x c *v h) $ j
+          = (\<Sum>l\<in>UNIV. (h$l) * (2 * (Re (Mcfun x c l) * Re (Mcfun x c j) + Im (Mcfun x c l) * Im (Mcfun x c j)
+                  - (Re (Afun x c) * Re (M2cfun x c j l) + Im (Afun x c) * Im (M2cfun x c j l)))))"
+        by (simp add: matrix_vector_mult_def Hcmat_def Re_cnj_mult mult.commute)
+      thus "2 * ((Re (Afun x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c j l)))
+                   + (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l)) * Im (Mcfun x c j))
+                - (Im (Afun x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c j l))
+                   + (- (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))) * Re (Mcfun x c j)))
+             + 0 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j))
+           = (Hcmat x c *v h) $ j"
+        by (simp add: sum_distrib_left sum_distrib_right sum_subtractf sum_negf algebra_simps)
+    qed
+  qed
+  have "(gradU (\<lambda>c. c) (\<lambda>_. 1) x has_derivative (\<lambda>h. Hcmat x c *v h)) (at c)"
+    unfolding field_eq
+  proof (subst has_derivative_componentwise_within, intro ballI)
+    fix b :: "real^2" assume "b \<in> Basis"
+    then obtain j where bj: "b = axis j 1" by (auto simp: Basis_vec_def)
+    have "((\<lambda>c. (\<chi> j. 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j))) \<bullet> b)
+            has_derivative (\<lambda>h. (Hcmat x c *v h) \<bullet> b)) (at c within UNIV)"
+      using comp[of j] by (simp add: bj inner_axis)
+    thus "((\<lambda>c. (\<chi> j. 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j))) \<bullet> b)
+            has_derivative (\<lambda>h. ((\<lambda>h. Hcmat x c *v h) h) \<bullet> b)) (at c within UNIV)"
+      by simp
+  qed
+  thus ?thesis .
+qed
+
+text \<open>Hence the \<open>c\<close>-coordinate Hessian of \<open>U\<close> (gain \<open>\<equiv> 1\<close>) IS the moment matrix.\<close>
+
+lemma HessU_c_eq:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "HessU (\<lambda>c. c) (\<lambda>_. 1) x c = Hcmat x c"
+proof -
+  have "HessU (\<lambda>c. c) (\<lambda>_. 1) x c = matrix (\<lambda>h. Hcmat x c *v h)"
+    by (rule HessU_explicit[OF has_derivative_gradU_c])
+  thus ?thesis by (simp add: matrix_of_matrix_vector_mul)
+qed
+
+
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
 text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
