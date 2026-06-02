@@ -2615,6 +2615,36 @@ lemma gradU_dip_component_moments:
                      * (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 3))))"
   by (rule gradU_component_via_M_paper[OF has_derivative_cvec_dip gain_dip_has_derivative])
 
+text \<open>\<^bold>\<open>The \<open>c\<close>-pattern value and its gradient in moment coordinates.\<close>  Inside the dipole
+  Hessian entries (@{thm HessU_dip_entry_moments}) the \<open>\<bm>x\<close>-dependence enters through
+  \<open>V = U_cart (\<lambda>c. c) (\<lambda>_. 1) x\<close> and its gradient \<open>\<nabla>\<^sub>cV = gradU (\<lambda>c. c) (\<lambda>_. 1) x\<close>.  Both are
+  themselves functions of the moments: \<open>V(c) = |A|\<^sup>2\<close> and \<open>(\<nabla>\<^sub>cV)\<^sub>j = 2 Re(cnj A (-\<ii>) M\<^sub>j)\<close>,
+  with \<open>A = \<M>\<^sub>1\<close>, \<open>M\<^sub>1 = \<M>\<^sub>2\<close>, \<open>M\<^sub>2 = \<M>\<^sub>3\<close> the first three coordinates of \<open>M_paper x c\<close>.  These
+  collapse the c-side of the Hessian entries onto \<open>M_paper\<close> as well --- completing the
+  \<open>\<Phi> = F \<circ> \<M>\<close> factorisation (every \<open>\<bm>x\<close>-dependence routes through \<open>M_paper\<close>).\<close>
+
+lemma Uc_eq_moment:
+  fixes x :: "(real^2)^'n"
+  shows "U_cart (\<lambda>c. c) (\<lambda>_. 1) x c = (cmod (M_paper x c $ 1))\<^sup>2"
+proof -
+  have "M_paper x c $ 1 = Afun x c"
+    using M_paper_proj_A[of x "\<lambda>c. c" c] by (simp add: A_cart_eq_Afun)
+  thus ?thesis by (simp add: U_cart_def A_cart_eq_Afun)
+qed
+
+lemma gradUc_component_moments:
+  fixes x :: "(real^2)^'n"
+  shows "gradU (\<lambda>c. c) (\<lambda>_. 1) x c $ j
+       = 2 * Re (cnj (M_paper x c $ 1)
+            * ((- \<i>) * complex_of_real ((axis j 1)$1) * (M_paper x c $ 2)
+             + (- \<i>) * complex_of_real ((axis j 1)$2) * (M_paper x c $ 3)))"
+proof -
+  have d1: "((\<lambda>c::real^2. c) has_derivative (\<lambda>v. v)) (at c)" by (rule has_derivative_ident)
+  have d2: "((\<lambda>_::real^2. 1::real) has_derivative (\<lambda>_. 0)) (at c)" by (rule has_derivative_const)
+  show ?thesis
+    using gradU_component_via_M_paper[OF d1 d2] by simp
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
