@@ -3180,11 +3180,6 @@ lemma parametric_transversality_meager_planar_config:
             \<and> \<not> (\<exists>D. ((\<lambda>u. G (x, u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D)}"
   sorry
 
-lemma Phi_bad_meager:
-  fixes V :: "(planar^'n) set" and cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "\<forall>\<omega>. cvec \<omega> \<noteq> 0"
-  shows "meager {x \<in> V. \<exists>\<omega>. Phibad cvec gain x \<omega> = 0 \<and> A_cart cvec x \<omega> \<noteq> 0}"
-  sorry
 
 text \<open>\<^bold>\<open>=== The genuinely-complete dipole meagerness scaffold (statements only) ===\<close>
 
@@ -3448,7 +3443,7 @@ text \<open>\<^bold>\<open>The genuine remaining obligation, for the actual func
   concrete steered dipole \<open>cvec = cvec\<^sub>dip \<omega>\<^sub>0 \<omega>\<^sub>s\<close>, \<open>g = gain\<^sub>dip\<close>: there is a feasible
   configuration \<open>x\<^sub>0\<close> and radius \<open>\<epsilon>>0\<close> whose pattern is regular (gradient nonvanishing on
   \<open>\<partial>B\<^sub>\<epsilon>\<close>, gradient-or-nondegenerate on \<open>\<Omega>\<^sup>~\<close>).  This is \<^emph>\<open>exactly\<close> the determinant/Baire
-  payoff (degenerate configs meager, @{thm Phi_bad_meager} + Baire inside the feasible
+  payoff (degenerate configs meager, @{thm Phi_bad_meager_dip} + Baire inside the feasible
   interior); crucially the \<^emph>\<open>continuity\<close> half is no longer part of this hole --- it is
   discharged below from the proven dipole facts.\<close>
 
