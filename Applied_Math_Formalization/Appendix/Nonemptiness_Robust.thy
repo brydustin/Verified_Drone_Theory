@@ -1922,6 +1922,67 @@ lemma Afun_c_partial:
   by (simp add: Mcfun_def inner_axis sum_distrib_left mult.assoc,
       simp add: cart_eq_inner_axis inner_commute)
 
+text \<open>The per-term \<open>c\<close>-derivative of the phase factor (reused below).\<close>
+
+lemma has_derivative_cis_c:
+  fixes x :: "(real^2)^'n" and c :: "real^2" and n :: 'n
+  shows "((\<lambda>c. cis (-(c \<bullet> (x$n)))) has_derivative
+      (\<lambda>h. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))) (at c)"
+proof -
+  have inner_d: "((\<lambda>c::real^2. -(c \<bullet> (x$n))) has_derivative (\<lambda>h. -(h \<bullet> (x$n)))) (at c)"
+    by (auto intro!: derivative_eq_intros)
+  have cis_d: "(cis has_derivative (\<lambda>r. r *\<^sub>R (\<i> * cis (-(c \<bullet> (x$n)))))) (at (-(c \<bullet> (x$n))))"
+    by (auto intro!: derivative_eq_intros)
+  have "((\<lambda>c. cis (-(c \<bullet> (x$n)))) has_derivative
+          (\<lambda>h. (-(h \<bullet> (x$n))) *\<^sub>R (\<i> * cis (-(c \<bullet> (x$n)))))) (at c)"
+    using has_derivative_compose[OF inner_d cis_d] by (simp add: o_def)
+  moreover have "(\<lambda>h. (-(h \<bullet> (x$n))) *\<^sub>R (\<i> * cis (-(c \<bullet> (x$n)))))
+               = (\<lambda>h. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))"
+    by (rule ext) (simp add: scaleR_conv_of_real algebra_simps)
+  ultimately show ?thesis by simp
+qed
+
+text \<open>First \<open>c\<close>-derivative of the \<open>k\<close>-th moment: \<open>D\<^sub>c M\<^sub>k(h) = -\<ii> \<Sum>\<^sub>n (x\<^sub>n)\<^sub>k (h\<cdot>x\<^sub>n) e\<^bsup>-\<ii> c\<cdot>x\<^sub>n\<^esup>\<close>;
+  its \<open>l\<close>-th partial is \<open>-\<ii> M\<^sub>k\<^sub>l\<close> --- this is where the second moments enter.\<close>
+
+lemma has_derivative_Mcfun_c:
+  "((\<lambda>c. Mcfun x c k) has_derivative
+      (\<lambda>h. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                       * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))) (at c)"
+proof -
+  have tderiv: "((\<lambda>c. complex_of_real ((x$n)$k) * cis (-(c \<bullet> (x$n)))) has_derivative
+                (\<lambda>h. (- \<i>) * complex_of_real ((x$n)$k)
+                       * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))) (at c)"
+    for n
+  proof -
+    have "((\<lambda>c. complex_of_real ((x$n)$k) * cis (-(c \<bullet> (x$n)))) has_derivative
+            (\<lambda>h. complex_of_real ((x$n)$k)
+                  * ((- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+                + 0 * cis (-(c \<bullet> (x$n))))) (at c)"
+      by (rule has_derivative_mult[OF has_derivative_const has_derivative_cis_c])
+    moreover have "(\<lambda>h. complex_of_real ((x$n)$k)
+                  * ((- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+                + 0 * cis (-(c \<bullet> (x$n))))
+                 = (\<lambda>h. (- \<i>) * complex_of_real ((x$n)$k)
+                       * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))"
+      by (rule ext) (simp add: algebra_simps)
+    ultimately show ?thesis by simp
+  qed
+  show ?thesis unfolding Mcfun_def
+    by (rule has_derivative_sum) (rule tderiv)
+qed
+
+lemma Mcfun_c_partial:
+  "(\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                * complex_of_real ((axis l 1) \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
+     = (- \<i>) * M2cfun x c k l"
+proof -
+  have ax: "(axis l 1) \<bullet> (x$n) = (x$n)$l" for n
+    by (simp add: cart_eq_inner_axis inner_commute)
+  show ?thesis
+    by (simp add: ax M2cfun_def sum_distrib_left mult.assoc)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
