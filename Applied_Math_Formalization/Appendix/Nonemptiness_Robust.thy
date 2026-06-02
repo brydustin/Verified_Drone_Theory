@@ -2917,6 +2917,41 @@ proof -
   finally show ?thesis using g0 by blast
 qed
 
+text \<open>\<^bold>\<open>The dipole bad set sits inside the chart engine's critical-projection set.\<close>  Putting
+  the two reductions together: at any \<open>\<omega>\<close> witnessing \<open>\<Phi> = 0\<close> the gradient \<open>G = \<nabla>\<^sub>\<Omega>U\<close>
+  vanishes (@{thm Phibad_dip_imp_detHess0}) \<^emph>\<open>and\<close> its \<open>\<omega>\<close>-derivative has no surjective branch
+  (@{thm not_surj_omega_deriv_iff_detHess_dip}, \<open>\<Omega> = UNIV\<close>).  Hence the degenerate-critical
+  configuration set --- even with the extra \<open>A \<noteq> 0\<close> restriction --- is contained in the
+  exact set whose meagerness @{thm parametric_transversality_meager_euclidean_stub} delivers
+  from \<open>regular_value_on G\<close>.  This is the structural half of \<open>Phi_bad_meager\<close>; what remains is
+  the transversality input \<open>regular_value_on\<close> and the \<open>(real^2)^'n \<cong> real^(2\<cdot>'n)\<close> reshape.\<close>
+
+lemma Phibad_dip_subset_critical:
+  fixes V :: "(planar^'n) set"
+  shows "{x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0}
+       \<subseteq> {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> \<not> (\<exists>D. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D)
+                        (at \<omega>) \<and> surj D)}"
+proof
+  fix x assume "x \<in> {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                            \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0}"
+  then obtain \<omega> where xV: "x \<in> V"
+    and pb: "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
+  from Phibad_dip_imp_detHess0[OF pb]
+  have g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and d0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" by blast+
+  have "\<not> (\<exists>D. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D)
+              (at \<omega> within UNIV) \<and> surj D)"
+    using not_surj_omega_deriv_iff_detHess_dip[OF open_UNIV UNIV_I] d0 by blast
+  hence nd: "\<not> (\<exists>D. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D)
+                   (at \<omega>) \<and> surj D)" by simp
+  from xV g0 nd
+  show "x \<in> {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> \<not> (\<exists>D. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D)
+                        (at \<omega>) \<and> surj D)}" by blast
+qed
+
 text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The set of feasible configurations carrying
   a degenerate critical point with \<open>A \<noteq> 0\<close> is meager.  This is \<open>prop:dimZ\<close>(1): \<open>lem:Msurj\<close>
   (the \<open>12\<times>12\<close> \<open>bigJ_det \<noteq> 0\<close>) \<open>\<Longrightarrow>\<close> \<open>Z\<^sub>reg\<close> is codim-3 \<open>\<Longrightarrow>\<close> its projection is meager.  This is the
