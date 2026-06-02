@@ -2373,6 +2373,44 @@ proof -
   ultimately show ?thesis by simp
 qed
 
+text \<open>\<^bold>\<open>Second-order bridge ingredients.\<close>  As \<open>\<omega>\<close> varies, the moment-space \<open>c\<close>-gradient and
+  \<open>c\<close>-pattern --- evaluated at \<open>cvec \<omega>\<close> --- vary by the chain rule through \<open>cvec\<close>:
+  \<open>D\<^sub>\<omega>[\<nabla>\<^sub>cV(cvec \<omega>)] = Hcmat(cvec \<omega>)\<cdot>(D\<^sub>\<omega>cvec)\<close> and \<open>D\<^sub>\<omega>[V(cvec \<omega>)] = (D\<^sub>\<omega>cvec)\<cdot>\<nabla>\<^sub>cV(cvec \<omega>)\<close>.\<close>
+
+lemma has_derivative_gradU_c_along_cvec:
+  fixes cvec :: "angle \<Rightarrow> planar" and x :: "(real^2)^'n" and \<omega> :: angle
+  assumes Dc: "(cvec has_derivative Dcvec) (at \<omega>)"
+  shows "((\<lambda>\<omega>. gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+            has_derivative (\<lambda>v. Hcmat x (cvec \<omega>) *v (Dcvec v))) (at \<omega>)"
+  using diff_chain_at[OF Dc has_derivative_gradU_c] by (simp add: o_def)
+
+lemma has_derivative_V_along_cvec:
+  fixes cvec :: "angle \<Rightarrow> planar" and x :: "(real^2)^'n" and \<omega> :: angle
+  assumes Dc: "(cvec has_derivative Dcvec) (at \<omega>)"
+  shows "((\<lambda>\<omega>. U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+            has_derivative (\<lambda>v. Dcvec v \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))) (at \<omega>)"
+  using diff_chain_at[OF Dc has_derivative_Uc_c] by (simp add: o_def)
+
+text \<open>\<^bold>\<open>The actual \<open>\<omega>\<close>-gradient field in explicit bridge form.\<close>  Assembling the first-order
+  bridge derivative into the gradient vector: \<open>\<nabla>\<^sub>\<omega>U = \<Sum>\<^sub>i [gain(\<omega>)(D\<^sub>\<omega>cvec\,e\<^sub>i)\<cdot>\<nabla>\<^sub>cV + dgain(e\<^sub>i)V] e\<^sub>i\<close>.
+  Differentiating this field once more gives \<open>HessU\<close> in moment-space terms.\<close>
+
+lemma gradU_via_c:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and x :: "(real^2)^'n" and \<omega> :: angle
+  assumes Dc: "(cvec has_derivative Dcvec) (at \<omega>)"
+    and Dg: "(gain has_derivative dgain) (at \<omega>)"
+  shows "gradU cvec gain x \<omega>
+         = (\<Sum>i\<in>UNIV. (gain \<omega> * (Dcvec (axis i 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                       + dgain (axis i 1) * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>)) *\<^sub>R axis i 1)"
+proof -
+  have "\<nabla> (U_cart cvec gain x) \<omega>
+      = (\<Sum>i\<in>UNIV. (\<lambda>v. gain \<omega> * (Dcvec v \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                          + dgain v * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>)) (axis i 1) *\<^sub>R axis i 1)"
+    by (rule grad_fun_eq[OF has_derivative_to_gradient[OF has_derivative_U_via_c[OF Dc Dg]]])
+  thus ?thesis by (simp add: gradU_def)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
