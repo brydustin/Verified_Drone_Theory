@@ -2840,7 +2840,21 @@ lemma regular_value_on_via_x_partial:
               (\<exists>Dj Dx. (G has_derivative Dj) (at (x, w))
                      \<and> ((\<lambda>y. G (y, w)) has_derivative Dx) (at x) \<and> surj Dx)"
   shows "regular_value_on G S 0"
-  sorry
+proof (rule regular_value_onI)
+  fix p assume pS: "p \<in> S" and p0: "G p = 0"
+  obtain x w where pxw: "p = (x, w)" by (cases p)
+  have xwS: "(x, w) \<in> S" using pS pxw by simp
+  have G0: "G (x, w) = 0" using p0 pxw by simp
+  obtain Dj Dx where dj: "(G has_derivative Dj) (at (x, w))"
+      and dx: "((\<lambda>y. G (y, w)) has_derivative Dx) (at x)" and sx: "surj Dx"
+    using partial[OF xwS G0] by blast
+  have rel: "\<And>h. Dj (h, 0) = Dx h" by (rule joint_deriv_restricts_to_partial[OF dj dx])
+  have sj: "surj Dj" by (rule surj_partial_imp_surj_joint[OF sx rel])
+  have atxw: "at (x, w) within S = at (x, w)" by (rule at_within_open[OF xwS openS])
+  have "(G has_derivative Dj) (at p within S)"
+    unfolding pxw atxw by (rule dj)
+  with sj show "\<exists>f'. (G has_derivative f') (at p within S) \<and> surj f'" by blast
+qed
 
 text \<open>\<^bold>\<open>(A2) The configuration derivative of \<open>gradU_dip\<close> factors through \<open>DM_paper_x\<close>.\<close>  Every
   \<open>\<bm>x\<close>-dependence of the \<open>\<omega>\<close>-gradient routes through the moment map, so \<open>D\<^sub>\<bm>x \<nabla>\<^sub>\<Omega>U = F \<circ> D\<^sub>\<bm>x\<M>\<close> for a
