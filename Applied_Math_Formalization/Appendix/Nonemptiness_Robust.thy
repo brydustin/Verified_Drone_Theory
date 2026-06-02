@@ -2465,6 +2465,20 @@ proof -
     using differentiable_chain_at[OF proj inner] by (simp add: o_def)
 qed
 
+text \<open>\<^bold>\<open>The dipole's scalar gradient component as a field of \<open>\<omega>\<close>\<close> --- instantiating the bridge
+  at the proven dipole jet (@{thm has_derivative_cvec_dip}, @{thm gain_dip_has_derivative}).
+  Differentiating this scalar field once more gives the \<open>k\<close>-th row of \<open>HessU_dip\<close> in
+  moment-space terms.\<close>
+
+lemma gradU_dip_component_field:
+  fixes x :: "(real^2)^'n"
+  shows "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k
+         = gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)
+                          \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + frechet_derivative gdip (at (\<omega>$1)) ((axis k 1)$1)
+             * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>)"
+  by (rule gradU_via_c_component[OF has_derivative_cvec_dip gain_dip_has_derivative])
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
