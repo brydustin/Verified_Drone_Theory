@@ -2348,6 +2348,31 @@ proof -
   thus ?thesis by (simp add: has_gradient_def gradU_def)
 qed
 
+text \<open>\<^bold>\<open>First-order bridge.\<close>  The actual pattern's \<open>\<omega>\<close>-derivative is the chain+product rule
+  through \<open>cvec\<close> and \<open>gain\<close>: \<open>D\<^sub>\<omega>U(v) = gain(\<omega>)\,(D\<^sub>\<omega>cvec\,v)\<cdot>\<nabla>\<^sub>cV(cvec \<omega>) + dgain(v)\,V(cvec \<omega>)\<close>,
+  with \<open>\<nabla>\<^sub>cV = gradU (\<lambda>c. c) (\<lambda>_. 1) x\<close> the moment-space \<open>c\<close>-gradient.\<close>
+
+lemma has_derivative_U_via_c:
+  fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
+    and x :: "(real^2)^'n" and \<omega> :: angle
+  assumes Dc: "(cvec has_derivative Dcvec) (at \<omega>)"
+    and Dg: "(gain has_derivative dgain) (at \<omega>)"
+  shows "(U_cart cvec gain x has_derivative
+            (\<lambda>v. gain \<omega> * (Dcvec v \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                 + dgain v * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))) (at \<omega>)"
+proof -
+  have chain: "((\<lambda>\<omega>. U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                  has_derivative (\<lambda>v. Dcvec v \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))) (at \<omega>)"
+    using diff_chain_at[OF Dc has_derivative_Uc_c] by (simp add: o_def)
+  have "((\<lambda>\<omega>. gain \<omega> * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+          has_derivative (\<lambda>v. gain \<omega> * (Dcvec v \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))
+                              + dgain v * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))) (at \<omega>)"
+    by (rule has_derivative_mult[OF Dg chain])
+  moreover have "U_cart cvec gain x = (\<lambda>\<omega>. gain \<omega> * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>))"
+    by (rule ext) (rule U_cart_factor)
+  ultimately show ?thesis by simp
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
