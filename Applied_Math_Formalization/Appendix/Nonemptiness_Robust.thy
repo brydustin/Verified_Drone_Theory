@@ -3238,7 +3238,42 @@ lemma Phi_bad_meager_dip:
   fixes V :: "((real^2)^'n) set"
   assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
   shows "meager {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
-  sorry
+proof -
+  let ?reg = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+              \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+              \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+              \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+  let ?def = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+              \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+              \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+  let ?steer = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+              \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+              \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+  let ?null = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+              \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
+  have meag4: "meager (?reg \<union> ?def \<union> ?steer \<union> ?null)"
+    by (intro meager_Un meager_bad_regular_stratum[OF assms]
+              meager_rank_deficient_stratum[OF assms]
+              meager_steering_singular_stratum[OF assms]
+              meager_Azero_degenerate_stratum[OF assms])
+  have sub: "{x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
+             \<subseteq> ?reg \<union> ?def \<union> ?steer \<union> ?null"
+  proof (rule subsetI)
+    fix x assume "x \<in> {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    then obtain \<omega> where xV: "x \<in> V"
+      and pb: "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
+    from Phibad_dip_imp_detHess0[OF pb]
+    have g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+      and d0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" by blast+
+    show "x \<in> ?reg \<union> ?def \<union> ?steer \<union> ?null"
+      using xV g0 d0 by blast
+  qed
+  show ?thesis by (rule meager_subset[OF sub meag4])
+qed
 
 
 subsection \<open>The capstone: \<open>\<F>\<^sub>0\<close> is nonempty for appropriately chosen \<open>\<xi>, \<kappa>, \<epsilon>\<close>\<close>
