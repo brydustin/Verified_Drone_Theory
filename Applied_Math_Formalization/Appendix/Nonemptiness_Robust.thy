@@ -2320,6 +2320,35 @@ proof -
 qed
 
 
+subsection \<open>The \<open>\<omega>\<close>--\<open>c\<close> bridge: the actual pattern factors as \<open>gain\<cdot>(V\<circ>cvec)\<close>\<close>
+
+text \<open>\<^bold>\<open>The multiplicative factorization.\<close>  The actual radiation intensity is the \<open>c\<close>-pattern
+  \<open>V = \<bar>A\<bar>\<^sup>2\<close> (the gain\<open>\<equiv>1\<close> intensity) evaluated at the wavevector \<open>c = cvec \<omega>\<close>, scaled by the
+  angular gain \<open>gain \<omega>\<close>: \<open>U(\<bm>x,\<omega>) = gain(\<omega>)\<cdot>V(\<bm>x, cvec \<omega>)\<close>.  This is the bridge along which
+  the \<open>\<omega>\<close>-derivatives of \<open>U\<close> reduce (chain + product rule) to the moment-space \<open>c\<close>-derivatives
+  \<open>gradU_c\<close>/\<open>Hcmat\<close> already computed.\<close>
+
+lemma U_cart_factor:
+  "U_cart cvec gain x \<omega> = gain \<omega> * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec \<omega>)"
+  by (simp add: U_cart_def A_cart_eq_Afun)
+
+text \<open>\<^bold>\<open>The \<open>c\<close>-pattern \<open>V\<close> has \<open>gradU_c\<close> as its genuine gradient.\<close>  \<open>V = U_cart (\<lambda>c. c) (\<lambda>_. 1) x\<close>
+  is differentiable (the array factor is smooth), so the \<open>THE\<close>-gradient \<open>gradU (\<lambda>c. c) (\<lambda>_. 1) x\<close>
+  is its actual Fréchet derivative --- the first-order input for the chain rule of the bridge.\<close>
+
+lemma has_derivative_Uc_c:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "(U_cart (\<lambda>c. c) (\<lambda>_. 1) x has_derivative (\<lambda>v. v \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x c)) (at c)"
+proof -
+  have hd: "(U_cart (\<lambda>c. c) (\<lambda>_. 1) x
+              has_derivative dU_cart (\<lambda>c. c) (\<lambda>h. h) (\<lambda>_. 1) (\<lambda>_. 0) x c) (at c)"
+    by (rule has_derivative_U_cart[OF has_derivative_ident has_derivative_const])
+  have "GRAD (U_cart (\<lambda>c. c) (\<lambda>_. 1) x) c :> \<nabla> (U_cart (\<lambda>c. c) (\<lambda>_. 1) x) c"
+    by (rule grad_fun_satisfies_GRAD[OF has_derivative_to_gradient[OF hd]])
+  thus ?thesis by (simp add: has_gradient_def gradU_def)
+qed
+
+
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
 text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
