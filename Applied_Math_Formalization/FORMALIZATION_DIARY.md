@@ -90,6 +90,28 @@ by a spacing target `s>0`: nulls A at ωn and spaces elements ≥ s) and re-deri
 All sorry-free. So the entire FEASIBILITY layer (closed nonempty + open nonempty interior)
 is DONE for the actual dipole. Builds clean (BUILD_EXIT=0).
 
+## 2026-06-01 (prop:dimZ Step 1) — Φ factors through the moment map M_paper (gradient half)
+
+Toward `Phi_bad_meager` (= prop:dimZ), began the **Φ = F∘M** factorization that lets the
+proven `bigJ`-surjectivity (`lem:Msurj`) act on Φ's derivative. Established (sorry-free):
+- `M_paper_eq_robust_moments`: the determinant-side moment map `M_paper x (cvec ω)`
+  (`complex^6`, Jacobian = `bigJ`) **equals** `[A_cart, Mmom 1, Mmom 2, M2mom 1 1, M2mom 1 2,
+  M2mom 2 2]` — i.e. the local moments through which `gradU`/`HessU` are expressed ARE
+  `M_paper`. (Matched via `A_moment_def`/`M1_moment_def`/…/`phase_def`, `w_M12_def`,
+  `power2_eq_square`+`of_real_mult`.) `M_paper` is in scope: Robust → Capstone → Regnonzero →
+  `Nonemptiness_Paper` → `Applied_Math_BlockDet.Moment_Map`.
+- `M_paper_proj_A`/`_M1`/`_M2`/`_M11`/`_M12`/`_M22`: the six component-projection rewrites.
+- `gradU_component_via_M_paper`: **Φ₁,Φ₂ (the gradient half) depend on (x,ω) only through
+  M_paper's coords A,M₁,M₂** (plus the gain/steering jet `gain,dgain,dc` as parameters).
+  From `gradU_component_via_moments` + `sum_2` + the projections.
+
+REMAINING for Step 1 (the Hessian half): `Φ₃ = det∇²U = H₁₁H₂₂−H₁₂²` through `M_paper$4,5,6`
+(the second moments). Needs `HessU $ k $ l` as an explicit function of `A,Mmom,M2mom` and the
+**second** jet `d²gain`, `d²c (=E)` — obtained by differentiating the moment form of `gradU`
+(`gradU_component_real_moments`); the M2mom-entry machinery is present (`has_derivative_Mmom`,
+`has_derivative_dA_via_M2`, `has_derivative_dA_dip`, `D2cvec_dip`) but not yet assembled into a
+closed `HessU = f(moments)`. That is the next sub-brick.
+
 REMAINING (2 sorries): `Phi_bad_meager` (the 12×12-determinant submersion ⟹ codim-3 ⟹ meager
 projection — the deep core) and `regular_feasible_point_dip`. The latter now has its open
 Baire arena (`Ffeas_dip_open_feasible`); to finish it: intersect that open V with the
