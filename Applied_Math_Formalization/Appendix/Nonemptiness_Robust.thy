@@ -2134,6 +2134,64 @@ definition Hcmat :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> real^2^2" wh
   "Hcmat x c = (\<chi> k. \<chi> l. 2 * (Re (cnj (Mcfun x c l) * Mcfun x c k)
                                - Re (cnj (Afun x c) * M2cfun x c k l)))"
 
+text \<open>\<^bold>\<open>The four \<open>c\<close>-derivatives in moment form.\<close>  Compose \<open>\<real>/\<I>\<close> (bounded-linear) with the
+  \<open>c\<close>-derivatives of \<open>A\<close>/\<open>M\<^sub>k\<close> and rewrite via the sum lemmas above: \<open>\<partial>\<^sub>c(\<real>A) = \<Sum>\<^sub>l h\<^sub>l \<I>M\<^sub>l\<close>,
+  \<open>\<partial>\<^sub>c(\<I>A) = -\<Sum>\<^sub>l h\<^sub>l \<real>M\<^sub>l\<close>, and the \<open>M\<^sub>k\<close>-analogues with the second moments \<open>M\<^sub>k\<^sub>l\<close>.\<close>
+
+lemma dRe_Afun:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "((\<lambda>c. Re (Afun x c)) has_derivative (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))) (at c)"
+proof (rule has_derivative_eq_rhs)
+  show "((\<lambda>c. Re (Afun x c)) has_derivative
+          (\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Afun_c])
+  show "(\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
+        = (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))"
+    by (rule ext) (rule ReDAfun)
+qed
+
+lemma dIm_Afun:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "((\<lambda>c. Im (Afun x c)) has_derivative (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l)))) (at c)"
+proof (rule has_derivative_eq_rhs)
+  show "((\<lambda>c. Im (Afun x c)) has_derivative
+          (\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Afun_c])
+  show "(\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
+        = (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l)))"
+    by (rule ext) (rule ImDAfun)
+qed
+
+lemma dRe_Mcfun:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "((\<lambda>c. Re (Mcfun x c k)) has_derivative
+            (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))) (at c)"
+proof (rule has_derivative_eq_rhs)
+  show "((\<lambda>c. Re (Mcfun x c k)) has_derivative
+          (\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                     * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Mcfun_c])
+  show "(\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                     * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
+        = (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))"
+    by (rule ext) (rule ReDMfun)
+qed
+
+lemma dIm_Mcfun:
+  fixes x :: "(real^2)^'n" and c :: "real^2"
+  shows "((\<lambda>c. Im (Mcfun x c k)) has_derivative
+            (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l)))) (at c)"
+proof (rule has_derivative_eq_rhs)
+  show "((\<lambda>c. Im (Mcfun x c k)) has_derivative
+          (\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                     * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Mcfun_c])
+  show "(\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
+                     * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
+        = (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l)))"
+    by (rule ext) (rule ImDMfun)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
