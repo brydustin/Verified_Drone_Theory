@@ -1983,6 +1983,33 @@ proof -
     by (simp add: ax M2cfun_def sum_distrib_left mult.assoc)
 qed
 
+text \<open>\<^bold>\<open>The \<open>c\<close>-gradient of \<open>\<bar>A\<bar>\<^sup>2\<close> in moment form.\<close>  Specialising
+  @{thm gradU_component_real_moments} to \<open>c\<close>-coordinates (\<open>cvec = id\<close>, \<open>gain \<equiv> 1\<close>, so the
+  steering/gain jet drops out) gives the clean gradient
+  \<open>\<partial>\<^bsub>c\<^sub>j\<^esub>\<bar>A\<bar>\<^sup>2 = 2(\<real>A\<cdot>\<I>M\<^sub>j - \<I>A\<cdot>\<real>M\<^sub>j)\<close> --- the field we differentiate once more for the
+  moment-space Hessian.\<close>
+
+lemma gradU_c_field:
+  "gradU (\<lambda>c. c) (\<lambda>_. 1) x c $ j
+     = 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j))"
+proof -
+  have d1: "((\<lambda>c::real^2. c) has_derivative (\<lambda>h. h)) (at c)"
+    by (rule has_derivative_ident)
+  have d2: "((\<lambda>_::real^2. 1::real) has_derivative (\<lambda>_. 0)) (at c)"
+    by (rule has_derivative_const)
+  have "gradU (\<lambda>c. c) (\<lambda>_. 1) x c $ j
+        = (\<lambda>_. 0) (axis j 1)
+            * ((Re (A_cart (\<lambda>c. c) x c))\<^sup>2 + (Im (A_cart (\<lambda>c. c) x c))\<^sup>2)
+          + (\<lambda>_. 1) c * (2 * (\<Sum>k\<in>UNIV. ((\<lambda>h. h) (axis j 1))$k
+                 * (Re (A_cart (\<lambda>c. c) x c) * Im (Mmom (\<lambda>c. c) x c k)
+                    - Im (A_cart (\<lambda>c. c) x c) * Re (Mmom (\<lambda>c. c) x c k))))"
+    by (rule gradU_component_real_moments[OF d1 d2])
+  also have "\<dots> = 2 * (Re (Afun x c) * Im (Mcfun x c j) - Im (Afun x c) * Re (Mcfun x c j))"
+    by (simp add: A_cart_eq_Afun Mmom_eq_Mcfun axis_def if_distrib sum.delta cong: if_cong,
+        smt (verit, ccfv_SIG) exhaust_2 sum_2 zero_neq_one)
+  finally show ?thesis .
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
