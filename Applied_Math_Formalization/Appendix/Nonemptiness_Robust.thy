@@ -2865,13 +2865,15 @@ lemma gradU_dip_x_partial_surj:
   shows "\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx"
   sorry
 
-text \<open>\<^bold>\<open>(A4) The regularity locus is open.\<close>  \<open>A_cart\<close> is continuous (jointly in \<open>(\<bm>x,\<omega>)\<close>) and the
-  steering determinant is continuous in \<open>\<omega>\<close>, so the set where both are nonzero is open --- the open
-  \<open>S\<close> on which the regular value lives.\<close>
+text \<open>\<^bold>\<open>(A4) The regularity locus is open.\<close>  \<open>A_cart\<close> is continuous (jointly in \<open>(\<bm>x,\<omega>)\<close>), the
+  steering determinant is continuous in \<open>\<omega>\<close>, and the submersion set \<open>{surj (DM_paper_x \<dots>)}\<close> is open
+  by \<^emph>\<open>lower semicontinuity of rank\<close> of the continuously-varying linear map \<open>DM_paper_x\<close> --- so the
+  full regularity locus (the open \<open>S\<close> on which the regular value lives) is open.\<close>
 
 lemma open_A_cart_nonzero:
   shows "open {p :: ((real^2)^'n) \<times> (real^2).
                  A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+               \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
                \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
   sorry
 
@@ -2886,15 +2888,21 @@ lemma gradU_dip_joint_C1:
           \<and> continuous_on UNIV G'"
   sorry
 
-text \<open>\<^bold>\<open>(A6) Assembled regular value of the dipole gradient field.\<close>  On the open locus where
-  \<open>A \<noteq> 0\<close> and the steering Jacobian is nonsingular, \<open>0\<close> is a regular value of the joint map
-  \<open>(\<bm>x,\<omega>) \<mapsto> \<nabla>\<^sub>\<Omega>U_dip\<close>.  Direct input to the transversality engine.\<close>
+text \<open>\<^bold>\<open>(A6) Assembled regular value of the dipole gradient field --- CORRECTED DOMAIN.\<close>  \<open>0\<close> is a
+  regular value of the joint map \<open>(\<bm>x,\<omega>) \<mapsto> \<nabla>\<^sub>\<Omega>U_dip\<close> on the open locus where \<^bold>\<open>all three\<close>
+  regularity conditions hold: \<open>A \<noteq> 0\<close>, the moment map is a submersion (\<open>surj (DM_paper_x \<dots>)\<close>), and
+  the steering Jacobian is nonsingular.  \<^bold>\<open>The \<open>surj (DM_paper_x \<dots>)\<close> conjunct is essential and was
+  missing before:\<close> @{thm gradU_dip_x_partial_surj} genuinely needs it, and it is \<^emph>\<open>not\<close> implied by
+  \<open>A \<noteq> 0\<close> (it is the open-dense rank-\<open>12\<close> condition, the \<open>m_star \<noteq> 0\<close> stratum).  Configurations
+  failing it form the rank-deficient stratum, which is handled separately
+  (\<open>meager_rank_deficient_stratum\<close> below).\<close>
 
 lemma regular_value_on_gradU_dip:
   fixes V :: "((real^2)^'n) set"
   assumes "open V" and "6 \<le> CARD('n)"
   shows "regular_value_on (\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
             ({p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+                             \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
                              \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}) 0"
   sorry
 
@@ -3111,6 +3119,103 @@ lemma Phi_bad_meager:
   fixes V :: "(planar^'n) set" and cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
   assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "\<forall>\<omega>. cvec \<omega> \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>. Phibad cvec gain x \<omega> = 0 \<and> A_cart cvec x \<omega> \<noteq> 0}"
+  sorry
+
+text \<open>\<^bold>\<open>=== The genuinely-complete dipole meagerness scaffold (statements only) ===\<close>
+
+  The generic \<open>Phi_bad_meager\<close> above is \<^emph>\<open>not provable\<close> as stated (it has no smoothness of \<open>cvec\<close>/
+  \<open>gain\<close> in \<open>\<omega>\<close>), so the capstone uses the \<^bold>\<open>dipole-specific\<close> \<open>Phi_bad_meager_dip\<close> below.  Proving
+  it requires a \<^bold>\<open>three-stratum decomposition\<close> --- because the regular value @{thm
+  regular_value_on_gradU_dip} only holds where the moment map is a submersion \<^bold>\<open>and\<close> the steering
+  map is an immersion.  The two non-regular strata (\<open>\<not> surj (DM_paper_x \<dots>)\<close> and \<open>det (Dcvec) = 0\<close>)
+  are positive-codimension and meager by their own arguments.  This mirrors the paper's
+  \<open>prop:dimZ\<close>/\<open>prop_regnonzero\<close> stratification (where the strata meagerness are themselves the deep
+  branch obligations).\<close>
+
+text \<open>\<^bold>\<open>(M1) A regular configuration exists at any nonzero wavevector.\<close>  The moment-map submersion
+  machinery (\<open>m_star\<close>, \<open>surj_iff_m_star\<close>) is proven only at the fixed \<open>c0_paper = (1,0)\<close>, \<open>CARD = 6\<close>.
+  This generalises the ``one regular point'' to an arbitrary nonzero steered wavevector and any
+  \<open>CARD('n) \<ge> 6\<close>.\<close>
+
+lemma DM_paper_x_regular_point_exists:
+  fixes c :: planar
+  assumes "c \<noteq> 0" and "6 \<le> CARD('n)"
+  shows "\<exists>x0::(real^2)^'n. surj (DM_paper_x x0 c)"
+  sorry
+
+text \<open>\<^bold>\<open>(M2) Open-dense submersion at a fixed nonzero wavevector.\<close>  From one regular point (M1) plus
+  lower semicontinuity of rank (\<open>rank_lower_semicont_open_dense_propagation\<close>, currently a \<open>sorry\<close> in
+  \<open>Nonemptiness_Paper\<close>), the moment-map derivative is surjective on an open dense subset of any open
+  \<open>V\<close>.  This is the general-wavevector analogue of \<open>DM_paper_open_dense_surjective\<close>.\<close>
+
+lemma DM_paper_x_open_dense_surjective_gen:
+  fixes V :: "((real^2)^'n) set" and c :: planar
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "c \<noteq> 0"
+  shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U \<and> (\<forall>x\<in>U. surj (DM_paper_x x c))"
+  sorry
+
+text \<open>\<^bold>\<open>(M3) The steering-singular angle locus is nowhere dense.\<close>  \<open>Dcvec_dip\<close> is real-analytic in
+  \<open>\<omega>\<close> and not everywhere singular, so its singular set is a proper analytic subset --- closed with
+  empty interior.\<close>
+
+lemma steering_singular_nowhere_dense:
+  shows "nowhere_dense {\<omega>::angle. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+  sorry
+
+text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open locus where \<open>A \<noteq> 0\<close>, \<open>surj (DM_paper_x \<dots>)\<close>,
+  and \<open>det (Dcvec) \<noteq> 0\<close>, \<open>0\<close> is a regular value (@{thm regular_value_on_gradU_dip}); covering this
+  open (non-product) locus by countably many product boxes and applying
+  @{thm parametric_transversality_meager_planar_config} on each, the degenerate-critical projection
+  over the regular stratum is meager.\<close>
+
+lemma meager_bad_regular_stratum:
+  fixes V :: "((real^2)^'n) set"
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
+  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+                  \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+  sorry
+
+text \<open>\<^bold>\<open>(M5) Rank-deficient stratum is meager.\<close>  The set of configurations carrying a degenerate
+  critical point (with \<open>A \<noteq> 0\<close>) at an angle where the moment map \<^emph>\<open>fails\<close> to be a submersion.  This
+  is the projection of a positive-codimension set; meager by the \<open>m_star = 0\<close> nowhere-density (M2)
+  combined with a parametric argument over \<open>\<omega>\<close>.\<close>
+
+lemma meager_rank_deficient_stratum:
+  fixes V :: "((real^2)^'n) set"
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
+  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+                  \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+  sorry
+
+text \<open>\<^bold>\<open>(M6) Steering-singular stratum is meager.\<close>  Degenerate critical points (with \<open>A \<noteq> 0\<close>) at an
+  angle where the steering Jacobian is singular.  Meager by (M3): the singular-\<open>\<omega>\<close> locus is
+  nowhere dense, and the critical points over it form a positive-codimension set.\<close>
+
+lemma meager_steering_singular_stratum:
+  fixes V :: "((real^2)^'n) set"
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
+  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+  sorry
+
+text \<open>\<^bold>\<open>(M7) The dipole-specific bad set is meager.\<close>  Assemble: by @{thm Phibad_dip_imp_detHess0},
+  \<open>\<Phi> = 0\<close> gives \<open>\<nabla>\<^sub>\<Omega>U = 0 \<and> det (\<nabla>\<^sup>2U) = 0\<close>; then every witnessing \<open>\<omega>\<close> falls into the regular
+  stratum (M4), the rank-deficient stratum (M5), or the steering-singular stratum (M6).  Their
+  union is meager.  \<^bold>\<open>This is the lemma the capstone actually consumes\<close> (in place of the unprovable
+  generic \<open>Phi_bad_meager\<close>).\<close>
+
+lemma Phi_bad_meager_dip:
+  fixes V :: "((real^2)^'n) set"
+  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
+  shows "meager {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0}"
   sorry
 
 
