@@ -2645,6 +2645,41 @@ proof -
     using gradU_component_via_M_paper[OF d1 d2] by simp
 qed
 
+text \<open>\<^bold>\<open>Sard brick (1): the dipole gradient field is \<open>C\<^sup>1\<close> in the configuration \<open>\<bm>x\<close>.\<close>  Fix the
+  steering angle \<open>\<omega>\<close>.  Via @{thm gradU_dip_component_moments} the \<open>j\<close>-th gradient component is a
+  fixed polynomial in the (\<open>\<bm>x\<close>-smooth) moment coordinates \<open>M_paper \<bm>x c\<close> (with \<open>c = cvec_dip \<omega>\<close>):
+  \<open>(\<nabla>U)\<^sub>j = \<partial>gdip (|\<M>\<^sub>1|\<^sup>2) + gain 2 Re(cnj \<M>\<^sub>1 (a\<M>\<^sub>2 + b\<M>\<^sub>3))\<close>.  Since each moment
+  coordinate is differentiable in \<open>\<bm>x\<close> (@{thm has_derivative_M_paper_x}) and \<open>cmod\<^sup>2 = Re\<^sup>2 + Im\<^sup>2\<close>,
+  the component is differentiable in \<open>\<bm>x\<close> --- the smoothness input \<open>derG\<close>/\<open>contG'\<close> that the
+  zero-set chart engine (and the rank step) require, with \<^emph>\<open>no\<close> assumption on \<open>cvec\<close>/\<open>gain\<close>
+  smoothness in \<open>\<omega>\<close> (the \<open>\<omega>\<close>-jets enter only as constants here).\<close>
+
+lemma gradU_dip_component_differentiable_x:
+  fixes x :: "(real^2)^'n" and V :: "((real^2)^'n) set"
+  shows "(\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ j) differentiable (at x within V)"
+proof -
+  have d: "(\<lambda>y. M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>) $ k) differentiable (at x within V)" for k :: 6
+    by (rule differentiableI[OF
+          bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_M_paper_x]])
+  have eq: "(\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ j)
+          = (\<lambda>y. frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)
+                   * ((Re (M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1))\<^sup>2
+                    + (Im (M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1))\<^sup>2)
+                 + gain_dip \<omega> * (2 * Re (cnj (M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1)
+                      * ((- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1)
+                           * (M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>) $ 2)
+                       + (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2)
+                           * (M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>) $ 3)))))"
+    by (rule ext) (simp add: gradU_dip_component_moments cmod_power2)
+  show ?thesis
+    unfolding eq
+    by (intro differentiable_add differentiable_mult differentiable_const differentiable_power
+              differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_Re]]
+              differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_Im]]
+              differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_cnj]]
+              d)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
