@@ -8,6 +8,32 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — Closing leaf lemmas: spectral, A1, A6
+
+Began discharging the leaf `sorry`s (deepest-first where tractable). Closed this session:
+- `sigma_min_pos_iff_invertible` (`0 < sigma_min H ⟷ det H ≠ 0`): smallest singular value over the
+  compact unit sphere is attained, so positive ⟺ `H*v ≠ 0` on the sphere ⟺ injective (normalise a
+  kernel vector) ⟺ `det ≠ 0` (`det_nz_iff_inj`).
+- `regular_value_on_via_x_partial` (A1): regular value from config-partial surjectivity, via the
+  proven `surj_partial_imp_surj_joint` + `joint_deriv_restricts_to_partial` (the earlier 21-min hang
+  was a fluke — it builds in ~2 min). Care: derive `at (x,w) within S = at (x,w)` for the
+  destructured point and `unfolding pxw atxw`, not `simp add: atp pxw` (rewrite-order trap).
+- `regular_value_on_gradU_dip` (A6): now a verified reduction to {`open_A_cart_nonzero`,
+  `gradU_dip_x_partial_surj`, `gradU_dip_joint_C1`}. Trap: `via_x_partial`'s `(λy. G(y,w))` becomes
+  `(λy. gradU … (fst (y,w)) (snd (y,w)))` — equal to the β-clean `gradU … y w` only by `fst_conv`,
+  NOT αβη; so `show` must use the `fst/snd` form and bridge with `simp`.
+
+Leaf `sorry`s remaining (16; one is the off-path generic `Phi_bad_meager`): the determinant-payoff
+rank lemma `gradU_dip_x_partial_surj`, the 4 strata, the two `DM_paper_x_…_gen` submersion lemmas,
+`steering_singular_nowhere_dense`, `no_degenerate_to_sphere_annulus`, `has_derivative_gradU_dip_x`,
+`gradU_dip_joint_C1`, `open_A_cart_nonzero` (needs rank lower-semicontinuity), `Ffeas_interior_nonempty`,
+`meager_linear_homeo_iff`, `parametric_transversality_meager_planar_config`, and the engine core.
+
+\<^bold>Practice (user):\<^esub> on any inexplicable "Failed to apply", turn on `[[show_types]]` immediately
+(it found the decoupled-type-var bug); pin polymorphic `'n` in new statements up front.
+
+---
+
 ## 2026-06-02 (robust set) — Soundness audit + the entire Baire/meager GLUE now machine-verified
 
 Audited the dipole capstone chain for soundness and made it compose. Three statement-level bugs fixed,
