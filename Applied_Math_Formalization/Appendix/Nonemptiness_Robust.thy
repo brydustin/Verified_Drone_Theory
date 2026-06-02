@@ -2526,6 +2526,73 @@ proof -
     by (rule has_derivative_add[OF has_derivative_mult[OF dGain dIP] has_derivative_mult[OF dGD dV]])
 qed
 
+text \<open>\<^bold>\<open>\<open>HessU_dip\<close> entry = the scalar component field's derivative.\<close>  Since \<open>$k\<close> is
+  bounded-linear, the \<open>(k,l)\<close> Hessian entry is the derivative of the \<open>k\<close>-th gradient
+  component in direction \<open>e\<^sub>l\<close> --- which @{thm has_derivative_gradU_dip_component} computes
+  explicitly in moment-space terms.\<close>
+
+lemma HessU_dip_eq_componentderiv:
+  fixes x :: "(real^2)^'n"
+  shows "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k $ l
+         = frechet_derivative (\<lambda>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k) (at \<omega>) (axis l 1)"
+proof -
+  have "((\<lambda>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k)
+          has_derivative (\<lambda>v. (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v v) $ k)) (at \<omega>)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth gradU_dip_has_derivative])
+  hence "frechet_derivative (\<lambda>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k) (at \<omega>) (axis l 1)
+         = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis l 1) $ k"
+    by (simp add: frechet_derivative_at')
+  also have "\<dots> = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k $ l"
+    by (simp add: matrix_vector_mult_def axis_def if_distrib sum.delta cong: if_cong)
+  finally show ?thesis by (rule sym)
+qed
+
+text \<open>\<^bold>\<open>The Hessian entry in moment-space form\<close> --- combine the two: \<open>HessU_dip\<close>'s \<open>(k,l)\<close>
+  entry is the explicit moment expression (jet coefficients \<open>Dcvec_dip\<close>, \<open>D\<^sup>2cvec_dip\<close>,
+  \<open>\<partial>gdip\<close>, \<open>\<partial>\<^sup>2gdip\<close>, \<open>Hcmat\<close>, all \<open>x\<close>-constant; the \<open>x\<close>-dependence is entirely through the
+  moments \<open>\<nabla>\<^sub>cV\<close>, \<open>Hcmat\<close>, \<open>V\<close> = \<open>M_paper\<close>).  So \<open>det HessU_dip\<close> factors through \<open>M_paper\<close>.\<close>
+
+lemma HessU_dip_entry_moments:
+  fixes x :: "(real^2)^'n"
+  shows "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k $ l
+       = (gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)
+                          \<bullet> (Hcmat x (cvec_dip \<omega>0 \<omega>s \<omega>) *v (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)))
+                        + (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1))
+                          \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + frechet_derivative gdip (at (\<omega>$1)) ((axis l 1)$1)
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>)))
+        + (frechet_derivative gdip (at (\<omega>$1)) ((axis k 1)$1)
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) ((axis k 1)$1)) (at \<omega>) (axis l 1)
+            * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))"
+proof -
+  \<comment> \<open>Step 1: the \<open>(k,l)\<close> Hessian entry is the directional derivative, along \<open>e\<^sub>l = axis l 1\<close>,
+        of the \<open>k\<close>-th component of the gradient field.\<close>
+  have step1: "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k $ l
+      = frechet_derivative (\<lambda>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k) (at \<omega>) (axis l 1)"
+    by (rule HessU_dip_eq_componentderiv)
+  \<comment> \<open>Step 2: the total (Frechet) derivative of that scalar component field is the explicit
+        moment-space linear map established in @{thm has_derivative_gradU_dip_component} --- a sum of
+        the curvature term \<open>\<nabla>\<^sub>c\<^sup>2V\<close> (via \<open>Hcmat\<close>), the second-order chart jet \<open>D\<^sup>2cvec_dip\<close>, and the
+        gain's first/second \<open>\<omega>\<close>-derivatives times \<open>\<nabla>\<^sub>cV\<close> and \<open>V\<close>.\<close>
+  have step2: "frechet_derivative (\<lambda>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k) (at \<omega>)
+      = (\<lambda>h. (gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)
+                          \<bullet> (Hcmat x (cvec_dip \<omega>0 \<omega>s \<omega>) *v (Dcvec_dip \<omega>0 \<omega>s \<omega> h))
+                        + (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) h)
+                          \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + frechet_derivative gdip (at (\<omega>$1)) (h$1)
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>)))
+        + (frechet_derivative gdip (at (\<omega>$1)) ((axis k 1)$1)
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> h \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) ((axis k 1)$1)) (at \<omega>) h
+            * U_cart (\<lambda>c. c) (\<lambda>_. 1) x (cvec_dip \<omega>0 \<omega>s \<omega>)))"
+    by (rule frechet_derivative_at'[OF has_derivative_gradU_dip_component])
+  \<comment> \<open>Step 3: evaluate that linear map at \<open>e\<^sub>l = axis l 1\<close> (\<open>\<beta>\<close>-reduction substitutes \<open>h := axis l 1\<close>),
+        which is exactly the claimed moment expression.\<close>
+  show ?thesis
+    unfolding step1 step2 by (rule refl)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 

@@ -8,6 +8,31 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — Hessian entry in moment-space form (ω–c bridge, 2nd order, complete)
+
+Closed the second-order half of the ω–c bridge: the actual dipole Hessian `HessU (cvec_dip ω0 ωs)
+gain_dip x ω` now has every entry written as an *explicit moment-space expression*, with all
+x-dependence funneled through `M_paper x c` (via `∇_cV`, `Hcmat`, `V`) and all geometry through
+x-independent jets (`Dcvec_dip`, `D2cvec_dip`, `∂gdip`, `∂²gdip`). Two new sorry-free lemmas:
+- `HessU_dip_eq_componentderiv`: `HessU … $ k $ l = frechet_derivative (λω. gradU … $ k) (at ω)
+  (axis l 1)` — the Hessian is the gradient field's Jacobian, and `$h k` is bounded-linear so it
+  commutes with `has_derivative` (`bounded_linear.has_derivative[OF bounded_linear_vec_nth
+  gradU_dip_has_derivative]`); then `frechet_derivative_at'` + the matrix-vector component picks the
+  `(k,l)` entry. (User fixed the `frechet_derivative_at'` orientation here.)
+- `HessU_dip_entry_moments`: the `(k,l)` entry equals the explicit 5-term moment expression. Proved
+  as three legible steps — (1) `HessU_dip_eq_componentderiv`; (2) `frechet_derivative_at'[OF
+  has_derivative_gradU_dip_component]` names the total derivative as the `(λh. …)` moment map proved
+  earlier; (3) `by (rule refl)` β-reduces the map at `e_l = axis l 1`, which is syntactically the
+  claimed expression. (Earlier terse `simp`/`apply` attempts failed: the conditional
+  `frechet_derivative_at` couldn't discharge its has_derivative premise inside `simp`; the fix is to
+  pre-instantiate with `[OF …]` and `unfold`.)
+
+Five-term anatomy (the genuine 2nd-order content): curvature `∇_c²V` pulled back through the chart
+Jacobian twice (`Hcmat` term); chart bending `D²cvec_dip`; two gain×`∇_cV` cross terms; gain's
+`∂²` times `V=|A|²`. Next brick: `det HessU_dip = poly(M_paper)` (Φ₃ via the bridge).
+
+---
+
 ## 2026-06-01 (robust set) — Weierstrass continuity inputs for the capstone (actual dipole)
 
 Toward discharging `regular_feasible_witness` *with the actual function* `cvec_dip`/`gain_dip`
