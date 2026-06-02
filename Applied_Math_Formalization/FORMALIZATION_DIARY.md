@@ -8,6 +8,33 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — Leaf-closing loop with self-audit; deep frontier reached
+
+Discipline this loop: \<^bold>never introduce a new `sorry`\<^esub>; every step is a net \<open>-1\<close> (full closure or a
+reduction to already-existing leaves). Audit of total on-path `sorry`s (Robust + engine core):
+\<open>17 \<rightarrow> 16\<close> (deleted dead generic `Phi_bad_meager`) \<open>\<rightarrow> 15\<close> (`meager_linear_homeo_iff`, with the
+proven helpers `nowhere_dense_homeo_image`/`meager_homeo_image`) \<open>\<rightarrow> 14\<close> (`Ffeas_interior_nonempty`
+via the existing `ball_inside_Ffeas`). Earlier this session: `sigma_min_pos_iff_invertible`,
+`regular_value_on_via_x_partial` (A1), `regular_value_on_gradU_dip` (A6 reduction).
+
+\<^bold>All bounded leaves are now closed.\<^esub> The remaining \<open>14\<close> are the deep mathematical cores:
+- determinant payoff: `gradU_dip_x_partial_surj` (rank), `has_derivative_gradU_dip_x` (chain rule
+  through `M_paper`; needs the explicit moment-gradient map \<open>\<Phi>\<close>), `open_A_cart_nonzero` (rank LSC),
+  `gradU_dip_joint_C1` (no joint-smoothness infra exists — `U_dip_higher_differentiable_on` is in \<open>\<omega>\<close>
+  only);
+- moment submersion at the steered wavevector: `DM_paper_x_regular_point_exists`,
+  `DM_paper_x_open_dense_surjective_gen` (the `m_star` machinery is `c0_paper`-only);
+- strata meagerness (need the engine): `meager_{bad_regular,rank_deficient,steering_singular,Azero}_stratum`;
+- engine core `regular_zero_set_projection_charts_core_2d`;
+- `steering_singular_nowhere_dense` (analytic zero set), `no_degenerate_to_sphere_annulus` (annulus
+  half now trivial via `sigma_min_pos_iff_invertible`; sphere half needs IFT isolation),
+  `parametric_transversality_meager_planar_config` (reshape \<open>(\<real>\<^sup>2)^'n \<cong> \<real>\<^sup>m\<close>, type-cardinality matching).
+
+\<^bold>Traps logged\<^esub>: `auto simp: homeomorphism_def` hangs (use projection lemmas `homeomorphism_cont1`/
+`apply1`/`apply2`); pin `obtain E :: "nat \<Rightarrow> _ set"` when destructuring `meager_def`.
+
+---
+
 ## 2026-06-02 (robust set) — Closing leaf lemmas: spectral, A1, A6
 
 Began discharging the leaf `sorry`s (deepest-first where tractable). Closed this session:
