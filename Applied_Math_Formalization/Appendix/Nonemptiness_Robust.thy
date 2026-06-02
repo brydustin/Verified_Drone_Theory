@@ -665,6 +665,22 @@ proof -
   thus ?thesis by (simp add: differentiable_on_def)
 qed
 
+text \<open>\<^bold>\<open>The gain is \<open>C\<^sup>2\<close>: its first-derivative field is again differentiable.\<close>  \<open>gdip\<close> is
+  \<open>C\<^sup>\<infinity>\<close>, so \<open>\<partial>gdip\<close> (\<open>\<lambda>t. frechet_derivative gdip (at t) v\<close>) is differentiable --- the
+  second-derivative input the Hessian bridge needs for the \<open>gain\<close> factor.\<close>
+
+lemma gdip_deriv_differentiable:
+  fixes t :: real
+  shows "(\<lambda>t. frechet_derivative gdip (at t) v) differentiable (at t)"
+proof -
+  have "higher_differentiable_on UNIV (\<lambda>y. frechet_derivative gdip (at y) v) 1"
+    using gdip_higher_differentiable_on[of "Suc 1"]
+    by (simp add: higher_differentiable_on.simps(2))
+  hence "(\<lambda>y. frechet_derivative gdip (at y) v) differentiable_on UNIV"
+    by (rule higher_differentiable_on_imp_differentiable_on) simp
+  thus ?thesis by (simp add: differentiable_on_def)
+qed
+
 text \<open>\<^bold>\<open>Step 2: the concrete steered wavevector \<open>cvec\<^sub>0\<close> is \<open>C\<^sup>\<infinity>\<close>.\<close>  \<open>kx,ky,kz\<close> are \<open>sin/cos\<close>
   of the angle components (smooth); the beam-lift coefficients \<open>(k\<bullet>\<omega>\<^sub>0 - k\<bullet>\<omega>\<^sub>s)/(kz \<omega>\<^sub>s - kz \<omega>\<^sub>0)\<close>
   are \<^emph>\<open>constants\<close> in \<open>\<omega>\<close> (finite by the secant hypothesis), so the planar steered wavevector
