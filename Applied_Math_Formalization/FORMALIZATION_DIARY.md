@@ -8,6 +8,33 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — Sard step begun: configuration-space smoothness bricks
+
+User chose (a) a dipole-specific `Phi_bad_meager_dip` obligation and (b) building the Sard step
+(`prop:dimZ`) incrementally as verified bricks. Key framing insight: the 2d chart-projection engine
+(`regular_zero_set_projection_charts_*`, `meager_critical_values_from_charts` in
+`Parametric_Transversality_Euclidean_Base`) takes `G : (ℝ^m × ℝ²) → ℝ²` and its bad set is exactly
+`{x: ∃ω. G(x,ω)=0 ∧ D_ω G not surjective}`.  Set **G = gradU_dip** (the ω-gradient, ℝ²-valued):
+`G=0` ⟺ ω critical, `D_ω G = HessU` not surjective ⟺ `det HessU = 0`.  So `Phibad_dip = 0` IS the
+critical-projection set of `gradU_dip` — Φ₃ needs no separate equation.
+
+Sard brick (1) landed, sorry-free: `gradU_dip_component_differentiable_x` — for fixed ω, the j-th
+gradient component is differentiable in x.  Proof: rewrite via `gradU_dip_component_moments` to a
+fixed polynomial in the x-smooth moment coordinates `M_paper y (cvec_dip ω)` (`has_derivative_M_paper_x`
++ `bounded_linear_vec_nth`), `cmod² = Re²+Im²` (`cmod_power2`), then `differentiable_*` intro chain with
+`differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_{Re,Im,cnj}]]`.  No
+ω-smoothness of cvec/gain assumed (the ω-jets enter as constants).
+
+Remaining for `Phi_bad_meager_dip`: (1b) same smoothness for V, ∇_cV (then HessU entries / vector
+form); (2) `regular_value_on gradU_dip 0` on the open `{A≠0}` region — D_x gradU = (2×6 moment Jac)·
+`DM_paper_x`, surjective since any 6 rows of the rank-12 `bigJ` are independent ⟹ D_x(A,M₁,M₂) onto ℝ⁶,
+and the 2×6 block has rank 2 when the steering Jacobian `Dcvec_dip` is nonsingular (A≠0 needed — at A=0
+every config is critical, which is why the bad set carries `A≠0`); (3) the general engine
+`regular_zero_set_projection_charts_core_2d` is itself still `sorry`, so a fully sorry-free
+`Phi_bad_meager_dip` also needs that infrastructure discharged.
+
+---
+
 ## 2026-06-02 (robust set) — Hessian entry in moment-space form (ω–c bridge, 2nd order, complete)
 
 Closed the second-order half of the ω–c bridge: the actual dipole Hessian `HessU (cvec_dip ω0 ωs)

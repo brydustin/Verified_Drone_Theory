@@ -2680,6 +2680,49 @@ proof -
               d)
 qed
 
+text \<open>\<^bold>\<open>Companion smoothness bricks for the \<open>c\<close>-pattern.\<close>  The same argument shows the gain\<open>\<equiv>1\<close>
+  pattern value \<open>V = U_cart (\<lambda>c. c) (\<lambda>_. 1) \<bm>x c\<close> and its \<open>c\<close>-gradient component are differentiable
+  in the configuration \<open>\<bm>x\<close> (at a \<^emph>\<open>fixed\<close> wavevector \<open>c\<close>) --- the building blocks for the
+  \<open>\<bm>x\<close>-smoothness of the Hessian entries.\<close>
+
+lemma Uc_differentiable_x:
+  fixes x :: "(real^2)^'n" and V :: "((real^2)^'n) set" and c :: "real^2"
+  shows "(\<lambda>y. U_cart (\<lambda>c. c) (\<lambda>_. 1) y c) differentiable (at x within V)"
+proof -
+  have d: "(\<lambda>y. M_paper y c $ k) differentiable (at x within V)" for k :: 6
+    by (rule differentiableI[OF
+          bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_M_paper_x]])
+  have eq: "(\<lambda>y. U_cart (\<lambda>c. c) (\<lambda>_. 1) y c)
+          = (\<lambda>y. (Re (M_paper y c $ 1))\<^sup>2 + (Im (M_paper y c $ 1))\<^sup>2)"
+    by (rule ext) (simp add: Uc_eq_moment cmod_power2)
+  show ?thesis
+    unfolding eq
+    by (intro differentiable_add differentiable_power
+              differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_Re]]
+              differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_Im]]
+              d)
+qed
+
+lemma gradUc_component_differentiable_x:
+  fixes x :: "(real^2)^'n" and V :: "((real^2)^'n) set" and c :: "real^2"
+  shows "(\<lambda>y. gradU (\<lambda>c. c) (\<lambda>_. 1) y c $ j) differentiable (at x within V)"
+proof -
+  have d: "(\<lambda>y. M_paper y c $ k) differentiable (at x within V)" for k :: 6
+    by (rule differentiableI[OF
+          bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_M_paper_x]])
+  have eq: "(\<lambda>y. gradU (\<lambda>c. c) (\<lambda>_. 1) y c $ j)
+          = (\<lambda>y. 2 * Re (cnj (M_paper y c $ 1)
+               * ((- \<i>) * complex_of_real ((axis j 1)$1) * (M_paper y c $ 2)
+                + (- \<i>) * complex_of_real ((axis j 1)$2) * (M_paper y c $ 3))))"
+    by (rule ext) (simp add: gradUc_component_moments)
+  show ?thesis
+    unfolding eq
+    by (intro differentiable_mult differentiable_const differentiable_add
+              differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_Re]]
+              differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_cnj]]
+              d)
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
