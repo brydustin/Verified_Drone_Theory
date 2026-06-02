@@ -3151,11 +3151,84 @@ text \<open>\<^bold>\<open>(B1) Meagerness transfers across a linear homeomorphi
   for moving between the dipole configuration space \<open>(\<real>\<^sup>2)^'n\<close> and the flat \<open>\<real>\<^sup>m\<close> the
   Euclidean transversality stub is typed for.\<close>
 
+lemma nowhere_dense_homeo_image:
+  fixes h :: "'a::topological_space \<Rightarrow> 'b::topological_space"
+  assumes H: "homeomorphism UNIV UNIV h k" and nd: "nowhere_dense E"
+  shows "nowhere_dense (h ` E)"
+proof -
+  have ch: "continuous_on UNIV h" by (rule homeomorphism_cont1[OF H])
+  have hk: "\<And>x. h (k x) = x" by (rule homeomorphism_apply2[OF H UNIV_I])
+  have kh: "\<And>x. k (h x) = x" by (rule homeomorphism_apply1[OF H UNIV_I])
+  have sub1: "h ` closure E \<subseteq> closure (h ` E)"
+    by (rule image_closure_subset[OF _ closed_closure closure_subset])
+       (rule continuous_on_subset[OF ch subset_UNIV])
+  have clc: "closed (h ` closure E)"
+  proof -
+    have "closedin (top_of_set UNIV) (h ` closure E)"
+      by (rule homeomorphism_imp_closed_map[OF H])
+         (simp add: closed_closedin[symmetric])
+    thus ?thesis
+      using closedin_closed_trans by blast
+  qed
+  have sub2: "closure (h ` E) \<subseteq> h ` closure E"
+    by (rule closure_minimal[OF image_mono[OF closure_subset] clc])
+  have cleq: "closure (h ` E) = h ` closure E" using sub1 sub2 by blast
+  have intsub: "interior (h ` closure E) \<subseteq> h ` interior (closure E)"
+  proof (rule subsetI)
+    fix y assume y: "y \<in> interior (h ` closure E)"
+    have oin: "openin (top_of_set UNIV) (interior (h ` closure E))"
+      by simp
+    have "openin (top_of_set UNIV) (k ` interior (h ` closure E))"
+      by (meson H homeomorphism_imp_open_map homeomorphism_sym oin)
+    hence kopen: "open (k ` interior (h ` closure E))"
+      by simp
+    have ksub: "k ` interior (h ` closure E) \<subseteq> closure E"
+    proof -
+      have "k ` interior (h ` closure E) \<subseteq> k ` (h ` closure E)"
+        by (rule image_mono[OF interior_subset])
+      also have "k ` (h ` closure E) = closure E" by (simp add: image_image kh)
+      finally show ?thesis .
+    qed
+    have "k ` interior (h ` closure E) \<subseteq> interior (closure E)"
+      by (rule interior_maximal[OF ksub kopen])
+    hence "k y \<in> interior (closure E)" using y by auto
+    hence "h (k y) \<in> h ` interior (closure E)" by (rule imageI)
+    thus "y \<in> h ` interior (closure E)" by (simp add: hk)
+  qed
+  have "interior (h ` closure E) = {}"
+    using intsub nd by (simp add: nowhere_dense_def)
+  thus ?thesis using cleq by (simp add: nowhere_dense_def)
+qed
+
+lemma meager_homeo_image:
+  fixes h :: "'a::topological_space \<Rightarrow> 'b::topological_space"
+  assumes H: "homeomorphism UNIV UNIV h k" and mA: "meager A"
+  shows "meager (h ` A)"
+proof -
+  from mA obtain E :: "nat \<Rightarrow> 'a set"
+    where cov: "A \<subseteq> (\<Union>n. E n)" and nd: "\<forall>n. nowhere_dense (E n)"
+    unfolding meager_def by blast
+  have "h ` A \<subseteq> (\<Union>n. h ` E n)" using cov by force
+  moreover have "\<forall>n. nowhere_dense (h ` E n)"
+    using nd nowhere_dense_homeo_image[OF H] by blast
+  ultimately show ?thesis unfolding meager_def by blast
+qed
+
 lemma meager_linear_homeo_iff:
   fixes f :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_vector"
-  assumes "linear f" and "homeomorphism UNIV UNIV f g"
+  assumes "linear f" and homeo: "homeomorphism UNIV UNIV f g"
   shows "meager (f ` S) \<longleftrightarrow> meager S"
-  sorry
+proof
+  assume "meager S"
+  thus "meager (f ` S)" by (rule meager_homeo_image[OF homeo])
+next
+  assume "meager (f ` S)"
+  hence "meager (g ` (f ` S))"
+    using assms(2) homeomorphism_symD meager_homeo_image by blast
+  moreover have "g ` (f ` S) = S"
+    using homeomorphism_apply1[OF homeo UNIV_I] by (simp add: image_image)
+  ultimately show "meager S" by simp
+qed
 
 text \<open>\<^bold>\<open>(B2) The transversality engine in our ACTUAL configuration type --- with the \<open>C\<^sup>1\<close>
   hypothesis made explicit.\<close>  This is the Euclidean transversality result restated with the
@@ -3323,7 +3396,8 @@ proof -
     have g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
       and d0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" by blast+
     show "x \<in> ?reg \<union> ?def \<union> ?steer \<union> ?null"
-      using xV g0 d0 by blast
+      using xV g0 d0
+      by fastforce 
   qed
   show ?thesis by (rule meager_subset[OF sub meag4])
 qed
