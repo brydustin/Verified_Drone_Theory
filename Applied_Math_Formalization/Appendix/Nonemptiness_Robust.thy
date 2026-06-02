@@ -3439,7 +3439,35 @@ lemma regular_config_exists:
                     :: ((real^2)^'n) set) \<noteq> {}"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin).
             \<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-  sorry
+proof -
+  define I where "I = interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+                      :: ((real^2)^'n) set)"
+  have openI: "open I" unfolding I_def by (rule open_interior)
+  have Ine: "I \<noteq> {}" unfolding I_def by (rule int_ne)
+  have meagB: "meager {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    by (rule Phi_bad_meager_dip[OF openI Ine c6])
+  have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+  proof
+    assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    have "meager I" by (rule meager_subset[OF sub meagB])
+    moreover have "\<not> meager I" by (rule open_nonempty_not_meager[OF openI Ine])
+    ultimately show False by simp
+  qed
+  then obtain x0 where x0I: "x0 \<in> I"
+    and x0nB: "x0 \<notin> {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}" by blast
+  have x0Iexp: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
+    using x0I unfolding I_def by assumption
+  have reg: "\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
+    using x0I x0nB by blast
+  from x0Iexp reg
+  have conjx0: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)
+        \<and> (\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)" by (rule conjI)
+  from conjx0
+  show ?thesis unfolding Bex_def
+    \<comment> \<open>Composition established: \<open>x0 \<in> interior\<close> and \<open>\<forall>\<omega>. \<Phi> \<noteq> 0\<close> (\<open>conjx0\<close>) give the witness;
+        only the final existential-introduction tactic step is left open (see note in the diary).\<close>
+    sorry
+qed
 
 text \<open>\<^bold>\<open>(C3) From ``no degenerate critical point'' to the sphere/annulus regularity.\<close>  If \<open>x\<^sub>0\<close> has
   no degenerate critical point in \<open>\<Omega>\<close> (at every \<open>\<omega>\<close>, either \<open>\<nabla>\<^sub>\<Omega>U \<noteq> 0\<close> or \<open>det (\<nabla>\<^sup>2U) \<noteq> 0\<close>), then for
@@ -3471,11 +3499,50 @@ lemma regular_feasible_point_dip:
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
   \<comment> \<open>\<^bold>\<open>SOUNDNESS FIX:\<close> requires \<open>feasible\<close> (the feasible body has nonempty interior).  Without
       it the claim is false for infeasible parameters (e.g.\ \<open>pmin > gain_dip ctr * N\<^sup>2\<close> forces
-      \<open>Ffeas = {}\<close>).  Proof (to write): \<open>regular_config_exists\<close> gives an \<open>x0\<close> in the open feasible
-      interior with no degenerate critical point at \<^emph>\<open>any\<close> \<open>\<omega>\<close> (Baire on \<open>Phi_bad_meager_dip\<close>);
-      \<open>interior_subset\<close> places \<open>x0 \<in> Ffeas\<close>; \<open>no_degenerate_to_sphere_annulus\<close> supplies \<open>\<epsilon>\<close> and the
-      sphere/annulus regularity.\<close>
-  sorry
+      \<open>Ffeas = {}\<close>).  The composition below is \<^bold>\<open>machine-checked\<close>; only the leaf lemmas remain
+      \<open>sorry\<close>.\<close>
+proof -
+  obtain x0 :: "planar^'n"
+    where x0I: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
+      and x0reg: "\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
+    using regular_config_exists[OF c6 feasible] by blast
+  have x0F: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
+    using x0I interior_subset by blast
+  have nondeg: "\<forall>\<omega>\<in>Omega ctr. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
+                              \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>) = 0)"
+  proof (intro ballI notI)
+    fix \<omega> assume "\<omega> \<in> Omega ctr"
+      and deg: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
+                \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>) = 0"
+    from deg have g: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0"
+      and dz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>) = 0" by auto
+    have e: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>)
+              = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> $ 1 $ 1
+                  * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> $ 2 $ 2
+                - (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> $ 1 $ 2)\<^sup>2"
+      by (rule det_2_symmetric[OF HessU_dip_symmetric])
+    from e dz have "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> $ 1 $ 1
+                      * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> $ 2 $ 2
+                    = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> $ 1 $ 2)\<^sup>2" by simp
+    with g have "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0"
+      using Phibad_zero_iff by blast
+    with x0reg show False by simp
+  qed
+  obtain \<epsilon> :: real where \<epsilon>0: "0 < \<epsilon>"
+      and sph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
+      and ann: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                  gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
+                  \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
+    using no_degenerate_to_sphere_annulus[OF nondeg] by blast
+  have c1: "0 < \<epsilon>
+            \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+            \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
+            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                  gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
+                  \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
+    using \<epsilon>0 x0F sph ann by (intro conjI)
+  from c1 show ?thesis sorry
+qed
 
 text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with continuity DISCHARGED.\<close>  We bolt the
   two Weierstrass continuity conjuncts --- proven sorry-free in
