@@ -8,6 +8,37 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — Soundness audit + the entire Baire/meager GLUE now machine-verified
+
+Audited the dipole capstone chain for soundness and made it compose. Three statement-level bugs fixed,
+then the reduction glue was proven (only leaf lemmas remain `sorry`).
+
+\<^bold>Statement-soundness fixes:\<^esub>
+- \<^bold>Feasibility:\<^esub> `F0_dip_nonempty` was \<^emph>false as stated\<^esub> (for `pmin > gain_dip ctr * N²`,
+  `Ffeas = {}`). Added explicit `interior (Ffeas …) ≠ {}` hypothesis, threaded through
+  `regular_feasible_witness_dip` and `regular_feasible_point_dip`.
+- \<^bold>A=0 stratum:\<^esub> array nulls are critical points, so `Phi_bad_meager_dip` is now the FULL bad set
+  `{∃ω. Φ=0}` with a 4th stratum `meager_Azero_degenerate_stratum`; `regular_config_exists` now
+  concludes "no degenerate critical at ANY ω".
+- \<^bold>surj(DM) in A6, C¹ in the engine lemma.\<^esub>
+
+\<^bold>The decoupled-type-variable bug (the witness-intro mystery):\<^esub> every witness tactic
+(`rule exI`, `rule_tac x=x0 in exI`, `metis`, `bexI[where x=x0]`, even fully-explicit
+`exI[where P=… and x=x0]`) \<^emph>failed to apply\<^esub> to `regular_config_exists`'s `∃x0∈interior(…). …`.
+`declare [[show_types]]` revealed why: the witness `x0 :: …^'n` (lemma's var) but the goal's bound
+`∃x0 :: …^'a` (a \<^emph>fresh\<^esub> var) — Ffeas/Phibad are dimension-polymorphic and nothing in the `shows`
+tied them to `'n`. Fix: annotate the conclusion `interior (Ffeas … :: ((real^2)^'n) set)`.
+
+\<^bold>Result:\<^esub> `regular_config_exists`, `regular_feasible_point_dip`, and `Phi_bad_meager_dip` are now
+\<^bold>fully proven\<^esub>. The whole reduction glue
+`F0_dip_nonempty ← regular_feasible_witness_dip ← regular_feasible_point_dip ←
+{regular_config_exists, no_degenerate_to_sphere_annulus} ← Phi_bad_meager_dip ← 4 strata`
+is machine-verified (BUILD_EXIT=0). Only the LEAF lemmas remain `sorry` (the deep ones:
+`gradU_dip_x_partial_surj`, the 4 strata, the two `DM_paper_x_…_gen` submersion lemmas, the engine
+core; plus moderate ones). The generic `Phi_bad_meager` is unprovable/superseded and off-path.
+
+---
+
 ## 2026-06-02 (robust set) — DEFINITIVE remaining-obligation list; A6 corrected; 3-stratum scaffold
 
 Traced the full proof tree of `F0_dip_nonempty` to bedrock. Corrected an earlier under-count:
