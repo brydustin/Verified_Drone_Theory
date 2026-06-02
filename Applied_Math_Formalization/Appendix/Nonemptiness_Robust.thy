@@ -2776,6 +2776,27 @@ lemma det_2_symmetric:
   shows "det A = A $ 1 $ 1 * A $ 2 $ 2 - (A $ 1 $ 2)\<^sup>2"
   using assms by (simp add: det_2 power2_eq_square)
 
+text \<open>\<^bold>\<open>A surjective \<open>\<bm>x\<close>-partial forces a surjective joint derivative.\<close>  For the regular-value
+  input the engine wants the \<^emph>\<open>joint\<close> \<open>(\<bm>x,\<omega>)\<close>-derivative of \<open>G = \<nabla>\<^sub>\<Omega>U\<close> to be onto \<open>\<real>\<^sup>2\<close>.
+  But the joint derivative \<open>D\<close> restricts to the configuration partial along \<open>(h,0)\<close>, so if the
+  \<^emph>\<open>configuration\<close> derivative alone is already onto (the determinant/\<open>lem:Msurj\<close> payoff: \<open>D\<^sub>\<bm>x\<M>\<close>
+  rank \<open>12\<close> \<open>\<Longrightarrow>\<close> \<open>D\<^sub>\<bm>x\<nabla>U\<close> onto when \<open>A \<noteq> 0\<close>), the whole derivative is onto regardless of the
+  \<open>\<omega>\<close>-block.  This is the linear-algebra hinge of the submersion step.\<close>
+
+lemma surj_partial_imp_surj_joint:
+  fixes Dj :: "('a::real_normed_vector \<times> 'b::real_normed_vector) \<Rightarrow> 'c::real_normed_vector"
+  assumes s: "surj Dx" and rel: "\<And>h. Dj (h, 0) = Dx h"
+  shows "surj Dj"
+proof -
+  have "y \<in> range Dj" for y
+  proof -
+    from s obtain h where "Dx h = y" by (metis surjD)
+    hence "Dj (h, 0) = y" using rel by simp
+    thus ?thesis by (metis rangeI)
+  qed
+  thus ?thesis by auto
+qed
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
