@@ -2825,6 +2825,52 @@ proof -
   show ?thesis using L G by (auto simp: algebra_simps)
 qed
 
+text \<open>\<^bold>\<open>The chart engine's non-surjectivity test \<open>=\<close> Hessian degeneracy, for the dipole.\<close>
+  The transversality engine flags \<open>(\<bm>x,\<omega>)\<close> as critical exactly when the \<open>\<omega>\<close>-derivative of
+  \<open>G = \<nabla>\<^sub>\<Omega>U\<close> has no surjective branch.  For the \<open>C\<^sup>2\<close> dipole that derivative is unique and
+  equals the Hessian action \<open>(*v) (\<nabla>\<^sup>2U)\<close> (@{thm gradU_dip_has_derivative}); by @{thm
+  surj_matrix_vector_iff_det} it is onto iff \<open>det (\<nabla>\<^sup>2U) \<noteq> 0\<close>.  Hence the engine's
+  non-surjectivity predicate is \<^emph>\<open>literally\<close> \<open>det (\<nabla>\<^sup>2U) = 0\<close> --- the degeneracy condition that
+  enters \<open>\<Phi>\<close>'s third slot.  We phrase it with \<open>at \<omega> within \<Omega>\<close> (\<open>\<omega>\<close> interior to the open
+  \<open>\<Omega>\<close>) so it plugs straight into the engine's bad-set description.\<close>
+
+lemma not_surj_omega_deriv_iff_detHess_dip:
+  fixes x :: "(real^2)^'n"
+  assumes O: "open \<Omega>" and w: "\<omega> \<in> \<Omega>"
+  shows "(\<not> (\<exists>D\<omega>. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D\<omega>)
+                  (at \<omega> within \<Omega>) \<and> surj D\<omega>))
+         \<longleftrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+proof -
+  have atw: "at \<omega> within \<Omega> = at \<omega>" by (rule at_within_open[OF w O])
+  have hd: "((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative
+              (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v v)) (at \<omega>)"
+    by (rule gradU_dip_has_derivative)
+  show ?thesis unfolding atw
+  proof
+    assume "\<not> (\<exists>D\<omega>. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D\<omega>)
+                    (at \<omega>) \<and> surj D\<omega>)"
+    hence "\<not> surj ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+      using hd by blast
+    thus "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+      using surj_matrix_vector_iff_det by blast
+  next
+    assume d0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+    show "\<not> (\<exists>D\<omega>. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D\<omega>)
+                  (at \<omega>) \<and> surj D\<omega>)"
+    proof
+      assume "\<exists>D\<omega>. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D\<omega>)
+                   (at \<omega>) \<and> surj D\<omega>"
+      then obtain D\<omega>
+        where hD: "((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D\<omega>)
+                     (at \<omega>)" and sD: "surj D\<omega>" by blast
+      have "D\<omega> = (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v v)"
+        by (rule has_derivative_unique[OF hD hd])
+      with sD have "surj ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))" by simp
+      with d0 surj_matrix_vector_iff_det show False by blast
+    qed
+  qed
+qed
+
 text \<open>\<^bold>\<open>OBLIGATION (the determinant's payoff).\<close>  The set of feasible configurations carrying
   a degenerate critical point with \<open>A \<noteq> 0\<close> is meager.  This is \<open>prop:dimZ\<close>(1): \<open>lem:Msurj\<close>
   (the \<open>12\<times>12\<close> \<open>bigJ_det \<noteq> 0\<close>) \<open>\<Longrightarrow>\<close> \<open>Z\<^sub>reg\<close> is codim-3 \<open>\<Longrightarrow>\<close> its projection is meager.  This is the
