@@ -2913,12 +2913,56 @@ text \<open>\<^bold>\<open>(A6) Assembled regular value of the dipole gradient f
 
 lemma regular_value_on_gradU_dip:
   fixes V :: "((real^2)^'n) set"
-  assumes "open V" and "6 \<le> CARD('n)"
+  assumes openV: "open V" and c6: "6 \<le> CARD('n)"
   shows "regular_value_on (\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
             ({p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                              \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
                              \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}) 0"
-  sorry
+proof (rule regular_value_on_via_x_partial)
+  have eq: "{p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+                            \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
+                            \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}
+          = (V \<times> UNIV) \<inter> {p::((real^2)^'n) \<times> (real^2).
+                 A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+               \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
+               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+    by auto
+  show "open {p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+                            \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
+                            \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+    unfolding eq
+    by (intro open_Int open_Times open_A_cart_nonzero openV open_UNIV)
+next
+  fix x w
+  assume mem: "(x, w) \<in> {p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
+                            \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
+                            \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+    and G0: "(\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p)) (x, w) = 0"
+  from mem have Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x w \<noteq> 0"
+    and DMs: "surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s w))"
+    and dets: "det (matrix (Dcvec_dip \<omega>0 \<omega>s w)) \<noteq> 0" by auto
+  obtain Dx where dx: "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y w) has_derivative Dx) (at x)"
+      and sx: "surj Dx"
+    using gradU_dip_x_partial_surj[OF Anz DMs dets] by blast
+  obtain G' :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+    where derG: "\<And>z. ((\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
+                       has_derivative blinfun_apply (G' z)) (at z)"
+    using gradU_dip_joint_C1 by blast
+  show "\<exists>Dj Dx. ((\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p)) has_derivative Dj) (at (x, w))
+              \<and> ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst (y, w)) (snd (y, w))) has_derivative Dx) (at x)
+              \<and> surj Dx"
+  proof (intro exI conjI)
+    show "((\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
+             has_derivative blinfun_apply (G' (x, w))) (at (x, w))"
+      by (rule derG)
+  next
+    show "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst (y, w)) (snd (y, w)))
+             has_derivative Dx) (at x)"
+      using dx by simp
+  next
+    show "surj Dx" by (rule sx)
+  qed
+qed
 
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
