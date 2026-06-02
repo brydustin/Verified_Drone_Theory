@@ -3437,7 +3437,8 @@ lemma regular_config_exists:
   assumes c6: "6 \<le> CARD('n)"
     and int_ne: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
-  shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin).
+  shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+                          :: ((real^2)^'n) set).
             \<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
 proof -
   define I where "I = interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
@@ -3467,7 +3468,13 @@ proof -
       witness \<open>x0\<close> is left open --- a witness-instantiation tactic step (\<open>bexI\<close>/\<open>rule_tac x=x0\<close>)
       that needs live goal/type inspection to dispatch against the large \<open>interior (Ffeas \<dots>)\<close>
       term; it is mathematically immediate from \<open>x0Iexp\<close> and \<open>reg\<close>.\<close>
-  show ?thesis using x0Iexp reg sorry
+  show ?thesis
+  proof (rule bexI[where x = x0])
+    show "\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0" by (rule reg)
+  next
+    show "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
+      by (rule x0Iexp)
+  qed
 qed
 
 text \<open>\<^bold>\<open>(C3) From ``no degenerate critical point'' to the sphere/annulus regularity.\<close>  If \<open>x\<^sub>0\<close> has
@@ -3542,10 +3549,16 @@ proof -
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
     using \<epsilon>0 x0F sph ann by (intro conjI)
-  \<comment> \<open>Composition fully established: \<open>c1\<close> is the conjunction at the witnesses \<open>(x0, \<epsilon>)\<close>.  Only the
-      final \<^emph>\<open>nested existential introduction\<close> \<open>\<exists>x0 \<epsilon>. \<dots>\<close> remains --- the same witness-instantiation
-      tactic step as in \<open>regular_config_exists\<close>.\<close>
-  show ?thesis using c1 sorry
+  show ?thesis
+  proof (rule exI[where x = x0], rule exI[where x = \<epsilon>])
+    show "0 < \<epsilon>
+          \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+          \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
+          \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+                gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
+                \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
+      by (rule c1)
+  qed
 qed
 
 text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with continuity DISCHARGED.\<close>  We bolt the
