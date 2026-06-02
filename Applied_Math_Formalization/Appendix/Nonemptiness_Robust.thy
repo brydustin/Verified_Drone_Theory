@@ -2593,6 +2593,28 @@ proof -
     unfolding step1 step2 by (rule refl)
 qed
 
+text \<open>\<^bold>\<open>The dipole gradient components \<open>\<Phi>\<^sub>1, \<Phi>\<^sub>2\<close> in moment-space form.\<close>  Specialising
+  @{thm gradU_component_via_M_paper} to the \<^emph>\<open>actual\<close> dipole steering/gain
+  (\<open>cvec_dip\<close>/\<open>gain_dip\<close>, with their proven derivatives \<open>Dcvec_dip\<close>/\<open>\<partial>gdip\<close>):
+  the \<open>j\<close>-th angular partial of \<open>U_dip\<close> depends on \<open>(\<bm>x,\<omega>)\<close> only through the first
+  three moment coordinates \<open>A, M\<^sub>1, M\<^sub>2\<close> of \<open>M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)\<close>, with the
+  steering/gain jets \<open>Dcvec_dip\<close>, \<open>gain_dip\<close>, \<open>\<partial>gdip\<close> as \<open>\<bm>x\<close>-independent coefficients.
+  Together with @{thm HessU_dip_entry_moments} this puts \<^emph>\<open>all three\<close> components of
+  \<open>Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip\<close> into moment-space form --- the \<open>\<Phi> = F \<circ> \<M>\<close> factorisation
+  for the genuine dipole.\<close>
+
+lemma gradU_dip_component_moments:
+  fixes x :: "(real^2)^'n"
+  shows "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ j
+         = frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)
+             * (cmod (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1))\<^sup>2
+           + gain_dip \<omega> * (2 * Re (cnj (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1)
+                * ((- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1)
+                     * (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 2)
+                 + (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2)
+                     * (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 3))))"
+  by (rule gradU_component_via_M_paper[OF has_derivative_cvec_dip gain_dip_has_derivative])
+
 
 subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart\<close> (the determinant's payoff, \<^emph>\<open>upstream\<close> of the capstone)\<close>
 
