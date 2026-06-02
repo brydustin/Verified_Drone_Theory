@@ -163,6 +163,28 @@ NEXT: `det Hcmat` as the explicit `Φ₃` moment polynomial (trivial now), then 
 to the general `cvec_dip`/`gain_dip` HessU (chain rule, d²c/d²gain as x-constant coeffs), then
 `Φ = F∘M_paper` ⟹ `D_xΦ = D_M F · bigJ` ⟹ rank/`smooth_chart_meager` ⟹ `Phi_bad_meager`.
 
+## 2026-06-01 (prop:dimZ Step 2) — the ω–c bridge (first order + second-order ingredients)
+
+The actual angle-pattern `U(x,ω)` relates to the moment-space c-quantities via `U = gain·(V∘cvec)`,
+`V = U_cart (λc.c)(λ_.1) x = |A|²`. All sorry-free, committed:
+- `U_cart_factor`: `U_cart cvec gain x ω = gain ω * U_cart (λc.c)(λ_.1) x (cvec ω)`.
+- `has_derivative_Uc_c`: `V` has `gradU_c` as its genuine Fréchet gradient (via
+  `has_derivative_U_cart` at id/const + `grad_fun_satisfies_GRAD`).
+- `has_derivative_U_via_c` (first-order bridge): `D_ω U(v) = gain(ω)(Dcvec v · ∇_cV) + dgain(v) V`
+  (chain `diff_chain_at` on cvec + product `has_derivative_mult` on the factorization).
+- `gradU_via_c`: the actual ω-gradient field assembled: `∇_ω U = Σ_i [gain(ω)(Dcvec e_i·∇_cV) +
+  dgain(e_i) V] e_i` (via `has_derivative_to_gradient` + `grad_fun_eq`).
+- Second-order ingredients: `has_derivative_gradU_c_along_cvec` (`D_ω[∇_cV(cvec ω)] = Hcmat(cvec ω)·Dcvec`,
+  chain on `has_derivative_gradU_c`), `has_derivative_V_along_cvec` (`D_ω[V(cvec ω)] = Dcvec·∇_cV`).
+
+REMAINING (the final assembly of the Hessian bridge — the last big analytic piece): differentiate
+`gradU_via_c`'s RHS once more to get `HessU cvec gain x ω` as the moment-space matrix
+`HessU_ij = (∂_jg)(Dφᵀ∇_cV)_i + g[(D²φ·∇_cV)_ij + (Dφᵀ Hcmat Dφ)_ij] + (∇_cV·∂_jφ)(∂_ig) + V(∂_j∂_ig)`.
+Needs cvec,gain C² (for the dipole: `has_derivative_Dcvec_dip`/`D2cvec_dip`, `gain_dip` C²) so the
+jet `Dcvec`,`dgain` are themselves differentiable (→ `D²cvec`,`d²gain`). Then `det HessU = poly(M_paper)`
+⟹ `Φ = F∘M_paper` ⟹ `D_xΦ = D_M F·bigJ` ⟹ rank 3 (`lem:3x3`,`bigJ_surj`) ⟹
+`smooth_chart_meager` over an Ω-cover ⟹ `Phi_bad_meager`.
+
 (OLD note) REMAINING for Step 1 (the Hessian half): `Φ₃ = det∇²U = H₁₁H₂₂−H₁₂²` through `M_paper$4,5,6`
 (the second moments). Needs `HessU $ k $ l` as an explicit function of `A,Mmom,M2mom` and the
 **second** jet `d²gain`, `d²c (=E)` — obtained by differentiating the moment form of `gradU`
