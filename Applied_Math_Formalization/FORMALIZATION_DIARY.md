@@ -105,6 +105,32 @@ proven `bigJ`-surjectivity (`lem:Msurj`) act on Φ's derivative. Established (so
   M_paper's coords A,M₁,M₂** (plus the gain/steering jet `gain,dgain,dc` as parameters).
   From `gradU_component_via_moments` + `sum_2` + the projections.
 
+## 2026-06-01 (prop:dimZ Step 1, ω–c bridge) — moment-space c-derivatives built
+
+The ω–c bridge scaffold, sorry-free:
+- `Afun x c = ∑ cis(−c·xₙ)`, `Mcfun x c k`, `M2cfun x c k l` — the array factor and
+  moments as functions of the *wavevector* `c`; bridge identities `A_cart cvec x ω =
+  Afun x (cvec ω)`, `Mmom = Mcfun (cvec ω)`, `M2mom = M2cfun (cvec ω)`.
+- `has_derivative_cis_c` (per-term phase c-derivative), `has_derivative_Afun_c`
+  (`D_c A(h) = −i ∑(h·xₙ)cis`), `has_derivative_Mcfun_c` (`D_c M_k(h) = −i ∑(xₙ)_k(h·xₙ)cis`),
+  with partials `Afun_c_partial`/`Mcfun_c_partial`: j-th/l-th partial = `−i M_j` / `−i M2_{kl}`.
+  So the second moments enter by one more c-differentiation. No steering jet.
+
+GOTCHAS: (i) `term` is a reserved Isabelle command — can't be a fact label; use `tderiv`.
+(ii) `has_derivative_sum` needs explicit `rule` (not `auto intro:`) for the HO unification of
+the summand derivative. (iii) Standalone lemmas with free `x` hit the JNF-`vec_index`-vs-HMA-
+`vec_nth` `$` ambiguity → "Failed to parse prop"; pin with `fixes x :: "(real^2)^'n"` (defs
+like `Afun` already constrain it).
+
+KEY REALIZATION (the clean route to the Hessian): work in **c-coordinates** = the cvec=id,
+gain≡1 specialization. Then `gradU (λc. c) (λ_. 1) x` is the c-gradient of `|A|²`, and
+`gradU_component_real_moments` (with dc=id, dgain=0) already gives it as
+`2(Re A · Im M_j − Im A · Re M_j)`. Differentiating *that* in c (using the c-derivatives
+above, no jet) yields the c-Hessian as a clean moment polynomial `H_{kl} = 2(Re(cnj M_l·M_k)
+− Re(cnj A·M_{kl}))`. The general ω-Hessian then = chain/product rule through cvec,gain
+(bringing in d²c, d²gain as x-constant coefficients). NEXT BRICK: the c-Hessian of `|A|²`
+in moments (differentiate the c-gradient), then the bridge, then `det = poly(M_paper)`.
+
 REMAINING for Step 1 (the Hessian half): `Φ₃ = det∇²U = H₁₁H₂₂−H₁₂²` through `M_paper$4,5,6`
 (the second moments). Needs `HessU $ k $ l` as an explicit function of `A,Mmom,M2mom` and the
 **second** jet `d²gain`, `d²c (=E)` — obtained by differentiating the moment form of `gradU`
