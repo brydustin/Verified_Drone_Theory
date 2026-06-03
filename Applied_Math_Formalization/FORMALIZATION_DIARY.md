@@ -8,6 +8,16 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-03 — bricks 1+2a of leaf #7 done (`Dcvec_det_eq`, `sin_cos_lin_not_const0`)
+
+Brick 2a `sin_cos_lin_not_const0` PROVEN: `sin s·(cos s - sin s·M)` cannot vanish on any open
+interval (F=F'=F''=0 there via `has_field_derivative_transform_within_open` — note the set arg is
+named `S`, capital; then `X-MY=0 ∧ Y+MX=0 ⟹ X=Y=0` vs `X²+Y²=1`).  Leaf #7
+`steering_singular_nowhere_dense` is now ONE assembly step away (brick 2b): rewrite the set via
+`Dcvec_det_eq` to `{ω. f ω = 0}` (f continuous ⟹ closed); a ball in it restricts on the horizontal
+segment `ω₂=c₂` to `sin s·(cos s - sin s·g(c₂))≡0` on an interval, contradicting 2a.  Then #7 unlocks
+the wrapper #13 `meager_steering_singular_stratum`.
+
 ## 2026-06-03 — `Dcvec_det_eq` proven (brick 1 of leaf #7 `steering_singular_nowhere_dense`)
 
 Explicit steering determinant: `det(matrix(Dcvec_dip ω0 ωs ω)) = sin ω₁·(cos ω₁ - sin ω₁·(Kₓ cos ω₂ +
