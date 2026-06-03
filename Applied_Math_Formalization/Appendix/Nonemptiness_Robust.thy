@@ -2823,6 +2823,85 @@ proof -
     using gradU_component_via_M_paper[OF d1 d2] by simp
 qed
 
+text \<open>\<^bold>\<open>A5 brick 2c-i: the c-pattern joint terms are jointly continuous in \<open>(\<bm>x,\<omega>)\<close>.\<close>  The
+  \<open>\<bm>x\<close>-dependence of every \<open>HessU_dip_entry_moments\<close> term routes through the moment functions
+  \<open>Afun\<close>, \<open>Mcfun\<close>, \<open>M2cfun\<close> (\<open>= \<Sum>\<^sub>n w(\<bm>x\<^sub>n) e\<^bsup>-\<ii>c\<bullet>\<bm>x\<^sub>n\<^esup>\<close>, the brick-1 shape).  Their joint
+  continuity (in \<open>(\<bm>x,c)\<close>) composed with \<open>cvec_dip\<close> (brick 2a) gives joint continuity of the
+  curvature matrix \<open>Hcmat\<close>, the c-gradient \<open>\<nabla>\<^sub>cV\<close>, and the value \<open>V\<close>.\<close>
+
+lemma continuous_on_Afun_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. Afun (fst p) (snd p))"
+  unfolding Afun_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_Mcfun_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. Mcfun (fst p) (snd p) k)"
+  unfolding Mcfun_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_M2cfun_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. M2cfun (fst p) (snd p) k l)"
+  unfolding M2cfun_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_Afun_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. Afun (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  using continuous_on_compose2[OF continuous_on_Afun_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_Mcfun_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. Mcfun (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) k)"
+  using continuous_on_compose2[OF continuous_on_Mcfun_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_M2cfun_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. M2cfun (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) k l)"
+  using continuous_on_compose2[OF continuous_on_M2cfun_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_Hcmat_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. Hcmat (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  unfolding Hcmat_def
+  by (intro continuous_on_vec_lambda continuous_intros
+            continuous_on_Afun_cvec_dip continuous_on_Mcfun_cvec_dip
+            continuous_on_M2cfun_cvec_dip)
+
+lemma continuous_on_gradUc_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. gradU (\<lambda>c. c) (\<lambda>_. 1) (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+proof -
+  have "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+          (\<lambda>p. \<chi> j. gradU (\<lambda>c. c) (\<lambda>_. 1) (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) $ j)"
+  proof (intro continuous_on_vec_lambda)
+    fix j :: 2
+    show "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+            (\<lambda>p. gradU (\<lambda>c. c) (\<lambda>_. 1) (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) $ j)"
+      by (simp only: gradUc_component_moments M_paper_components,
+          intro continuous_intros continuous_on_A_moment_cvec_dip
+                continuous_on_M1_moment_cvec_dip continuous_on_M2_moment_cvec_dip)
+  qed
+  thus ?thesis by (simp add: vec_lambda_eta)
+qed
+
+lemma continuous_on_Uc_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+proof -
+  have *: "(\<lambda>p::(planar^'n) \<times> (real^2). U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
+         = (\<lambda>p. (cmod (A_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p))))\<^sup>2)"
+    by (rule ext) (simp add: Uc_eq_moment M_paper_components)
+  show ?thesis
+    unfolding *
+    by (intro continuous_intros continuous_on_A_moment_cvec_dip)
+qed
+
 text \<open>\<^bold>\<open>Sard brick (1): the dipole gradient field is \<open>C\<^sup>1\<close> in the configuration \<open>\<bm>x\<close>.\<close>  Fix the
   steering angle \<open>\<omega>\<close>.  Via @{thm gradU_dip_component_moments} the \<open>j\<close>-th gradient component is a
   fixed polynomial in the (\<open>\<bm>x\<close>-smooth) moment coordinates \<open>M_paper \<bm>x c\<close> (with \<open>c = cvec_dip \<omega>\<close>):
