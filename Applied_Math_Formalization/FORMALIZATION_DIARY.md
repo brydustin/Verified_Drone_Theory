@@ -21,9 +21,16 @@ stratum is needed\<^esub> (my earlier "soundness cascade" alarm was wrong).  Pro
 - (ii) `surj_moment_grad_map`: `(d\<^sub>2,d\<^sub>3) \<mapsto> (2g·Im(cnj a·(c\<^sub>j\<^sub>1 d\<^sub>2 + c\<^sub>j\<^sub>2 d\<^sub>3)))\<^sub>j` onto \<real>\<^sup>2 when `a≠0, g≠0,
   det C ≠ 0` — Cramer's rule + (i).  (Trap: `simp only` for the final assembly, else `Im_mult`
   expansion blocks `iw1/iw2`; `metis of_real_eq_0_iff` for `Dnz`.)
+- (ii.5) `Dcvec_det_zero_of_sin`: `sin(ω\<^sub>1)=0 \<Longrightarrow> det(matrix(Dcvec_dip …)) = 0` — Dcvec kills
+  `axis 2 1` (ω-column = 0), so non-injective, `det = 0` via `det_nz_iff_inj` on the
+  `has_derivative_cvec_dip` linearity.  With the gain bridge gives `steer \<Longrightarrow> gain_dip ω \<noteq> 0`.  DONE.
 - (iii) REMAINING (the bulk): the explicit `DΦ`-on-`(M\<^sub>2,M\<^sub>3)` derivative = the (ii) map, then
   `surj(F∘DM) \<longleftrightarrow> surj F` via `Msurj`, assembling `gradU_dip_x_partial_surj`.  Needs an explicit
-  has_derivative computation of the `E_j` moment expressions (product/Re/cnj rules).
+  has_derivative computation of the `E_j` moment expressions (product/Re/cnj rules).  The directional/
+  affine shortcut (`E_j(M0+s·δ) = E_j(M0) + s·m_j` for `δ\<^sub>1=0`, slope `m_j` = the (ii) map) is circular
+  via `has_derivative_gradU_dip_x` (which hides `F`); the explicit component derivative is irreducible.
+  Connecting facts still needed inline: `A_cart = M_paper$1` (for `a≠0`) and
+  `det(matrix Dcvec) = c11 c22 - c12 c21` (`det_2`+`matrix_def`, matching the (ii) `detC` indexing).
 
 ## 2026-06-02 (robust set) — `has_derivative_gradU_dip_x` closed (chain rule); audit 14 → 13
 
