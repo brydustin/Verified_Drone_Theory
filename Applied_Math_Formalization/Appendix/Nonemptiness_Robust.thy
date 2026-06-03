@@ -3710,7 +3710,100 @@ proof -
     by (simp add: det_2 matrix_def Dcvec_dip_def axis_def sin_cos_squared_add[of "\<omega>$2"]
   algebra_simps)
 qed
-  
+
+lemma pythagorean_squared:
+  fixes m :: real
+  shows
+    "cos m * (cos m * (cos m * cos m))
+      + (sin m * (sin m * (sin m * sin m))
+      + cos m * (cos m * (sin m * (sin m * 2)))) = 1"
+proof -
+  let ?c = "cos m"
+  let ?s = "sin m"
+
+  have cs: "?c * ?c + ?s * ?s = 1"
+    using sin_cos_squared_add[of m]
+    by (simp add: power2_eq_square add.commute)
+
+  have
+    "?c * (?c * (?c * ?c))
+      + (?s * (?s * (?s * ?s))
+      + ?c * (?c * (?s * (?s * 2))))
+     = (?c * ?c + ?s * ?s) * (?c * ?c + ?s * ?s)"
+    by (smt (verit, del_insts) Groups.mult_ac(2) ab_semigroup_mult_class.mult_ac(1) 
+        mult_2 mult_hom.hom_add)
+  also have "... = 1"
+    using cs by simp
+  finally show ?thesis.
+qed
+
+lemma sin_cos_lin_not_const0:
+    fixes M a b :: real
+    assumes ab: "a < b"
+    shows "\<exists>s. a < s \<and> s < b \<and> sin s * (cos s -
+  sin s * M) \<noteq> 0"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    hence Z: "\<And>s. a < s \<Longrightarrow> s < b
+  \<Longrightarrow> sin s * (cos s - sin s * M) = 0" by auto
+    define F  where "F  = (\<lambda>s::real. sin s * (cos s - sin s
+  * M))"
+    define F1 where "F1 = (\<lambda>s::real. (cos s * cos s - sin s
+  * sin s) - M * (2 * sin s * cos s))"
+    define F2 where "F2 = (\<lambda>s::real. - (4 * (sin s * cos
+  s)) - M * (2 * (cos s * cos s - sin s * sin s)))"
+    have FZ:  "F s = 0" if "a < s" "s < b" for s using Z[OF that]
+  by (simp add: F_def)
+    have dF:  "(F  has_real_derivative F1 s) (at s)" for s
+      unfolding F_def F1_def by (auto intro!: derivative_eq_intros
+  simp: algebra_simps)
+    have dF1: "(F1 has_real_derivative F2 s) (at s)" for s
+      unfolding F1_def F2_def by (auto intro!: derivative_eq_intros
+  simp: algebra_simps)
+    have F1Z: "F1 s = 0" if "a < s" "s < b" for s
+    proof -
+      have "(F has_real_derivative 0) (at s)"
+      proof (rule has_field_derivative_transform_within_open[where
+  f = "\<lambda>_. 0" and S = "{a<..<b}"])
+        show "((\<lambda>_. 0::real) has_real_derivative 0) (at s)"
+  by (rule DERIV_const)
+        show "open {a<..<b}" by simp
+        show "s \<in> {a<..<b}" using that by simp
+        show "\<And>y. y \<in> {a<..<b} \<Longrightarrow> (0::real) = F y" 
+          using FZ by simp
+      qed   
+      with dF[of s] show "F1 s = 0" by (metis DERIV_unique)
+    qed
+    define m where "m = (a + b) / 2"
+    have m_mem: "m \<in> {a<..<b}" using ab by (simp add: m_def)
+    have e1: "F1 m = 0" using F1Z m_mem by simp
+    have "(F1 has_real_derivative 0) (at m)"
+    proof (rule has_field_derivative_transform_within_open[where f
+  = "\<lambda>_. 0" and S = "{a<..<b}"])
+      show "((\<lambda>_. 0::real) has_real_derivative 0) (at m)"
+        by (rule DERIV_const)
+      show "open {a<..<b}" by simp
+      show "m \<in> {a<..<b}" using m_mem by simp
+      show "\<And>y. y \<in> {a<..<b} \<Longrightarrow> (0::real) =  F1 y" using F1Z by simp
+    qed
+    with dF1[of m] have e2: "F2 m = 0" by (metis DERIV_unique)
+    define X where "X = cos m * cos m - sin m * sin m"
+    define Y where "Y = 2 * sin m * cos m"
+    have pyth: "X * X + Y * Y = 1" 
+      using sin_cos_squared_add[of m] using pythagorean_squared
+      by (simp add: X_def Y_def power2_eq_square algebra_simps)
+    have eq1: "X - M * Y = 0" using e1 by (simp add: F1_def X_def
+  Y_def)
+    have eq2: "Y + M * X = 0" using e2 by (simp add: F2_def X_def
+  Y_def algebra_simps)
+    have "(1 + M * M) * X = 0" 
+      using eq1 eq2 by (smt (verit, del_insts) mult_not_zero zero_le_mult_iff)
+    hence "X = 0"
+      by (metis more_arith_simps(6) mult_eq_0_iff sum_squares_eq_zero_iff) 
+    moreover from this eq2 have "Y = 0" by simp
+    ultimately show False using pyth by simp
+  qed
+
 
 lemma steering_singular_nowhere_dense:
   shows "nowhere_dense {\<omega>::angle. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
