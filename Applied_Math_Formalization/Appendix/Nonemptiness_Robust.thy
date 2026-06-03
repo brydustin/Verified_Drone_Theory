@@ -2968,6 +2968,51 @@ proof -
   thus ?thesis by (simp add: vec_lambda_eta)
 qed
 
+text \<open>\<^bold>\<open>A5 brick 3: joint \<open>(\<bm>x,\<omega>)\<close> continuity of the \<open>\<bm>x\<close>-partial of \<open>gradU\<close>.\<close>  The \<open>\<bm>x\<close>-partial
+  ({thm has_derivative_gradU_dip_x_explicit}) is \<open>\<chi> j. dEjm(jets) (M_paper \<bm>x c) (DM_paper_x \<bm>x c h)\<close>,
+  which through {thm dEjm_def} touches only the first three moment derivatives \<open>\<delta>\<^sub>1,\<delta>\<^sub>2,\<delta>\<^sub>3 =
+  d_A, d_M\<^sub>1, d_M\<^sub>2\<close>.  Those are moment sums (\<open>phase\<close>/\<open>d_phase\<close>), so jointly continuous in \<open>(\<bm>x,c)\<close>
+  (brick-1 shape); composed with \<open>cvec_dip\<close> and assembled with the brick 2a moments and 2b jets,
+  the \<open>\<bm>x\<close>-partial applied to any fixed direction is jointly continuous.\<close>
+
+lemma continuous_on_DA_paper_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. DA_paper_x (fst p) (snd p) h)"
+  unfolding DA_paper_x_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_DM1_paper_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. DM1_paper_x (fst p) (snd p) h)"
+  unfolding DM1_paper_x_def phase_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_DM2_paper_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. DM2_paper_x (fst p) (snd p) h)"
+  unfolding DM2_paper_x_def phase_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_DA_paper_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. DA_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_DA_paper_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_DM1_paper_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. DM1_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_DM1_paper_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_DM2_paper_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. DM2_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_DM2_paper_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+
+
 text \<open>\<^bold>\<open>Sard brick (1): the dipole gradient field is \<open>C\<^sup>1\<close> in the configuration \<open>\<bm>x\<close>.\<close>  Fix the
   steering angle \<open>\<omega>\<close>.  Via @{thm gradU_dip_component_moments} the \<open>j\<close>-th gradient component is a
   fixed polynomial in the (\<open>\<bm>x\<close>-smooth) moment coordinates \<open>M_paper \<bm>x c\<close> (with \<open>c = cvec_dip \<omega>\<close>):
@@ -3550,6 +3595,30 @@ proof -
   qed
   show ?thesis
     unfolding dEjm_def by (simp add: axis_def key algebra_simps)
+qed
+
+lemma continuous_on_gradU_dip_xpartial_applied:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. (\<chi> j. dEjm (frechet_derivative gdip (at ((snd p)$1)) ((axis j 1)$1)) (gain_dip (snd p))
+                  ((Dcvec_dip \<omega>0 \<omega>s (snd p) (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s (snd p) (axis j 1))$2)
+                  (M_paper (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
+                  (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) i)) :: real^2)"
+proof (intro continuous_on_vec_lambda)
+  fix j :: 2
+  show "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+          (\<lambda>p. dEjm (frechet_derivative gdip (at ((snd p)$1)) ((axis j 1)$1)) (gain_dip (snd p))
+                  ((Dcvec_dip \<omega>0 \<omega>s (snd p) (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s (snd p) (axis j 1))$2)
+                  (M_paper (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
+                  (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) i))"
+    unfolding dEjm_def
+    by (simp only: M_paper_components DM_paper_x_components,
+        intro continuous_intros
+              continuous_on_frechet_gdip_proj_snd continuous_on_gain_dip_snd
+              continuous_on_Dcvec_dip_snd
+              continuous_on_A_moment_cvec_dip continuous_on_M1_moment_cvec_dip
+              continuous_on_M2_moment_cvec_dip
+              continuous_on_DA_paper_x_cvec_dip continuous_on_DM1_paper_x_cvec_dip
+              continuous_on_DM2_paper_x_cvec_dip)
 qed
 
 lemma gradU_dip_x_partial_surj:
