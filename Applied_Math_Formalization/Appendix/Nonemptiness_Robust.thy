@@ -2865,7 +2865,83 @@ lemma has_derivative_gradU_dip_x:
   shows "\<exists>F::complex^6 \<Rightarrow> real^2. bounded_linear F
             \<and> ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative
                   (F \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at x within V)"
-  sorry
+proof -
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  define E :: "2 \<Rightarrow> complex^6 \<Rightarrow> real" where
+    "E = (\<lambda>j M. frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1) * (cmod (M$1))\<^sup>2
+              + gain_dip \<omega> * (2 * Re (cnj (M$1)
+                   * ((- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1) * (M$2)
+                    + (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2) * (M$3)))))"
+  define \<Phi> :: "complex^6 \<Rightarrow> real^2" where "\<Phi> = (\<lambda>M. (\<chi> j. E j M))"
+  \<comment> \<open>the gradient field factors through the moment map\<close>
+  have gU: "(\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) = (\<lambda>y. \<Phi> (M_paper y c))"
+  proof (rule ext)
+    fix y
+    have comp: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ j = \<Phi> (M_paper y c) $ j" for j :: 2
+    proof -
+      have "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ j = E j (M_paper y c)"
+        unfolding E_def c_def by (rule gradU_dip_component_moments)
+      thus ?thesis by (simp add: \<Phi>_def)
+    qed
+    show "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> = \<Phi> (M_paper y c)"
+      unfolding Finite_Cartesian_Product.vec_eq_iff using comp by blast
+  qed
+  \<comment> \<open>the moment map's configuration derivative\<close>
+  have dM: "((\<lambda>y. M_paper y c) has_derivative DM_paper_x x c) (at x within V)"
+    unfolding c_def by (rule has_derivative_M_paper_x)
+  \<comment> \<open>\<open>\<Phi>\<close> is (Fréchet) differentiable at the moment point\<close>
+  have eproj: "(\<lambda>M::complex^6. M $ k) differentiable (at (M_paper x c))" for k :: 6
+    by (rule differentiableI[OF
+          bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_ident]])
+  have ej: "(\<lambda>M. E j M) differentiable (at (M_paper x c))" for j :: 2
+  proof -
+    have "(\<lambda>M. E j M)
+            = (\<lambda>M. frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)
+                     * ((Re (M$1))\<^sup>2 + (Im (M$1))\<^sup>2)
+                   + gain_dip \<omega> * (2 * Re (cnj (M$1)
+                        * ((- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1) * (M$2)
+                         + (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2) * (M$3)))))"
+      by (rule ext) (simp add: E_def cmod_power2)
+    moreover have "(\<lambda>M::complex^6. frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)
+                     * ((Re (M$1))\<^sup>2 + (Im (M$1))\<^sup>2)
+                   + gain_dip \<omega> * (2 * Re (cnj (M$1)
+                        * ((- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1) * (M$2)
+                         + (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2) * (M$3)))))
+                   differentiable (at (M_paper x c))"
+      by (intro differentiable_add differentiable_mult differentiable_const differentiable_power
+                differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_Re]]
+                differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_Im]]
+                differentiable_compose[OF bounded_linear_imp_differentiable[OF bounded_linear_cnj]]
+                eproj)
+    ultimately show ?thesis by simp
+  qed
+  have d\<Phi>: "\<Phi> differentiable (at (M_paper x c))"
+  proof -
+    have "\<Phi> differentiable (at (M_paper x c) within UNIV)"
+    proof (subst differentiable_componentwise_within, intro ballI)
+      fix b :: "real^2" assume "b \<in> Basis"
+      then obtain j where bj: "b = axis j 1" by (auto simp: Basis_vec_def)
+      have "(\<lambda>M. \<Phi> M \<bullet> b) = (\<lambda>M. E j M)"
+        by (rule ext) (simp add: \<Phi>_def bj inner_axis)
+      thus "(\<lambda>M. \<Phi> M \<bullet> b) differentiable (at (M_paper x c) within UNIV)"
+        using ej by simp
+    qed
+    thus ?thesis by simp
+  qed
+  then obtain D\<Phi> where hD\<Phi>: "(\<Phi> has_derivative D\<Phi>) (at (M_paper x c))"
+    by (auto simp: differentiable_def)
+  have blD\<Phi>: "bounded_linear D\<Phi>" by (rule has_derivative_bounded_linear[OF hD\<Phi>])
+  have chain: "((\<lambda>y. \<Phi> (M_paper y c)) has_derivative (D\<Phi> \<circ> DM_paper_x x c)) (at x within V)"
+  proof -
+    have "((\<Phi> \<circ> (\<lambda>y. M_paper y c)) has_derivative (D\<Phi> \<circ> DM_paper_x x c)) (at x within V)"
+      by (rule diff_chain_within[OF dM has_derivative_at_withinI[OF hD\<Phi>]])
+    thus ?thesis by (simp add: o_def)
+  qed
+  have fin: "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative
+                 (D\<Phi> \<circ> DM_paper_x x c)) (at x within V)"
+    unfolding gU by (rule chain)
+  show ?thesis using blD\<Phi> fin unfolding c_def by blast
+qed
 
 text \<open>\<^bold>\<open>(A3) The determinant payoff: the configuration partial is onto \<open>\<real>\<^sup>2\<close>.\<close>  When \<open>A \<noteq> 0\<close>, the
   moment map is a submersion (\<open>surj (DM_paper_x \<dots>)\<close>, \<open>lem:Msurj\<close>), and the steering map is an
