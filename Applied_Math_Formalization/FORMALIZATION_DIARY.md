@@ -8,6 +8,22 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-03 — leaf #7 `steering_singular_nowhere_dense` PROVEN (11 on-path sorries left)
+
+Assembled from `Dcvec_det_eq` + `sin_cos_lin_not_const0` (brick 2b): set rewritten to `{ω. f ω = 0}`
+(f continuous ⟹ closed via `closed_Collect_eq`); a ball inside it restricted to the horizontal
+segment `ω₂=c₂` gives `sin s·(cos s - sin s·g(c₂))≡0` on an interval, contradicting 2a.
+`dist(vector[s,c₂]) c = ¦s-c₁¦` via `vector[s,c₂]-c = axis 1 (s-c₁)` +
+`norm_eq_sqrt_inner`/`inner_axis_axis`/`real_sqrt_abs2`.
+\<^bold>Remaining on-path (11):\<^esub> #1 engine Sard-covering, #2 `DM_paper_x_open_dense_surjective_gen`,
+#3 `DM_paper_x_regular_point_exists`, #4 A5 `gradU_dip_joint_C1`, #5 A4 `open_A_cart_nonzero`,
+#6 `rank_lower_semicont_open_dense_propagation`, #9 `parametric_transversality_meager_planar_config`,
+#10 `no_degenerate_to_sphere_annulus`, #11 `meager_bad_regular_stratum`,
+#12 `meager_rank_deficient_stratum`, #13 `meager_steering_singular_stratum` (needs #7+#9).
+NOTE: #7 is an INPUT to #13, not a full unlock — the 4 `meager_*_stratum` wrappers all funnel
+through the parametric bridge #9 → engine #1.  No more "quick analytic" leaves remain; the
+self-contained ones are A5 (#4) and rank-semicont (#6); the universal bottleneck is engine #1.
+
 ## 2026-06-03 — bricks 1+2a of leaf #7 done (`Dcvec_det_eq`, `sin_cos_lin_not_const0`)
 
 Brick 2a `sin_cos_lin_not_const0` PROVEN: `sin s·(cos s - sin s·M)` cannot vanish on any open
