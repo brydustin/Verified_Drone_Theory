@@ -2988,6 +2988,27 @@ text \<open>\<^bold>\<open>(A3) The determinant payoff: the configuration partia
   immersion (\<open>det (Dcvec_dip \<dots>) \<noteq> 0\<close>, which also forces \<open>gain_dip \<omega> \<noteq> 0\<close>), the \<open>\<bm>x\<close>-derivative
   of \<open>\<nabla>\<^sub>\<Omega>U\<close> is surjective.\<close>
 
+text \<open>\<^bold>\<open>Analytic core of the determinant payoff.\<close>  For a nonzero complex \<open>a\<close>, the real-linear
+  functional \<open>w \<mapsto> Im(\<bar>a\<bar>\<dots>cnj a \<cdot> w)\<close> is onto \<open>\<real>\<close> --- multiplication by the nonzero \<open>cnj a\<close> is a
+  \<complex>-bijection and \<open>Im\<close> is onto.  This is why each gradient component's \<open>\<bm>x\<close>-derivative can hit
+  any real value once \<open>A \<noteq> 0\<close>.\<close>
+
+lemma surj_Im_cnj_mult:
+  fixes a :: complex
+  assumes "a \<noteq> 0"
+  shows "surj (\<lambda>w. Im (cnj a * w))"
+proof -
+  have cnz: "cnj a \<noteq> 0" using assms by simp
+  show ?thesis
+    unfolding surj_def
+  proof (intro allI)
+    fix y :: real
+    have "y = Im (cnj a * (\<i> * complex_of_real y / cnj a))"
+      using cnz by (simp add: field_simps)
+    thus "\<exists>x. y = Im (cnj a * x)" by blast
+  qed
+qed
+
 lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
   assumes Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
