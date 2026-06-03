@@ -8,6 +8,17 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — `has_derivative_gradU_dip_x` closed (chain rule); audit 14 → 13
+
+Proved `has_derivative_gradU_dip_x`: the configuration-derivative of \<open>\<nabla>\<^sub>\<Omega>U_dip\<close> factors through
+`DM_paper_x` (define the moment-gradient map \<open>\<Phi>\<close> from `gradU_dip_component_moments`, prove \<open>\<Phi>\<close>
+differentiable at the moment point componentwise, then `diff_chain_within` with the proven
+`has_derivative_M_paper_x`).  This is the A2 input to the determinant-payoff rank lemma
+`gradU_dip_x_partial_surj`, which is now unblocked (it has its explicit \<open>D\<^sub>\<bm>x\<close>).  Traps: use the
+\<^bold>qualified\<^esub> `Finite_Cartesian_Product.vec_eq_iff` (unqualified resolves elsewhere); `diff_chain_within`
+yields \<open>f \<circ> g\<close>, convert to the \<open>\<lambda>\<close>-form with `o_def`; prove componentwise with `rule
+gradU_dip_component_moments` (no `simp`, which over-expands `M_paper`).  Audit now \<open>13\<close> (12 Robust + engine).
+
 ## 2026-06-02 (robust set) — Leaf-closing loop with self-audit; deep frontier reached
 
 Discipline this loop: \<^bold>never introduce a new `sorry`\<^esub>; every step is a net \<open>-1\<close> (full closure or a
