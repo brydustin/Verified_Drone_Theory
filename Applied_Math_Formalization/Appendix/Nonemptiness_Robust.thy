@@ -3806,8 +3806,53 @@ lemma sin_cos_lin_not_const0:
 
 
 lemma steering_singular_nowhere_dense:
-  shows "nowhere_dense {\<omega>::angle. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
-  sorry
+    shows "nowhere_dense {\<omega>::angle. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+  proof -   
+    define g where "g = (\<lambda>u::real. ((kx \<omega>0 - kx
+  \<omega>s)/(kz \<omega>s - kz \<omega>0)) * cos u
+                                   + ((ky \<omega>0 - ky
+  \<omega>s)/(kz \<omega>s - kz \<omega>0)) * sin u)"
+    define f where "f = (\<lambda>\<omega>::real^2. sin
+  (\<omega>$1) * (cos (\<omega>$1) - sin (\<omega>$1) * g
+  (\<omega>$2)))"
+    have feq: "{\<omega>::angle. det (matrix (Dcvec_dip \<omega>0
+  \<omega>s \<omega>)) = 0} = {\<omega>. f \<omega> = 0}"
+      by (simp add: f_def g_def Dcvec_det_eq)
+    have contf: "continuous_on UNIV f"
+      unfolding f_def g_def
+      by (intro continuous_intros bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+    have closedE: "closed {\<omega>::real^2. f \<omega> = 0}"
+      by (rule closed_Collect_eq[OF contf continuous_on_const])
+    have intE: "interior {\<omega>::real^2. f \<omega> = 0} = {}"
+    proof (rule ccontr)
+      assume "interior {\<omega>. f \<omega> = 0} \<noteq> {}"
+      then obtain c where "c \<in> interior {\<omega>. f \<omega> =
+  0}" by blast
+      then obtain r where r: "0 < r" and bsub: "ball c r  \<subseteq> {\<omega>. f \<omega> = 0}"
+        using mem_interior by blast
+      have inb: "sin s * (cos s - sin s * g (c$2)) = 0" if hs:
+  "\<bar>s - c$1\<bar> < r" for s
+      proof -
+        have "vector [s, c$2] - c = axis 1 (s - c$1)"
+          by (simp add: vec_eq_iff forall_2 vector_2 axis_def,
+              smt (verit, del_insts) Finite_Cartesian_Product.minus_vec_def 
+              exhaust_2 vec_lambda_unique vector_2(1,2) verit_minus_simplify(1))
+        hence "dist (vector [s, c$2] :: real^2) c = \<bar>s -  c$1\<bar>"
+          by (simp add: dist_norm norm_eq_sqrt_inner inner_axis_axis)
+        hence "vector [s, c$2] \<in> ball c r" using hs by (simp add: dist_commute)
+        hence "f (vector [s, c$2]) = 0" using bsub by blast
+        thus ?thesis by (simp add: f_def vector_2)
+      qed
+      have lt: "c$1 - r < c$1 + r" using r by simp
+      obtain s where "c$1 - r < s" "s < c$1 + r" "sin s * (cos s - sin s * g (c$2)) \<noteq> 0"
+        using sin_cos_lin_not_const0[where M = "g (c$2)" and a = "c$1 - r" and b = "c$1 + r"] lt 
+        by blast
+      moreover from this have "\<bar>s - c$1\<bar> < r" by simp
+      ultimately show False using inb by blast
+    qed
+    show ?thesis
+      using closedE intE by (simp add: feq nowhere_dense_def closure_closed)
+  qed
 
 text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open locus where \<open>A \<noteq> 0\<close>, \<open>surj (DM_paper_x \<dots>)\<close>,
   and \<open>det (Dcvec) \<noteq> 0\<close>, \<open>0\<close> is a regular value (@{thm regular_value_on_gradU_dip}); covering this
