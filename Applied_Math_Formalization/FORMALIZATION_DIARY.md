@@ -8,6 +8,43 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-03 — DEFINITIVE on-path sorry list for `F0_dip_nonempty` (13 leaves)
+
+Verified by scanning ALL working `.thy` files (not just `Robust`).  \<^bold>Off-path (do NOT count):\<^esub>
+`Nonemptiness_Inventory` (`thm_final`,`prop_*`,`lem_*` — standalone, not imported), `Nonemptiness_Capstone`
+(`branch_*_meager`,`capstone_feasible`,`capstone_X0_sound` — the generic capstone superseded by the
+dipole `F0_dip_nonempty`; imported but never referenced by the F0 chain), the `oops` in
+`Higher_Differentiability.thy` (inert note).  The whole moment-map machinery
+(`BlockDet`/`MomentJac`/`Moment_Map`) is sorry-FREE.  The architecture above the leaves
+(`F0_dip_nonempty`→`regular_feasible_witness_dip`→`regular_feasible_point_dip`→`Phi_bad_meager_dip`)
+is machine-checked.
+
+\<^bold>The 13 on-path leaves, by tier:\<^esub>
+- \<^bold>Tier A (long poles, days):\<^esub>
+  1. `regular_zero_set_projection_charts_core_2d` (engine, `Parametric_Transversality_Euclidean_Base.thy` L352) — the chart COVERING only (NOT Sard).  \<^bold>Sard is already discharged:\<^esub>
+     Isabelle ships `baby_Sard`, and `negligible_critical_values_from_charts` (engine L285) is PROVEN
+     with it.  Searched all 5 Munkres files — NO Sard/negligible/critical/measure (only Baire + a custom
+     `top1_m_manifold_on` type).  So this sorry = "regular value 0 \<Rightarrow> (IFT) level set is a local graph
+     \<Rightarrow> bad params \<subseteq> critical-value images (rank-deficient projection), \<sigma>-compact charts"; tool is
+     HOL-Analysis `implicit_function_theorem` over Euclidean `real^'m`, then `negligible_...` finishes.
+  2. `DM_paper_x_open_dense_surjective_gen` (Robust 3682) — rank-12 submersion open-dense, generalised from `c0_paper=(1,0),CARD=6` to steered `cvec_dip`, `CARD≥6`.
+  3. `DM_paper_x_regular_point_exists` (Robust 3671) — a submersion point exists (same generalisation).
+- \<^bold>Tier B (hours):\<^esub>
+  4. `gradU_dip_joint_C1` (A5, Robust 3296) — joint C¹ blinfun derivative field (self-contained).
+  5. `open_A_cart_nonzero` (A4, Robust 3285) — regularity locus open (needs #6).
+  6. `rank_lower_semicont_open_dense_propagation` (`Nonemptiness_Paper.thy`) — rank lower-semicont + density.
+  7. `steering_singular_nowhere_dense` (Robust 3692) — `{det Dcvec = 0}` nowhere dense.
+  8. `meager_Azero_degenerate_stratum` (Robust 3745) — `A=0` stratum meager.
+  9. `parametric_transversality_meager_planar_config` (Robust 3641) — bridge to the engine.
+  10. `no_degenerate_to_sphere_annulus` (Robust 4106) — spine glue for `regular_feasible_point_dip`.
+- \<^bold>Tier C (quick wrappers, once inputs land):\<^esub>
+  11. `meager_bad_regular_stratum` (Robust 3702) — = A6 + #9.
+  12. `meager_rank_deficient_stratum` (Robust 3717) — = #2/#6.
+  13. `meager_steering_singular_stratum` (Robust 3730) — = #7.
+
+When all 13 are proven sorry-free \<^bold>with sound (non-vacuous) statements\<^esub>, `F0_dip_nonempty` is the
+unqualified end-to-end proof (only hypothesis `c6`).  No other leaves exist.
+
 ## 2026-06-03 (robust set) — (A3) `gradU_dip_x_partial_surj` PROVEN (the determinant payoff)
 
 The deepest analytic leaf is closed: the configuration-derivative of \<open>\<nabla>\<^sub>\<Omega>U_dip\<close> is onto \<open>\<real>\<^sup>2\<close>
