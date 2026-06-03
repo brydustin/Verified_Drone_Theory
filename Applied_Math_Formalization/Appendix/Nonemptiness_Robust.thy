@@ -2983,6 +2983,27 @@ proof -
   thus ?thesis by (simp add: gain_dip_def)
 qed
 
+text \<open>\<^bold>\<open>The steering determinant carries the \<open>sin(\<omega>\<^sub>1)\<close> factor.\<close>  At \<open>sin(\<omega>\<^sub>1) = 0\<close> the steering
+  Jacobian \<open>Dcvec_dip\<close> sends \<open>axis 2 1\<close> to \<open>0\<close> (its \<open>\<omega>\<close>-column vanishes), so it is not injective and
+  its determinant is \<open>0\<close>.  Contrapositively \<open>det \<noteq> 0 \<Longrightarrow> sin(\<omega>\<^sub>1) \<noteq> 0\<close>, which with
+  @{thm gain_dip_nonzero_of_sin} yields \<open>gain_dip \<omega> \<noteq> 0\<close> from the immersion hypothesis alone.\<close>
+
+lemma Dcvec_det_zero_of_sin:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes "sin (\<omega> $ 1) = 0"
+  shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
+proof -
+  have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
+  have z2: "Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) = 0"
+    using assms unfolding Dcvec_dip_def by (simp add: axis_def)
+  have ax_nz: "axis (2::2) (1::real) \<noteq> 0"
+    by (metis axis_nth zero_index zero_neq_one)
+  have "\<not> inj (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    using z2 ax_nz lin by (metis injD linear_0)
+  thus ?thesis using det_nz_iff_inj[OF lin] by blast
+qed
+
 text \<open>\<^bold>\<open>(A3) The determinant payoff: the configuration partial is onto \<open>\<real>\<^sup>2\<close>.\<close>  When \<open>A \<noteq> 0\<close>, the
   moment map is a submersion (\<open>surj (DM_paper_x \<dots>)\<close>, \<open>lem:Msurj\<close>), and the steering map is an
   immersion (\<open>det (Dcvec_dip \<dots>) \<noteq> 0\<close>, which also forces \<open>gain_dip \<omega> \<noteq> 0\<close>), the \<open>\<bm>x\<close>-derivative
