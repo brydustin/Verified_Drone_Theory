@@ -1054,6 +1054,59 @@ lemma continuous_on_M22_moment_joint:
   by (intro continuous_on_sum continuous_on_cis continuous_intros
             bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
+text \<open>\<^bold>\<open>A5 brick 2a: the moment composite \<open>(\<bm>x,\<omega>) \<mapsto> M_paper \<bm>x (cvec_dip \<omega>0 \<omega>s \<omega>)\<close> is jointly
+  continuous.\<close>  The dipole steering \<open>cvec_dip\<close> is smooth (@{thm cvec_dip_higher_differentiable_on}),
+  hence continuous; composing the pairing \<open>(\<bm>x,\<omega>) \<mapsto> (\<bm>x, cvec_dip \<omega>0 \<omega>s \<omega>)\<close> with the
+  jointly-continuous moments (brick 1) routes every \<open>\<bm>x\<close>-dependence of \<open>HessU\<close>/\<open>Dx\<close> through this
+  composite.\<close>
+
+lemma continuous_on_cvec_dip:
+  "continuous_on UNIV (cvec_dip \<omega>0 \<omega>s)"
+  by (rule higher_differentiable_on_imp_continuous_on[OF cvec_dip_higher_differentiable_on])
+
+lemma continuous_on_pair_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. (fst p, cvec_dip \<omega>0 \<omega>s (snd p)))"
+  by (intro continuous_on_Pair continuous_on_fst[OF continuous_on_id]
+            continuous_on_compose2[OF continuous_on_cvec_dip
+                                      continuous_on_snd[OF continuous_on_id] subset_UNIV])
+
+lemma continuous_on_A_moment_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. A_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  using continuous_on_compose2[OF continuous_on_A_moment_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_M1_moment_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. M1_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  using continuous_on_compose2[OF continuous_on_M1_moment_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_M2_moment_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. M2_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  using continuous_on_compose2[OF continuous_on_M2_moment_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_M11_moment_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. M11_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  using continuous_on_compose2[OF continuous_on_M11_moment_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_M12_moment_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. M12_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  using continuous_on_compose2[OF continuous_on_M12_moment_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_M22_moment_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. M22_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
+  using continuous_on_compose2[OF continuous_on_M22_moment_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
 subsection \<open>First contact with the determinant: the moments appear in \<open>dA\<close>\<close>
 
 text \<open>\<^bold>\<open>The moment map enters here.\<close>  The first moments of the configuration,
