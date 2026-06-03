@@ -1019,6 +1019,41 @@ lemma continuous_on_A_moment_joint:
               bounded_linear.continuous_on[OF
   bounded_linear_vec_nth])
 
+lemma continuous_on_M1_moment_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
+     (\<lambda>p. M1_moment (fst p) (snd p))"
+  unfolding M1_moment_def phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_M2_moment_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
+     (\<lambda>p. M2_moment (fst p) (snd p))"
+  unfolding M2_moment_def phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_M11_moment_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
+     (\<lambda>p. M11_moment (fst p) (snd p))"
+  unfolding M11_moment_def phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_M12_moment_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
+     (\<lambda>p. M12_moment (fst p) (snd p))"
+  unfolding M12_moment_def phase_def w_M12_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_M22_moment_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
+     (\<lambda>p. M22_moment (fst p) (snd p))"
+  unfolding M22_moment_def phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
 subsection \<open>First contact with the determinant: the moments appear in \<open>dA\<close>\<close>
 
 text \<open>\<^bold>\<open>The moment map enters here.\<close>  The first moments of the configuration,
