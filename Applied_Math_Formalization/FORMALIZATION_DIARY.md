@@ -8,6 +8,23 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-02 (robust set) — Into the determinant payoff: gain-from-steer + surj F pieces (i),(ii)
+
+\<^bold>Key correction (user):\<^esub> use the ACTUAL gain.  `gain_dip ω = gdip(ω\<^sub>1) = (edip ω\<^sub>1)\<^sup>2`, and
+`gsinc x = (if x=0 then 1 else sin x/x)` gives `gdip θ = 0 \<longleftrightarrow> cos θ = ±1 \<longleftrightarrow> sin θ = 0`.  Since
+`det(matrix(Dcvec_dip …))` carries a `sin(ω\<^sub>1)` factor (its ω-column is `(-sinω\<^sub>1 sinω\<^sub>2, sinω\<^sub>1 cosω\<^sub>2)`),
+the steering hypothesis `det ≠ 0 \<Longrightarrow> sin ω\<^sub>1 ≠ 0 \<Longrightarrow> gain_dip ω ≠ 0`.  So \<^bold>no gain hypothesis / gain=0
+stratum is needed\<^esub> (my earlier "soundness cascade" alarm was wrong).  Proved `gain_dip_nonzero_of_sin`.
+
+\<^bold>surj F\<^esub> (the rank core of `gradU_dip_x_partial_surj`) factors into three pieces; (i),(ii) done:
+- (i) `surj_Im_cnj_mult`: `w \<mapsto> Im(cnj a · w)` onto \<real> for `a ≠ 0` (right inverse `i·s/cnj a`).
+- (ii) `surj_moment_grad_map`: `(d\<^sub>2,d\<^sub>3) \<mapsto> (2g·Im(cnj a·(c\<^sub>j\<^sub>1 d\<^sub>2 + c\<^sub>j\<^sub>2 d\<^sub>3)))\<^sub>j` onto \<real>\<^sup>2 when `a≠0, g≠0,
+  det C ≠ 0` — Cramer's rule + (i).  (Trap: `simp only` for the final assembly, else `Im_mult`
+  expansion blocks `iw1/iw2`; `metis of_real_eq_0_iff` for `Dnz`.)
+- (iii) REMAINING (the bulk): the explicit `DΦ`-on-`(M\<^sub>2,M\<^sub>3)` derivative = the (ii) map, then
+  `surj(F∘DM) \<longleftrightarrow> surj F` via `Msurj`, assembling `gradU_dip_x_partial_surj`.  Needs an explicit
+  has_derivative computation of the `E_j` moment expressions (product/Re/cnj rules).
+
 ## 2026-06-02 (robust set) — `has_derivative_gradU_dip_x` closed (chain rule); audit 14 → 13
 
 Proved `has_derivative_gradU_dip_x`: the configuration-derivative of \<open>\<nabla>\<^sub>\<Omega>U_dip\<close> factors through
