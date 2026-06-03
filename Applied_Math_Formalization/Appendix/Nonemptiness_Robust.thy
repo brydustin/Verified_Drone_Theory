@@ -3009,6 +3009,76 @@ proof -
   qed
 qed
 
+text \<open>\<^bold>\<open>Linear-algebra core of the determinant payoff.\<close>  The two real-linear forms
+  \<open>(d\<^sub>2,d\<^sub>3) \<mapsto> 2g\<cdot>Im(cnj a \<cdot> (c\<^sub>j\<^sub>1 d\<^sub>2 + c\<^sub>j\<^sub>2 d\<^sub>3))\<close> (\<open>j = 1,2\<close>) jointly hit all of \<open>\<real>\<^sup>2\<close> when
+  \<open>a \<noteq> 0\<close>, \<open>g \<noteq> 0\<close> and the \<open>2\<times>2\<close> coefficient matrix is nonsingular: pick \<open>w\<^sub>j\<close> with
+  \<open>2g\<cdot>Im(cnj a\<cdot>w\<^sub>j) = t\<^sub>j\<close> (analytic core), then solve the nonsingular real system
+  \<open>c\<^sub>j\<^sub>1 d\<^sub>2 + c\<^sub>j\<^sub>2 d\<^sub>3 = w\<^sub>j\<close> by Cramer's rule.\<close>
+
+lemma surj_moment_grad_map:
+  fixes a :: complex and g c11 c12 c21 c22 :: real
+  assumes a0: "a \<noteq> 0" and g0: "g \<noteq> 0" and detC: "c11 * c22 - c12 * c21 \<noteq> 0"
+  shows "surj (\<lambda>p::complex \<times> complex.
+            (2 * g * Im (cnj a * (complex_of_real c11 * fst p + complex_of_real c12 * snd p)),
+             2 * g * Im (cnj a * (complex_of_real c21 * fst p + complex_of_real c22 * snd p))))"
+proof -
+  have cnz: "cnj a \<noteq> 0" using a0 by simp
+  have Dr: "c11 * c22 - c12 * c21 \<noteq> 0" using detC by simp
+  have Dnz: "complex_of_real (c11 * c22 - c12 * c21) \<noteq> 0"
+    by (metis Dr of_real_eq_0_iff)
+  have Deq: "complex_of_real (c11 * c22 - c12 * c21)
+             = complex_of_real c11 * complex_of_real c22 - complex_of_real c12 * complex_of_real c21"
+    by (simp add: of_real_diff of_real_mult)
+  show ?thesis
+    unfolding surj_def
+  proof (intro allI)
+    fix t :: "real \<times> real"
+    obtain t1 t2 where t: "t = (t1, t2)" by (cases t)
+    define w1 where "w1 = \<i> * complex_of_real (t1 / (2 * g)) / cnj a"
+    define w2 where "w2 = \<i> * complex_of_real (t2 / (2 * g)) / cnj a"
+    have iw1: "2 * g * Im (cnj a * w1) = t1" using cnz g0 by (simp add: w1_def field_simps)
+    have iw2: "2 * g * Im (cnj a * w2) = t2" using cnz g0 by (simp add: w2_def field_simps)
+    define d2 where "d2 = (complex_of_real c22 * w1 - complex_of_real c12 * w2)
+                            / complex_of_real (c11 * c22 - c12 * c21)"
+    define d3 where "d3 = (complex_of_real c11 * w2 - complex_of_real c21 * w1)
+                            / complex_of_real (c11 * c22 - c12 * c21)"
+    have e1: "complex_of_real c11 * d2 + complex_of_real c12 * d3 = w1"
+    proof -
+      have "complex_of_real c11 * d2 + complex_of_real c12 * d3
+            = (complex_of_real c11 * (complex_of_real c22 * w1 - complex_of_real c12 * w2)
+               + complex_of_real c12 * (complex_of_real c11 * w2 - complex_of_real c21 * w1))
+              / complex_of_real (c11 * c22 - c12 * c21)"
+        by (simp add: d2_def d3_def add_divide_distrib)
+      also have "\<dots> = (complex_of_real (c11 * c22 - c12 * c21) * w1)
+                       / complex_of_real (c11 * c22 - c12 * c21)"
+        by (simp add: Deq algebra_simps)
+      also have "\<dots> = w1" using Dnz by simp
+      finally show ?thesis .
+    qed
+    have e2: "complex_of_real c21 * d2 + complex_of_real c22 * d3 = w2"
+    proof -
+      have "complex_of_real c21 * d2 + complex_of_real c22 * d3
+            = (complex_of_real c21 * (complex_of_real c22 * w1 - complex_of_real c12 * w2)
+               + complex_of_real c22 * (complex_of_real c11 * w2 - complex_of_real c21 * w1))
+              / complex_of_real (c11 * c22 - c12 * c21)"
+        by (simp add: d2_def d3_def add_divide_distrib)
+      also have "\<dots> = (complex_of_real (c11 * c22 - c12 * c21) * w2)
+                       / complex_of_real (c11 * c22 - c12 * c21)"
+        by (simp add: Deq algebra_simps)
+      also have "\<dots> = w2" using Dnz by simp
+      finally show ?thesis .
+    qed
+    have "t = (2 * g * Im (cnj a * (complex_of_real c11 * fst (d2, d3)
+                                     + complex_of_real c12 * snd (d2, d3))),
+               2 * g * Im (cnj a * (complex_of_real c21 * fst (d2, d3)
+                                     + complex_of_real c22 * snd (d2, d3))))"
+      by (simp only: t fst_conv snd_conv e1 e2 iw1 iw2)
+    thus "\<exists>p. t = (2 * g * Im (cnj a * (complex_of_real c11 * fst p + complex_of_real c12 * snd p)),
+                   2 * g * Im (cnj a * (complex_of_real c21 * fst p + complex_of_real c22 * snd p)))"
+      by blast
+  qed
+qed
+
 lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
   assumes Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
