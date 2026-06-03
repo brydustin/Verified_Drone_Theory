@@ -4059,18 +4059,76 @@ text \<open>\<^bold>\<open>The concrete capstone: \<open>\<F>\<^sub>0\<close> fo
   the regular feasible point (the determinant/Baire payoff, @{thm regular_feasible_point_dip}).\<close>
 
 theorem F0_dip_nonempty:
-  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
   assumes c6: "6 \<le> CARD('n)"
-    and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
-                      :: (planar^'n) set) \<noteq> {}"
-  shows "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
-            \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
-                \<noteq> ({}::(planar^'n) set)"
-  \<comment> \<open>\<^bold>\<open>SOUNDNESS FIX:\<close> the feasibility precondition is now explicit.  It can be discharged from a
-      strict-feasibility (Slater) witness via @{thm Ffeas_interior_nonempty}, or assumed as the
-      design precondition (the paper's ``for appropriately chosen parameters'').\<close>
-  using regular_feasible_witness_dip[OF c6 feasible]
-  by (blast intro: F0_nonempty_of_witness)
+  shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
+            0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
+              \<noteq> ({}::(planar^'n) set)"
+  \<comment> \<open>\<^bold>\<open>Unconditional capstone.\<close>  The only hypothesis is the dimension restriction \<open>c6\<close>; the design
+      (steering \<open>\<omega>\<^sub>0,\<omega>\<^sub>s,\<omega>\<^sub>null\<close>, geometry \<open>A,B,D\<close>, tolerances \<open>d\<^sub>min,\<delta>\<^sub>null,p\<^sub>min,R\<close> and margins) is
+      \<^emph>\<open>delivered by the construction\<close>, not assumed.  Feasibility is discharged by the explicit
+      Slater witness (@{thm feasible_witness_exists}): the actual \<open>cvec_dip\<close> nulls at \<open>\<omega>\<^sub>null\<close>
+      (roots of unity, \<open>A(\<bm>x,\<omega>\<^sub>null)=0\<close>), the main-beam power is pinned to the cap for \<^emph>\<open>every\<close>
+      configuration (@{thm Upow_at_main}: \<open>cvec_dip(\<omega>\<^sub>0)=0\<close>), and we pick \<open>p\<^sub>min,d\<^sub>min,\<delta>\<^sub>null\<close> to make
+      the witness strictly feasible --- everything is under our control.\<close>
+proof -
+  define \<omega>0 :: planar where "\<omega>0 = vector [pi/2, 0]"
+  define \<omega>s :: planar where "\<omega>s = vector [0, 0]"
+  define \<omega>null :: planar where "\<omega>null = vector [pi, 0]"
+  have hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    by (simp add: \<omega>s_def \<omega>0_def kz_def)
+  have cn: "cvec_dip \<omega>0 \<omega>s \<omega>null \<noteq> 0"
+  proof -
+    have "cvec_dip \<omega>0 \<omega>s \<omega>null $ 1 = - 2"
+      by (simp add: cvec_dip_def \<omega>0_def \<omega>s_def \<omega>null_def kx_def ky_def kz_def
+                    sin_pi_half cos_pi_half axis_def)
+    hence "cvec_dip \<omega>0 \<omega>s \<omega>null $ 1 \<noteq> 0" by simp
+    thus ?thesis by (metis zero_index)
+  qed
+  have N1: "CARD('n) > 1" using c6 by simp
+  have spos: "(0::real) < 1" by simp
+  obtain x :: "planar^'n"
+    where afz: "af (cvec_dip \<omega>0 \<omega>s) x \<omega>null = 0"
+      and spac0: "\<forall>m m'. m \<noteq> m' \<longrightarrow> (1::real) \<le> spdist 0 0 1 (x $ m) (x $ m')"
+    using feasible_witness_exists[OF N1 cn spos] by meson
+  define R :: real where "R = norm x + 1"
+  have g0pos: "0 < gain_dip \<omega>0"
+  proof -
+    have "sin (\<omega>0 $ 1) \<noteq> 0" by (simp add: \<omega>0_def sin_pi_half)
+    hence "gain_dip \<omega>0 \<noteq> 0" by (rule gain_dip_nonzero_of_sin)
+    moreover have "0 \<le> gain_dip \<omega>0" by (rule gain_dip_nonneg)
+    ultimately show ?thesis by simp
+  qed
+  have feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0
+                    :: (planar^'n) set) \<noteq> {}"
+  proof -
+    have spac: "\<forall>p\<in>{p. fst p \<noteq> snd p}. (1/2::real) < spdist 0 0 1 (x $ fst p) (x $ snd p)"
+      using spac0 by fastforce
+    have Nlt: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>null < 1"
+      using afz by (simp add: Upow_def)
+    have Pgt: "(0::real) < Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0"
+    proof -
+      have "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0 = gain_dip \<omega>0 * (real CARD('n))\<^sup>2"
+        by (rule Upow_at_main[OF hsep])
+      moreover have "0 < (real CARD('n))\<^sup>2" using N1 by simp
+      ultimately show ?thesis using mult_pos_pos[OF g0pos] by simp
+    qed
+    have inR: "x \<in> ball 0 R" by (simp add: R_def dist_norm)
+    obtain \<rho> where \<rho>: "0 < \<rho>"
+        and sub: "ball x \<rho> \<subseteq> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0"
+      using ball_inside_Ffeas[OF gain_dip_nonneg gain_dip_nonneg spac Nlt Pgt inR] by blast
+    have "ball x \<rho> \<subseteq> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0)"
+      by (rule interior_maximal[OF sub open_ball])
+    moreover have "x \<in> ball x \<rho>" using \<rho> by simp
+    ultimately show ?thesis by blast
+  qed
+  have "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 (Omega \<omega>0) 1 0 \<xi> \<kappa> \<epsilon>
+              \<noteq> ({}::(planar^'n) set)"
+    using regular_feasible_witness_dip[OF c6 feasible]
+    by (blast intro: F0_nonempty_of_witness)
+  thus ?thesis by blast
+qed
 
 
 end

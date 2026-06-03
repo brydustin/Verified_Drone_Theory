@@ -8,6 +8,27 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-03 (robust set) — Capstone `F0_dip_nonempty` discharged to ONLY `c6` (feasibility removed)
+
+\<^bold>User catch:\<^esub> the final theorem may assume only the dimension restriction `c6` (`6 ≤ CARD('n)`);
+the `feasible: interior(Ffeas …) ≠ {}` precondition is not allowed.  Resolved by \<^emph>\<open>construction\<close>,
+not by hypothesis or by existential hand-waving:
+
+- \<^bold>Key physics:\<^esub> `af_at_main`/`Upow_at_main` --- `cvec_dip ω0 ωs ω0 = 0` at the main beam, so
+  `Upow(x,ω0) = gain·N² = cap` for \<^emph>\<open>every\<close>\<close> config (given `kz ωs ≠ kz ω0`).  The upper power bound
+  `Upow ≤ cap` is thus a theorem (vacuous constraint) and `ball_inside_Ffeas` only needs the strict
+  \<^emph>\<open>lower\<close>\<close> bound `pmin < Upow ω0`.  (The spurious `Upow ctr < cap` in `Ffeas_interior_nonempty` is
+  unused; with `ctr=ω0` it is even false `cap<cap` --- left it, it is standalone/uncited.)
+- \<^bold>Construction:\<^esub> concrete angles `ω0=(π/2,0)`, `ωs=(0,0)`, `ωnull=(π,0)`, `ctr=ω0` give
+  `kz ωs=1≠0=kz ω0` and `cvec_dip ω0 ωs ωnull $ 1 = -2 ≠ 0`; `feasible_witness_exists` builds the
+  Slater witness `x` (nulls at `ωnull`, spacing `≥1`); pick `dmin=1/2, δnull=1, pmin=0, A=B=0,D=1,
+  R=‖x‖+1`.  Then `ball_inside_Ffeas` ⟹ `interior(Ffeas) ≠ {}`, fed to
+  `regular_feasible_witness_dip`+`F0_nonempty_of_witness`.
+- \<^bold>Statement now:\<^esub> `6 ≤ CARD('n) ⟹ ∃ A B D ω0 ωs ωnull ctr R dmin δnull pmin ξ κ ε. 0<ξ∧0<κ∧0<ε
+  ∧ F0 (cvec_dip ω0 ωs) gain_dip R dmin A B D ωnull ctr (Omega ctr) δnull pmin ξ κ ε ≠ {}`.
+  The design is delivered by the construction; only `c6` is assumed.  `gain_dip ω0 > 0` from
+  `gain_dip_nonzero_of_sin` (sin(π/2)=1≠0).  Build clean (BUILD_EXIT=0).
+
 ## 2026-06-02 (robust set) — Into the determinant payoff: gain-from-steer + surj F pieces (i),(ii)
 
 \<^bold>Key correction (user):\<^esub> use the ACTUAL gain.  `gain_dip ω = gdip(ω\<^sub>1) = (edip ω\<^sub>1)\<^sup>2`, and
