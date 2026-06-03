@@ -3207,6 +3207,27 @@ lemma has_derivative_gradU_dip_x_explicit:
       by (simp add: bj inner_axis o_def)
   qed
 
+text \<open>\<^bold>\<open>(iii, step 4 helper) The moment-derivative on the \<open>(M\<^sub>2,M\<^sub>3)\<close>-plane.\<close>  On the moment tangent
+  \<open>\<delta> = (0,d\<^sub>2,d\<^sub>3,0,0,0)\<close> the \<open>\<bar>M\<^sub>1\<bar>\<^sup>2\<close> term of \<open>dEjm\<close> vanishes (its \<open>\<delta>\<^sub>1\<close> is \<open>0\<close>), leaving the steering
+  bilinear in the \<open>Im\<close>-form (\<open>Re((-\<ii>)w) = Im w\<close>) --- exactly the components of @{thm
+  surj_moment_grad_map}.\<close>
+
+lemma dEjm_on_e:
+  fixes M0 :: "complex^6" and p g c1 c2 :: real and d2 d3 :: complex
+  shows "dEjm p g c1 c2 M0 (axis 2 d2 + axis 3 d3)
+         = 2 * g * Im (cnj (M0$1) * (complex_of_real c1 * d2 + complex_of_real c2 * d3))"
+proof -
+  have key: "Re (cnj (M0$1) * ((- \<i>) * complex_of_real c1 * d2 + (- \<i>) * complex_of_real c2 * d3))
+             = Im (cnj (M0$1) * (complex_of_real c1 * d2 + complex_of_real c2 * d3))"
+  proof -
+    have "cnj (M0$1) * ((- \<i>) * complex_of_real c1 * d2 + (- \<i>) * complex_of_real c2 * d3)
+          = (- \<i>) * (cnj (M0$1) * (complex_of_real c1 * d2 + complex_of_real c2 * d3))"
+      by (simp add: algebra_simps)
+    thus ?thesis by simp
+  qed
+  show ?thesis
+    unfolding dEjm_def by (simp add: axis_def key algebra_simps)
+qed
 
 lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
@@ -3214,7 +3235,47 @@ lemma gradU_dip_x_partial_surj:
     and Msurj: "surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))"
     and steer: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
   shows "\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx"
-  sorry
+proof -
+  define dE :: "complex^6 \<Rightarrow> real^2" where
+    "dE = (\<lambda>\<delta>. \<chi> j. dEjm (frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)) (gain_dip \<omega>)
+                       ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2)
+                       (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) \<delta>)"
+  have hd: "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative
+              (dE \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at x)"
+    using has_derivative_gradU_dip_x_explicit[where V=UNIV] by (simp add: dE_def o_def)
+  \<comment> \<open>the three nondegeneracy ingredients (\<open>A \<noteq> 0\<close>, \<open>gain \<noteq> 0\<close>, immersion) all from the hypotheses\<close>
+  have a0: "M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1 \<noteq> 0"
+    by (metis Anz M_paper_proj_A)
+  have g0: "gain_dip \<omega> \<noteq> 0"
+    using steer Dcvec_det_zero_of_sin gain_dip_nonzero_of_sin by metis
+  have detC: "(Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))$1 * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1))$2
+            - (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))$2 * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1))$1 \<noteq> 0"
+    using steer by (simp add: det_2 matrix_def, argo)
+  \<comment> \<open>\<open>dE\<close> is onto via @{thm surj_moment_grad_map} on the \<open>(M\<^sub>2,M\<^sub>3)\<close> directions\<close>
+  have surjdE: "surj dE"
+  proof (unfold surj_def, intro allI)
+    fix t :: "real^2"
+    obtain p :: "complex \<times> complex" where p:
+      "(t $ 1, t $ 2) =
+         (2 * gain_dip \<omega> * Im (cnj (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1)
+              * (complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))$1) * fst p
+               + complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))$2) * snd p)),
+          2 * gain_dip \<omega> * Im (cnj (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1)
+              * (complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1))$1) * fst p
+               + complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1))$2) * snd p)))"
+      using surjD[OF surj_moment_grad_map[OF a0 g0 detC]] by blast
+    have c1: "dE (axis 2 (fst p) + axis 3 (snd p)) $ 1 = t $ 1"
+        using p by (simp add: dE_def dEjm_on_e)
+    have c2: "dE (axis 2 (fst p) + axis 3 (snd p)) $ 2 = t $ 2"
+        using p by (simp add: dE_def dEjm_on_e)
+    have "t = dE (axis 2 (fst p) + axis 3 (snd p))"
+      by (smt (verit) Finite_Cartesian_Product.vec_eq_iff c1 c2 exhaust_2)
+    thus "\<exists>\<delta>. t = dE \<delta>" by blast
+    qed
+  have "surj (dE \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))"
+    by (rule comp_surj[OF Msurj surjdE])
+  with hd show ?thesis by blast
+qed
 
 text \<open>\<^bold>\<open>(A4) The regularity locus is open.\<close>  \<open>A_cart\<close> is continuous (jointly in \<open>(\<bm>x,\<omega>)\<close>), the
   steering determinant is continuous in \<open>\<omega>\<close>, and the submersion set \<open>{surj (DM_paper_x \<dots>)}\<close> is open

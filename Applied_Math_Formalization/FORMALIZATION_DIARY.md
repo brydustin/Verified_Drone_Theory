@@ -8,6 +8,31 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-03 (robust set) — (A3) `gradU_dip_x_partial_surj` PROVEN (the determinant payoff)
+
+The deepest analytic leaf is closed: the configuration-derivative of \<open>\<nabla>\<^sub>\<Omega>U_dip\<close> is onto \<open>\<real>\<^sup>2\<close>
+when \<open>A \<noteq> 0\<close>, \<open>surj(DM_paper_x)\<close>, and the steering Jacobian is nonsingular.  Built bottom-up:
+- (i) `surj_Im_cnj_mult`, (ii) `surj_moment_grad_map` (Cramer + analytic core) — done earlier.
+- `has_derivative_Ej_moment` + named `Ejm`/`dEjm` + `has_derivative_Ejm`: explicit moment-space
+  Fréchet derivative of a gradient component (idiom `rule has_derivative_eq_rhs` is the WRONG
+  lever once `?f'` is a bare schematic; use `derivative_eq_intros` on the original goal).
+- `has_derivative_gradU_dip_component_x` (step 2): chain via `has_derivative_M_paper_x` +
+  `diff_chain_at` + `gradU_dip_component_moments`/`cmod_power2` (don't pre-instantiate `dEjm`'s
+  schematics — let `diff_chain_at` fix `?M0` and `simp o_def` do the rest).
+- `has_derivative_gradU_dip_x_explicit` (step 3): assemble the 2 components via
+  `has_derivative_componentwise_within` + `Basis_vec_def` + `inner_axis` (mirrors
+  `gradU_dip_differentiable_x`).
+- `dEjm_on_e` + the surj assembly (step 4): on \<open>\<delta>=(0,d\<^sub>2,d\<^sub>3,0,0,0)\<close> the \<open>\<bar>M\<^sub>1\<bar>\<^sup>2\<close> term drops, leaving
+  the `Im`-form (`Re((-\<ii>)w)=Im w`); `Dx = dE \<circ> DM`, `surj Dx \<longleftrightarrow> surj dE` by `comp_surj`+`Msurj`,
+  `surj dE` by `surj_moment_grad_map`.  Traps: `a0` via `metis M_paper_proj_A` (simp over-unfolds
+  to `A_moment`); `detC` via `det_2`+`matrix_def`+`argo` (commuted product); the vector equality
+  `t = dE e` must be assembled componentwise (`c1`,`c2`) then `metis exhaust_2 vec_eq_iff` — a
+  single combined `simp` won't fire `vec_eq_iff` on `t = (\<chi> j. \<dots>)`.
+
+\<^bold>Remaining on the A-chain:\<^esub> (A4) `open_A_cart_nonzero`, (A5) `gradU_dip_joint_C1`, then (A6) the
+regular-value lemma (consumes A3+A4+A5) \<rightarrow> transversality engine \<rightarrow> regular stratum of
+`Phi_bad_meager_dip` \<rightarrow> `regular_feasible_point_dip` \<rightarrow> capstone.
+
 ## 2026-06-03 (robust set) — Capstone `F0_dip_nonempty` discharged to ONLY `c6` (feasibility removed)
 
 \<^bold>User catch:\<^esub> the final theorem may assume only the dimension restriction `c6` (`6 ≤ CARD('n)`);
