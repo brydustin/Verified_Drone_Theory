@@ -2902,6 +2902,72 @@ proof -
     by (intro continuous_intros continuous_on_A_moment_cvec_dip)
 qed
 
+text \<open>\<^bold>\<open>A5 brick 2c-ii: joint continuity of the full \<open>HessU\<close> field.\<close>  Assemble the
+  \<open>HessU_dip_entry_moments\<close> formula: a joint matrix-vector helper, the \<open>\<omega>\<close>-jets pulled back
+  along \<open>snd\<close>, and the \<open>(\<bm>x,\<omega>)\<close>-continuous c-pattern terms (brick 2c-i), glued by
+  \<open>continuous_on_inner\<close>/arithmetic.  Then lift the \<open>2\<times>2\<close> entries to the matrix.\<close>
+
+lemma continuous_on_matvec:
+  fixes A :: "'a::topological_space \<Rightarrow> real^('m::finite)^('p::finite)"
+    and v :: "'a \<Rightarrow> real^'m"
+  assumes "continuous_on S A" and "continuous_on S v"
+  shows "continuous_on S (\<lambda>x. A x *v v x)"
+  unfolding matrix_vector_mult_def
+  by (intro continuous_on_vec_lambda continuous_on_sum continuous_intros
+            continuous_on_component assms)
+
+lemma continuous_on_gain_dip_snd:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set) (\<lambda>p. gain_dip (snd p))"
+  by (rule continuous_on_compose2[OF continuous_on_gain_dip
+        continuous_on_snd[OF continuous_on_id] subset_UNIV])
+
+lemma continuous_on_Dcvec_dip_snd:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set) (\<lambda>p. Dcvec_dip \<omega>0 \<omega>s (snd p) h)"
+  by (rule continuous_on_compose2[OF continuous_on_Dcvec_dip
+        continuous_on_snd[OF continuous_on_id] subset_UNIV])
+
+lemma continuous_on_D2cvec_dip_snd:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set) (\<lambda>p. D2cvec_dip \<omega>0 \<omega>s (snd p) h h')"
+  by (rule continuous_on_compose2[OF continuous_on_D2cvec_dip
+        continuous_on_snd[OF continuous_on_id] subset_UNIV])
+
+lemma continuous_on_frechet_gdip_proj_snd:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. frechet_derivative gdip (at ((snd p)$1)) r)"
+  by (rule continuous_on_compose2[OF continuous_on_frechet_gdip_proj
+        continuous_on_snd[OF continuous_on_id] subset_UNIV])
+
+lemma continuous_on_frechet2_gdip_proj_snd:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) c) (at (snd p)) v)"
+  by (rule continuous_on_compose2[OF continuous_on_frechet2_gdip_proj
+        continuous_on_snd[OF continuous_on_id] subset_UNIV])
+
+lemma continuous_on_HessU_dip_entry:
+    "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+       (\<lambda>p. vec_nth (vec_nth (HessU (cvec_dip \<omega>0
+  \<omega>s) gain_dip (fst p) (snd p)) k) l)"
+    by (simp only: HessU_dip_entry_moments,
+        intro continuous_intros 
+              continuous_on_matvec continuous_on_gain_dip_snd
+              continuous_on_Dcvec_dip_snd 
+              continuous_on_D2cvec_dip_snd
+              continuous_on_frechet_gdip_proj_snd 
+              continuous_on_frechet2_gdip_proj_snd
+              continuous_on_Hcmat_cvec_dip continuous_on_gradUc_cvec_dip 
+              continuous_on_Uc_cvec_dip)
+
+lemma continuous_on_HessU_dip_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))"
+proof -
+  have "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+          (\<lambda>p. \<chi> k. \<chi> l. vec_nth (vec_nth
+                  (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p)) k) l)"
+    by (intro continuous_on_vec_lambda continuous_on_HessU_dip_entry)
+  thus ?thesis by (simp add: vec_lambda_eta)
+qed
+
 text \<open>\<^bold>\<open>Sard brick (1): the dipole gradient field is \<open>C\<^sup>1\<close> in the configuration \<open>\<bm>x\<close>.\<close>  Fix the
   steering angle \<open>\<omega>\<close>.  Via @{thm gradU_dip_component_moments} the \<open>j\<close>-th gradient component is a
   fixed polynomial in the (\<open>\<bm>x\<close>-smooth) moment coordinates \<open>M_paper \<bm>x c\<close> (with \<open>c = cvec_dip \<omega>\<close>):
