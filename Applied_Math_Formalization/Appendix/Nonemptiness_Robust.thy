@@ -3174,6 +3174,40 @@ proof -
       by (simp add: o_def)
 qed
 
+lemma has_derivative_gradU_dip_x_explicit:
+    fixes x :: "(real^2)^'n" and V :: "((real^2)^'n) set"
+    shows "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s)
+  gain_dip y \<omega>) has_derivative
+              (\<lambda>h. \<chi> j. dEjm (frechet_derivative gdip
+  (at (\<omega>$1)) ((axis j 1)$1)) (gain_dip \<omega>)
+                            ((Dcvec_dip \<omega>0 \<omega>s
+  \<omega> (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s \<omega>
+  (axis j 1))$2)
+                            (M_paper x (cvec_dip \<omega>0
+  \<omega>s \<omega>))
+                            (DM_paper_x x (cvec_dip \<omega>0
+  \<omega>s \<omega>) h))) (at x within V)"
+  proof (subst has_derivative_componentwise_within, intro ballI)
+    fix b :: "real^2" assume "b \<in> Basis"
+    then obtain j where bj: "b = axis j 1" by (auto simp:
+  Basis_vec_def)
+    show "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s)
+  gain_dip y \<omega> \<bullet> b) has_derivative
+            (\<lambda>h. (\<chi> j. dEjm (frechet_derivative gdip
+  (at (\<omega>$1)) ((axis j 1)$1)) (gain_dip \<omega>)
+                            ((Dcvec_dip \<omega>0 \<omega>s
+  \<omega> (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s \<omega>
+  (axis j 1))$2)
+                            (M_paper x (cvec_dip \<omega>0
+  \<omega>s \<omega>))
+                            (DM_paper_x x (cvec_dip \<omega>0
+  \<omega>s \<omega>) h)) \<bullet> b)) (at x within V)"
+      using has_derivative_gradU_dip_component_x[where j=j, THEN
+  has_derivative_at_withinI]
+      by (simp add: bj inner_axis o_def)
+  qed
+
+
 lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
   assumes Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
