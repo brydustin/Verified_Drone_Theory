@@ -3685,12 +3685,108 @@ text \<open>\<^bold>\<open>(A5) The dipole gradient field is jointly \<open>C\<^
   arguments, so \<open>G = \<nabla>\<^sub>\<Omega>U\<close> has a continuous (blinfun) derivative field --- the \<open>derG\<close>/\<open>contG'\<close>
   inputs of the chart engine's local step @{thm regular_zero_set_projection_local_chart_2d}.\<close>
 
+lemma continuous_on_HessU_blinfun_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>z. Blinfun ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst z) (snd z))))"
+proof (rule continuous_on_blinfun_componentwise)
+  fix e :: "real^2" assume "e \<in> Basis"
+  have "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+          (\<lambda>z. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst z) (snd z) *v e)"
+    by (rule continuous_on_matvec[OF continuous_on_HessU_dip_joint continuous_on_const])
+  thus "continuous_on UNIV
+          (\<lambda>z. blinfun_apply (Blinfun ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst z) (snd z)))) e)"    
+    using continuous_on_HessU_dip_joint continuous_on_const continuous_on_matvec
+    by (simp add: bounded_linear_Blinfun_apply matrix_vector_mul_bounded_linear, blast)
+qed
+
 lemma gradU_dip_joint_C1:
   shows "\<exists>G'::(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2)).
             (\<forall>z. ((\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
                      has_derivative blinfun_apply (G' z)) (at z))
           \<and> continuous_on UNIV G'"
-  sorry
+proof -
+  define Dx where
+    "Dx x \<omega> = (\<lambda>h. \<chi> j. dEjm (frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)) (gain_dip \<omega>)
+                ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2)
+                (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h))"
+    for x :: "(real^2)^'n" and \<omega> :: "real^2"
+  define D where
+    "D z = (\<lambda>w::((real^2)^'n) \<times> (real^2). Dx (fst z) (snd z) (fst w)
+              + HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst z) (snd z) *v (snd w))"
+    for z :: "((real^2)^'n) \<times> (real^2)"
+  have FX: "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx x \<omega>) (at x within UNIV)"
+    for x :: "(real^2)^'n" and \<omega> :: "real^2"
+    unfolding Dx_def by (rule has_derivative_gradU_dip_x_explicit)
+  have blDx: "bounded_linear (Dx x \<omega>)" for x \<omega>
+    using FX has_derivative_bounded_linear by blast
+  have dx0: "Dx x \<omega> 0 = 0" for x \<omega>
+    by (metis blDx bounded_linear.linear linear_0)
+  have blD: "bounded_linear (D z)" for z
+    unfolding D_def
+    by (intro bounded_linear_add bounded_linear_compose[OF blDx bounded_linear_fst]
+              bounded_linear_compose[OF matrix_vector_mul_bounded_linear bounded_linear_snd])
+  have hd: "((\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p)) has_derivative D z) (at z)" for z
+  proof -
+    obtain x \<omega> where z: "z = (x, \<omega>)" by fastforce
+    have FY: "\<And>x' \<omega>'. x' \<in> (UNIV::((real^2)^'n) set) \<Longrightarrow> \<omega>' \<in> (UNIV::(real^2) set) \<Longrightarrow>
+                ((\<lambda>\<omega>''. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>'') has_derivative
+                 blinfun_apply (Blinfun ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>')))) (at \<omega>' within UNIV)"
+    proof -
+      fix x' :: "(real^2)^'n" and \<omega>' :: "real^2"
+      have "((\<lambda>\<omega>''. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>'') has_derivative
+              (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>' *v v)) (at \<omega>' within UNIV)"
+        by (rule has_derivative_at_withinI[OF gradU_dip_has_derivative])
+      thus "((\<lambda>\<omega>''. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>'') has_derivative
+              blinfun_apply (Blinfun ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>')))) (at \<omega>' within UNIV)"
+        by (simp add: bounded_linear_Blinfun_apply matrix_vector_mul_bounded_linear)
+    qed
+    have FYC: "continuous (at (x, \<omega>) within UNIV \<times> UNIV)
+                 (\<lambda>(x', \<omega>'). Blinfun ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>')))"
+    proof -
+      have "continuous (at (x, \<omega>) within UNIV)
+              (\<lambda>z. Blinfun ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst z) (snd z))))"
+        using continuous_on_HessU_blinfun_joint 
+        by (simp add: continuous_on_eq_continuous_within, blast)
+      thus ?thesis by (simp add: case_prod_unfold UNIV_Times_UNIV)
+    qed
+    have "((\<lambda>(x', \<omega>'). gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x' \<omega>') has_derivative
+             (\<lambda>(tx, ty). Dx x \<omega> tx
+                  + blinfun_apply (Blinfun ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))) ty))
+           (at (x, \<omega>) within UNIV \<times> UNIV)"
+      by (rule has_derivative_partialsI[OF FX FY FYC UNIV_I convex_UNIV])
+    thus ?thesis
+      unfolding z D_def
+      by (simp add: bounded_linear_Blinfun_apply matrix_vector_mul_bounded_linear
+                    case_prod_unfold UNIV_Times_UNIV)
+  qed
+  have cont: "continuous_on UNIV (\<lambda>z. Blinfun (D z))"
+  proof (rule continuous_on_blinfun_componentwise)
+    fix w :: "((real^2)^'n) \<times> (real^2)" assume "w \<in> Basis"
+    then consider b where "b \<in> Basis" "w = (b, 0)" | e where "e \<in> Basis" "w = (0, e)"
+      unfolding Basis_prod_def by auto
+    thus "continuous_on UNIV (\<lambda>z. blinfun_apply (Blinfun (D z)) w)"
+    proof cases
+      case 1
+      have "continuous_on UNIV (\<lambda>z. D z w)"
+        unfolding D_def \<open>w = (b, 0)\<close> Dx_def
+        using continuous_on_gradU_dip_xpartial_applied[where i=b] by simp
+      thus ?thesis by (simp add: bounded_linear_Blinfun_apply blD)
+    next
+      case 2
+      have "continuous_on UNIV (\<lambda>z. D z w)"
+        unfolding D_def \<open>w = (0, e)\<close>
+        by (simp add: dx0 continuous_on_matvec[OF continuous_on_HessU_dip_joint continuous_on_const])
+      thus ?thesis by (simp add: bounded_linear_Blinfun_apply blD)
+    qed
+  qed
+  show ?thesis
+  proof (intro exI[where x="\<lambda>z. Blinfun (D z)"] conjI allI)
+    fix z
+    show "((\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
+             has_derivative blinfun_apply (Blinfun (D z))) (at z)"
+      using hd[of z] by (simp add: bounded_linear_Blinfun_apply blD)
+  qed (rule cont)
+qed
 
 text \<open>\<^bold>\<open>(A6) Assembled regular value of the dipole gradient field --- CORRECTED DOMAIN.\<close>  \<open>0\<close> is a
   regular value of the joint map \<open>(\<bm>x,\<omega>) \<mapsto> \<nabla>\<^sub>\<Omega>U_dip\<close> on the open locus where \<^bold>\<open>all three\<close>
