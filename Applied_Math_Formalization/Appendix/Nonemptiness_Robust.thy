@@ -1011,6 +1011,14 @@ proof -
   thus ?thesis by (rule continuous_on_subset) simp
 qed
 
+lemma continuous_on_A_moment_joint:
+    "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
+  (\<lambda>p. A_moment (fst p) (snd p))"
+    unfolding A_moment_def phase_def
+    by (intro continuous_on_sum continuous_on_cis continuous_intros
+              bounded_linear.continuous_on[OF
+  bounded_linear_vec_nth])
+
 subsection \<open>First contact with the determinant: the moments appear in \<open>dA\<close>\<close>
 
 text \<open>\<^bold>\<open>The moment map enters here.\<close>  The first moments of the configuration,
