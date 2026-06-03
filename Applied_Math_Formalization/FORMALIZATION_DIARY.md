@@ -8,6 +8,27 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-03 — engine #1 + A5 scoping (use the `Ck_on` C^k predicate, not weak diff)
+
+\<^bold>Engine #1\<^esub> (`regular_zero_set_projection_charts_core_2d`): its supports are ALL PROVEN —
+`regular_zero_set_projection_local_chart_2d` (IFT), `countable_chart_cover_of_levelset_2d`
+(Lindelöf), `negligible_critical_values_from_charts` (`baby_Sard`).  Two facts about the core:
+(1) its statement is UNDERSPECIFIED — it only assumes `reg0`, but `countable_chart_cover` needs
+`derG`+`contG'` (a global C¹ field), supplied by A5; so the C¹ hyps must be ADDED to the core.
+(2) the remaining math is the bad⟺critical IFT identification (`fst∘φ` critical ⟺ `∂_ω G`
+non-surjective; tangent `= ker G' = Im Dφ`) + σ-compactness + chain-rule Jacobian — the deepest leaf.
+
+\<^bold>A5\<^esub> `gradU_dip_joint_C1` reduces cleanly to `Ck_on 1 (λp. gradU (cvec_dip ω0 ωs) gain_dip (fst p)
+(snd p)) UNIV` via `Ck1_on_imp_C1_interface` (Ck1_C1_Bridge.thy); `Ck_on = higher_differentiable_on`
+(`Ck_on_iff_higher_differentiable_on`), combinators `Ck_on_add/mult/scaleR/compose/pow`.  GAP: only
+single-variable smoothness exists (`U_dip_Ck2` = C² in ω; `C1_M_paper_x` = C¹ in x); NO joint `(x,ω)`
+smoothness of `M_paper`/`U`/`gradU` — A5 needs it built (M_paper jointly C^∞, then compose).  \<^bold>Always
+use `Ck_on`/`higher_differentiable_on` (true C^k), never `k_times_Fr_differentiable_on` (no continuity).\<^esub>
+
+\<^bold>Conclusion:\<^esub> the engine branch (A5 joint-smoothness → engine IFT identification) is a multi-session
+effort.  #6 `rank_lower_semicont_open_dense_propagation` (genericity branch, independent) is the likely
+faster guaranteed win.
+
 ## 2026-06-03 — leaf #7 `steering_singular_nowhere_dense` PROVEN (11 on-path sorries left)
 
 Assembled from `Dcvec_det_eq` + `sin_cos_lin_not_const0` (brick 2b): set rewritten to `{ω. f ω = 0}`
