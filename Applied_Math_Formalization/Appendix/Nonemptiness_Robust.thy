@@ -1107,6 +1107,88 @@ lemma continuous_on_M22_moment_cvec_dip:
   using continuous_on_compose2[OF continuous_on_M22_moment_joint
                                  continuous_on_pair_cvec_dip subset_UNIV] by simp
 
+text \<open>\<^bold>\<open>A5 brick 2b: the pure-\<open>\<omega>\<close> jets of \<open>HessU_dip_entry_moments\<close> are continuous in \<open>\<omega>\<close>.\<close>
+  The gain \<open>gain_dip = gdip\<circ>\<pi>\<^sub>1\<close> and the steering jets \<open>Dcvec_dip\<close>, \<open>D2cvec_dip\<close>, and the gain's
+  first/second Fréchet derivatives are all continuous in \<open>\<omega>\<close> --- proved through the \<open>C\<^sup>\<infinity>\<close>
+  smoothness of \<open>gdip\<close>/\<open>cvec_dip\<close> (@{thm higher_differentiable_on.simps(2)} extracts the
+  derivative-field smoothness, the @{thm frechet_derivative_cvec_dip}/
+  @{thm has_derivative_Dcvec_dip} jets identify the explicit forms), so we never touch the
+  \<open>sin/cos\<close> formulas or the beam-lift division constant.\<close>
+
+lemma continuous_on_gain_dip:
+  "continuous_on UNIV gain_dip"
+  unfolding gain_dip_def
+  by (rule continuous_on_compose2[OF
+        higher_differentiable_on_imp_continuous_on[OF gdip_higher_differentiable_on]
+        bounded_linear.continuous_on[OF bounded_linear_vec_nth continuous_on_id] subset_UNIV])
+
+lemma continuous_on_Dcvec_dip:
+  "continuous_on UNIV (\<lambda>\<omega>. Dcvec_dip \<omega>0 \<omega>s \<omega> h)"
+proof -
+  have "higher_differentiable_on UNIV (\<lambda>\<omega>. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) h) 1"
+    using cvec_dip_higher_differentiable_on[of \<omega>0 \<omega>s "Suc 1"]
+    by (simp add: higher_differentiable_on.simps(2))
+  hence "continuous_on UNIV (\<lambda>\<omega>. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) h)"
+    by (rule higher_differentiable_on_imp_continuous_on)
+  thus ?thesis by (simp add: frechet_derivative_cvec_dip)
+qed
+
+lemma continuous_on_D2cvec_dip:
+  "continuous_on UNIV (\<lambda>\<omega>. D2cvec_dip \<omega>0 \<omega>s \<omega> h h')"
+proof -
+  have C1: "higher_differentiable_on UNIV (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) 1"
+  proof -
+    have "higher_differentiable_on UNIV (\<lambda>y. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at y) h) 1"
+      using cvec_dip_higher_differentiable_on[of \<omega>0 \<omega>s "Suc 1"]
+      by (simp add: higher_differentiable_on.simps(2))
+    thus ?thesis by (simp add: frechet_derivative_cvec_dip)
+  qed
+  from C1 have "higher_differentiable_on UNIV
+                  (\<lambda>x. frechet_derivative (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) (at x) h') 0"
+    by (simp add: higher_differentiable_on.simps(2))
+  hence "continuous_on UNIV (\<lambda>x. frechet_derivative (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) (at x) h')"
+    by (rule higher_differentiable_on_imp_continuous_on)
+  thus ?thesis
+    by (simp add: frechet_derivative_at[OF has_derivative_Dcvec_dip])
+qed
+
+lemma continuous_on_frechet_gdip_proj:
+  "continuous_on UNIV (\<lambda>\<omega>::real^2. frechet_derivative gdip (at (\<omega>$1)) r)"
+proof -
+  have g: "continuous_on UNIV (\<lambda>t::real. frechet_derivative gdip (at t) r)"
+  proof -
+    have "higher_differentiable_on UNIV (\<lambda>t. frechet_derivative gdip (at t) r) 1"
+      using gdip_higher_differentiable_on[of "Suc 1"]
+      by (simp add: higher_differentiable_on.simps(2))
+    thus ?thesis by (rule higher_differentiable_on_imp_continuous_on)
+  qed
+  show ?thesis
+    by (rule continuous_on_compose2[OF g
+          bounded_linear.continuous_on[OF bounded_linear_vec_nth continuous_on_id] subset_UNIV])
+qed
+
+lemma continuous_on_frechet2_gdip_proj:
+  "continuous_on UNIV
+     (\<lambda>\<omega>::real^2. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) c) (at \<omega>) v)"
+proof -
+  have outer1: "higher_differentiable_on UNIV (\<lambda>t. frechet_derivative gdip (at t) c) 1"
+    using gdip_higher_differentiable_on[of "Suc 1"]
+    by (simp add: higher_differentiable_on.simps(2))
+  have f1C1: "higher_differentiable_on UNIV
+                (\<lambda>\<eta>::real^2. frechet_derivative gdip (at (\<eta>$1)) c) 1"
+  proof -
+    have "higher_differentiable_on UNIV
+            ((\<lambda>t. frechet_derivative gdip (at t) c) \<circ> (\<lambda>\<eta>::real^2. \<eta>$1)) 1"
+      by (rule higher_differentiable_on_compose
+            [OF outer1 proj_higher_differentiable_on _ open_UNIV open_UNIV]) auto
+    thus ?thesis by (simp add: o_def)
+  qed
+  from f1C1 have "higher_differentiable_on UNIV
+       (\<lambda>x. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) c) (at x) v) 0"
+    by (simp add: higher_differentiable_on.simps(2))
+  thus ?thesis by (rule higher_differentiable_on_imp_continuous_on)
+qed
+
 subsection \<open>First contact with the determinant: the moments appear in \<open>dA\<close>\<close>
 
 text \<open>\<^bold>\<open>The moment map enters here.\<close>  The first moments of the configuration,
