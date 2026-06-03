@@ -3128,6 +3128,52 @@ proof -
                        simp: algebra_simps)
 qed
 
+text \<open>\<^bold>\<open>Named moment-gradient component and its derivative.\<close>  Packaging @{thm
+  gradU_dip_component_moments} (after \<open>cmod\<^sup>2 = Re\<^sup>2 + Im\<^sup>2\<close>) as the function \<open>Ejm\<close> of the moment
+  vector, with explicit Fréchet derivative \<open>dEjm\<close> (= @{thm has_derivative_Ej_moment}), lets us
+  chain through @{thm has_derivative_M_paper_x} without rewriting the large derivative term.\<close>
+
+definition Ejm :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^6 \<Rightarrow> real" where
+  "Ejm p g c1 c2 = (\<lambda>M. p * ((Re (M$1))\<^sup>2 + (Im (M$1))\<^sup>2)
+              + g * (2 * Re (cnj (M$1) * ((- \<i>) * complex_of_real c1 * (M$2)
+                                        + (- \<i>) * complex_of_real c2 * (M$3)))))"
+
+definition dEjm :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^6 \<Rightarrow> complex^6 \<Rightarrow> real" where
+  "dEjm p g c1 c2 M0 = (\<lambda>\<delta>. p * (2 * Re (M0$1) * Re (\<delta>$1) + 2 * Im (M0$1) * Im (\<delta>$1))
+              + g * (2 * Re (cnj (\<delta>$1) * ((- \<i>) * complex_of_real c1 * (M0$2)
+                                        + (- \<i>) * complex_of_real c2 * (M0$3))
+                          + cnj (M0$1) * ((- \<i>) * complex_of_real c1 * (\<delta>$2)
+                                        + (- \<i>) * complex_of_real c2 * (\<delta>$3)))))"
+
+lemma has_derivative_Ejm:
+  fixes M0 :: "complex^6" and p g c1 c2 :: real
+  shows "(Ejm p g c1 c2 has_derivative dEjm p g c1 c2 M0) (at M0)"
+  unfolding Ejm_def dEjm_def by (rule has_derivative_Ej_moment)
+
+text \<open>\<^bold>\<open>(iii, step 2) Explicit \<open>\<bm>x\<close>-derivative of a gradient component.\<close>  The chain rule through
+  the proven moment-map derivative @{thm has_derivative_M_paper_x}: \<open>\<partial>\<^sub>\<bm>x(\<nabla>\<^sub>\<Omega>U)\<^sub>j = dEjm \<circ> DM\<close>.\<close>
+
+lemma has_derivative_gradU_dip_component_x:
+  fixes x :: "(real^2)^'n"
+  shows "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ j) has_derivative
+            (dEjm (frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)) (gain_dip \<omega>)
+                  ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2)
+                  (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+             \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at x)"
+proof -
+  have eq: "(\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ j)
+            = (\<lambda>y. Ejm (frechet_derivative gdip (at (\<omega>$1)) ((axis j 1)$1)) (gain_dip \<omega>)
+                       ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$1) ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1))$2)
+                       (M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>)))"
+    by (rule ext) (simp add: gradU_dip_component_moments cmod_power2 Ejm_def)
+  have dM: "((\<lambda>y. M_paper y (cvec_dip \<omega>0 \<omega>s \<omega>)) has_derivative DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>)) (at x)"
+    using has_derivative_M_paper_x[where V=UNIV] by fastforce
+  show ?thesis
+      unfolding eq
+      using diff_chain_at[OF dM has_derivative_Ejm]
+      by (simp add: o_def)
+qed
+
 lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
   assumes Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
