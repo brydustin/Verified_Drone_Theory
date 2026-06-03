@@ -3100,6 +3100,34 @@ proof -
   qed
 qed
 
+text \<open>\<^bold>\<open>Explicit moment-space derivative of a gradient component.\<close>  The \<open>j\<close>-th component of
+  \<open>\<nabla>\<^sub>\<Omega>U_dip\<close>, read as a function of the moment vector \<open>M \<in> \<complex>\<^sup>6\<close> via
+  @{thm gradU_dip_component_moments} (with \<open>p = \<partial>gdip\<close>, \<open>g = gain_dip \<omega>\<close>, \<open>c\<^sub>1,c\<^sub>2\<close> the steering
+  Jacobian column), has the explicit Fréchet derivative below: the \<open>\<bar>M\<^sub>1\<bar>\<^sup>2\<close> term differentiates to
+  \<open>2Re(M\<^sub>1)Re(\<delta>\<^sub>1)+2Im(M\<^sub>1)Im(\<delta>\<^sub>1)\<close> and the bilinear term by the product rule.\<close>
+
+lemma has_derivative_Ej_moment:
+  fixes M0 :: "complex^6" and p g c1 c2 :: real
+  shows "((\<lambda>M. p * ((Re (M$1))\<^sup>2 + (Im (M$1))\<^sup>2)
+              + g * (2 * Re (cnj (M$1) * ((- \<i>) * complex_of_real c1 * (M$2)
+                                        + (- \<i>) * complex_of_real c2 * (M$3)))))
+          has_derivative
+          (\<lambda>\<delta>. p * (2 * Re (M0$1) * Re (\<delta>$1) + 2 * Im (M0$1) * Im (\<delta>$1))
+             + g * (2 * Re (cnj (\<delta>$1) * ((- \<i>) * complex_of_real c1 * (M0$2)
+                                        + (- \<i>) * complex_of_real c2 * (M0$3))
+                          + cnj (M0$1) * ((- \<i>) * complex_of_real c1 * (\<delta>$2)
+                                        + (- \<i>) * complex_of_real c2 * (\<delta>$3))))))
+          (at M0)"
+proof -
+  have proj: "((\<lambda>M::complex^6. M $ k) has_derivative (\<lambda>\<delta>. \<delta> $ k)) (at M0)" for k
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_ident])
+  show ?thesis
+      by (auto intro!: derivative_eq_intros proj bounded_linear.has_derivative[OF bounded_linear_Re]
+                       bounded_linear.has_derivative[OF bounded_linear_Im]
+                       bounded_linear.has_derivative[OF bounded_linear_cnj]
+                       simp: algebra_simps)
+qed
+
 lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
   assumes Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
