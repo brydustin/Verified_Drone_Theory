@@ -2943,9 +2943,50 @@ proof -
   show ?thesis using blD\<Phi> fin unfolding c_def by blast
 qed
 
+text \<open>\<^bold>\<open>The actual dipole gain is nonzero off the endfire nulls.\<close>  \<open>gain_dip \<omega> = gdip(\<omega>\<^sub>1)\<close> and
+  \<open>gdip \<theta> = (edip \<theta>)\<^sup>2\<close>; the half-wave dipole pattern \<open>edip \<theta> = cos(\<pi>/2 cos\<theta>)/sin\<theta>\<close> vanishes only where
+  \<open>cos(\<pi>/2 cos\<theta>) = 0 \<longleftrightarrow> cos\<theta> = \<pm>1 \<longleftrightarrow> sin\<theta> = 0\<close>.  So off \<open>sin\<theta> = 0\<close> the gain is strictly positive.
+  Crucially the steering determinant carries a \<open>sin(\<omega>\<^sub>1)\<close> factor (its \<open>\<omega>\<close>-column is
+  \<open>(-sin\<omega>\<^sub>1 sin\<omega>\<^sub>2, sin\<omega>\<^sub>1 cos\<omega>\<^sub>2)\<close>), so the immersion hypothesis \<open>det(Dcvec) \<noteq> 0\<close> already forces
+  \<open>sin(\<omega>\<^sub>1) \<noteq> 0\<close>, hence \<open>gain_dip \<omega> \<noteq> 0\<close> --- no separate gain hypothesis is needed.\<close>
+
+lemma gain_dip_nonzero_of_sin:
+  fixes \<omega> :: "real^2"
+  assumes "sin (\<omega> $ 1) \<noteq> 0"
+  shows "gain_dip \<omega> \<noteq> 0"
+proof -
+  have cb: "(cos (\<omega> $ 1))\<^sup>2 < 1"
+  proof -
+    have "0 < (sin (\<omega> $ 1))\<^sup>2" using assms by simp
+    moreover have "(sin (\<omega> $ 1))\<^sup>2 + (cos (\<omega> $ 1))\<^sup>2 = 1"
+      by (rule sin_cos_squared_add)
+    ultimately show ?thesis by linarith
+  qed
+  hence cabs: "\<bar>cos (\<omega> $ 1)\<bar> < 1" by (simp add: abs_square_less_1)
+  have c_lo: "- 1 < cos (\<omega> $ 1)" and c_hi: "cos (\<omega> $ 1) < 1"
+    using cabs by (auto simp: abs_less_iff)
+  have hpi: "0 < pi/2" using pi_gt_zero by simp
+  have "0 < cos (pi/2 * cos (\<omega> $ 1))"
+  proof (rule cos_gt_zero_pi)
+    have "pi/2 * (- 1) < pi/2 * cos (\<omega> $ 1)"
+      by (rule mult_strict_left_mono[OF c_lo hpi])
+    thus "- (pi/2) < pi/2 * cos (\<omega> $ 1)" by simp
+  next
+    have "pi/2 * cos (\<omega> $ 1) < pi/2 * 1"
+      by (rule mult_strict_left_mono[OF c_hi hpi])
+    thus "pi/2 * cos (\<omega> $ 1) < pi/2" by simp
+  qed
+  hence "cos (pi/2 * cos (\<omega> $ 1)) \<noteq> 0" by simp
+  hence "edip (\<omega> $ 1) \<noteq> 0" using assms by (simp add: edip_def)
+  hence "(edip (\<omega> $ 1))\<^sup>2 \<noteq> 0" by simp
+  hence "gdip (\<omega> $ 1) \<noteq> 0" by (simp add: gdip_eq_edip_sq)
+  thus ?thesis by (simp add: gain_dip_def)
+qed
+
 text \<open>\<^bold>\<open>(A3) The determinant payoff: the configuration partial is onto \<open>\<real>\<^sup>2\<close>.\<close>  When \<open>A \<noteq> 0\<close>, the
   moment map is a submersion (\<open>surj (DM_paper_x \<dots>)\<close>, \<open>lem:Msurj\<close>), and the steering map is an
-  immersion (\<open>det (Dcvec_dip \<dots>) \<noteq> 0\<close>), the \<open>\<bm>x\<close>-derivative of \<open>\<nabla>\<^sub>\<Omega>U\<close> is surjective.\<close>
+  immersion (\<open>det (Dcvec_dip \<dots>) \<noteq> 0\<close>, which also forces \<open>gain_dip \<omega> \<noteq> 0\<close>), the \<open>\<bm>x\<close>-derivative
+  of \<open>\<nabla>\<^sub>\<Omega>U\<close> is surjective.\<close>
 
 lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
