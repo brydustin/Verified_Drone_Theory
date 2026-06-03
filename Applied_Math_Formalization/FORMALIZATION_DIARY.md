@@ -8,6 +8,16 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-03 — `Dcvec_det_eq` proven (brick 1 of leaf #7 `steering_singular_nowhere_dense`)
+
+Explicit steering determinant: `det(matrix(Dcvec_dip ω0 ωs ω)) = sin ω₁·(cos ω₁ - sin ω₁·(Kₓ cos ω₂ +
+K_y sin ω₂))`, `Kₓ=(kx ω0-kx ωs)/(kz ωs-kz ω0)`, `K_y` likewise.  Proof: a `have …` arithmetic
+identity discharged by `argo` (the `Kₓ`-numerator cancellation), then
+`simp(det_2 matrix_def Dcvec_dip_def axis_def sin_cos_squared_add algebra_simps)`.  Brick 2 (the
+`nowhere_dense` itself): `{det=0}` closed ⟹ nowhere_dense ⟺ interior={}; on a horizontal segment
+`h(ω₁)=cos ω₁ - sin ω₁·g(b)` has `h²+h'²=1+g(b)²>0`, so it cannot vanish on an interval (and the
+`sin ω₁=0` points are isolated) — contradiction with `{det=0}` containing a ball.
+
 ## 2026-06-03 — DEFINITIVE on-path sorry list for `F0_dip_nonempty` (13 leaves)
 
 Verified by scanning ALL working `.thy` files (not just `Robust`).  \<^bold>Off-path (do NOT count):\<^esub>

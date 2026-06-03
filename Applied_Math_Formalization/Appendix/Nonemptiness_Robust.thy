@@ -3689,6 +3689,29 @@ text \<open>\<^bold>\<open>(M3) The steering-singular angle locus is nowhere den
   \<open>\<omega>\<close> and not everywhere singular, so its singular set is a proper analytic subset --- closed with
   empty interior.\<close>
 
+lemma Dcvec_det_eq:
+    fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+    shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+           = sin (\<omega>$1) * (cos (\<omega>$1)
+               - sin (\<omega>$1) * (((kx \<omega>0 - kx
+  \<omega>s)/(kz \<omega>s - kz \<omega>0)) * cos (\<omega>$2)
+                            + ((ky \<omega>0 - ky \<omega>s)/(kz
+  \<omega>s - kz \<omega>0)) * sin (\<omega>$2)))"
+proof -
+  have "cos (\<omega> $h 1) * (sin (\<omega> $h 1) * (cos (\<omega> $h 2) * cos (\<omega> $h 2))) + 
+           (cos (\<omega> $h 1) * (sin (\<omega> $h 1) * (sin (\<omega> $h 2) * sin (\<omega> $h 2))) + 
+           ((kx \<omega>0 * (sin (\<omega> $h 1) * (sin (\<omega> $h 1) * cos (\<omega> $h 2))) - 
+             kx \<omega>s * (sin (\<omega> $h 1) * (sin (\<omega> $h 1) * cos (\<omega> $h 2)))) / 
+            (kz \<omega>s - kz \<omega>0) + (kx \<omega>s * (sin (\<omega> $h 1) * (sin (\<omega> $h 1) * cos (\<omega> $h 2))) - 
+             kx \<omega>0 * (sin (\<omega> $h 1) * (sin (\<omega> $h 1) * cos (\<omega> $h 2)))) / (kz \<omega>s - kz \<omega>0))) =
+       cos (\<omega> $h 1) * (sin (\<omega> $h 1) * (cos (\<omega> $h 2) * cos (\<omega> $h 2) + sin (\<omega> $h 2) * sin (\<omega> $h 2)))"
+    by argo
+  then show ?thesis
+    by (simp add: det_2 matrix_def Dcvec_dip_def axis_def sin_cos_squared_add[of "\<omega>$2"]
+  algebra_simps)
+qed
+  
+
 lemma steering_singular_nowhere_dense:
   shows "nowhere_dense {\<omega>::angle. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
   sorry
