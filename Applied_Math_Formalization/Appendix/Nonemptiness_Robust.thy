@@ -3669,6 +3669,116 @@ proof -
   with hd show ?thesis by blast
 qed
 
+text \<open>\<^bold>\<open>Abstract foundation: surjective operators form an open set.\<close>  For a continuously-varying
+  family of bounded operators into a finite-dimensional (Euclidean) space, the surjective stratum is
+  open --- lower-semicontinuity of rank, proved via the adjoint: \<open>surj A \<longleftrightarrow> inj(adj A) \<longleftrightarrow> adj A
+  bounded below\<close>, and bounded-below survives perturbations smaller than the bound (using
+  \<open>\<bar>adj L\<bar> \<le> \<bar>L\<bar>\<close>).  This is the reusable openness behind A4's submersion conjunct.\<close>
+
+lemma norm_adjoint_blinfun_le:
+  fixes L :: "'a::euclidean_space \<Rightarrow>\<^sub>L 'b::euclidean_space"
+  shows "norm (adjoint (blinfun_apply L) x) \<le> norm L * norm x"
+proof -
+  have lin: "linear (blinfun_apply L)"
+    by (rule bounded_linear.linear[OF blinfun.bounded_linear_right])
+  have "(norm (adjoint (blinfun_apply L) x))\<^sup>2
+        = adjoint (blinfun_apply L) x \<bullet> adjoint (blinfun_apply L) x"
+    by (rule power2_norm_eq_inner)
+  also have "\<dots> = x \<bullet> blinfun_apply L (adjoint (blinfun_apply L) x)"
+    by (rule adjoint_clauses(2)[OF lin])
+  also have "\<dots> \<le> norm x * norm (blinfun_apply L (adjoint (blinfun_apply L) x))"
+    by (rule norm_cauchy_schwarz)
+  also have "\<dots> \<le> norm x * (norm L * norm (adjoint (blinfun_apply L) x))"
+    by (rule mult_left_mono[OF norm_blinfun norm_ge_zero])
+  also have "\<dots> = (norm L * norm x) * norm (adjoint (blinfun_apply L) x)"
+    by (simp add: ac_simps)
+  finally have key: "(norm (adjoint (blinfun_apply L) x))\<^sup>2
+                      \<le> (norm L * norm x) * norm (adjoint (blinfun_apply L) x)" .
+  show ?thesis
+  proof (cases "adjoint (blinfun_apply L) x = 0")
+    case True thus ?thesis by simp
+  next
+    case False
+    hence pos: "0 < norm (adjoint (blinfun_apply L) x)" by simp
+    have ineq: "norm (adjoint (blinfun_apply L) x) * norm (adjoint (blinfun_apply L) x)
+                \<le> (norm L * norm x) * norm (adjoint (blinfun_apply L) x)"
+      using key by (simp add: power2_eq_square)
+    show ?thesis by (rule mult_right_le_imp_le[OF ineq pos])
+  qed
+qed
+
+lemma adjoint_blinfun_diff:
+  fixes A B :: "'a::euclidean_space \<Rightarrow>\<^sub>L 'b::euclidean_space"
+  shows "adjoint (blinfun_apply (A - B)) y
+         = adjoint (blinfun_apply A) y - adjoint (blinfun_apply B) y"
+proof (rule euclidean_eqI)
+  fix i :: 'a assume "i \<in> Basis"
+  have lAB: "linear (blinfun_apply (A - B))" and lA: "linear (blinfun_apply A)"
+    and lB: "linear (blinfun_apply B)"
+    by (rule bounded_linear.linear[OF blinfun.bounded_linear_right])+
+  have "adjoint (blinfun_apply (A - B)) y \<bullet> i = y \<bullet> blinfun_apply (A - B) i"
+    by (rule adjoint_clauses(2)[OF lAB])
+  also have "\<dots> = y \<bullet> blinfun_apply A i - y \<bullet> blinfun_apply B i"
+    by (simp add: blinfun.diff_left inner_diff_right)
+  also have "\<dots> = (adjoint (blinfun_apply A) y - adjoint (blinfun_apply B) y) \<bullet> i"
+    by (simp add: adjoint_clauses(2)[OF lA] adjoint_clauses(2)[OF lB] inner_diff_left)
+  finally show "adjoint (blinfun_apply (A - B)) y \<bullet> i
+                = (adjoint (blinfun_apply A) y - adjoint (blinfun_apply B) y) \<bullet> i" .
+qed
+
+lemma open_surj_blinfun:
+  "open {A::('a::euclidean_space) \<Rightarrow>\<^sub>L ('b::euclidean_space). surj (blinfun_apply A)}"
+proof (unfold open_dist, intro ballI)
+  fix A0 :: "'a \<Rightarrow>\<^sub>L 'b" assume "A0 \<in> {A. surj (blinfun_apply A)}"
+  hence sA0: "surj (blinfun_apply A0)" by simp
+  have lin0: "linear (blinfun_apply A0)"
+    by (rule bounded_linear.linear[OF blinfun.bounded_linear_right])
+  have "surj (adjoint (adjoint (blinfun_apply A0))) = inj (adjoint (blinfun_apply A0))"
+    by (rule surj_adjoint_iff_inj[OF adjoint_linear[OF lin0]])
+  hence injAdj0: "inj (adjoint (blinfun_apply A0))"
+    using sA0 by (simp add: adjoint_adjoint[OF lin0])
+  obtain B where Bpos: "0 < B"
+      and Bb: "\<And>w. B * norm w \<le> norm (adjoint (blinfun_apply A0) w)"
+    using linear_inj_bounded_below_pos[OF adjoint_linear[OF lin0] injAdj0] by blast
+  show "\<exists>e>0. \<forall>y. dist y A0 < e \<longrightarrow> y \<in> {A. surj (blinfun_apply A)}"
+  proof (intro exI[where x=B] conjI Bpos allI impI)
+    fix y :: "'a \<Rightarrow>\<^sub>L 'b" assume dy: "dist y A0 < B"
+    have liny: "linear (blinfun_apply y)"
+      by (rule bounded_linear.linear[OF blinfun.bounded_linear_right])
+    have inj_y: "inj (adjoint (blinfun_apply y))"
+    proof (rule injI)
+      fix u v assume eq: "adjoint (blinfun_apply y) u = adjoint (blinfun_apply y) v"
+      have z: "adjoint (blinfun_apply y) (u - v) = 0"
+      proof -
+        have "adjoint (blinfun_apply y) (u - v)
+              = adjoint (blinfun_apply y) u - adjoint (blinfun_apply y) v"
+          by (rule linear_diff[OF adjoint_linear[OF liny]])
+        thus ?thesis using eq by simp
+      qed
+      have "B * norm (u - v) \<le> norm (adjoint (blinfun_apply A0) (u - v))" by (rule Bb)
+      also have "\<dots> = norm (adjoint (blinfun_apply (A0 - y)) (u - v))"
+        using z by (simp add: adjoint_blinfun_diff)
+      also have "\<dots> \<le> norm (A0 - y) * norm (u - v)" by (rule norm_adjoint_blinfun_le)
+      also have "\<dots> = dist y A0 * norm (u - v)"
+        by (simp add: dist_blinfun_def norm_minus_commute)
+      finally have le: "B * norm (u - v) \<le> dist y A0 * norm (u - v)" .
+      have "norm (u - v) \<le> 0"
+      proof (rule ccontr)
+        assume "\<not> norm (u - v) \<le> 0"
+        hence "0 < norm (u - v)" by simp
+        with le have "B \<le> dist y A0" by (simp add: mult_le_cancel_right)
+        with dy show False by simp
+      qed
+      thus "u = v" by simp
+    qed
+    have "surj (adjoint (adjoint (blinfun_apply y))) = inj (adjoint (blinfun_apply y))"
+      by (rule surj_adjoint_iff_inj[OF adjoint_linear[OF liny]])
+    hence "surj (blinfun_apply y)"
+      using inj_y by (simp add: adjoint_adjoint[OF liny])
+    thus "y \<in> {A. surj (blinfun_apply A)}" by simp
+  qed
+qed
+
 text \<open>\<^bold>\<open>(A4) The regularity locus is open.\<close>  \<open>A_cart\<close> is continuous (jointly in \<open>(\<bm>x,\<omega>)\<close>), the
   steering determinant is continuous in \<open>\<omega>\<close>, and the submersion set \<open>{surj (DM_paper_x \<dots>)}\<close> is open
   by \<^emph>\<open>lower semicontinuity of rank\<close> of the continuously-varying linear map \<open>DM_paper_x\<close> --- so the
