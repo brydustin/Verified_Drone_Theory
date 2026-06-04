@@ -4515,6 +4515,34 @@ proof -
   thus ?thesis by (metis DM_paper_x_eq_MM)
 qed
 
+text \<open>\<^bold>\<open>[E] brick 2: the steering transport.\<close>  For \<open>c \<noteq> 0\<close> there is an invertible \<open>2\<times>2\<close> map \<open>T\<close>
+  with \<open>T\<^sup>\<top> c = c0_paper = (1,0)\<close>; substituting \<open>\<bm>x\<^sub>n = T \<bm>y\<^sub>n\<close> then turns the phases
+  \<open>c\<bullet>(T\<bm>y\<^sub>n)\<close> into \<open>c0\<bullet>\<bm>y\<^sub>n\<close>, the bridge from a general steering to the base steering.\<close>
+
+lemma steering_transport_exists:
+  fixes c :: "real^2"
+  assumes "c \<noteq> 0"
+  shows "\<exists>T::real^2^2. invertible T \<and> transpose T *v c = c0_paper"
+proof -
+  have cc0: "c \<bullet> c \<noteq> 0" using assms by (simp add: inner_eq_zero_iff)
+  define N :: "real^2^2" where
+    "N = (\<chi> i. \<chi> j. (if i = 1 then (if j = 1 then c $ 1 else c $ 2)
+                     else (if j = 1 then - (c $ 2) else c $ 1)) / (c \<bullet> c))"
+  have cdot: "c \<bullet> c = c $ 1 * c $ 1 + c $ 2 * c $ 2"
+    by (simp add: inner_vec_def sum_2)
+  have Nc: "N *v c = c0_paper"
+    unfolding c0_paper_def
+    by (simp add: N_def matrix_vector_mult_def vec_eq_iff forall_2 sum_2 cdot[symmetric] cc0
+                  field_simps)
+  have "det N = 1 / (c \<bullet> c)"
+    unfolding N_def
+    by (simp add: det_2 cdot[symmetric] cc0 field_simps power2_eq_square)
+  hence "invertible N" using cc0 by (simp add: invertible_det_nz)
+  hence "invertible (transpose N)" by (simp add: invertible_transpose)
+  moreover have "transpose (transpose N) *v c = c0_paper" using Nc by simp
+  ultimately show ?thesis by blast
+qed
+
 lemma DM_paper_x_regular_point_exists:
   fixes c :: planar
   assumes "c \<noteq> 0" and "6 \<le> CARD('n)"
