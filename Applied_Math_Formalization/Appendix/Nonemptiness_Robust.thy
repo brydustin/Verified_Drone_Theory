@@ -4490,6 +4490,31 @@ text \<open>\<^bold>\<open>(M1) A regular configuration exists at any nonzero wa
   This generalises the ``one regular point'' to an arbitrary nonzero steered wavevector and any
   \<open>CARD('n) \<ge> 6\<close>.\<close>
 
+lemma DM_paper_x_eq_MM:
+"DM_paper_x x c = Moment_Map.DM_paper_x x c"
+proof -
+  have "((\<lambda>y. M_paper y c) has_derivative DM_paper_x x c)
+(at x)"
+    using has_derivative_M_paper_x[where V=UNIV] by fastforce
+  moreover have "((\<lambda>y. M_paper y c) has_derivative
+Moment_Map.DM_paper_x x c) (at x)"
+    using Moment_Map.has_derivative_M_paper_x[where V=UNIV] by fastforce
+  ultimately show ?thesis by (rule has_derivative_unique)
+qed
+
+lemma DM_paper_x_regular_point_c0:
+"\<exists>x0::(real^2)^6. surj (DM_paper_x x0 c0_paper)"
+proof -
+  obtain U :: "((real^2)^6) set" 
+    where U: "(UNIV::((real^2)^6) set) \<subseteq> closure U"
+      and surjU: "\<forall>x\<in>U. surj (Moment_Map.DM_paper_x x c0_paper)"
+    using DM_paper_open_dense_surjective[OF open_UNIV] by blast
+  have "U \<noteq> {}" using U by (metis closure_empty empty_not_UNIV subset_empty)
+  then obtain x0 :: "(real^2)^6"
+    where "surj (Moment_Map.DM_paper_x x0 c0_paper)" using surjU by blast
+  thus ?thesis by (metis DM_paper_x_eq_MM)
+qed
+
 lemma DM_paper_x_regular_point_exists:
   fixes c :: planar
   assumes "c \<noteq> 0" and "6 \<le> CARD('n)"
