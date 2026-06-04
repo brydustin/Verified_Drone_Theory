@@ -3779,6 +3779,83 @@ proof (unfold open_dist, intro ballI)
   qed
 qed
 
+text \<open>\<^bold>\<open>Joint \<open>(\<bm>x,\<omega>)\<close> continuity of the moment-map configuration derivative \<open>DM_paper_x\<close>.\<close>  Each
+  of the six \<open>DM_paper_x\<close> components \<open>d_*_moment_x\<close> is a \<open>phase\<close>/\<open>d_phase\<close> moment sum (brick-1 shape),
+  jointly continuous in \<open>(\<bm>x,c)\<close>; composed with \<open>cvec_dip\<close> and assembled they give continuity of
+  \<open>DM_paper_x \<bm>x (cvec_dip \<omega>)\<close> as a \<^const>\<open>Blinfun\<close> field --- the input for \<open>open_surj_blinfun\<close>.\<close>
+
+lemma continuous_on_d_A_moment_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. d_A_moment_x (fst p) (snd p) h)"
+  unfolding d_A_moment_x_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_d_M1_moment_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. d_M1_moment_x (fst p) (snd p) h)"
+  unfolding d_M1_moment_x_def phase_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_d_M2_moment_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. d_M2_moment_x (fst p) (snd p) h)"
+  unfolding d_M2_moment_x_def phase_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_d_M11_moment_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. d_M11_moment_x (fst p) (snd p) h)"
+  unfolding d_M11_moment_x_def phase_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_d_M12_moment_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. d_M12_moment_x (fst p) (snd p) h)"
+  unfolding d_M12_moment_x_def w_M12_def dw_M12_def phase_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_d_M22_moment_x_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. d_M22_moment_x (fst p) (snd p) h)"
+  unfolding d_M22_moment_x_def phase_def d_phase_def
+  by (intro continuous_on_sum continuous_on_cis continuous_intros
+            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
+
+lemma continuous_on_d_A_moment_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. d_A_moment_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_d_A_moment_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_d_M1_moment_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. d_M1_moment_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_d_M1_moment_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_d_M2_moment_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. d_M2_moment_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_d_M2_moment_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_d_M11_moment_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. d_M11_moment_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_d_M11_moment_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_d_M12_moment_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. d_M12_moment_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_d_M12_moment_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
+lemma continuous_on_d_M22_moment_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. d_M22_moment_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
+  using continuous_on_compose2[OF continuous_on_d_M22_moment_x_joint
+                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
+
 text \<open>\<^bold>\<open>(A4) The regularity locus is open.\<close>  \<open>A_cart\<close> is continuous (jointly in \<open>(\<bm>x,\<omega>)\<close>), the
   steering determinant is continuous in \<open>\<omega>\<close>, and the submersion set \<open>{surj (DM_paper_x \<dots>)}\<close> is open
   by \<^emph>\<open>lower semicontinuity of rank\<close> of the continuously-varying linear map \<open>DM_paper_x\<close> --- so the
