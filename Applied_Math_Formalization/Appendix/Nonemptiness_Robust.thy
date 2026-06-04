@@ -3923,7 +3923,97 @@ lemma open_A_cart_nonzero:
                  A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
                \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
-  sorry
+ proof -
+    \<comment> \<open>Conjunct 1: array factor nonzero --- A_cart =
+  Afun, jointly continuous (brick 2c-i).\<close>
+    have contA: "continuous_on (UNIV :: (((real^2)^'n) \<times>
+  (real^2)) set)
+                   (\<lambda>p. A_cart (cvec_dip \<omega>0
+  \<omega>s) (fst p) (snd p))"
+      by (simp add: A_cart_eq_Afun continuous_on_Afun_cvec_dip)
+    have o1: "open {p :: ((real^2)^'n) \<times> (real^2). A_cart
+  (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0}"
+      using open_Collect_neq[OF contA continuous_on_const] by simp
+    \<comment> \<open>Conjunct 2: submersion locus open ---
+  preimage of the open surjective operators.\<close>
+    have bl: "bounded_linear (DM_paper_x x c)" for x ::
+  "(real^2)^'n" and c :: planar
+      using has_derivative_M_paper_x has_derivative_bounded_linear
+  by blast
+    have isc: "continuous (at p) (\<lambda>p. Blinfun (DM_paper_x
+  (fst p) (cvec_dip \<omega>0 \<omega>s (snd p))))" for p
+      using continuous_on_eq_continuous_at[OF open_UNIV, THEN
+  iffD1,
+              OF continuous_on_Blinfun_DM_paper_x_cvec_dip]
+      by blast
+    have o2: "open {p :: ((real^2)^'n) \<times> (real^2). surj
+  (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))}"
+    proof -
+      have eq: "{p :: ((real^2)^'n) \<times> (real^2). surj
+  (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))}
+                = (\<lambda>p. Blinfun (DM_paper_x (fst p)
+  (cvec_dip \<omega>0 \<omega>s (snd p)))) -` {A. surj
+  (blinfun_apply A)}" 
+        by (auto simp: bounded_linear_Blinfun_apply[OF bl])
+      show ?thesis unfolding eq by (rule continuous_open_vimage[OF
+  open_surj_blinfun isc])
+    qed
+    \<comment> \<open>Conjunct 3: steering-Jacobian det nonzero ---
+  det_2 in the continuous matrix entries.\<close>
+    have contD: "continuous_on (UNIV :: (((real^2)^'n) \<times>
+  (real^2)) set)
+                   (\<lambda>p. det (matrix (Dcvec_dip \<omega>0
+  \<omega>s (snd p))))"
+    proof -
+      have ent: "continuous_on (UNIV :: (((real^2)^'n) \<times>
+  (real^2)) set)
+                   (\<lambda>p. vec_nth (vec_nth (matrix (Dcvec_dip
+  \<omega>0 \<omega>s (snd p))) i) j)" for i j
+      proof -
+        have "(\<lambda>p :: ((real^2)^'n) \<times> (real^2).
+                 vec_nth (vec_nth (matrix (Dcvec_dip \<omega>0
+  \<omega>s (snd p))) i) j)
+              = (\<lambda>p. vec_nth (Dcvec_dip \<omega>0 \<omega>s
+  (snd p) (axis j 1)) i)"
+          by (simp add: matrix_def)
+        thus ?thesis
+          by (metis continuous_on_Dcvec_dip_snd continuous_on_component) 
+      qed
+      have eq: "(\<lambda>p :: ((real^2)^'n) \<times> (real^2). det
+  (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))))
+              = (\<lambda>p. vec_nth (vec_nth (matrix (Dcvec_dip
+  \<omega>0 \<omega>s (snd p))) 1) 1
+                   * vec_nth (vec_nth (matrix (Dcvec_dip \<omega>0
+  \<omega>s (snd p))) 2) 2
+                   - vec_nth (vec_nth (matrix (Dcvec_dip \<omega>0
+  \<omega>s (snd p))) 1) 2
+                   * vec_nth (vec_nth (matrix (Dcvec_dip \<omega>0
+  \<omega>s (snd p))) 2) 1)"
+        by (rule ext) (rule det_2) 
+      show ?thesis unfolding eq by (intro continuous_intros ent)
+    qed
+
+    have o3: "open {p :: ((real^2)^'n) \<times> (real^2). det
+  (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+      using open_Collect_neq[OF contD continuous_on_const] by simp
+    \<comment> \<open>The regularity locus is the intersection of
+  the three open sets.\<close>
+    have setEq: "{p :: ((real^2)^'n) \<times> (real^2).
+                   A_cart (cvec_dip \<omega>0 \<omega>s) (fst p)
+  (snd p) \<noteq> 0
+                 \<and> surj (DM_paper_x (fst p) (cvec_dip
+  \<omega>0 \<omega>s (snd p)))
+                 \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s
+  (snd p))) \<noteq> 0}
+                = {p. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p)
+  (snd p) \<noteq> 0}
+                  \<inter> {p. surj (DM_paper_x (fst p) (cvec_dip
+  \<omega>0 \<omega>s (snd p)))}
+                  \<inter> {p. det (matrix (Dcvec_dip \<omega>0
+  \<omega>s (snd p))) \<noteq> 0}"
+      by auto
+    show ?thesis unfolding setEq by (intro open_Int o1 o2 o3)
+  qed
 
 text \<open>\<^bold>\<open>(A5) The dipole gradient field is jointly \<open>C\<^sup>1\<close> in \<open>(\<bm>x,\<omega>)\<close>.\<close>  \<open>U_dip\<close> is smooth in both
   arguments, so \<open>G = \<nabla>\<^sub>\<Omega>U\<close> has a continuous (blinfun) derivative field --- the \<open>derG\<close>/\<open>contG'\<close>
