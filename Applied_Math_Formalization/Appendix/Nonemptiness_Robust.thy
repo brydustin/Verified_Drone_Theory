@@ -4586,6 +4586,59 @@ lemma A_moment_applyT:
   shows "A_moment (applyT T y) c = A_moment y c0_paper"
   by (simp add: A_moment_def phase_applyT[OF assms])
 
+lemma M1_moment_applyT:
+  fixes T :: "real^2^2"
+  assumes "transpose T *v c = c0_paper"
+  shows "M1_moment (applyT T y) c
+       = of_real (T $ 1 $ 1) * M1_moment y c0_paper
+       + of_real (T $ 1 $ 2) * M2_moment y c0_paper"
+proof -
+  have key: "\<And>n. of_real ((applyT T y $ n) $ 1) * phase c (applyT T y) n
+       = of_real (T $ 1 $ 1) * (of_real ((y $ n) $ 1) * phase c0_paper y n)
+       + of_real (T $ 1 $ 2) * (of_real ((y $ n) $ 2) * phase c0_paper y n)"
+  proof -
+    fix n
+    have ph: "phase c (applyT T y) n = phase c0_paper y n"
+      by (rule phase_applyT[OF assms])
+    have wt: "(applyT T y $ n) $ 1 = T $ 1 $ 1 * (y $ n) $ 1 + T $ 1 $ 2 * (y $ n) $ 2"
+      by (simp add: applyT_def matrix_vector_mult_def sum_2)
+    show "of_real ((applyT T y $ n) $ 1) * phase c (applyT T y) n
+       = of_real (T $ 1 $ 1) * (of_real ((y $ n) $ 1) * phase c0_paper y n)
+       + of_real (T $ 1 $ 2) * (of_real ((y $ n) $ 2) * phase c0_paper y n)"
+      by (simp only: ph wt of_real_add of_real_mult algebra_simps)
+  qed
+  show ?thesis
+    unfolding M1_moment_def M2_moment_def
+    by (simp add: key sum.distrib sum_distrib_left mult.assoc)
+qed
+
+lemma M2_moment_applyT:
+  fixes T :: "real^2^2"
+  assumes "transpose T *v c = c0_paper"
+  shows "M2_moment (applyT T y) c
+       = of_real (T $ 2 $ 1) * M1_moment y c0_paper
+       + of_real (T $ 2 $ 2) * M2_moment y c0_paper"
+proof -
+  have key: "\<And>n. of_real ((applyT T y $ n) $ 2) * phase c (applyT T y) n
+       = of_real (T $ 2 $ 1) * (of_real ((y $ n) $ 1) * phase c0_paper y n)
+       + of_real (T $ 2 $ 2) * (of_real ((y $ n) $ 2) * phase c0_paper y n)"
+  proof -
+    fix n
+    have ph: "phase c (applyT T y) n = phase c0_paper y n"
+      by (rule phase_applyT[OF assms])
+    have wt: "(applyT T y $ n) $ 2 = T $ 2 $ 1 * (y $ n) $ 1 + T $ 2 $ 2 * (y $ n) $ 2"
+      by (simp add: applyT_def matrix_vector_mult_def sum_2)
+    show "of_real ((applyT T y $ n) $ 2) * phase c (applyT T y) n
+       = of_real (T $ 2 $ 1) * (of_real ((y $ n) $ 1) * phase c0_paper y n)
+       + of_real (T $ 2 $ 2) * (of_real ((y $ n) $ 2) * phase c0_paper y n)"
+      by (simp only: ph wt of_real_add of_real_mult algebra_simps)
+  qed
+  show ?thesis
+    unfolding M1_moment_def M2_moment_def
+    by (simp add: key sum.distrib sum_distrib_left mult.assoc)
+qed
+
+
 lemma DM_paper_x_regular_point_exists:
   fixes c :: planar
   assumes "c \<noteq> 0" and "6 \<le> CARD('n)"
