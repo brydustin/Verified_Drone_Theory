@@ -8,6 +8,61 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-04 — A5 + A4 + `open_surj_blinfun` closed; leaf [E] steering-transport opened
+
+Big multi-leaf push. Three on-path obligations and one reusable abstract foundation
+landed green (all built `BUILD_EXIT=0`, committed + pushed), and leaf **[E]
+`DM_paper_x_regular_point_exists`** is now under active construction.
+
+GREEN + COMMITTED this session:
+ - **A5 `gradU_dip_joint_C1`** (d3cd568) — the joint-`(x,ω)` C¹ field. Brick 4
+   assembled it via `has_derivative_partialsI` (fx=`has_derivative_gradU_dip_x_explicit`,
+   fy=`gradU_dip_has_derivative`=HessU·, fy_cont=`continuous_on_HessU_blinfun_joint`),
+   `G' z = Blinfun(λ(tx,ty). Dx tx + HessU *v ty)`, `continuous_on UNIV G'` by
+   `continuous_on_blinfun_componentwise` splitting the PRODUCT basis ((b,0)→brick 3,
+   (0,e)→brick 2). See [[a5-route2-joint-c1-plan]] for the full 4-brick chain.
+ - **`open_surj_blinfun`** (9177800) — reusable: `{A::'a⇒⇩L'b. surj(blinfun_apply A)}`
+   is OPEN, via `surj A ⟺ inj(adjoint A) ⟺ adjoint A bounded-below`, perturbation `<B`.
+   ALL deterministic (no smt/argo). Supports: `norm_adjoint_blinfun_le` (Cauchy–Schwarz,
+   uses the NO-abs `norm_cauchy_schwarz`), `adjoint_blinfun_diff`.
+ - **A4 `open_A_cart_nonzero`** (d78e5e0) — the regularity locus is open; three-way
+   intersection: o1 (`A_cart≠0` via `A_cart_eq_Afun`+`open_Collect_neq`), o2 (`surj(DM)`
+   via `open_surj_blinfun`+`continuous_open_vimage`), o3 (`det(matrix Dcvec_dip)≠0`
+   via `det_2`). Plumbing 426ca00/b831a5a/2c2871b.
+ - **[E] brick 1** (426ca00) — `DM_paper_x_regular_point_c0` (∃ regular point at
+   `c0_paper`, dim 6) + `DM_paper_x_eq_MM` (the TWO `DM_paper_x` constants —
+   `Nonemptiness_Paper.*` vs `Moment_Map.*` — are both THE Fréchet derivative of
+   `M_paper`, identified by `has_derivative_unique`). `DM_paper_open_dense_surjective`
+   gives the regular point on a dense set at `c0_paper`.
+ - **[E] brick 2** `steering_transport_exists` (2f3c108) — for `c≠0` there is an
+   invertible `T::real^2^2` with `Tᵀ c = c0_paper`. Built `N = (1/(c·c))·[[c₁,c₂],[−c₂,c₁]]`,
+   `N *v c = c0_paper` (per-component `consider "i=1"|"i=2"` + `sum_2`), `det N = 1/(c·c)≠0`,
+   `T = transpose N`. KEY FIX: `sum_2` (`Cartesian_Space:635`, `sum f (UNIV::2 set)=f 1+f 2`)
+   IS real and necessary — without it `matrix_vector_mult_def` leaves the sum unexpanded;
+   and the per-component `if i=1` only collapses after a literal case split (a monolithic
+   `(χ i. …)=vector[1,0]` simp does NOT discharge it — that was the line-4536 failure).
+
+ARGO TRAP (cost ~1h): `by argo` on a NONLINEAR goal (products of norms) HUNG the whole
+`Applied_Math_Appendix` build for 1:00:18 (BUILD_EXIT=142) — argo is linear-only and does
+not self-timeout. Now: NEVER argo/smt on products/powers of variables; CAP every build
+`timeout 595 … -o timeout=300`. Recorded in [[argo-smt-nonlinear-hang-and-build-timeout]].
+
+WORKING TREE (uncommitted, UNVERIFIED — last green tip is 2f3c108):
+ - an alternative `Nc` proof (case-split + `metis add_divide_distrib … divide_self_if`);
+   functionally equivalent to the committed one, not yet re-built.
+ - **[E] brick 3 foundations**: `applyT T y = (χ n. T *v (y$n))`; `inner_transpose_mv`
+   ((Tᵀc)·v = c·(T*v v) via `dot_lmul_matrix`); `phase_applyT` / `A_moment_applyT`
+   (the phase, hence `A_moment`, is steering-invariant under `xₙ ↦ T yₙ` when `Tᵀc=c0`).
+   These compile in isolation but the session ended before a full `BUILD_EXIT=0`.
+
+NEXT (resume here): build-verify the working tree; if green, commit brick 3 foundations,
+then the brick-3 MOMENT LAW proper — `M1/M2` linear in `T`, `M11/M12/M22` quadratic
+(Sym²T), giving `M_paper(applyT T y, c) = L_T *v M_paper(y, c0)` with `det L_T = det(T)⁴≠0`
+so surjectivity transports. Then brick 4 (Jacobian/surj transport) + brick 5 (dim-6→N
+embedding) close [E]. After [E]: [F] density (`DM_paper_x_open_dense_surjective_gen`),
+then engine core [C], strata [G–J], and the independent geometric leaf [K]
+`no_degenerate_to_sphere_annulus`. See [[dipole-endtoend-obligation-list]].
+
 ## 2026-06-03 — engine #1 + A5 scoping (use the `Ck_on` C^k predicate, not weak diff)
 
 \<^bold>Engine #1\<^esub> (`regular_zero_set_projection_charts_core_2d`): its supports are ALL PROVEN —

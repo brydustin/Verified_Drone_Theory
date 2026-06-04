@@ -4531,17 +4531,60 @@ proof -
   have cdot: "c \<bullet> c = c $ 1 * c $ 1 + c $ 2 * c $ 2"
     by (simp add: inner_vec_def sum_2)
   have Nc: "N *v c = c0_paper"
-    unfolding c0_paper_def
-    by (simp add: N_def matrix_vector_mult_def vec_eq_iff forall_2 sum_2 cdot[symmetric] cc0
-                  field_simps)
+      unfolding Finite_Cartesian_Product.vec_eq_iff
+    proof (intro allI)
+      fix i :: 2
+      consider "i = 1" | "i = 2" using exhaust_2 by metis
+      thus "(N *v c) $ i = c0_paper $ i"
+      proof cases
+        case 1 thus ?thesis
+          by (simp add: N_def matrix_vector_mult_def sum_2 c0_paper_def cdot[symmetric]
+              cc0 field_simps, metis add_divide_distrib cc0 cdot divide_self_if)
+      next
+        case 2 thus ?thesis
+          by (simp add: N_def matrix_vector_mult_def sum_2 c0_paper_def cdot[symmetric] cc0 field_simps)
+      qed
+    qed
+
+
   have "det N = 1 / (c \<bullet> c)"
     unfolding N_def
-    by (simp add: det_2 cdot[symmetric] cc0 field_simps power2_eq_square)
+    by (simp add: det_2 cdot[symmetric] cc0 field_simps power2_eq_square,
+        metis (no_types) add_divide_distrib arithmetic_simps(79) cc0 inner_real2 
+        mult_divide_mult_cancel_left)
+
   hence "invertible N" using cc0 by (simp add: invertible_det_nz)
-  hence "invertible (transpose N)" by (simp add: invertible_transpose)
+  hence "invertible (transpose N)"
+    by (simp add: transpose_invertible)
   moreover have "transpose (transpose N) *v c = c0_paper" using Nc by simp
   ultimately show ?thesis by blast
 qed
+
+text \<open>\<^bold>\<open>[E] brick 3 (foundations): apply \<open>T\<close> elementwise; the phase is steering-invariant.\<close>\<close>
+
+definition applyT :: "real^2^2 \<Rightarrow> (real^2)^'n \<Rightarrow> (real^2)^'n" where
+  "applyT T y = (\<chi> n. T *v (y $ n))"
+
+lemma inner_transpose_mv:
+  fixes T :: "real^'n::finite^'m::finite"
+    and c :: "real^'m"
+    and v :: "real^'n"
+  shows "(transpose T *v c) \<bullet> v = c \<bullet> (T *v v)"
+  by (simp add: dot_lmul_matrix)
+
+lemma phase_applyT:
+  assumes "transpose T *v c = c0_paper"
+  shows "phase c (applyT T y) n = phase c0_paper y n"
+proof -
+  have "c \<bullet> (T *v (y $ n)) = c0_paper \<bullet> (y $ n)"
+    using assms inner_transpose_mv[of T c "y $ n"] by simp
+  thus ?thesis by (simp add: phase_def applyT_def)
+qed
+
+lemma A_moment_applyT:
+  assumes "transpose T *v c = c0_paper"
+  shows "A_moment (applyT T y) c = A_moment y c0_paper"
+  by (simp add: A_moment_def phase_applyT[OF assms])
 
 lemma DM_paper_x_regular_point_exists:
   fixes c :: planar
