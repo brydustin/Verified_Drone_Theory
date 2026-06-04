@@ -3856,6 +3856,63 @@ lemma continuous_on_d_M22_moment_x_cvec_dip:
   using continuous_on_compose2[OF continuous_on_d_M22_moment_x_joint
                                  continuous_on_pair_cvec_dip subset_UNIV] by simp
 
+lemma continuous_on_DM_paper_x_cvec_dip:
+  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+     (\<lambda>p. DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) i)"
+proof -
+  have "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+          (\<lambda>p. \<chi> k::6. DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) i $ k)"
+  proof (rule continuous_on_vec_lambda)
+    fix k :: 6
+    consider "k = 1" | "k = 2" | "k = 3" | "k = 4" | "k = 5" | "k = 6"
+      using exhaust_6 by metis
+    thus "continuous_on UNIV (\<lambda>p. DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) i $ k)"
+    proof cases
+      case 1 thus ?thesis
+        by (simp add: continuous_on_d_A_moment_x_cvec_dip
+            Nonemptiness_Paper.DM_paper_x_components(1) continuous_on_DA_paper_x_cvec_dip)
+    next
+      case 2 thus ?thesis
+        by (simp add: continuous_on_d_M1_moment_x_cvec_dip
+            Nonemptiness_Paper.DM_paper_x_components(2) continuous_on_DM1_paper_x_cvec_dip)
+    next
+      case 3 thus ?thesis
+        by (simp add: continuous_on_d_M2_moment_x_cvec_dip
+            Nonemptiness_Paper.DM_paper_x_components(3) continuous_on_DM2_paper_x_cvec_dip)
+    next
+      case 4 thus ?thesis 
+        by (metis (no_types, lifting) DM11_paper_x_def Nonemptiness_Paper.DM_paper_x_components(4)
+            continuous_on_d_M11_moment_x_cvec_dip continuous_on_eq d_M11_moment_x_def)
+    next
+      case 5 thus ?thesis
+        by (metis (no_types, lifting) DM12_paper_x_def Nonemptiness_Paper.DM_paper_x_components(5)
+            continuous_on_d_M12_moment_x_cvec_dip continuous_on_eq d_M12_moment_x_def) 
+    next
+      case 6 thus ?thesis 
+        by (metis (no_types, lifting) DM22_paper_x_def Nonemptiness_Paper.DM_paper_x_components(6)
+            continuous_on_d_M22_moment_x_cvec_dip continuous_on_eq d_M22_moment_x_def) 
+    qed
+  qed
+  thus ?thesis by (simp only: vec_lambda_eta)
+qed
+
+lemma continuous_on_Blinfun_DM_paper_x_cvec_dip:
+    "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
+       (\<lambda>p. Blinfun (DM_paper_x (fst p) (cvec_dip \<omega>0
+  \<omega>s (snd p))))"
+  proof (rule continuous_on_blinfun_componentwise)
+    fix i :: "(real^2)^'n" assume "i \<in> Basis"
+    have bl: "bounded_linear (DM_paper_x x c)" for x ::
+  "(real^2)^'n" and c :: planar
+      using has_derivative_M_paper_x has_derivative_bounded_linear
+  by blast
+    show "continuous_on UNIV
+            (\<lambda>p. blinfun_apply (Blinfun (DM_paper_x (fst p)
+  (cvec_dip \<omega>0 \<omega>s (snd p)))) i)"
+      using continuous_on_DM_paper_x_cvec_dip[where i=i]
+      by (simp add: bounded_linear_Blinfun_apply[OF bl])
+  qed
+
 text \<open>\<^bold>\<open>(A4) The regularity locus is open.\<close>  \<open>A_cart\<close> is continuous (jointly in \<open>(\<bm>x,\<omega>)\<close>), the
   steering determinant is continuous in \<open>\<omega>\<close>, and the submersion set \<open>{surj (DM_paper_x \<dots>)}\<close> is open
   by \<^emph>\<open>lower semicontinuity of rank\<close> of the continuously-varying linear map \<open>DM_paper_x\<close> --- so the
