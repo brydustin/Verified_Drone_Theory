@@ -44,17 +44,6 @@ session Applied_Math_Appendix in "Appendix" = Applied_Math_Nonemptiness +
     Nonemptiness_Capstone
     Nonemptiness_Robust
 
-(* Part 2 of the robust development (WORK IN PROGRESS): Nonemptiness_Robust2
-   imports the (now finished, sorry-free) Nonemptiness_Robust and holds the
-   remaining leaves (DM_paper_x_regular_point_exists, the meager_*_stratum
-   family, no_degenerate_to_sphere_annulus) plus M12_moment_applyT and the
-   Dcvec_det_eq argo step.  It is NOT a build target yet (the argo/M12 steps are
-   slow and several leaves are sorry).  Edit it interactively against the heaped
-   part 1:
-     isabelle jedit -d Imported_Munkres_Topology -d Applied_Math_Formalization \
-       -l Applied_Math_Appendix Appendix/Nonemptiness_Robust2.thy
-   Promote it to a session here once it is sorry-free and deterministic. *)
-
 session Applied_Math_Sard in "SardNegligible" = Applied_Math_Base +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   sessions
