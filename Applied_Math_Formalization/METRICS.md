@@ -41,11 +41,12 @@ Mirror of the paper's Table 3. Code/git rows are recomputable any time with
 | **Author (human)** | 1 (Dustin Bryant) | — |
 | — | — | — |
 | **AI sessions** (formalization transcripts) | 13 | grows |
-| **Human prompts** (upper bound, see caveats) | 1,121 | grows |
-| **Assistant turns** | 23,994 | grows |
-| **Tool calls** | 12,731 | grows |
-| **Tokens — input-side total** | 11.03 B | grows |
-| &nbsp;&nbsp;cache read / cache creation / fresh | 10.90 B / 128.9 M / 1.8 M | grows |
+| **Human prompts** (paper defn; excl. slash + system) | 938 | grows |
+| &nbsp;&nbsp;excluded as slash commands / system-noise | 14 / 405 | — |
+| **Assistant turns** | 24,045 | grows |
+| **Tool calls** | 12,753 | grows |
+| **Tokens — input-side total** | 11.04 B | grows |
+| &nbsp;&nbsp;cache read / cache creation / fresh | 10.91 B / 129.0 M / 1.8 M | grows |
 | **Tokens — output** | 56.4 M | grows |
 | **Input : output ratio** | 196 : 1 | — |
 | **API-equivalent cost** (Opus rates, w/ caching) | ≈ \$23,000 | grows |
@@ -135,11 +136,14 @@ Re-run at completion and paste the final snapshot into §1.
 
 ## 6. Caveats
 
-- **Human-prompt count is an upper bound.** It counts every human-authored text
-  turn, including short confirmations ("continue", "go on") and possibly some
-  harness-injected text wrapped as user content. The paper's 229 *excludes* bare
-  slash commands and is a hand-curated figure. Before publishing, decide the
-  exact definition and refine the filter in `transcript_metrics.py`.
+- **Human-prompt count matches the paper's definition.** `classify_user()` in
+  `transcript_metrics.py` counts genuine human-typed turns and excludes bare
+  slash commands (e.g. `/compact`) and all harness/system content (interrupt
+  notices, compaction summaries, local-command output, system-reminder-only
+  turns). Short confirmations ("continue", "go on") are intentionally kept, as
+  the paper does ("most were short directives or confirmations"). The excluded
+  tallies are reported alongside the count for transparency. Spot-checked
+  against a manual category breakdown (genuine 937 ± 1).
 - **Git history is the monorepo mirror.** It begins 2026-05-25, but session
   transcripts show activity from 2026-05-05 — the development predates the mirror
   (the diary refers to an upstream `antenna-nonemptiness` repo). For a true

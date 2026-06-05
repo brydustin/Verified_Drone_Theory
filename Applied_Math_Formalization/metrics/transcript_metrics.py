@@ -13,7 +13,7 @@ Usage:
 Each DIR is a Claude Code project transcript directory under ~/.claude/projects.
 Reports per-directory and aggregate. Pure stdlib; streams line-by-line.
 """
-import sys, os, json, glob, collections, datetime
+import sys, os, json, glob, collections, datetime, re
 
 # API-equivalent pricing ($ per 1e6 tokens). These match the reference paper's
 # Opus rates so the cost figure is directly comparable; the actual subscription
@@ -25,24 +25,55 @@ PRICE = {
     "output":         75.00,
 }
 
-def is_human_prompt(rec):
-    """A genuine human-typed prompt: user record whose content is text
-    (string or text-block), not a tool_result carrier, not a sidechain turn."""
-    if rec.get("type") != "user":
-        return False
-    if rec.get("isSidechain"):
-        return False
-    if rec.get("isMeta"):
-        return False
+# Markers of harness-injected user turns that are NOT human prompts.
+_SLASH_RE = re.compile(r'^/[A-Za-z][\w-]*$')          # bare slash command, e.g. /compact
+_SYSREM_RE = re.compile(r'<system-reminder>.*?</system-reminder>', re.DOTALL)
+_NONPROMPT_PREFIXES = (
+    "<command-name>", "<command-message>", "<command-args>",
+    "<local-command-stdout>", "<local-command-stderr>",
+    "<bash-input>", "<bash-stdout>", "<bash-stderr>",
+    "Caveat:", "[Request interrupted",
+)
+
+def classify_user(rec):
+    """Classify a user record. Returns one of:
+      'human'      - a genuine human-typed prompt (paper's definition)
+      'slash'      - a bare slash command (e.g. /compact) -> excluded per paper
+      'tool_result'- a tool result carrier (not a prompt)
+      'noise'      - interrupt notice, compaction summary, local-cmd output,
+                     system-reminder-only, or other harness injection
+    Mirrors arXiv:2603.15929v2: human prompts exclude bare slash commands and
+    all system/harness content."""
+    if rec.get("type") != "user" or rec.get("isSidechain") or rec.get("isMeta") \
+       or rec.get("isCompactSummary"):
+        return "noise"
     msg = rec.get("message") or {}
     c = msg.get("content")
     if isinstance(c, str):
-        return c.strip() != ""
-    if isinstance(c, list):
+        txt = c
+    elif isinstance(c, list):
         kinds = {b.get("type") for b in c if isinstance(b, dict)}
-        # human text turns contain a 'text' block and no tool_result
-        return ("text" in kinds) and ("tool_result" not in kinds)
-    return False
+        if "tool_result" in kinds:
+            return "tool_result"
+        if "text" not in kinds:
+            return "noise"
+        txt = "\n".join(b.get("text", "") for b in c
+                        if isinstance(b, dict) and b.get("type") == "text")
+    else:
+        return "noise"
+    # strip injected system-reminder blocks before judging the human content
+    core = _SYSREM_RE.sub("", txt).strip()
+    if not core:
+        return "noise"
+    if core.startswith(_NONPROMPT_PREFIXES):
+        # slash commands are recorded as <command-name>/foo</command-name>
+        return "slash" if core.startswith(("<command-name>", "<command-message>")) else "noise"
+    if "This session is being continued from a previous conversation" in core[:200]:
+        return "noise"
+    first = core.split(None, 1)[0]
+    if _SLASH_RE.match(first):                          # bare /command, not a pasted path
+        return "slash"
+    return "human"
 
 def parse_ts(s):
     try:
@@ -59,7 +90,6 @@ def classify(rawtext):
 def scan_file(f, formalization_only=False, min_lines=50):
     """Returns (metrics, tools, timestamps, included:bool, reason:str)."""
     m = collections.Counter(); tools = collections.Counter(); timestamps = []
-    slash = 0
     with open(f, errors="replace") as fh:
         raw = fh.read()
     nlines = raw.count("\n")
@@ -96,15 +126,13 @@ def scan_file(f, formalization_only=False, min_lines=50):
             m["output"]         += u.get("output_tokens", 0) or 0
         elif typ == "user":
             m["user_records"] += 1
-            if is_human_prompt(o):
+            kind = classify_user(o)
+            if kind == "human":
                 m["human_prompts"] += 1
-                msg = o.get("message") or {}
-                c = msg.get("content")
-                txt = c if isinstance(c, str) else " ".join(
-                    b.get("text", "") for b in c if isinstance(b, dict) and b.get("type") == "text")
-                if txt.strip().startswith("/"):
-                    slash += 1
-    m["slash_command_prompts"] = slash
+            elif kind == "slash":
+                m["excluded_slash"] += 1
+            elif kind == "noise":
+                m["excluded_noise"] += 1
     m["sessions"] = 1
     return m, tools, timestamps, True, "ok"
 
@@ -136,8 +164,8 @@ def report(label, m, tools, ts):
     ratio = total_in / m["output"] if m["output"] else 0
     print(f"\n===== {label} =====")
     print(f"  Sessions (transcript files) : {m['sessions']}")
-    print(f"  Human prompts               : {m['human_prompts']}  "
-          f"(of which slash-prefixed: {m['slash_command_prompts']})")
+    print(f"  Human prompts (paper defn)  : {m['human_prompts']}  "
+          f"(excluded: {m['excluded_slash']} slash, {m['excluded_noise']} system/noise)")
     print(f"  Assistant turns             : {m['assistant_turns']}  "
           f"(sidechain/sub-agent: {m['assistant_turns_sidechain']})")
     print(f"  Tool calls                  : {m['tool_calls']}")
