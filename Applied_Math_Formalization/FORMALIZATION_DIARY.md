@@ -8,6 +8,42 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-05 — Split `Nonemptiness_Robust` (part 1 sorry-free + heaped); deleted unused parametric bridge
+
+\<^bold>Why split.\<^esub> `Nonemptiness_Robust` had grown to 5.6k lines with heavy typing
+(`complex^6`, `real^2^2` transports); every iteration recompiled everything →
+unworkable. Cut the theory at `M12_moment_applyT`:
+ - `Nonemptiness_Robust` (part 1, ~4.8k lines, \<^bold>0 sorry\<^esub>) — finished; build with
+   `isabelle build -b -D Imported_Munkres_Topology -D Applied_Math_Formalization
+   Applied_Math_Appendix` to persist the heap (leaf session needs `-b`).
+ - `Nonemptiness_Robust2` (imports part 1) — the 7 remaining leaves
+   (`DM_paper_x_regular_point_exists`, `DM_paper_x_open_dense_surjective_gen`,
+   the four `meager_*_stratum`, `no_degenerate_to_sphere_annulus`) + `M12` + the
+   `Dcvec_det_eq` argo. Edit with `-l Applied_Math_Appendix` (part 1 precompiled →
+   fast). Not a build target yet.
+
+\<^bold>Deleted `parametric_transversality_meager_planar_config`\<^esub> — used by zero proofs
+(only a `@{thm}` doc antiquotation), an abstract restatement of the already-existing
+Euclidean transversality engine, itself a `sorry`. Its obligation
+(`meager_bad_regular_stratum`, M4) stays in part 2, to be proved by instantiating the
+genuine engine at the actual `G = \<nabla>\<^sub>\<Omega>U`. On-path leaves 10 → 9.
+
+\<^bold>Build hygiene (cost ~1.5h).\<^esub> A `timeout 1500 isabelle build` whose SIGTERM did NOT
+kill the `poly` child left a 91-min zombie holding the heap lock; a later build sat
+lock-blocked 14 min doing nothing. LESSONS: bound builds with `timeout -s KILL`
+(poly ignores SIGTERM); kill stray engines with `pkill -x poly` (NOT
+`pkill -f <pat>` — the pattern matches the launching shell, exit 144). A leaf
+session needs `-b` to persist its heap.
+
+\<^bold>Found + (user) fixed:\<^esub> `M11/M22_moment_applyT` had been left as `apply (simp …)`
+then `qed` (illegal — needs `done`); the full build failed at the `qed`. User
+rewrote both with explicit `sum_key` proofs (green, in part 1).
+
+NEXT (in Robust2, against the part-1 heap): give `M12` the `sum_key` treatment, make
+`Dcvec_det_eq` deterministic (drop argo), then close [E] — `M_paper_applyT` →
+`Lapp` invertible via `det\<^sub>3(Sym\<^sup>2 T) = (det\<^sub>2 T)\<^sup>3` → chain-rule transport →
+`DM_paper_x_regular_point_exists`.
+
 ## 2026-06-04 — A5 + A4 + `open_surj_blinfun` closed; leaf [E] steering-transport opened
 
 Big multi-leaf push. Three on-path obligations and one reusable abstract foundation
