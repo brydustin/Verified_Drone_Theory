@@ -328,6 +328,30 @@ qed
 
 
 
+text \<open>\<^bold>\<open>[E] brick 4c support:\<close> the per-point transport \<open>applyT T\<close> is linear, and
+  surjective when \<open>T\<close> is invertible (an explicit right inverse \<open>applyT B\<close>).\<close>
+
+lemma applyT_linear: "linear (applyT T)"
+proof (rule linearI)
+  have l: "linear ((*v) T)" by (rule matrix_vector_mul_linear)
+  show "applyT T (x + y) = applyT T x + applyT T y" for x y :: "(real^2)^'n"
+    by (simp add: applyT_def Finite_Cartesian_Product.vec_eq_iff vector_add_component linear_add[OF l])
+  show "applyT T (r *\<^sub>R x) = r *\<^sub>R applyT T x" for r and x :: "(real^2)^'n"
+    by (simp add: applyT_def Finite_Cartesian_Product.vec_eq_iff vector_scaleR_component linear_cmul[OF l])
+qed
+
+lemma applyT_surj:
+  assumes "invertible T" shows "surj (applyT T :: (real^2)^'n \<Rightarrow> _)"
+proof -
+  obtain B :: "real^2^2" where B: "T ** B = mat 1"
+    using assms unfolding invertible_def by blast
+  have "applyT T (applyT B z) = z" for z :: "(real^2)^'n"
+    by (simp add: applyT_def Finite_Cartesian_Product.vec_eq_iff matrix_vector_mul_assoc B matrix_vector_mul_lid)
+  thus ?thesis by (metis surjI)
+qed
+
+
+
 lemma DM_paper_x_regular_point_exists:
   fixes c :: planar
   assumes "c \<noteq> 0" and "6 \<le> CARD('n)"
