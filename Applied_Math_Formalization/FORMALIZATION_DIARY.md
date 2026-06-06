@@ -8,6 +8,45 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-06 — Brick 4 complete (transport matrix + surjectivity + chain rule); fast-eval setup
+
+**Brick 4 of leaf [E] is done** — four commits, each verified green before commit:
+- `e451d1c` — `Lmat` (the 6×6 transport `1 ⊕ T ⊕ Sym²T`), `Lmat_apply` (its action),
+  `M_paper_transport` (`M_paper(applyT T y) c = L_T (M_paper y c₀)`).
+- `3248c55` — `surj_Lmat`: `surj((*v)(Lmat a b p q))` for `a·q−b·p ≠ 0`. Injectivity
+  through the three blocks (component 1; T-block via `a·q−b·p≠0`; `Sym²T` block via
+  `invertible_Smat_c` + explicit left inverse from `invertible_def`), then inj→surj in
+  finite dim. NB `det_nz_iff_inj` is **real-only** (THM 0 on the complex matrix) — route
+  inj→surj directly. Helpers `UNIV_3`, `sum_3`.
+- `792058b` — `applyT_linear`, `applyT_surj` (invertible T ⟹ surj, explicit right inverse).
+- `3312f2a` — `DM_paper_x_surj_transport` (4c): differentiate `M_paper_transport` both
+  sides (chain rule via `diff_chain_at` + `has_derivative_M_paper_x` +
+  `linear_imp_has_derivative`), `has_derivative_unique` gives
+  `DM_paper_x(applyT T y₀) c ∘ applyT T = L_T ∘ DM_paper_x y₀ c₀`; RHS surjective
+  (`surj_Lmat ∘ reg`), `applyT T` surjective ⟹ first factor surjective.
+
+**Two traps cost the most time** (both now in memory): (1) bare `vec_eq_iff` resolves to
+**Jordan_Normal_Form's** lemma (wrong type) — `unfolding`/`simp` no-ops silently; always
+`Finite_Cartesian_Product.vec_eq_iff`. (2) `scaleR_vec_def` over-unfolds; use the
+one-level `vector_scaleR_component` + `linear_cmul`.
+
+**Fast offline-verify loop established.** Built the `Applied_Math_Appendix` heap (part 1).
+Scratch theory `imports "Applied_Math_Appendix.Nonemptiness_Robust"` (session-qualified →
+loads part 1 from heap in seconds; bare import reprocesses from source = 5–10 min). Re-state
+or `sorry` part-2 deps in the scratch; eval_at runs ~2 min. This replaced the 10-min
+Robust2-reprocessing loop. (Can't heap Robust2 — two sessions can't share the Appendix dir,
+and it's the active file.)
+
+**Brick 5 plan (next).** Lift `DM_paper_x_regular_point_c0` (`∃x₀::(real^2)^6.
+surj(DM_paper_x x₀ c₀)`, dim-6, via `m_star`/`DM_paper_open_dense_surjective`) to
+`CARD('n)≥6`. Structure is favourable: every `DM_paper_x` component is `∑_{n} f(c, x$n, h$n)`
+(`A_moment=∑_n phase`, `d_A_moment_x=∑_n d_phase`, …) with each term depending only on
+`x$n`/`h$n`. Embed via an injection `ι:6↪'n`: `y₀$(ι k)=x₀$k`, arbitrary elsewhere; for `h`
+supported on `range ι` the off-range terms vanish (linear in `h$n`, and `h$j=0`), so
+`DM_paper_x y₀ c₀ (h) = DM_paper_x x₀ c₀ (h∘ι)` ⟹ surjective. Then [E] =
+`DM_paper_x_surj_transport` ∘ (brick 5 at c₀) ∘ `steering_transport_exists`. Note
+`DM_paper_x_open_dense_surjective_gen` [F] is the general open-dense version (separate sorry).
+
 ## 2026-06-05 — Split Robust at M12 (committed 568d636); fixed M12 parse hang; into brick 4
 
 **Split committed.** `Nonemptiness_Robust` cut at `M12_moment_applyT` into part 1
