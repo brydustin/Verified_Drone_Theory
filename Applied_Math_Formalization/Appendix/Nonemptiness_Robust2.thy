@@ -181,6 +181,35 @@ proof -
   thus ?thesis by (simp add: invertible_det_nz)
 qed
 
+text \<open>\<^bold>\<open>[E] brick 4b (complex block): the \<open>Sym\<^sup>2\<close> block over \<open>\<complex>\<close>.\<close>  The
+  transport acts on the complex moment vector, so we need the \<open>3\<times>3\<close> symmetric-square
+  block over \<open>\<complex>\<close>; its determinant is \<open>(of_real (det T))\<^sup>3\<close>, nonzero exactly when
+  \<open>T\<close> is invertible.\<close>
+
+definition Smat_c :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^3^3" where
+  "Smat_c a b p q = vector
+    [ vector [of_real (a\<^sup>2),   of_real (2 * a * b),     of_real (b\<^sup>2)],
+      vector [of_real (a * p), of_real (a * q + b * p), of_real (b * q)],
+      vector [of_real (p\<^sup>2),   of_real (2 * p * q),     of_real (q\<^sup>2)] ]"
+
+lemma det_Smat_c:
+  "det (Smat_c a b p q) = (of_real (a * q - b * p)) ^ 3"
+  unfolding Smat_c_def
+  by (simp add: det_3 vector_3 of_real_power of_real_mult of_real_add of_real_diff
+                power2_eq_square power3_eq_cube algebra_simps)
+
+lemma invertible_Smat_c:
+  assumes "a * q - b * p \<noteq> 0"
+  shows "invertible (Smat_c a b p q)"
+proof -
+  have "det (Smat_c a b p q) = (of_real (a * q - b * p)) ^ 3"
+    by (rule det_Smat_c)
+  moreover have "(of_real (a * q - b * p) :: complex) \<noteq> 0"
+    using assms by fastforce
+  ultimately have "det (Smat_c a b p q) \<noteq> 0" by simp
+  thus ?thesis by (simp add: invertible_det_nz)
+qed
+
 
 lemma DM_paper_x_regular_point_exists:
   fixes c :: planar
