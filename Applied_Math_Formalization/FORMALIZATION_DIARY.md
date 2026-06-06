@@ -47,6 +47,20 @@ supported on `range ι` the off-range terms vanish (linear in `h$n`, and `h$j=0`
 `DM_paper_x_surj_transport` ∘ (brick 5 at c₀) ∘ `steering_transport_exists`. Note
 `DM_paper_x_open_dense_surjective_gen` [F] is the general open-dense version (separate sorry).
 
+**Brick-5 groundwork (verified in scratch, not yet committed):** the injection `ι:6↪'n` is
+`card_le_inj[OF finite_class.finite_UNIV finite_class.finite_UNIV c]` with
+`c: card(UNIV::6) ≤ card(UNIV::'n)` (`card_le_inj` needs **3** premises — both `finite` +
+the `card ≤`; works because `'n` is finite from `(real^2)^'n`; in an isolated lemma `'n`
+lacks the `finite` sort and it fails). Reindex core helper (last `simp`-on-`sum.reindex`
+step **looped** — apply `sum.reindex` as `rule`/`subst`, not blanket `simp`):
+`sum_reindex_embed: ⟦inj ι; ⋀n. n∉range ι ⟹ g n = 0⟧ ⟹ (∑n::'n. g n) = (∑k::6. g(ι k))`
+via `sum.mono_neutral_right[OF finite_UNIV subset_UNIV]` + `sum.reindex`. Remaining: build
+`y₀$(ι k)=x₀$k` (0 elsewhere), `h$(ι k)=h₀$k` (0 elsewhere); apply the helper to each of the
+6 `d_*_moment_x` sums (off-range terms vanish: `d_phase`/weights are linear in `h$n`,
+`h$j=0`; on-range `phase c₀ y₀ (ι k)=phase c₀ x₀ k`, `d_phase` likewise, `(y₀$(ι k))$i=(x₀$k)$i`);
+assemble `DM_paper_x y₀ c₀ h = DM_paper_x x₀ c₀ h₀`; then for any `z`, pick `h₀` with
+`DM_paper_x x₀ c₀ h₀ = z` (dim-6 surj) ⟹ `DM_paper_x y₀ c₀ (embed h₀) = z` ⟹ surj.
+
 ## 2026-06-05 — Split Robust at M12 (committed 568d636); fixed M12 parse hang; into brick 4
 
 **Split committed.** `Nonemptiness_Robust` cut at `M12_moment_applyT` into part 1
