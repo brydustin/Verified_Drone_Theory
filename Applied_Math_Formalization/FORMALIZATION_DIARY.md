@@ -49,6 +49,26 @@ directly (general-`'n`/general-`c` analogue of the dim-6 `m_star` argument:
 `nowhere_dense_m_star_zeros`). [E] does NOT depend on this — it rests on the dim-6 `m_star`
 existence — so [E] is solid; only [F] is contingent.
 
+**CHOSEN ROUTE (user, 2026-06-06): prove [F] `M_paper`-specifically (option b) → fully sound.**
+Design done; build is next (multi-step). The dim-6 `m_star = det(matrix(MJx))` is square only
+because `(real^2)^6 ≅ real^12 ≅ complex^6`. For general `'n` the Jacobian is non-square; use the
+**codomain Gram via the FIXED iso `transC : complex^6 → real^12`** (`Moment_Jacobian`, not
+`'n`-dependent):
+  `m_star_gen x c = det (matrix (G x c))`,
+  `G x c = (transC ∘ DM_paper_x x c) ∘ adjoint (transC ∘ DM_paper_x x c) :: real^12 ⇒ real^12`.
+`real^12` is Cartesian + square so `matrix`/`det` apply, and `adjoint` handles the domain — no
+flattening of `(real^2)^'n`. Steps:
+1. Foundation (general LA, HOL-Analysis `adjoint`): linear `A :: 'a::euclidean_space ⇒ real^'m`
+   ⟹ `surj A ⟷ invertible (matrix (A ∘ adjoint A))` (surj A ⟺ inj(adjoint A) ⟺ Gram invertible;
+   `invertible_det_nz`).
+2. Four properties of `m_star_gen(·,c)`, fed to `lines_entire_slice_nowhere_dense`
+   (`Nonemptiness_Paper`, general: continuous + entire-along-every-line + nonzero ⟹
+   `nowhere_dense` zeros): (a) continuous; (b) `surj(DM_paper_x x c) ⟷ m_star_gen x c ≠ 0`;
+   (c) entire-along-lines (entries `cis`/poly ⟹ entire; `adjoint` linear; `det` polynomial);
+   (d) nonzero somewhere (brick 5 / `DM_paper_x_regular_point_exists`).
+3. [F] = open (`open_Collect_neq`) + dense (`open_Int_closure_subset` + nowhere_dense), mirroring
+   `DM_paper_open_dense_surjective`; then drop `rank_lower_semicont` from [F] entirely.
+
 ## 2026-06-06 — Brick 4 complete (transport matrix + surjectivity + chain rule); fast-eval setup
 
 **Brick 4 of leaf [E] is done** — four commits, each verified green before commit:
