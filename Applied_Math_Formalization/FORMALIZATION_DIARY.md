@@ -8,6 +8,33 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-06 (cont.) — Brick 5 + **leaf [E] `DM_paper_x_regular_point_exists` CLOSED** (commit 4e4e437)
+
+First sorry of `F0_dip_nonempty` eliminated (Robust2 7 → 6 sorries). Three new lemmas:
+- `sum_reindex_embed` — `⟦inj ι; ⋀n. n∉range ι ⟹ g n = 0⟧ ⟹ (∑n∈UNIV. g n) = (∑k∈UNIV. g(ι k))`
+  (`sum.mono_neutral_right` + `sum.reindex`). Reusable.
+- `DM_paper_x_regular_point_c0_gen` (brick 5) — lifts the dim-6 regular point
+  `DM_paper_x_regular_point_c0` to `CARD('n) ≥ 6`: embed `x₀ :: (real^2)^6` via an injection
+  `ι : 6 ↪ 'n` (`card_le_inj`), pad off-image with 0. Each of the six `d_*_moment_x` sums
+  reindexes (off-image terms vanish — every summand is linear in `h$n`, `h$j=0`; on-image
+  terms agree since `phase`/`d_phase`/weights are per-point), giving
+  `DM_paper_x (embed) c₀ = DM_paper_x x₀ c₀` componentwise (via `DM_paper_x_eq_MM` +
+  `Moment_Map.DM_paper_x_def` + `DM_paper_x_components`), hence surjective.
+- `DM_paper_x_regular_point_exists` (was the sorry) — `c≠0`, `CARD('n)≥6`: pick `T` with
+  `Tᵀc=c₀` (`steering_transport_exists`), regular `y₀` at `c₀` (brick 5),
+  `DM_paper_x_surj_transport` (4c) ⟹ `surj (DM_paper_x (applyT T y₀) c)`.
+
+Many parse/overload traps along the way (all now in memory): bare `inv` = group inverse
+(use `inv_into UNIV`); `(∑x::T. _)` = `suminf`/nat (use `∑x∈UNIV`); `inj_on` via
+`simp(inj_eq inj_on_def)` loops; two `DM_paper_x` (Paper vs Moment_Map, bridge
+`DM_paper_x_eq_MM`). The user fixed the final `key` step (the `DM_paper_x_eq_MM` bridge)
+in the scratch; I verified + folded into Robust2.
+
+**Leaves remaining (8):** Robust2 — `DM_paper_x_open_dense_surjective_gen` [F], four
+`meager_*_stratum`, `no_degenerate_to_sphere_annulus`; plus `Nonemptiness_Paper`'s
+`rank_lower_semicont_open_dense_propagation` and the transversality engine
+`regular_zero_set_projection_charts_core_2d`.
+
 ## 2026-06-06 — Brick 4 complete (transport matrix + surjectivity + chain rule); fast-eval setup
 
 **Brick 4 of leaf [E] is done** — four commits, each verified green before commit:
