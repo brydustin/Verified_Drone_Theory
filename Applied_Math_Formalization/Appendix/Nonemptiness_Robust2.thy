@@ -352,6 +352,50 @@ qed
 
 
 
+text \<open>\<^bold>\<open>[E] brick 4c: transport of surjectivity\<close> from \<open>c\<^sub>0\<close> to any \<open>c \<noteq> 0\<close>.
+  Differentiate \<open>M_paper_transport\<close> on both sides; \<open>has_derivative_unique\<close> gives
+  \<open>DM_paper_x (applyT T y\<^sub>0) c \<circ> applyT T = L\<^sub>T \<circ> DM_paper_x y\<^sub>0 c\<^sub>0\<close>; the RHS is surjective
+  (\<open>surj_Lmat\<close> \<open>\<circ>\<close> reg), and \<open>applyT T\<close> is surjective, so the first factor is surjective.\<close>
+
+lemma DM_paper_x_surj_transport:
+  fixes T :: "real^2^2" and c :: planar and y0 :: "(real^2)^'n"
+  assumes Tinv: "invertible T" and Tc: "transpose T *v c = c0_paper"
+      and reg: "surj (DM_paper_x y0 c0_paper)"
+  shows "surj (DM_paper_x (applyT T y0) c)"
+proof -
+  define L where "L \<equiv> (\<lambda>v::complex^6. Lmat (T$1$1) (T$1$2) (T$2$1) (T$2$2) *v v)"
+  have Llin: "linear L" unfolding L_def by (rule matrix_vector_mul_linear)
+  have hd_f: "(applyT T has_derivative applyT T) (at y0)"
+    by (rule linear_imp_has_derivative[OF applyT_linear])
+  have hd_g: "((\<lambda>z. M_paper z c) has_derivative DM_paper_x (applyT T y0) c) (at (applyT T y0))"
+    using has_derivative_M_paper_x[where x="applyT T y0" and c=c and V=UNIV] by simp
+  have d1: "((\<lambda>y. M_paper (applyT T y) c) has_derivative (DM_paper_x (applyT T y0) c \<circ> applyT T)) (at y0)"
+    using diff_chain_at[OF hd_f hd_g] by (simp add: o_def)
+  have hd_g0: "((\<lambda>y. M_paper y c0_paper) has_derivative DM_paper_x y0 c0_paper) (at y0)"
+    using has_derivative_M_paper_x[where x=y0 and c=c0_paper and V=UNIV] by simp
+  have hd_L: "(L has_derivative L) (at (M_paper y0 c0_paper))"
+    by (rule linear_imp_has_derivative[OF Llin])
+  have d2: "((\<lambda>y. L (M_paper y c0_paper)) has_derivative (L \<circ> DM_paper_x y0 c0_paper)) (at y0)"
+    using diff_chain_at[OF hd_g0 hd_L] by (simp add: o_def)
+  have feq: "(\<lambda>y. M_paper (applyT T y) c) = (\<lambda>y. L (M_paper y c0_paper))"
+    by (simp add: L_def fun_eq_iff M_paper_transport[OF Tc])
+  have d2': "((\<lambda>y. M_paper (applyT T y) c) has_derivative (L \<circ> DM_paper_x y0 c0_paper)) (at y0)"
+    unfolding feq by (rule d2)
+  have Deq: "DM_paper_x (applyT T y0) c \<circ> applyT T = L \<circ> DM_paper_x y0 c0_paper"
+    by (rule has_derivative_unique[OF d1 d2'])
+  have sL: "surj L"
+  proof -
+    have ne: "T$1$1 * T$2$2 - T$1$2 * T$2$1 \<noteq> 0" using Tinv by (simp add: invertible_det_nz det_2)
+    have "surj ((*v) (Lmat (T$1$1) (T$1$2) (T$2$1) (T$2$2)))" by (rule surj_Lmat[OF ne])
+    thus ?thesis by (simp add: L_def)
+  qed
+  have "surj (L \<circ> DM_paper_x y0 c0_paper)" using reg sL by (rule comp_surj)
+  hence "surj (DM_paper_x (applyT T y0) c \<circ> applyT T)" using Deq by simp
+  thus "surj (DM_paper_x (applyT T y0) c)" by (metis comp_apply surjD surjI)
+qed
+
+
+
 lemma DM_paper_x_regular_point_exists:
   fixes c :: planar
   assumes "c \<noteq> 0" and "6 \<le> CARD('n)"
