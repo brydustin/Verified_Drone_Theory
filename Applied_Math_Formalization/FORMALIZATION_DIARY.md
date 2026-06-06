@@ -8,6 +8,36 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-06-05 — Split Robust at M12 (committed 568d636); fixed M12 parse hang; into brick 4
+
+**Split committed.** `Nonemptiness_Robust` cut at `M12_moment_applyT` into part 1
+(through `M22_moment_applyT`, ends with `end`) + new `Nonemptiness_Robust2`
+(`imports Nonemptiness_Robust`; M12 onward through `F0_dip_nonempty`). Part 2 is the
+active file. Heaping part 1 was tried and **reverted** (a12ba00 split → 2421b82
+revert → 568d636 re-split) — the user keeps jEdit open, so edit Robust2 with
+`-l Applied_Math_Nonemptiness` (jEdit reprocesses part 1 in-session). `parametric_…`
+kept (the 1 sorry in part 1); 7 leaves in part 2.
+
+**M12_moment_applyT parse hang FIXED.** Its `key` statement carried ~24 `$` (vec_nth)
+on `real^2^2` → elaboration hung at PARSE (purple forever), *before any proof*. Fix:
+`define t11..t22` for the four entries (drops to ~6 `$`), then mirror the proven
+`M22` `sum_key` proof. **GOTCHA:** `define` folds the goal but NOT `?thesis` (stays
+in `T$i$j`), so the final step needs
+`using sum_key[unfolded t11_def t12_def t21_def t22_def]` to reconcile t↔T, then
+`by (simp add: sum_distrib_left algebra_simps power2_eq_square ac_simps)`. Drop
+`of_real_add`/`of_real_mult`/`mult.assoc` — already default simp ("duplicate" warnings).
+See [[dollar-notation-slow-parse-use-vec-nth]].
+
+**Build hygiene** ([[isabelle-build-process-hygiene]]): don't batch-build Appendix to
+"verify" during interactive work; one build at a time (heap lock); `timeout -s KILL`
+(poly ignores SIGTERM → zombies); `pkill -9 -x poly` (NOT `-f`); leaf heap needs `-b`.
+
+NEXT — brick 4 in Robust2: `M_paper_applyT` (assemble the six `*_moment_applyT` laws
+into the vector law `M_paper(applyT T y) c = L_T (M_paper y c0)`) → `L_T` invertible
+(`det₃(Sym²T) = (det₂T)³ ≠ 0`) → chain rule
+`DM_paper_x(applyT T y0,c) ∘ applyT T = L_T ∘ DM_paper_x(y0,c0)` → close
+`DM_paper_x_regular_point_exists` (+ brick 5: dim-6→N embedding). See [[e-steering-transport-plan]].
+
 ## 2026-06-04 — A5 + A4 + `open_surj_blinfun` closed; leaf [E] steering-transport opened
 
 Big multi-leaf push. Three on-path obligations and one reusable abstract foundation
