@@ -91,6 +91,95 @@ proof -
 qed
 
 
+text \<open>\<^bold>\<open>[E] brick 4a: the vector moment law.\<close>  Bundling the six \<open>*_moment_applyT\<close>
+  laws into one equation \<open>M_paper(applyT T y) c = L\<^sub>T (M_paper y c\<^sub>0)\<close>.  The four matrix
+  entries are named \<open>a,b,p,q\<close> via \<^theory_text>\<open>defines\<close> so the explicit transported vector parses
+  (a bare \<open>T$i$j\<close> form would carry ~16 vec-nth occurrences and hang elaboration).\<close>
+
+lemma M_paper_applyT:
+  fixes T :: "real^2^2" and a b p q :: real
+  assumes Tc: "transpose T *v c = c0_paper"
+  defines "a \<equiv> T $ 1 $ 1" and "b \<equiv> T $ 1 $ 2"
+      and "p \<equiv> T $ 2 $ 1" and "q \<equiv> T $ 2 $ 2"
+  shows "M_paper (applyT T y) c = vector
+    [ A_moment y c0_paper,
+      of_real a * M1_moment y c0_paper + of_real b * M2_moment y c0_paper,
+      of_real p * M1_moment y c0_paper + of_real q * M2_moment y c0_paper,
+      of_real (a\<^sup>2) * M11_moment y c0_paper
+        + of_real (2 * a * b) * M12_moment y c0_paper
+        + of_real (b\<^sup>2) * M22_moment y c0_paper,
+      of_real (a * p) * M11_moment y c0_paper
+        + of_real (a * q + b * p) * M12_moment y c0_paper
+        + of_real (b * q) * M22_moment y c0_paper,
+      of_real (p\<^sup>2) * M11_moment y c0_paper
+        + of_real (2 * p * q) * M12_moment y c0_paper
+        + of_real (q\<^sup>2) * M22_moment y c0_paper ]"
+proof (subst Finite_Cartesian_Product.vec_eq_iff, intro allI)
+  fix i :: 6
+  consider "i = 1" | "i = 2" | "i = 3" | "i = 4" | "i = 5" | "i = 6"
+    using exhaust_6 by metis
+  then show "M_paper (applyT T y) c $ i =
+      vector
+        [ A_moment y c0_paper,
+          of_real a * M1_moment y c0_paper + of_real b * M2_moment y c0_paper,
+          of_real p * M1_moment y c0_paper + of_real q * M2_moment y c0_paper,
+          of_real (a\<^sup>2) * M11_moment y c0_paper
+            + of_real (2 * a * b) * M12_moment y c0_paper
+            + of_real (b\<^sup>2) * M22_moment y c0_paper,
+          of_real (a * p) * M11_moment y c0_paper
+            + of_real (a * q + b * p) * M12_moment y c0_paper
+            + of_real (b * q) * M22_moment y c0_paper,
+          of_real (p\<^sup>2) * M11_moment y c0_paper
+            + of_real (2 * p * q) * M12_moment y c0_paper
+            + of_real (q\<^sup>2) * M22_moment y c0_paper ] $ i"
+  proof cases
+    case 1 then show ?thesis
+      by (simp add: A_moment_applyT[OF Tc] vector_def)
+  next
+    case 2 then show ?thesis
+      unfolding a_def b_def by (simp add: M1_moment_applyT[OF Tc] vector_def)
+  next
+    case 3 then show ?thesis
+      unfolding p_def q_def by (simp add: M2_moment_applyT[OF Tc] vector_def)
+  next
+    case 4 then show ?thesis
+      unfolding a_def b_def by (simp add: M11_moment_applyT[OF Tc] vector_def)
+  next
+    case 5 then show ?thesis
+      unfolding a_def b_def p_def q_def
+      by (simp add: M12_moment_applyT[OF Tc] vector_def)
+  next
+    case 6 then show ?thesis
+      unfolding p_def q_def by (simp add: M22_moment_applyT[OF Tc] vector_def)
+  qed
+qed
+
+
+text \<open>\<^bold>\<open>[E] brick 4b: the \<open>Sym\<^sup>2\<close> block is invertible.\<close>  The second-order transport
+  block --- the \<open>3\<times>3\<close> matrix carrying \<open>(M\<^sub>1\<^sub>1, M\<^sub>1\<^sub>2, M\<^sub>2\<^sub>2)\<close> --- is the symmetric square
+  of \<open>T = ((a,b),(p,q))\<close>.  Its determinant is \<open>(det T)\<^sup>3 = (aq - bp)\<^sup>3\<close>, so it is
+  invertible exactly when \<open>T\<close> is.  This is the one genuinely nonlinear step of the
+  steering transport.\<close>
+
+definition Smat :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real^3^3" where
+  "Smat a b p q = vector
+    [ vector [a\<^sup>2,    2 * a * b,      b\<^sup>2],
+      vector [a * p,  a * q + b * p,  b * q],
+      vector [p\<^sup>2,    2 * p * q,      q\<^sup>2] ]"
+
+lemma det_Smat:
+  "det (Smat a b p q) = (a * q - b * p) ^ 3"
+  unfolding Smat_def
+  by (simp add: det_3 vector_3 power2_eq_square power3_eq_cube algebra_simps)
+
+lemma invertible_Smat:
+  assumes "a * q - b * p \<noteq> 0"
+  shows "invertible (Smat a b p q)"
+proof -
+  have "det (Smat a b p q) = (a * q - b * p) ^ 3" by (rule det_Smat)
+  with assms have "det (Smat a b p q) \<noteq> 0" by simp
+  thus ?thesis by (simp add: invertible_det_nz)
+qed
 
 
 lemma DM_paper_x_regular_point_exists:
@@ -282,7 +371,7 @@ lemma steering_singular_nowhere_dense:
 text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open locus where \<open>A \<noteq> 0\<close>, \<open>surj (DM_paper_x \<dots>)\<close>,
   and \<open>det (Dcvec) \<noteq> 0\<close>, \<open>0\<close> is a regular value (@{thm regular_value_on_gradU_dip}); covering this
   open (non-product) locus by countably many product boxes and applying
-  @{thm parametric_transversality_meager_planar_config} on each, the degenerate-critical projection
+  {thm parametric_transversality_meager_planar_config} on each, the degenerate-critical projection
   over the regular stratum is meager.\<close>
 
 lemma meager_bad_regular_stratum:
