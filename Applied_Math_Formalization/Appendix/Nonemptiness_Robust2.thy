@@ -524,9 +524,28 @@ text \<open>\<^bold>\<open>(M2) Open-dense submersion at a fixed nonzero wavevec
 
 lemma DM_paper_x_open_dense_surjective_gen:
   fixes V :: "((real^2)^'n) set" and c :: planar
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)" and "c \<noteq> 0"
+  assumes V_open: "open V" and V_ne: "V \<noteq> {}" and N_ge_6: "6 \<le> CARD('n)" and c_ne: "c \<noteq> 0"
   shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U \<and> (\<forall>x\<in>U. surj (DM_paper_x x c))"
-  sorry
+proof -
+  have deriv: "\<And>x. x \<in> (UNIV::((real^2)^'n) set) \<Longrightarrow>
+      ((\<lambda>y. M_paper y c) has_derivative DM_paper_x x c) (at x within UNIV)"
+    using has_derivative_M_paper_x by blast
+  obtain x0 :: "(real^2)^'n" where "surj (DM_paper_x x0 c)"
+    using DM_paper_x_regular_point_exists[OF c_ne N_ge_6] by blast
+  hence onereg: "\<exists>x0\<in>(UNIV::((real^2)^'n) set). surj (DM_paper_x x0 c)" by blast
+  obtain U0 where U0o: "open U0" and U0d: "(UNIV::((real^2)^'n) set) \<subseteq> closure U0"
+      and U0s: "\<forall>x\<in>U0. surj (DM_paper_x x c)"
+    using rank_lower_semicont_open_dense_propagation[OF open_UNIV UNIV_not_empty N_ge_6 deriv onereg]
+    by blast
+  have "open (V \<inter> U0)" using V_open U0o by blast
+  moreover have "V \<inter> U0 \<subseteq> V" by blast
+  moreover have "\<forall>x\<in>V \<inter> U0. surj (DM_paper_x x c)" using U0s by blast
+  moreover have "V \<subseteq> closure (V \<inter> U0)"
+  proof -
+    have "V = V \<inter> closure U0" using U0d by auto
+    also have "V \<inter> closure U0 \<subseteq> closure (V \<inter> U0)" using V_open by (rule open_Int_closure_subset)
+    finally show ?thesis .
+  qed
 
 text \<open>\<^bold>\<open>(M3) The steering-singular angle locus is nowhere dense.\<close>  \<open>Dcvec_dip\<close> is real-analytic in
   \<open>\<omega>\<close> and not everywhere singular, so its singular set is a proper analytic subset --- closed with
