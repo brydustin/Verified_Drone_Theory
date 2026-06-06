@@ -30,10 +30,24 @@ Many parse/overload traps along the way (all now in memory): bare `inv` = group 
 `DM_paper_x_eq_MM`). The user fixed the final `key` step (the `DM_paper_x_eq_MM` bridge)
 in the scratch; I verified + folded into Robust2.
 
-**Leaves remaining (8):** Robust2 — `DM_paper_x_open_dense_surjective_gen` [F], four
-`meager_*_stratum`, `no_degenerate_to_sphere_annulus`; plus `Nonemptiness_Paper`'s
-`rank_lower_semicont_open_dense_propagation` and the transversality engine
-`regular_zero_set_projection_charts_core_2d`.
+**[F] `DM_paper_x_open_dense_surjective_gen` proven** (commit f710616) — reduces to the
+rank-semicont keystone: `M_paper` differentiable (`has_derivative_M_paper_x`) + a regular
+point (just proven) ⟹ `rank_lower_semicont_open_dense_propagation` on UNIV gives an open
+dense regular set; intersect with `V` (`open_Int_closure_subset`). Robust2 sorries 6 → 5.
+
+**Leaves remaining (7), all heavy analytic/transversality:** `rank_lower_semicont…` (Paper),
+the engine `regular_zero_set_projection_charts_core_2d` (Parametric), four `meager_*_stratum`,
+`no_degenerate_to_sphere_annulus` (Robust2).
+
+**⚠ Soundness flag on `rank_lower_semicont_open_dense_propagation` (Paper, sorry).** Its
+assumptions give only `(F has_derivative DF x)(at x within V)` + one regular point. Openness
+of the regular stratum needs `DF` *continuous* (C¹), and **density needs `F` real-analytic**
+(else rank-deficiency need not be nowhere dense) — neither is assumed. As stated it's likely
+not provable. `M_paper` is real-analytic and C¹, so the fix is to either (a) add those
+hypotheses and supply them at the [F] call site, or (b) prove the `M_paper`-specific version
+directly (general-`'n`/general-`c` analogue of the dim-6 `m_star` argument:
+`nowhere_dense_m_star_zeros`). [E] does NOT depend on this — it rests on the dim-6 `m_star`
+existence — so [E] is solid; only [F] is contingent.
 
 ## 2026-06-06 — Brick 4 complete (transport matrix + surjectivity + chain rule); fast-eval setup
 
