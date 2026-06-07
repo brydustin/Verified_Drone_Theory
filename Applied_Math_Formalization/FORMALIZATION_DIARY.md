@@ -2064,3 +2064,12 @@ proven-smooth pieces): (a) gain-of-omega (lambda om. gdip (om$1)) C-infinity on 
 (b) concrete cvec0 C-infinity; (c) assemble U_cart in C^2 (already have U_cart C^2 =>
 gradU/HessU genuine via gradU_has_derivative_of_C2); (d) instantiate the capstone at
 cvec0 + gdip-gain, zero assumptions.
+
+### no_degenerate_to_sphere_annulus DONE (commit `595e046`) — Robust2 5→4 sorries
+Morse argument, fully machine-checked. Reusable general lemma born: **`isolated_nondeg_zero`**
+(a zero with injective Frechet derivative is isolated; `linear_inj_bounded_below_pos` +
+`has_derivative_at_alt` o(.) bound). Then C={gradU=0}∩Omega compact+discrete⇒finite
+(`compact_eq_Bolzano_Weierstrass`), dodge the finite radius set. Remaining leaves: the four
+`meager_*_stratum` (Robust2) + the transversality engine `regular_zero_set_projection_charts_core_2d`
+(Parametric) + dead `rank_semicont` (Paper).
+
