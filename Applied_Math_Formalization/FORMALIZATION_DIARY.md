@@ -69,6 +69,16 @@ flattening of `(real^2)^'n`. Steps:
 3. [F] = open (`open_Collect_neq`) + dense (`open_Int_closure_subset` + nowhere_dense), mirroring
    `DM_paper_open_dense_surjective`; then drop `rank_lower_semicont` from [F] entirely.
 
+**DONE — [F] is now sound (commit `ed8cf5f`).** The whole `mstarg` plan above is built and green:
+`surj_iff_gram_invertible`, `mstarg`+`surj_iff_mstarg`, `matrix_gram_entry`, `cont_mstarg`,
+the general `cline_entire_d*`/`cline_entire_DM_comp` (general `d_phase` via `cline_entire_cis_linear`),
+`rline_entire_mstarg`, `mstarg_nonzero`, `nowhere_dense_mstarg_zeros`, and [F] reproved via
+`U = V ∩ {mstarg ≠ 0}`. **`rank_lower_semicont_open_dense_propagation` is now unused dead code**
+(deletable from `Nonemptiness_Paper` → would drop the leaf count to 6). The [E]/[F] chain is fully
+sound. Lessons banked: the fresh-`'n` trap (`fix e :: "(real^2)^'n"` makes a *new* type var — omit
+the annotation); `metis` over big `det(matrix …)` terms blows up (chain iffs with `blast`); clean
+up `eval_at` zombie poly (`timeout -s KILL` of the bash wrapper leaves the JVM→poly subtree).
+
 ## 2026-06-06 — Brick 4 complete (transport matrix + surjectivity + chain rule); fast-eval setup
 
 **Brick 4 of leaf [E] is done** — four commits, each verified green before commit:
