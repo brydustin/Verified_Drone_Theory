@@ -2073,3 +2073,20 @@ Morse argument, fully machine-checked. Reusable general lemma born: **`isolated_
 `meager_*_stratum` (Robust2) + the transversality engine `regular_zero_set_projection_charts_core_2d`
 (Parametric) + dead `rank_semicont` (Paper).
 
+### core_2d (the parametric-transversality keystone) PROVEN — 2026-06
+The one genuinely-hard lemma the WHOLE theorem funnels through is done (verified in
+`Appendix/Scratch_core2d.thy`, then inserted into `Parametric_Transversality_Euclidean_Base.thy`):
+- `projection_deriv_not_inj` — kernel step: at a regular point with non-surjective slice,
+  `(0,w)\<in>ker DG = range D\<phi>` (from `regular_value_local_chart`) \<Longrightarrow> `fst\<circ>D\<phi>` non-injective.
+- `countable_chart_cover_with_Dphi` — mirror of `countable_chart_cover_of_levelset_2d` but
+  keeps `D\<phi>` with `range D\<phi> = ker DG` (uses `regular_value_local_chart`, not the local-chart
+  lemma that drops it); Lindelof subcover.
+- `core_2d_strong` — assembles them: bad set \<subseteq> \<Union> chart-projection critical sets, each with
+  rank-deficient derivative. STRENGTHENED with `derG`/`contG'` (the old `core_2d` sorry assumed
+  only `reg0`, which is insufficient — that was a real statement gap); dropped the \<sigma>-compact
+  clause (the Sard-finish `negligible_critical_values_from_charts` doesn't need it).
+Lessons banked: [[type-every-bound-var-and-inspect-states]]. NEXT: rewire the base stubs
+(`..._stub_2d`, `..._negligible_stub`, `..._meager_euclidean_stub`) to consume `core_2d_strong`
+(thread `derG`/`contG'` through their assms), delete the old `core_2d` sorry, then Robust's
+`parametric_transversality_meager_planar_config`, then the 4 strata.
+
