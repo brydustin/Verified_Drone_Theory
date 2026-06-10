@@ -806,26 +806,6 @@ proof -
 qed
 
 
-lemma regular_zero_set_projection_charts_core_2d:
-  fixes V :: "(real^'m::{finite,wellorder}) set"
-    and \<Omega> :: "(real^2) set"
-    and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
-  assumes "open V" "V \<noteq> {}" "open \<Omega>"
-    and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
-  shows "\<exists>(charts :: nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec))))
-            (Crit0 :: nat \<Rightarrow> (real^'m::{finite,wellorder}) set)
-            (D0 :: nat \<Rightarrow> (real^'m::{finite,wellorder})
-                       \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L (real^'m::{finite,wellorder}))).
-           {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
-               (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
-             \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit0 i)) \<and>
-           (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
-              ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)) \<and>
-           (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
-              rank (matrix (blinfun_apply (D0 i x))) < CARD('m)) \<and>
-           (\<forall>i. \<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set.
-              (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n))"
-  sorry
 
 text \<open>
   Local (single-point) version of the regular-value-to-chart step.
@@ -884,7 +864,7 @@ qed
 text \<open>
   Countable chart cover of the regular level set, extracted from the local chart
   lemma via Lindelof.  This is the "topological" part of
-  @{thm regular_zero_set_projection_charts_core_2d}; the remaining part is to
+  @{thm core_2d_strong}; the remaining part is to
   identify the critical points/values and record Jacobians with rank defect.
 \<close>
 
@@ -1272,7 +1252,10 @@ lemma regular_zero_set_projection_charts_stub_2d:
   fixes V :: "(real^'m::{finite,wellorder}) set"
     and \<Omega> :: "(real^2) set"
     and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
-  assumes "open V" "V \<noteq> {}" "open \<Omega>"
+    and G' :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and openOm: "open \<Omega>"
+    and derG: "\<And>z. z \<in> V\<times>\<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on (V\<times>\<Omega>) G'"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
   shows "\<exists>(charts :: nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec))))
             (Crit :: nat \<Rightarrow> (real^'m::{finite,wellorder}) set)
@@ -1309,7 +1292,7 @@ proof -
               ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)) \<and>
            (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
               rank (matrix (blinfun_apply (D0 i x))) < CARD('m))"
-    using regular_zero_set_projection_charts_core_2d[OF assms]
+    using core_2d_strong[OF openV openOm derG contG' reg0]
     by auto 
   then obtain
     charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec)))"
@@ -1390,8 +1373,10 @@ theorem parametric_transversality_negligible_stub:
   fixes V :: "(real^'m::{finite,wellorder}) set"
     and \<Omega> :: "(real^2) set"
     and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
-  assumes "open V" "V \<noteq> {}"
-    and "open \<Omega>"
+    and G' :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and openOm: "open \<Omega>"
+    and derG: "\<And>z. z \<in> V\<times>\<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on (V\<times>\<Omega>) G'"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
   shows "negligible {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
                  (\<not> (\<exists>D. ((\<lambda>u. G (x,u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D))}"
@@ -1408,7 +1393,7 @@ proof -
     and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
               ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
     and rk: "\<forall>i x. x \<in> Crit i \<longrightarrow> rank (matrix (blinfun_apply (D i x))) < CARD('m)"
-    using regular_zero_set_projection_charts_stub_2d[OF assms] by blast
+    using regular_zero_set_projection_charts_stub_2d[OF openV Vne openOm derG contG' reg0] by blast
   have "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
     by (rule negligible_critical_values_from_charts, use der rk in auto)
   then show ?thesis
@@ -1671,15 +1656,27 @@ theorem parametric_transversality_meager_euclidean_stub:
   fixes V :: "(real^'m::{finite,wellorder}) set"
     and \<Omega> :: "(real^2) set"
     and G :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (real^2)"
-  assumes "open V" "V \<noteq> {}"
-    and "open \<Omega>"
+    and G' :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and openOm: "open \<Omega>"
+    and derG: "\<And>z. z \<in> V\<times>\<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on (V\<times>\<Omega>) G'"
     and reg0: "regular_value_on G (V\<times>\<Omega>) 0"
   shows "meager {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
                  (\<not> (\<exists>D. ((\<lambda>u. G (x,u)) has_derivative D) (at \<omega> within \<Omega>) \<and> surj D))}"
 proof -
   let ?bad = "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
                 (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}"
-  from regular_zero_set_projection_charts_core_2d[OF assms] show ?thesis
+  have core: "\<exists>(charts::nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2))))
+            (Crit0::nat \<Rightarrow> (real^'m::{finite,wellorder}) set)
+            (D0::nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L (real^'m::{finite,wellorder})))).
+           ?bad \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit0 i)) \<and>
+           (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
+              ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)) \<and>
+           (\<forall>i x. x \<in> Crit0 i \<longrightarrow> rank (matrix (blinfun_apply (D0 i x))) < CARD('m)) \<and>
+           (\<forall>i. \<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set.
+              (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n))"
+    using core_2d_strong[OF openV openOm derG contG' reg0] by blast
+  from core show ?thesis
   proof (elim exE conjE)
     fix charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> ((real,2) vec)))"
       and Crit0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"

@@ -2109,3 +2109,26 @@ replace with explicit rule/[THEN iffD1]/structured chains. NEXT: bake Scratch_sc
 core_2d_strong into the base (Parametric_Transversality_Euclidean_Base) + rel_sigma/slice/helper;
 ONE Appendix rebuild (heap is gone, rebuild needed anyway); then rewire the 3 stubs + the 4 strata.
 
+### Stub rewire COMPLETE — base now ZERO sorrys (2026-06-10)
+Rewired the 3 consumers onto core_2d_strong and DELETED the old
+regular_zero_set_projection_charts_core_2d sorry (the base's last one):
+- regular_zero_set_projection_charts_stub_2d, parametric_transversality_negligible_stub,
+  parametric_transversality_meager_euclidean_stub: each gains fixes G' + assms derG/contG'
+  (named openV/Vne/openOm/derG/contG'/reg0); rule swapped to core_2d_strong[OF openV openOm
+  derG contG' reg0] (stub_2d projects away the sigma clause; negligible via stub_2d;
+  meager destructures all 4 conjuncts incl sig).
+- TRAP: OF-composing the rule-shaped derG leaves a residual guard
+  (\<And>z. z\<in>V\<times>\<Omega> \<Longrightarrow> z\<in>V\<times>\<Omega>) \<Longrightarrow> CONCL. blast/auto swallow it, but chaining straight into
+  proof (elim exE conjE) FAILS (elim can't see past the guard). Fix: interpose
+  have core: "..." using ...[OF ...] by blast, then from core show ... elim.
+SESSION-GRAPH CLARITY (false alarm resolved): the base IS compiled — Nonemptiness_Paper
+imports Parametric_Transversality_Euclidean imports the base, so it lives in the
+Applied_Math_Nonemptiness session; Robust reaches it via Paper. Crucially:
+**base edits verify in the 41-SECOND Applied_Math_Nonemptiness build**, NOT the 32-min
+Appendix build (that one only rebakes the heap for jEdit/Robust work).
+Verified: BUILD_EXIT=0 Applied_Math_Nonemptiness (41s). Appendix rebake running.
+NEXT: Robust's parametric_transversality_meager_planar_config via
+parametric_transversality_meager_euclidean_stub (now sorry-free engine end-to-end),
+then the 4 strata (M4 engine+regular_value_on_gradU_dip; M5 nowhere_dense_mstarg_zeros;
+M6; M6b), then Capstone.
+
