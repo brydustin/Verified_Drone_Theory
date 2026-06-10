@@ -3778,8 +3778,8 @@ text \<open>
   stratum of the moment-map derivative is open \<^emph>\<open>and dense\<close>: take
   \<open>U = V \<inter> {x. m\<^sup>*(x) \<noteq> 0}\<close>. Openness is \<open>C\<^sup>1\<close>; density is real-analytic
   (\<open>{m\<^sup>*=0}\<close> nowhere dense, so its complement is dense and meets every open
-  subset of \<open>V\<close>). This is \<open>rank_lower_semicont_open_dense_propagation\<close> made
-  unconditional for the concrete moment map (no C¹-only false claim).
+  subset of \<open>V\<close>). This makes the open-dense regular stratum unconditional
+  for the concrete moment map (no C¹-only false claim).
 \<close>
 
 lemma DM_paper_open_dense_surjective:
@@ -3805,34 +3805,6 @@ next
   show "\<forall>x\<in>V \<inter> {x::(real^2)^6. m_star x \<noteq> 0}. surj (Moment_Map.DM_paper_x x c0_paper)"
     by (auto simp: surj_iff_m_star)
 qed
-
-text \<open>
-  \<^bold>\<open>Generic analytic scaffolding (not about the moment map specifically).\<close>
-  Any \<open>C\<^sup>1\<close> map into \<^typ>\<open>complex^6\<close> on an open set \<open>V \<subseteq> \<real>\<^sup>2\<^sup>N\<close> whose
-  derivative is surjective at \<^emph>\<open>even one\<close> point of \<open>V\<close> has surjective
-  derivative on an open dense subset of \<open>V\<close>. The proof is the
-  lower-semicontinuity-of-rank upgrade: the surjective stratum is open
-  by lower semicontinuity of the rank of a continuously-varying linear
-  map, and openness + the one regular point + nonemptiness/connectedness
-  of \<open>V\<close> propagates this to open density.
-
-  This lemma is the \<^emph>\<open>tool\<close>. It is instantiated with the concrete moment
-  map \<^const>\<open>M_paper\<close> (below) and the base-point hypothesis is supplied by
-  \<open>bigJ_surj\<close>, yielding the headline concrete theorem
-  \<open>DM_paper_open_dense_surjective\<close>, which is what feeds the
-  \<open>ZH0surj\<close> piece of \<open>prop_regnonzero\<close>.
-\<close>
-
-lemma rank_lower_semicont_open_dense_propagation:
-  fixes V :: "((real^2)^'n) set"
-    and \<F> :: "(real^2)^'n \<Rightarrow> complex^6"
-    and D\<F> :: "(real^2)^'n \<Rightarrow> ((real^2)^'n \<Rightarrow> complex^6)"
-  assumes V_open: "open V" and V_ne: "V \<noteq> {}"
-    and N_ge_6: "6 \<le> CARD('n)"
-    and deriv: "\<And>x. x \<in> V \<Longrightarrow> (\<F> has_derivative D\<F> x) (at x within V)"
-    and one_regular: "\<exists>x\<^sub>0\<in>V. surj (D\<F> x\<^sub>0)"
-  shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U \<and> (\<forall>x\<in>U. surj (D\<F> x))"
-  sorry
 
 theorem prop_regnonzero:
   fixes V Breg_nonzero Zreg ZH0surj BcaseB BH0res :: "((real^2)^'n) set"
