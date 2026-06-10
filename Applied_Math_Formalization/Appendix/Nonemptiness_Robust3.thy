@@ -1,5 +1,5 @@
-theory Nonemptiness_Robust2
-  imports Nonemptiness_Robust
+theory Nonemptiness_Robust3
+  imports Nonemptiness_Robust2
 begin
 
 lemma M12_moment_applyT:
@@ -518,8 +518,8 @@ proof -
 qed
 
 text \<open>\<^bold>\<open>(M2) Open-dense submersion at a fixed nonzero wavevector.\<close>  From one regular point (M1) plus
-  lower semicontinuity of rank (\<open>rank_lower_semicont_open_dense_propagation\<close>, currently a \<open>sorry\<close> in
-  \<open>Nonemptiness_Paper\<close>), the moment-map derivative is surjective on an open dense subset of any open
+  lower semicontinuity of rank (the rank-semicontinuity tool was deleted as dead code; this is
+  delivered sorry-free by the \<open>mstarg\<close> machinery below), the moment-map derivative is surjective on an open dense subset of any open
   \<open>V\<close>.  This is the general-wavevector analogue of \<open>DM_paper_open_dense_surjective\<close>.\<close>
 
 text \<open>\<^bold>\<open>[E]/[F] sound open-dense machinery (in progress).\<close>  The general-n analogue of

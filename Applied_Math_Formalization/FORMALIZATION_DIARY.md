@@ -2184,3 +2184,37 @@ ENDGAME NOTE (re-confirmed): Capstone's leaves can only be discharged from
 strata that live DOWNSTREAM (Robust2) — final wiring must migrate strata
 upstream of/into Capstone.
 CLEANUP QUEUED: delete dead Paper lemma + orphan Inventory.thy (next entry).
+
+### Deletions verified + Robust SPLIT into Robust1/2/3 with M11/M22 optimization (2026-06-10)
+DELETIONS (queued in audit entry) now verified green and committed:
+- Paper's rank_lower_semicont_open_dense_propagation (dead code) deleted along
+  with its stale prose block; one cross-ref sentence rewritten. Paper: 0 sorrys.
+- Orphan Nonemptiness_Inventory.thy deleted (10 vacuous "shows True sorry"
+  placeholders; its one real result was a 1-line corollary of dxA_surj).
+- BlockDet prose mentions of the dead lemma left stale DELIBERATELY (text-only;
+  editing would invalidate the deep BlockDet..Appendix heap chain for prose).
+TIMEOUT POST-MORTEM (12:15 failure, user-run): the four M11/M22 key/sum_key
+commands elaborated CONCURRENTLY and GC-death-spiraled (even the morning green
+run was 73% GC); 3600s session ceiling hit. Same source as the morning green
+build => scheduling/GC, not logic. Lesson: threads=4 for these sessions.
+THE SPLIT (user-directed; supersedes the old "stay on single Robust" decision):
+- Nonemptiness_Robust1 = old Robust lines 1-4642 (through M2_moment_applyT),
+  in NEW session Applied_Math_Appendix_Base (with Regnonzero + Capstone).
+- Nonemptiness_Robust2 = M11_moment_applyT + M22_moment_applyT ONLY, proofs
+  REWRITTEN with the define-t11/t12/t21/t22 trick (ported from the M12 template;
+  statements unchanged). Lives in OWN DIR Appendix/Robust2/ — Isabelle forbids
+  two sessions sharing a directory — as the sole theory of leaf session
+  Applied_Math_Appendix.
+- Nonemptiness_Robust3 = the active dev file formerly NAMED Robust2 (git mv,
+  history preserved); imports Robust2; in NO session (jEdit-only, like
+  Moment_Jacobian). Import chain: Robust3 -> Robust2 -> Robust1 -> Capstone.
+NUMBERS: Appendix_Base 4:42 elapsed (Robust1 cumulated 703s vs old monolith
+Robust 2664s); leaf Appendix 5s elapsed, M11+M22 cumulated 5.7s (was 2000s+,
+or timeout). Total verify cycle for Robust2 edits is now ~5 SECONDS after a
+one-time Base heap bake.
+WORKFLOW: build `-o threads=4 Applied_Math_Appendix`; jEdit work:
+-l Applied_Math_Appendix, open Robust3. NOTE: the commented-out planar_config
+block now sits in Robust1 (heap) — develop the lemma in Robust3, migrate later
+in one batch (one Base rebake).
+NEXT (unchanged): uncomment+prove parametric_transversality_meager_planar_config
+(develop in Robust3), then strata M4/M5/M6/M6b, then Capstone.

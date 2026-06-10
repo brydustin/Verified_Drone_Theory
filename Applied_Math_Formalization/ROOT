@@ -35,14 +35,27 @@ session Applied_Math_Nonemptiness in "." = Applied_Math_MomentJac +
   theories
     Nonemptiness_Paper
 
-session Applied_Math_Appendix in "Appendix" = Applied_Math_Nonemptiness +
+(* The robust-feasible-set development is split for build granularity:
+   Nonemptiness_Robust1 (the long, stable first half) bakes into the
+   Applied_Math_Appendix_Base heap; Nonemptiness_Robust2 (the Sym^2 T
+   diagonal moment laws, formerly a parse-time hotspot) sits alone in the
+   Applied_Math_Appendix leaf so it can be rebuilt/iterated in minutes.
+   Nonemptiness_Robust3 (active development, formerly named Robust2) is
+   deliberately in NO session - edit it in jEdit against the
+   Applied_Math_Appendix heap. *)
+session Applied_Math_Appendix_Base in "Appendix" = Applied_Math_Nonemptiness +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   sessions
     Applied_Math_HigherDiff
   theories
     Nonemptiness_Regnonzero_Appendix
     Nonemptiness_Capstone
-    Nonemptiness_Robust
+    Nonemptiness_Robust1
+
+session Applied_Math_Appendix in "Appendix/Robust2" = Applied_Math_Appendix_Base +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Nonemptiness_Robust2
 
 session Applied_Math_Sard in "SardNegligible" = Applied_Math_Base +
   options [document = false, quick_and_dirty = true, timeout = 3600]
