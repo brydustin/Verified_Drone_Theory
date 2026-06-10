@@ -2090,3 +2090,22 @@ Lessons banked: [[type-every-bound-var-and-inspect-states]]. NEXT: rewire the ba
 (thread `derG`/`contG'` through their assms), delete the old `core_2d` sorry, then Robust's
 `parametric_transversality_meager_planar_config`, then the 4 strata.
 
+### core_2d sigma-compact clause — dev complete in Nonemptiness-heap scratch (2026-06-09)
+Killing the 90-min batch build mid-flight DELETED the Applied_Math_Appendix heap, so I moved
+the dev loop onto the intact Applied_Math_Nonemptiness heap (it has regular_value_local_chart;
+restated the 2 short kernel lemmas + regular_value_on def). Scratch: Appendix/Scratch_sc2.thy.
+Proven there (all GREEN, ~30-50s evals):
+- rel_closed_open_sigma_compact: open U, closed T => U cap T sigma-compact (setdist exhaustion;
+  smt/divide_le_eq LOOP, fixed with mult_right_mono + linarith + metis-free).
+- slice_linear: w |-> blinfun_apply F (0,w) linear (composition route).
+- crit0_sigma_compact_helper: {u in U. ~surj(slice)} sigma-compact. Key: u|->det(matrix(slice))
+  continuous (bounded_bilinear_blinfun_apply + det_2 + bounded_linear_vec_nth); ~surj<->det=0
+  (det_nz_iff_inj + inj<->surj); closedin + closedin_closed[THEN iffD1] (NOT blast-search) + rel_sigma.
+- cover (countable_chart_cover_with_Dphi): now EXPOSES open (U i).
+- core_2d_strong: Crit0 redefined = {u in U i. ~surj(slice at charts i u)}; cover clause direct;
+  rank via projection_deriv_not_inj (moved); NEW sigma-compact conjunct via the helper.
+TRAP reconfirmed (logged): metis/blast/auto over big blinfun/det/matrix terms HANG (137, no error);
+replace with explicit rule/[THEN iffD1]/structured chains. NEXT: bake Scratch_sc2's modified cover +
+core_2d_strong into the base (Parametric_Transversality_Euclidean_Base) + rel_sigma/slice/helper;
+ONE Appendix rebuild (heap is gone, rebuild needed anyway); then rewire the 3 stubs + the 4 strata.
+

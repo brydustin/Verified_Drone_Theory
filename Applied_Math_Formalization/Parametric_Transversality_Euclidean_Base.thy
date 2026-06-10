@@ -396,7 +396,7 @@ lemma countable_chart_cover_with_Dphi:
   shows "\<exists>(U::nat \<Rightarrow> (real^'m::{finite,wellorder}) set)
             (charts::nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2))))
             (Dphi::nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L ((real^'m::{finite,wellorder}) \<times> (real^2))))).
-           (\<forall>i. charts i ` (U i) \<subseteq> M \<and>
+           (\<forall>i. open (U i) \<and> charts i ` (U i) \<subseteq> M \<and>
                 (\<forall>u\<in>U i. (charts i has_derivative blinfun_apply (Dphi i u)) (at u)
                          \<and> range (blinfun_apply (Dphi i u)) = {w. blinfun_apply (G' (charts i u)) w = 0})) \<and>
            M \<subseteq> (\<Union>i. charts i ` (U i))"
@@ -515,7 +515,7 @@ proof -
     have ex_pick: "\<forall>i. \<exists>(U::(real^'m::{finite,wellorder}) set)
               (\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))
               (D\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L ((real^'m::{finite,wellorder}) \<times> (real^2)))).
-              e i = \<phi> ` U \<and> \<phi> ` U \<subseteq> M \<and>
+              open U \<and> e i = \<phi> ` U \<and> \<phi> ` U \<subseteq> M \<and>
               (\<forall>u\<in>U. (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)) \<and>
               (\<forall>u\<in>U. range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0})"
     proof
@@ -526,7 +526,7 @@ proof -
         and \<phi> :: "real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2))"
         and g :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> real^'m::{finite,wellorder}"
         and D\<phi> :: "real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L ((real^'m::{finite,wellorder}) \<times> (real^2)))"
-        where w: "\<phi> ` U \<subseteq> M"
+        where w: "open U" "\<phi> ` U \<subseteq> M"
           "\<forall>u\<in>U. (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)"
           "\<forall>u\<in>U. range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
           "e i = \<phi> ` U"
@@ -534,7 +534,7 @@ proof -
       show "\<exists>(U::(real^'m::{finite,wellorder}) set)
               (\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))
               (D\<phi>::real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L ((real^'m::{finite,wellorder}) \<times> (real^2)))).
-              e i = \<phi> ` U \<and> \<phi> ` U \<subseteq> M \<and>
+              open U \<and> e i = \<phi> ` U \<and> \<phi> ` U \<subseteq> M \<and>
               (\<forall>u\<in>U. (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)) \<and>
               (\<forall>u\<in>U. range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0})"
         apply (rule_tac x=U in exI)
@@ -546,13 +546,13 @@ proof -
     obtain U0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
       and \<phi>0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))"
       and D\<phi>0 :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L ((real^'m::{finite,wellorder}) \<times> (real^2))))"
-      where pick: "\<And>i. e i = \<phi>0 i ` (U0 i) \<and> \<phi>0 i ` (U0 i) \<subseteq> M \<and>
+      where pick: "\<And>i. open (U0 i) \<and> e i = \<phi>0 i ` (U0 i) \<and> \<phi>0 i ` (U0 i) \<subseteq> M \<and>
               (\<forall>u\<in>U0 i. (\<phi>0 i has_derivative blinfun_apply (D\<phi>0 i u)) (at u)) \<and>
               (\<forall>u\<in>U0 i. range (blinfun_apply (D\<phi>0 i u)) = {w. blinfun_apply (G' (\<phi>0 i u)) w = 0})"
       using ex_pick unfolding choice_iff by blast
     show ?thesis
     proof (intro exI[of _ U0] exI[of _ \<phi>0] exI[of _ D\<phi>0] conjI)
-      show "\<forall>i. \<phi>0 i ` (U0 i) \<subseteq> M \<and>
+      show "\<forall>i. open (U0 i) \<and> \<phi>0 i ` (U0 i) \<subseteq> M \<and>
                 (\<forall>u\<in>U0 i. (\<phi>0 i has_derivative blinfun_apply (D\<phi>0 i u)) (at u) \<and>
                           range (blinfun_apply (D\<phi>0 i u)) = {w. blinfun_apply (G' (\<phi>0 i u)) w = 0})"
         using pick by blast
@@ -561,6 +561,140 @@ proof -
       finally show "M \<subseteq> (\<Union>i. \<phi>0 i ` (U0 i))" .
     qed
   qed
+qed
+
+lemma rel_closed_open_sigma_compact:
+  fixes U T :: "(real^'m::{finite,wellorder}) set"
+  assumes openU: "open U" and closedT: "closed T"
+  shows "\<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set. (\<forall>n. compact (K n)) \<and> U \<inter> T = (\<Union>n. K n)"
+proof (cases "U = UNIV")
+  case True
+  define K where "K = (\<lambda>n::nat. T \<inter> cball 0 (real n))"
+  have "compact (K n)" for n
+  proof -
+    have "K n \<subseteq> cball 0 (real n)" unfolding K_def by auto
+    hence "bounded (K n)" using bounded_cball bounded_subset by blast
+    moreover have "closed (K n)" unfolding K_def by (intro closed_Int closedT closed_cball)
+    ultimately show ?thesis by (simp add: compact_eq_bounded_closed)
+  qed
+  moreover have "U \<inter> T = (\<Union>n. K n)"
+  proof -
+    have "T = (\<Union>n. T \<inter> cball 0 (real n))"
+      by (auto simp: dist_norm) (meson real_arch_simple)
+    thus ?thesis using True by (simp add: K_def)
+  qed
+  ultimately show ?thesis by blast
+next
+  case False
+  then have neU: "- U \<noteq> {}" by auto
+  have cU: "closed (- U)" using openU by (metis open_closed)
+  have pos: "0 < setdist {x} (- U)" if "x \<in> U" for x
+  proof -
+    have "x \<notin> closure (- U)" using that cU by simp
+    thus ?thesis using setdist_eq_0_sing_1[of x "- U"] neU setdist_pos_le[of "{x}" "- U"]
+      by (metis order_le_less)
+  qed
+  define K where "K = (\<lambda>n::nat. T \<inter> cball 0 (real n) \<inter> {x. 1/(real n + 1) \<le> setdist {x} (- U)})"
+  have "compact (K n)" for n
+  proof -
+    have csd: "closed {x. 1/(real n + 1) \<le> setdist {x} (- U)}"
+      by (intro closed_Collect_le continuous_on_const continuous_on_setdist)
+    have "K n \<subseteq> cball 0 (real n)" unfolding K_def by auto
+    hence "bounded (K n)" using bounded_cball bounded_subset by blast
+    moreover have "closed (K n)" unfolding K_def by (intro closed_Int closedT closed_cball csd)
+    ultimately show ?thesis by (simp add: compact_eq_bounded_closed)
+  qed
+  moreover have "U \<inter> T = (\<Union>n. K n)"
+  proof
+    show "U \<inter> T \<subseteq> (\<Union>n. K n)"
+    proof
+      fix x assume x: "x \<in> U \<inter> T"
+      hence sp: "0 < setdist {x} (- U)" using pos by blast
+      obtain n where n: "max (norm x) (1 / setdist {x} (- U)) \<le> real n" using real_arch_simple by blast
+      have "norm x \<le> real n" using n by simp
+      moreover have "1/(real n + 1) \<le> setdist {x} (- U)"
+      proof -
+        have hn: "1 / setdist {x} (- U) \<le> real n" using n by simp
+        from mult_right_mono[OF hn less_imp_le[OF sp]]
+        have h2: "1 \<le> real n * setdist {x} (- U)" using sp by simp
+        have "(real n + 1) * setdist {x} (- U) = real n * setdist {x} (- U) + setdist {x} (- U)"
+          by (simp add: distrib_right)
+        hence h3: "1 \<le> (real n + 1) * setdist {x} (- U)" using h2 sp by linarith
+        have "(0::real) < real n + 1" by simp
+        thus ?thesis using h3 by (metis pos_divide_le_eq mult.commute)
+      qed
+      ultimately show "x \<in> (\<Union>n. K n)" using x by (auto simp: K_def dist_norm)
+    qed
+  next
+    show "(\<Union>n. K n) \<subseteq> U \<inter> T"
+    proof
+      fix x assume "x \<in> (\<Union>n. K n)"
+      then obtain n where "x \<in> K n" by blast
+      hence xT: "x \<in> T" and sd: "1/(real n + 1) \<le> setdist {x} (- U)" by (auto simp: K_def)
+      have "(0::real) < 1/(real n + 1)" by simp
+      hence "0 < setdist {x} (- U)" using sd by linarith
+      hence "x \<notin> - U" using setdist_sing_in_set[of x "- U"] by force
+      thus "x \<in> U \<inter> T" using xT by simp
+    qed
+  qed
+  ultimately show ?thesis by blast
+qed
+
+lemma slice_linear:
+  "linear (\<lambda>w::real^2. blinfun_apply F (0::real^'m::{finite,wellorder}, w))"
+proof -
+  have "linear (\<lambda>w::real^2. (0::real^'m::{finite,wellorder}, w))"
+    by (auto simp: linear_iff plus_prod_def scaleR_prod_def)
+  moreover have "linear (blinfun_apply F)"
+    by (rule bounded_linear.linear[OF blinfun.bounded_linear_right])
+  ultimately show ?thesis using linear_compose by (force simp: o_def)
+qed
+
+lemma crit0_sigma_compact_helper:
+  fixes charts :: "real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2))"
+    and G' :: "((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow> (((real^'m::{finite,wellorder}) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+    and U :: "(real^'m::{finite,wellorder}) set"
+    and W :: "((real^'m::{finite,wellorder}) \<times> (real^2)) set"
+  assumes openU: "open U" and cci: "continuous_on U charts"
+    and sub: "charts ` U \<subseteq> W" and cgW: "continuous_on W G'"
+  shows "\<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set. (\<forall>n. compact (K n)) \<and>
+           {u \<in> U. \<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))} = (\<Union>n. K n)"
+proof -
+  have GC: "continuous_on U (\<lambda>u. G' (charts u))"
+    using continuous_on_compose2[OF cgW cci sub] by (simp add: o_def)
+  have ent: "continuous_on U (\<lambda>u. blinfun_apply (G' (charts u)) z)" for z
+    by (rule bounded_bilinear.continuous_on[OF bounded_bilinear_blinfun_apply GC continuous_on_const])
+  have det_eq: "\<And>u. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w)))
+        = blinfun_apply (G' (charts u)) (0, axis 1 1) $ 1 * blinfun_apply (G' (charts u)) (0, axis 2 1) $ 2
+        - blinfun_apply (G' (charts u)) (0, axis 2 1) $ 1 * blinfun_apply (G' (charts u)) (0, axis 1 1) $ 2"
+    by (simp add: det_2 matrix_def)
+  have detc: "continuous_on U (\<lambda>u. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))))"
+  proof -
+    have e2: "continuous_on U (\<lambda>u. blinfun_apply (G' (charts u)) z $ i)" for z i
+      by (rule bounded_linear.continuous_on[OF bounded_linear_vec_nth ent])
+    show ?thesis unfolding det_eq by (intro continuous_intros e2)
+  qed
+  have surj_det: "surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))
+                \<longleftrightarrow> det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) \<noteq> 0" for u
+  proof -
+    have "surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))
+        \<longleftrightarrow> inj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))"
+      using linear_injective_imp_surjective[OF slice_linear]
+            linear_surjective_imp_injective[OF slice_linear] by blast
+    thus ?thesis using det_nz_iff_inj[OF slice_linear] by blast
+  qed
+  have crit_eq: "{u \<in> U. \<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))}
+               = {u \<in> U. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) = 0}"
+    by (auto simp: surj_det)
+  have "closedin (top_of_set U)
+          {u \<in> U. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) = 0}"
+    by (rule continuous_closedin_preimage_constant[OF detc])
+  with crit_eq have cl: "closedin (top_of_set U)
+          {u \<in> U. \<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))}" by simp
+  obtain T where T: "closed T"
+      "{u \<in> U. \<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))} = U \<inter> T"
+    using closedin_closed[THEN iffD1, OF cl] by blast
+  show ?thesis unfolding T(2) by (rule rel_closed_open_sigma_compact[OF openU T(1)])
 qed
 
 lemma core_2d_strong:
@@ -579,21 +713,23 @@ lemma core_2d_strong:
              \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit0 i)) \<and>
            (\<forall>i x. x \<in> Crit0 i \<longrightarrow>
               ((fst \<circ> charts i) has_derivative (blinfun_apply (D0 i x))) (at x within Crit0 i)) \<and>
-           (\<forall>i x. x \<in> Crit0 i \<longrightarrow> rank (matrix (blinfun_apply (D0 i x))) < CARD('m))"
+           (\<forall>i x. x \<in> Crit0 i \<longrightarrow> rank (matrix (blinfun_apply (D0 i x))) < CARD('m)) \<and>
+           (\<forall>i. \<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set. (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n))"
 proof -
   obtain U :: "nat \<Rightarrow> (real^'m::{finite,wellorder}) set"
      and charts :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<times> (real^2)))"
      and Dphi :: "nat \<Rightarrow> (real^'m::{finite,wellorder} \<Rightarrow> ((real^'m::{finite,wellorder}) \<Rightarrow>\<^sub>L ((real^'m::{finite,wellorder}) \<times> (real^2))))"
    where
-    cov: "\<forall>i. charts i ` (U i) \<subseteq> {q \<in> V\<times>\<Omega>. G q = 0} \<and>
+    cov: "\<forall>i. open (U i) \<and> charts i ` (U i) \<subseteq> {q \<in> V\<times>\<Omega>. G q = 0} \<and>
               (\<forall>u\<in>U i. (charts i has_derivative blinfun_apply (Dphi i u)) (at u)
                        \<and> range (blinfun_apply (Dphi i u)) = {w. blinfun_apply (G' (charts i u)) w = 0})" and
     ccov: "{q \<in> V\<times>\<Omega>. G q = 0} \<subseteq> (\<Union>i. charts i ` (U i))"
     using countable_chart_cover_with_Dphi[OF openV openOmega derG contG' reg0] by blast
   have cder: "\<And>i u. u \<in> U i \<Longrightarrow> (charts i has_derivative blinfun_apply (Dphi i u)) (at u)" using cov by blast
   have crng: "\<And>i u. u \<in> U i \<Longrightarrow> range (blinfun_apply (Dphi i u)) = {w. blinfun_apply (G' (charts i u)) w = 0}" using cov by blast
+  have openUi: "\<And>i. open (U i)" using cov by blast
   define D0 where "D0 = (\<lambda>i u. Blinfun fst o\<^sub>L Dphi i u)"
-  define Crit0 where "Crit0 = (\<lambda>i. {u \<in> U i. \<not> inj (blinfun_apply (D0 i u))})"
+  define Crit0 where "Crit0 = (\<lambda>i. {u \<in> U i. \<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts i u)) (0, w))})"
   have Dapply: "\<And>i u. blinfun_apply (D0 i u) = (\<lambda>v. fst (blinfun_apply (Dphi i u) v))"
     by (simp add: D0_def blinfun_compose.rep_eq bounded_linear_fst bounded_linear_Blinfun_apply, auto)
   have linD0: "\<And>i u. linear (blinfun_apply (D0 i u))"
@@ -624,9 +760,7 @@ proof -
           by (simp add: o_def)
         with sj nbad show False by blast
       qed
-      have "\<not> inj (\<lambda>v. fst (blinfun_apply (Dphi i u) v))"
-        using crng[OF iu] cu by (intro projection_deriv_not_inj[where Gp="G' (x,\<omega>)"]) (use slice in auto)
-      hence uCrit: "u \<in> Crit0 i" using iu by (simp add: Crit0_def Dapply)
+      have uCrit: "u \<in> Crit0 i" using slice iu cu by (simp add: Crit0_def)
       have "x = (fst \<circ> charts i) u" using cu by (simp add: o_def)
       thus "x \<in> (\<Union>i. (fst \<circ> charts i) ` (Crit0 i))" using uCrit by blast
     qed
@@ -645,10 +779,28 @@ proof -
   next
     show "\<forall>i x. x \<in> Crit0 i \<longrightarrow> rank (matrix (blinfun_apply (D0 i x))) < CARD('m)"
     proof (intro allI impI)
-      fix i x assume "x \<in> Crit0 i"
-      hence "\<not> inj (blinfun_apply (D0 i x))" by (simp add: Crit0_def)
+      fix i x assume xC: "x \<in> Crit0 i"
+      hence xU: "x \<in> U i" by (simp add: Crit0_def)
+      have ns: "\<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts i x)) (0, w))"
+        using xC by (simp add: Crit0_def)
+      have "\<not> inj (\<lambda>v. fst (blinfun_apply (Dphi i x) v))"
+        using crng[OF xU] by (intro projection_deriv_not_inj[where Gp="G' (charts i x)"]) (use ns in auto)
+      hence "\<not> inj (blinfun_apply (D0 i x))" by (simp add: Dapply)
       thus "rank (matrix (blinfun_apply (D0 i x))) < CARD('m)"
         by (rule rank_defect_of_not_inj[OF linD0])
+    qed
+  next
+    show "\<forall>i. \<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set. (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n)"
+    proof (intro allI)
+      fix i
+      have cci: "continuous_on (U i) (charts i)"
+      proof (rule continuous_at_imp_continuous_on, rule ballI)
+        fix u assume "u \<in> U i"
+        thus "continuous (at u) (charts i)" using cder has_derivative_continuous by blast
+      qed
+      have sub: "charts i ` (U i) \<subseteq> V\<times>\<Omega>" using cov by blast
+      show "\<exists>K::nat \<Rightarrow> (real^'m::{finite,wellorder}) set. (\<forall>n. compact (K n)) \<and> Crit0 i = (\<Union>n. K n)"
+        unfolding Crit0_def by (rule crit0_sigma_compact_helper[OF openUi cci sub contG'])
     qed
   qed
 qed
