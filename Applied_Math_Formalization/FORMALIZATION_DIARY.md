@@ -2132,3 +2132,27 @@ parametric_transversality_meager_euclidean_stub (now sorry-free engine end-to-en
 then the 4 strata (M4 engine+regular_value_on_gradU_dip; M5 nowhere_dense_mstarg_zeros;
 M6; M6b), then Capstone.
 
+
+### Appendix rebake GREEN post-rewire (2026-06-10, user-run)
+Computer crashed during the original rebake; working tree survived intact, rewire
+committed as 2178245. User then ran the full Appendix rebuild in their terminal:
+**Finished Applied_Math_Appendix (0:22:09 elapsed)** — first green build of the
+whole chain against the zero-sorry base. STATUS CORRECTIONS vs previous entry:
+- Robust.thy's parametric_transversality_meager_planar_config is COMMENTED OUT
+  (lines 4464-4477) — so Robust has ZERO active sorrys; the lemma must be
+  uncommented + proven, not just "resolved". Robust2 mentions it only in
+  unchecked prose ({thm ...} without @), so the build doesn't care.
+- Active sorry census: Robust2 4 (M4/M5/M6/M6b strata), Capstone 6
+  (capstone_feasible, 4 branch_*_meager, capstone_X0_sound). Total 10 + the
+  commented-out transport lemma.
+- No Appendix consumer calls the rewired stubs yet (grep clean), which is why
+  the signature change didn't break the rebake.
+PERF NOTE: Robust line 4797 (sum_key inside the Sym2T steering-transport) ran
+~187s — classic big-$-term parse hang (see dollar-notation memory); builds fine,
+rewrite with vec_nth only if it becomes a bottleneck.
+BUILD TRAP (cost me a killed build): `-D` SELECTS all sessions in the dir —
+`-D … Applied_Math_Nonemptiness` also launches the 32-min Appendix build.
+Use lowercase `-d` + explicit session name. Heaps live in DEFAULT
+~/.isabelle/Isabelle2025-2 (the -ap-nonemptiness HOME_USER dir is empty).
+NEXT (unchanged): uncomment+prove planar_config transport, then M4/M5/M6/M6b,
+then Capstone.
