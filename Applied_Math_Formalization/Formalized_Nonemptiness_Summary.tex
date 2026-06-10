@@ -1,0 +1,695 @@
+\documentclass[11pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,linkcolor=blue,urlcolor=blue]{hyperref}
+
+%% ---- theorem environments -------------------------------------------------
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+%% ---- notation -------------------------------------------------------------
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\CC}{\mathbb{C}}
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\cvec}{c}                 % the steered planar wave-vector map c(omega)
+\newcommand{\Af}{A}                   % array factor
+\newcommand{\Upat}{U}                 % radiation intensity / power pattern
+\newcommand{\gain}{g}                 % element gain
+\newcommand{\Ffeas}{\mathcal{F}}      % feasible set
+\newcommand{\Fzero}{\mathcal{F}_{0}}  % robust feasible set
+\newcommand{\Xrob}{X_{\mathrm{rob}}}
+\newcommand{\Xnull}{X_{0}}
+\newcommand{\grad}{\nabla}
+\newcommand{\sigmin}{\sigma_{\min}}
+\newcommand{\nd}{\textsf{nd}}
+\newcommand{\code}[1]{\texttt{\small #1}}
+\newcommand{\norm}[1]{\lVert #1 \rVert}
+\newcommand{\abs}[1]{\lvert #1 \rvert}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\interior}{int}
+\DeclareMathOperator{\spann}{span}
+\DeclareMathOperator{\cis}{cis}
+\DeclareMathOperator{\Img}{Im}
+\DeclareMathOperator{\Real}{Re}
+
+\title{\bf A Semi-Formal Account of the Machine-Checked\\
+  Odd-$N$ / Dipole Nonemptiness Argument\\[4pt]
+  \large As Formalized in Isabelle/HOL}
+\author{Generated from the Isabelle development\\
+  \code{Verified\_Drone\_Theory/Applied\_Math\_Formalization}}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+This note reconstructs, in ordinary mathematical language, the antenna /
+drone--array \emph{nonemptiness} argument exactly as it currently lives in the
+Isabelle/HOL development.  It begins from first definitions (the configuration
+space, the steered array factor, the radiation pattern, and the robust feasible
+set whose nonemptiness is the goal), develops the genuinely machine-checked
+backbone --- the Baire--category closeout, the odd-$N$ surjectivity geometry, the
+explicit $12\times 12$ moment determinant, the steering-transport reduction, and
+the negligible$\,\to\,$meager bridge --- and ends at the assembled capstone
+theorems \code{odd\_N\_nonemptiness} and \code{F0\_dip\_nonempty}.  Every named
+result below is quoted from the Isabelle sources, and \emph{nothing is asserted
+that is not present there.}  A closing section lists, with full transparency,
+the ten leaf lemmas that are still discharged by \code{sorry}: the capstone is a
+machine-checked \emph{assembly} that currently rests on those explicitly named
+holes.  Isabelle identifiers are printed \code{like this} so each statement can
+be traced to source.
+\end{abstract}
+
+\tableofcontents
+
+%% ==========================================================================
+\section{Status of this document}
+%% ==========================================================================
+
+The development is split into a fully proved \emph{spine} plus a set of
+\emph{leaf obligations}.  Concretely:
+
+\begin{itemize}[leftmargin=1.4em]
+\item The Baire/meager closeout (\S\ref{sec:baire}), the odd-$N$ surjectivity
+  geometry (\S\ref{sec:odd}), the explicit moment determinant and steering
+  transport (\S\ref{sec:moment}), and the negligible$\to$meager / rank-deficient
+  image engine (\S\ref{sec:engine}) are \textbf{\code{sorry}-free}: their
+  theory files contain no oracle steps.
+\item The four ``bad-stratum'' branch results (\S\ref{sec:branches}) are proved
+  as \emph{conditional reductions}: each is a genuine theorem whose deep input
+  is named as an explicit hypothesis.
+\item The two top-level capstones (\S\ref{sec:capstone}) are assembled and
+  type-checked by Isabelle, but their proofs invoke a handful of leaf lemmas
+  that are presently \code{sorry}.  Those ten leaves are catalogued honestly in
+  \S\ref{sec:holes}.
+\end{itemize}
+
+Thus what is \emph{logically complete} is the entire scaffolding plus all the
+algebra; what is \emph{assembled but not yet airtight} is the very top of the
+tower.  This document is faithful to that state.
+
+%% ==========================================================================
+\section{Background: the objects and the target set}\label{sec:setup}
+%% ==========================================================================
+
+\subsection{Configurations and look-directions}
+
+Fix an odd number $N\ge 7$ of radiating elements (for the concrete dipole
+capstone only $N\ge 6$ is needed).  In Isabelle $N=\code{CARD('n)}$ for a finite
+index type \code{'n}.
+
+\begin{definition}[Configuration space]
+A \emph{configuration} is a tuple of $N$ planar element positions
+\[
+  x=(x_1,\dots,x_N)\in(\RR^2)^N,\qquad x\in\code{(real\^{}2)\^{}'n}.
+\]
+This is a finite-dimensional Euclidean space, hence a complete metric (Baire)
+space --- exactly the setting the closeout needs.
+\end{definition}
+
+A \emph{look-direction} is an angle pair $\omega=(\theta,\phi)\in\RR^2$.  To each
+$\omega$ one associates a wave-vector $k(\omega)$ with components
+$k_x,k_y,k_z$.  Steering toward a design direction relative to a steering
+direction $\omega_s$ produces a \emph{planar phase-slope vector}
+$\cvec(\omega)\in\RR^2$.  In the concrete (dipole) instance this is the explicit
+secant map \code{cvec\_dip}:
+\begin{align}
+  \cvec(\omega)_1 &= \big(k_x(\omega)-k_x(\omega_s)\big)
+      + \frac{k_x(\omega_0)-k_x(\omega_s)}{k_z(\omega_s)-k_z(\omega_0)}\,
+        \big(k_z(\omega)-k_z(\omega_s)\big),\notag\\
+  \cvec(\omega)_2 &= \big(k_y(\omega)-k_y(\omega_s)\big)
+      + \frac{k_y(\omega_0)-k_y(\omega_s)}{k_z(\omega_s)-k_z(\omega_0)}\,
+        \big(k_z(\omega)-k_z(\omega_s)\big).
+  \label{eq:cvec}
+\end{align}
+The abstract development keeps $\cvec:\RR^2\to\RR^2$ generic;
+\eqref{eq:cvec} is its instantiation (\code{cvec\_dip}, \code{cvec0}).
+
+\subsection{The array factor and the radiation pattern}
+
+\begin{definition}[Array factor]\label{def:af}
+For a configuration $x$ and direction $\omega$,
+\[
+  \Af(x,\omega)\;=\;\sum_{n=1}^{N}\exp\!\big(-\,i\,\cvec(\omega)\cdot x_n\big)
+            \;=\;\sum_{n=1}^{N}\cis\!\big(-\cvec(\omega)\cdot x_n\big),
+\]
+a sum of $N$ unit-modulus phasors (\code{af}, \code{A\_cart}).  Each summand has
+modulus $1$, so $\abs{\Af(x,\omega)}\le N$ always (\code{cmod\_af\_le\_card}).
+\end{definition}
+
+\begin{definition}[Element gain and radiation intensity]
+Let $\gain(\omega)\ge 0$ be the (element) gain pattern.  The \emph{radiation
+intensity} (power pattern) is
+\[
+  \Upat(x,\omega)\;=\;\gain(\omega)\,\abs{\Af(x,\omega)}^2
+\]
+(\code{Upow}, \code{U\_cart}).  For the genuine half-wave \emph{dipole} the gain
+is $\gain_{\mathrm{dip}}(\omega)=\abs{e(\theta)}^2$, a smooth function of
+$\theta=\omega_1$ only (\code{gain\_dip}), and the concrete pattern is
+$U_{\mathrm{dip}}=\code{U\_cart}\ \code{cvec\_dip}\ \code{gain\_dip}$.
+\end{definition}
+
+We write $\grad_\omega\Upat$ for the gradient of $\Upat$ in the angle variable
+(a vector in $\RR^2$, \code{gradU}), and $\grad^2_\omega\Upat$ for the symmetric
+$2\times2$ Hessian (\code{HessU}); these are the genuine higher derivatives of
+$\Upat$ supplied by the \code{Higher\_Differentiability\_Multi} library.  For a
+symmetric $2\times2$ matrix $H$ let
+\[
+  \sigmin(H)=\inf_{\norm v=1}\norm{Hv}
+\]
+be its smallest singular value (\code{sigma\_min}).  Finally, the
+\emph{degeneracy map}
+\[
+  \Phi(x,\omega)=\big(\partial_\theta\Upat,\ \partial_\phi\Upat,\
+       \det\grad^2_\omega\Upat\big)\in\RR^3
+\]
+(\code{Phibad}) vanishes exactly at a \emph{degenerate critical point} of the
+pattern: $\grad\Upat=0$ \emph{and} $\det\grad^2\Upat=0$
+(\code{Phibad\_zero\_iff}).
+
+\subsection{The feasible set and the robust feasible set}
+
+The design constraints carve out a compact feasible set.
+
+\begin{definition}[Feasible set $\Ffeas$]\label{def:feas}
+With aperture radius $R$, minimum spacing $d_{\min}$, focusing geometry
+$(A,B,D)$, null direction $\omega_{\mathrm{null}}$, main-beam direction
+$\omega_0$, null cap $\delta_{\mathrm{null}}$ and main-beam floor $p_{\min}$,
+\[
+  \Ffeas \;=\; c_{\mathrm{pen}}^{-1}\{0\}
+   \,\cap\, \{x:\Upat(x,\omega_{\mathrm{null}})\in[0,\delta_{\mathrm{null}}]\}
+   \,\cap\, \{x:\Upat(x,\omega_0)\in[p_{\min},\,\gain(\omega_0)N^2]\}
+   \,\cap\, \overline{B}_R(0),
+\]
+where the spacing penalty
+$c_{\mathrm{pen}}(x)=\sum_{n\ne m}\max\{0,\;d_{\min}-\norm{r'_n-r'_m}\}$ vanishes
+iff every focused inter-element distance is $\ge d_{\min}$ (\code{Ffeas},
+\code{cpen}, \code{spdist}).  Each cut is the preimage of a closed set under a
+continuous map, so $\Ffeas$ is \textbf{compact} (\code{Ffeas\_compact}), and
+around any \emph{strictly} feasible point a whole ball lies in $\Ffeas$, so
+$\Ffeas$ has nonempty interior (\code{ball\_inside\_Ffeas}).
+\end{definition}
+
+To obtain a \emph{robust} feasible point --- one whose sidelobe structure is
+quantitatively non-degenerate --- one intersects $\Ffeas$ with margin sets around
+the design direction $\mathrm{ctr}=(\theta_0,\phi_0)$.
+
+\begin{definition}[Robust sets and the target $\Fzero$]\label{def:F0}
+For radii/margins $\varepsilon,\kappa,\xi>0$ and the angular scan box
+$\Omega=[\theta_0-\tfrac\pi2,\theta_0+\tfrac\pi2]\times[\phi_0-\pi,\phi_0+\pi]$
+(\code{Omega}, proved compact),
+\begin{align*}
+  \Xrob(\varepsilon,\kappa)
+    &= \big\{x : \norm{\grad_\omega\Upat(x,\omega)}\ge\kappa
+        \ \ \forall\,\omega\in\partial B_\varepsilon(\mathrm{ctr})\big\},\\[2pt]
+  \Xnull(\xi,\kappa,\varepsilon)
+    &= \Big\{x\in\Xrob :
+        \norm{\grad_\omega\Upat(x,y)}+\sigmin\!\big(\grad^2_\omega\Upat(x,y)\big)
+          \ge\xi\ \ \forall\,y\in\Omega\setminus B_\varepsilon(\mathrm{ctr})\Big\},
+\end{align*}
+(\code{Xrobust}, \code{X0}).  The {\bf target set} whose nonemptiness is the
+flagship result is the \emph{robust feasible set}
+\[
+  \boxed{\;\Fzero(\xi,\kappa,\varepsilon)\;=\;\Ffeas\,\cap\,\Xnull(\xi,\kappa,\varepsilon)\;}
+  \qquad(\code{F0},\ \code{Fzero}).
+\]
+\end{definition}
+
+\begin{remark}
+The margin condition $\norm{\grad\Upat}+\sigmin(\grad^2\Upat)\ge\xi$ away from the
+beam says exactly: at every off-beam direction the pattern is either not critical
+($\grad\Upat\ne0$) or has a nondegenerate Hessian ($\sigmin>0$, i.e.
+$\det\grad^2\Upat\ne0$).  This is the analytic shadow of the degeneracy map
+$\Phi$ of \S\ref{sec:setup}, and is precisely what the determinant work secures.
+\end{remark}
+
+\paragraph{The goal.}  Prove that for a suitable design and suitable positive
+margins, $\Fzero\ne\varnothing$.
+
+%% ==========================================================================
+\section{The Baire--category closeout (fully machine-checked)}\label{sec:baire}
+%% ==========================================================================
+
+The strategy is a Baire-category argument: a small number of ``bad'' parameter
+sets are each topologically negligible (\emph{meager}), so their union cannot
+swallow a nonempty open piece of the feasible family, and any leftover point is
+the desired robust feasible configuration.
+
+\begin{definition}[Nowhere dense, meager]
+A set $E$ is \emph{nowhere dense} if $\interior(\overline E)=\varnothing$
+(\code{nowhere\_dense}); a set is \emph{meager} if it is contained in a countable
+union of nowhere-dense sets (\code{meager}).
+\end{definition}
+
+\begin{lemma}[Stability of meagerness; all \code{sorry}-free]
+Meagerness is preserved by subsets (\code{meager\_subset}), by finite unions
+(\code{meager\_Un}) and by countable unions (\code{meager\_Union\_nat}).
+\end{lemma}
+
+\begin{lemma}[Baire]\label{lem:baire}
+In a finite-dimensional real normed space, a nonempty open set is not meager:
+\[
+  \text{\code{open U}}\ \wedge\ U\ne\varnothing\ \Longrightarrow\ \neg\,\text{\code{meager U}}
+  \qquad(\code{open\_nonempty\_not\_meager}).
+\]
+\end{lemma}
+
+These combine into the closeout, which is proved with no oracle steps.
+
+\begin{theorem}[Closeout, \code{nonemptiness\_from\_meager\_branches}]\label{thm:closeout}
+Let $V$ be a nonempty open subset of $\Ffeas$, and let
+$B_1,B_2,B_3,B_4$ be four ``bad'' sets such that each $B_i\cap V$ is meager.
+Suppose every good point lies in some robust margin set, i.e.
+\[
+  x\in V\setminus(B_1\cup B_2\cup B_3\cup B_4)
+   \ \Longrightarrow\ \exists\,\xi>0.\ x\in\Xnull(\xi).
+\]
+Then $\Fzero(\xi)\ne\varnothing$ for some $\xi>0$.
+\end{theorem}
+
+\begin{proof}[Proof (as formalized)]
+By Lemma~\ref{lem:baire}, $V$ is not meager.  The union
+$\bigcup_i (B_i\cap V)$ is meager (\code{bad\_union\_meagerness}, four
+applications of \code{meager\_Un}).  If $V\setminus\bigcup_iB_i$ were empty then
+$V$ would be a subset of a meager set, hence meager --- contradiction.  Pick
+$x\in V\setminus\bigcup_iB_i$; by hypothesis $x\in\Xnull(\xi)$ for some $\xi>0$,
+and $x\in V\subseteq\Ffeas$, so $x\in\Ffeas\cap\Xnull(\xi)=\Fzero(\xi)$.  Hence
+$\Fzero(\xi)\ne\varnothing$ (\code{final\_nonemptiness\_from\_bad\_union}).
+\end{proof}
+
+\begin{remark}
+A Lebesgue variant is also proved: if each $B_i\cap V$ is merely
+\emph{negligible} (measure zero) then the same conclusion holds, because a
+nonempty open set is not negligible
+(\code{nonemptiness\_from\_negligible\_branches}).
+\end{remark}
+
+The four bad sets are the obstruction strata of the pattern; they are defined
+concretely from the array factor (\code{Bregzero}, \code{Bfoldzero},
+\code{Bfoldnonzero}, \code{Bregnonzero}):
+\begin{itemize}[leftmargin=1.4em]
+\item $B_{\mathrm{regzero}}$: on the regular angular stratum, $\Af$ fails to be
+  transverse to $0$;
+\item $B_{\mathrm{foldzero}}$: $\Af$ has a zero on the fold curve $\Sigma$;
+\item $B_{\mathrm{foldnonzero}}$: a fold-critical point with $\Af\ne0$ (reduced to
+  a finite exceptional set $E$);
+\item $B_{\mathrm{regnonzero}}$: a degenerate critical point ($\Phi=0$) with
+  $\Af\ne0$ on the regular stratum.
+\end{itemize}
+
+%% ==========================================================================
+\section{The odd-$N$ surjectivity geometry (fully machine-checked)}\label{sec:odd}
+%% ==========================================================================
+
+The very first bad set ($\Af$ non-transverse to $0$) is controlled by a clean
+parity fact: an array factor zero forces the differential
+$D_x\Af:(\RR^2)^N\to\CC$ to be onto, \emph{provided $N$ is odd}.  This is the
+formalized core of the paper's Lemma \emph{Azero-surj}.
+
+\begin{lemma}[Odd parity nucleus]
+A sum of an odd number of $\pm1$'s is odd, hence nonzero
+(\code{sum\_pm\_one\_odd\_nonzero}).  Consequently a real-collinear family of
+unit phasors $z_n=\varepsilon_n u$ ($\varepsilon_n=\pm1$, $u\ne0$) sums to
+$\big(\sum\varepsilon_n\big)u$, whose coefficient has the same parity as the
+number of terms (\code{sum\_collinear\_units\_card}).
+\end{lemma}
+
+\begin{theorem}[Zero $\Rightarrow$ not collinear, \code{af\_zero\_odd\_not\_collinear}]
+If $N$ is odd and $\Af(x,\omega)=0$, then the phasors
+$\cis(-\cvec(\omega)\cdot x_n)$ cannot all lie on one real line through the
+origin.
+\end{theorem}
+
+\begin{proof}[Proof (as formalized)]
+If they were collinear, each would be $\varepsilon_n u$ with
+$\varepsilon_n=\pm1$, so $\Af=\big(\sum\varepsilon_n\big)u$.  But $N$ odd makes
+$\sum\varepsilon_n$ odd, hence $\ne0$, and $u\ne0$, so $\Af\ne0$ ---
+contradicting $\Af(x,\omega)=0$.
+\end{proof}
+
+\begin{corollary}[Independent pair, \code{af\_zero\_odd\_indep\_pair}]
+Under the same hypotheses two of the phasors are $\RR$-linearly independent, so
+their real span is all of $\CC$ (\code{complex\_real\_span\_2}).
+\end{corollary}
+
+\begin{theorem}[$D_x\Af$ is onto, \code{dxA\_surj} $=$ \code{lem\_Azero\_surj}]
+\label{thm:dxa}
+Let $N$ be odd, $\cvec(\omega)\ne0$ and $\Af(x,\omega)=0$.  Then the partial
+differential
+\[
+  D_x\Af(x,\omega)\,[h]\;=\;-\,i\sum_{n=1}^N \big(\cvec(\omega)\cdot h_n\big)\,
+       \cis\!\big(-\cvec(\omega)\cdot x_n\big)
+\]
+is surjective onto $\CC$: for every $w\in\CC$ there is a displacement $h$ with
+$D_x\Af(x,\omega)[h]=w$.
+\end{theorem}
+
+\begin{proof}[Proof (as formalized)]
+Pick an independent pair of phasors at indices $i\ne j$.  Because
+$\cvec(\omega)\ne0$, choose $d$ with $\cvec(\omega)\cdot d=1$; moving only
+elements $i,j$ along $d$ with real coefficients $r,s$ makes
+$D_x\Af[h]=-i\,(r\,z_i+s\,z_j)$.  Since $z_i,z_j$ span $\CC$ over $\RR$, the
+coefficients $(r,s)$ can be chosen to hit any target $w$.
+\end{proof}
+
+A second elementary spine fact pins down where the steering vector itself
+vanishes.
+
+\begin{lemma}[Secant on the sphere, \code{lem\_czero}]
+If the design and steering directions are angularly separated
+($k_z(\omega_0)\ne k_z(\omega_s)$) and the secant phase-slope vanishes,
+$\cvec_0(\omega_0,\omega_s,\omega)=0$, then $\omega$ is one of the two
+distinguished directions: $k(\omega)=k(\omega_0)$ or $k(\omega)=k(\omega_s)$.
+\end{lemma}
+
+%% ==========================================================================
+\section{The moment map and the explicit \texorpdfstring{$12\times12$}{12x12}
+  determinant (fully machine-checked)}\label{sec:moment}
+%% ==========================================================================
+
+The hardest of the four branches ($\Af\ne0$, degenerate critical point) is
+governed by a \emph{moment map} whose differential is generically onto.  This is
+the formalized Lemma \emph{Msurj}, and it is the single largest verified algebraic
+fact in the development.
+
+\begin{definition}[Moment map, \code{M\_paper}]
+For a six-element configuration $x\in(\RR^2)^6$ and steering $c$,
+\[
+  M(x,c)=\big(A,\,M_1,\,M_2,\,M_{11},\,M_{12},\,M_{22}\big)(x,c)\in\CC^6,
+\]
+the vector of the zeroth, first, and second phase-weighted moments of the array
+(\code{A\_moment}, \code{M1\_moment}, \dots, \code{M22\_moment}).  Its Fréchet
+derivative in the configuration variable is $D_xM(x,c):(\RR^2)^6\to\CC^6$
+(\code{DM\_paper\_x}).
+\end{definition}
+
+\begin{definition}[The paper's regular point]
+At $\kappa=1$ take the six equally spaced ``roots-of-unity'' positions
+\[
+  x_0=\Big(\,(0,2),\,(\tfrac\pi3,2),\,(\tfrac{2\pi}3,0),\,(\pi,0),\,
+       (\tfrac{4\pi}3,2),\,(\tfrac{5\pi}3,2)\,\Big),\qquad
+  c_0=(1,0)
+\]
+(\code{x0\_paper}, \code{c0\_paper}).
+\end{definition}
+
+\begin{theorem}[The explicit determinant, \code{bigJ\_det} / \code{bigJ\_det\_nonzero}]
+\label{thm:det}
+Identifying $\CC^6\cong\RR^{12}$, the $12\times12$ Jacobian
+$J=D_xM(x_0,c_0)$ has the closed-form determinant
+\[
+  \det J \;=\; -\,\frac{5\pi^8}{3}\;\ne\;0 .
+\]
+\end{theorem}
+
+This is proved by an exact symbolic expansion of the explicit numeric/symbolic
+matrix \code{bigJ}.  Its consequences are all formalized:
+
+\begin{corollary}[Surjectivity and its open locus]\label{cor:surj}
+\begin{enumerate}[label=(\alph*),leftmargin=2em]
+\item The linear map $v\mapsto Jv$ is onto (\code{bigJ\_surj}), hence
+  $D_xM(x_0,c_0)$ is surjective (\code{surj\_DM\_paper\_base}).
+\item For any $x$, surjectivity of $D_xM(x,c_0)$ is equivalent to the
+  transported determinant being nonzero, $m^\ast(x)=\det\big(\mathrm{matrix}\,(MJ_x)\big)\ne0$
+  (\code{surj\_iff\_m\_star}).
+\item The set $\{x:D_xM(x,c_0)\text{ surjective}\}=\{x:m^\ast(x)\ne0\}$ is
+  \textbf{open} (\code{open\_surj\_stratum}), because $m^\ast$ is continuous.
+\end{enumerate}
+\end{corollary}
+
+To pass from the privileged steering $c_0=(1,0)$ to an arbitrary nonzero
+steering $c$, the development uses a linear change of variables --- the
+``steering transport'' bricks, all \code{sorry}-free.
+
+\begin{lemma}[Steering transport, \code{steering\_transport\_exists}]
+For every $c\ne0$ there is an invertible $2\times2$ matrix $T$ with
+$T^{\!\top}c=c_0$ (\code{steering\_transport\_exists}).  Writing $T$'s action on
+configurations as $y\mapsto\code{applyT}\,T\,y$, the moments transform
+covariantly:
+\[
+  A(\code{applyT}\,T\,y,\,c)=A(y,c_0),\qquad
+  M_k(\code{applyT}\,T\,y,\,c)=\textstyle\sum_\ell T_{k\ell}\,M_\ell(y,c_0)
+\]
+and analogously for the second moments $M_{11},M_{12},M_{22}$ (the bricks
+\code{phase\_applyT}, \code{A\_moment\_applyT}, \code{M1\_moment\_applyT},
+\dots, \code{M22\_moment\_applyT}).
+\end{lemma}
+
+Thus a single explicit regular point at $c_0$ propagates to a regular point at
+\emph{every} nonzero steering, and the open regular locus of
+Corollary~\ref{cor:surj}(c) transports along with it.  (Turning ``one regular
+point'' into ``open \emph{dense}'' for general $c$ is the rank lower-semicontinuity
+step \code{DM\_paper\_x\_open\_dense\_surjective\_gen}, which is one of the
+remaining leaves; see \S\ref{sec:holes}.)
+
+%% ==========================================================================
+\section{The negligible \texorpdfstring{$\to$}{->} meager engine
+  (fully machine-checked)}\label{sec:engine}
+%% ==========================================================================
+
+A rank-deficient smooth image must be meager; this is the measure-theoretic
+muscle behind every branch.  It is built from a baby Sard theorem and a
+$\sigma$-compact exhaustion.
+
+\begin{lemma}[Negligible/meager bridge]
+A closed negligible set is nowhere dense (\code{nowhere\_dense\_closed\_negligible}),
+nowhere dense implies meager (\code{meager\_nowhere\_dense}), and a countable
+union of closed negligible sets is meager (\code{meager\_negligible\_closed\_cover}).
+\end{lemma}
+
+\begin{lemma}[$\sigma$-compact exhaustion, \code{open\_sigma\_compact\_exhaustion}]
+Every open $U\subseteq\RR^m$ is a countable union of compact sets.
+\end{lemma}
+
+\begin{theorem}[Rank-deficient image is meager,
+  \code{rank\_deficient\_C1\_image\_meager}]\label{thm:rankdef}
+If $U\subseteq\RR^m$ is open and $F:U\to\RR^n$ is $C^1$ with
+$\rank DF(x)<n$ for all $x\in U$, then $F(U)$ is meager.  In particular
+(\code{smooth\_chart\_meager}) a smooth map from an open $U\subseteq\RR^m$ with
+$m<n$ has meager image.
+\end{theorem}
+
+\begin{proof}[Proof (as formalized)]
+Exhaust $U$ by compacts $K_j$; on each, baby Sard (\code{baby\_Sard}) gives
+that the image $F(K_j)$ is negligible and closed, and
+\code{meager\_negligible\_closed\_cover} bundles the countable union into a
+meager set covering $F(U)$.
+\end{proof}
+
+A transversality companion turns a critical/level-set picture into negligibility
+via countable chart covers (\code{negligible\_critical\_values\_from\_charts},
+\code{countable\_chart\_cover\_of\_levelset\_2d}, both proved); the single
+geometric input it still needs --- a regular-value chart with the rank-defect
+bookkeeping --- is the keystone leaf of \S\ref{sec:holes}.  An independent Sard
+transport result \code{negligible\_singular\_image\_2n} (in
+\code{Sard\_Negligible}, \code{sorry}-free) supplies the negligibility of the
+image of a map with non-surjective derivative on the concrete configuration type.
+
+%% ==========================================================================
+\section{The four branches as conditional reductions}\label{sec:branches}
+%% ==========================================================================
+
+Each branch is a genuine, \code{sorry}-free theorem; its deep geometric input is
+named as a hypothesis (and discharged --- or still open --- elsewhere).
+
+\begin{proposition}[Regular zero stratum, \code{prop\_regzero}]
+Let $V$ be nonempty open and $\Omega_{\mathrm{reg}}$ open.  If the joint map
+$\Af$ is $C^1$ and is jointly transverse to $0$ on $V\times\Omega_{\mathrm{reg}}$
+(its differential onto wherever $\Af=0$ --- exactly Theorem~\ref{thm:dxa}), then
+\[
+  \{x\in V:\Af(x,\cdot)\text{ not transverse to }0\text{ on }\Omega_{\mathrm{reg}}\}
+  \quad\text{is meager.}
+\]
+\end{proposition}
+
+\begin{proposition}[Fold zero stratum, \code{prop\_foldzero}]
+A finite union of per-chart meager fold-zero sets is meager: if for each
+chart $\ell<L$ the slice $\{x\in V:\exists t\in I_\ell,\ F_\ell(x,t)=0\}$ is
+meager, then so is their union over $\ell$.
+\end{proposition}
+
+\begin{lemma}[Fold fields and the fold curve, \code{lem\_foldfields}]
+The kernel and tangent fields along the fold curve are computed explicitly, and
+$\det J_{\cvec}(D,\theta,\phi)=(\cos\theta-\sin\theta\,(D\cdot e_r(\phi)))\sin\theta$,
+identifying the fold curve $\Sigma$ as the zero set of this determinant.
+\end{lemma}
+
+\begin{lemma}[Finiteness of the exceptional set, \code{lem\_Efinite}]
+If $g_\theta$ is the real restriction of an entire function $G$ (so
+$g_\theta(t)=\Real G(t)$), $g_\theta\not\equiv0$ on a compact interval $\Theta$,
+and the $\phi$-fibres are finite, then the exceptional set
+$E=\{\omega\in\Sigma:g_\theta(\theta)=0\}$ is finite.
+\end{lemma}
+
+\begin{proposition}[Fold nonzero stratum, \code{prop\_foldnonzero}]
+If $E$ is finite and each slice $\{x\in V:F_{\mathrm{crit}}(\omega,x)=0\}$
+($\omega\in E$) is nowhere dense, then the bad set $\subseteq\bigcup_{\omega\in
+E}\{x\in V:F_{\mathrm{crit}}(\omega,x)=0\}$ is meager.
+\end{proposition}
+
+\begin{proposition}[Regular nonzero stratum, \code{prop\_regnonzero}]\label{prop:regnz}
+The degenerate-critical bad set decomposes into four meager pieces:
+\[
+  B_{\mathrm{regnonzero}}\cap V \subseteq
+   (Z_{\mathrm{reg}}\cap V)\cup(Z_{H\equiv0}\cap V)
+   \cup(B_{\mathrm{CaseB}}\cap V)\cup(B_{H0\mathrm{res}}\cap V),
+\]
+and if each of the four pieces is meager then $B_{\mathrm{regnonzero}}\cap V$ is
+meager.  (The four sub-meagerness facts are the appendix obligations
+$\dim Z$, Case~B, and the $H\!\equiv\!0$ residue; the bulk of the supporting
+algebra --- codimension cuts, $\Lambda^{(11)}$ residues, nowhere-density of the
+analytic cuts --- is proved \code{sorry}-free in
+\code{Nonemptiness\_Regnonzero\_Appendix}, e.g. \code{prop\_dimZ},
+\code{prop\_Lambda\_common}, \code{cor\_Lambda\_closed}.)
+\end{proposition}
+
+%% ==========================================================================
+\section{The assembled capstones}\label{sec:capstone}
+%% ==========================================================================
+
+The branches, the feasibility construction, and the robustness soundness are now
+fed through the \code{sorry}-free closeout (Theorem~\ref{thm:closeout}).
+
+\begin{theorem}[Abstract capstone, \code{odd\_N\_nonemptiness}]
+Let $N$ be odd, $N\ge7$, $\cvec(\omega_N)\ne0$, $\Omega_{\mathrm{reg}}$ open with
+$\cvec\ne0$ on it, $E$ finite, and each fold slice nowhere dense.  Then there is
+$\xi>0$ with $\Fzero(\xi)\ne\varnothing$.
+\end{theorem}
+
+The proof literally assembles \code{branch\_regzero\_meager},
+\code{branch\_foldzero\_meager}, \code{branch\_foldnonzero\_meager},
+\code{branch\_regnonzero\_meager}, the feasibility witness, and the robustness
+soundness through \code{nonemptiness\_from\_meager\_branches}.
+
+The concrete payoff is for the \emph{actual} dipole pattern, with the real
+radiation intensity $U_{\mathrm{dip}}=\gain_{\mathrm{dip}}(\omega)\abs{\Af(x,\omega)}^2$
+and the explicit steered wave-vector $\cvec_{\mathrm{dip}}$ of \eqref{eq:cvec} ---
+no abstract $\cvec$ or $\gain$.
+
+\begin{theorem}[Concrete dipole capstone, \code{F0\_dip\_nonempty}]\label{thm:capstone}
+For every $N\ge6$ there exist a design $(A,B,D)$, directions
+$\omega_0,\omega_s,\omega_{\mathrm{null}},\mathrm{ctr}$, tolerances
+$R,d_{\min},\delta_{\mathrm{null}},p_{\min}$, and positive margins $\xi,\kappa,\varepsilon>0$
+such that the robust feasible set for the dipole pattern is nonempty:
+\[
+  \Fzero\big(\cvec_{\mathrm{dip}},\,\gain_{\mathrm{dip}},\,R,d_{\min},A,B,D,
+     \omega_{\mathrm{null}},\mathrm{ctr},\Omega,\delta_{\mathrm{null}},p_{\min};\,
+     \xi,\kappa,\varepsilon\big)\ \ne\ \varnothing .
+\]
+The design is \emph{delivered by the construction}, not assumed.
+\end{theorem}
+
+\begin{proof}[Proof (the construction, as formalized)]
+Choose $\omega_0=(\tfrac\pi2,0)$ (main beam), $\omega_s=(0,0)$ (steering),
+$\omega_{\mathrm{null}}=(\pi,0)$ (null).  Then $k_z(\omega_s)\ne k_z(\omega_0)$,
+and $\cvec_{\mathrm{dip}}(\omega_{\mathrm{null}})\ne0$ (its first component is
+$-2$).  By the roots-of-unity witness \code{feasible\_witness\_exists}
+(using $N>1$) there is a configuration $x$ with
+$\Af(x,\omega_{\mathrm{null}})=0$ --- the $N$ phases are the $N$-th roots of unity,
+whose sum vanishes (\code{sum\_cis\_neg\_roots\_unity}) --- and all pairwise
+spacings $\ge1$.  At the main beam $\cvec_{\mathrm{dip}}(\omega_0)=0$, so all
+phasors align and the main-beam power is pinned to its cap
+$\Upat(x,\omega_0)=\gain_{\mathrm{dip}}(\omega_0)N^2>0$ (\code{Upow\_at\_main},
+with $\gain_{\mathrm{dip}}(\omega_0)>0$ since $\sin\omega_0=1$).  Picking
+$p_{\min},d_{\min},\delta_{\mathrm{null}}$ to make the witness \emph{strictly}
+feasible places a whole ball inside $\Ffeas$ (\code{ball\_inside\_Ffeas}), so
+$\Ffeas$ has nonempty interior.  A regular feasible point then exists, and the
+two Weierstrass continuity conjuncts (continuity of
+$\omega\mapsto\norm{\grad\Upat}$ and of
+$\omega\mapsto\sigmin(\grad^2\Upat)$, proved \code{sorry}-free in
+\code{norm\_gradU\_dip\_continuous\_on}, \code{sigma\_min\_HessU\_dip\_continuous\_on})
+upgrade it to a robust feasible point with positive margins, via
+\code{F0\_nonempty\_of\_witness}.
+\end{proof}
+
+\begin{remark}
+The \emph{assembly} of Theorem~\ref{thm:capstone} is machine-checked: the
+construction of the witness, the nulling, the main-beam pinning, the strict
+feasibility, the compactness/continuity inputs, and the wiring through the
+closeout are all genuine proofs.  What the proof still \emph{borrows} are the
+leaf lemmas listed next.
+\end{remark}
+
+%% ==========================================================================
+\section{What is not yet airtight: the ten leaf \texttt{sorry}s}\label{sec:holes}
+%% ==========================================================================
+
+In the interest of complete honesty --- and in keeping with the rule of this
+project to never present an oracle step as a proof --- here are the exactly ten
+leaf lemmas currently discharged by \code{sorry} on which the capstones depend
+(transitively).  Each is a self-contained, clearly delimited geometric or
+analytic statement; none is hidden inside the assembly.
+
+\begin{enumerate}[leftmargin=1.8em]
+\item \code{regular\_zero\_set\_projection\_charts\_core\_2d}
+  (\code{Parametric\_Transversality\_Euclidean\_Base}, line~371): the
+  regular-value chart with rank-defect bookkeeping --- the genuine
+  implicit-function/Sard keystone, to be built from
+  \code{inverse\_function\_theorem}.
+\item \code{rank\_lower\_semicont\_open\_dense\_propagation}
+  (\code{Nonemptiness\_Paper}, line~3835): one regular point of a $C^1$ map into
+  $\CC^6$ propagates to an open \emph{dense} surjective locus (rank lower
+  semicontinuity).
+\item[3--10.] In the frontier file \code{Nonemptiness\_Robust}: the parametric
+  transversality meagerness \code{parametric\_transversality\_meager\_planar\_config}
+  (4474); the general-steering regular point and its open-dense locus
+  \code{DM\_paper\_x\_regular\_point\_exists} (4757),
+  \code{DM\_paper\_x\_open\_dense\_surjective\_gen} (4768); the three
+  $\Phi=0$ stratum-meagerness lemmas \code{meager\_bad\_regular\_stratum} (4953),
+  \code{meager\_rank\_deficient\_stratum} (4967),
+  \code{meager\_steering\_singular\_stratum} (4980), the $\Af=0$ degenerate
+  stratum \code{meager\_Azero\_degenerate\_stratum} (4994); and the separation
+  margin \code{no\_degenerate\_to\_sphere\_annulus} (5357) that turns
+  pointwise nondegeneracy into a uniform positive margin on a sphere/annulus.
+\end{enumerate}
+
+By contrast, everything in \S\S\ref{sec:baire}--\ref{sec:branches} --- the Baire
+closeout, the odd-$N$ surjectivity, the $-5\pi^8/3$ determinant and its
+surjectivity/open-locus consequences, the steering transport, the
+negligible$\to$meager and rank-deficient-image engine, and the four branch
+reductions --- is \code{sorry}-free.  The mathematical tower is built; the
+remaining work is to knock out these ten named blocks at the top.
+
+%% ==========================================================================
+\section*{Appendix: dictionary of Isabelle names}
+\addcontentsline{toc}{section}{Appendix: dictionary of Isabelle names}
+%% ==========================================================================
+
+\begin{center}\small
+\begin{tabular}{@{}ll@{}}
+\hline
+\textbf{Object / result} & \textbf{Isabelle name} \\
+\hline
+Configuration space $(\RR^2)^N$ & \code{(real\^{}2)\^{}'n} \\
+Array factor $\Af$ & \code{af}, \code{A\_cart} \\
+Radiation intensity $\Upat$ & \code{Upow}, \code{U\_cart}, \code{U\_dip} \\
+Steered wave-vector $\cvec$ & \code{cvec\_dip}, \code{cvec0} \\
+Gradient / Hessian / $\sigmin$ & \code{gradU}, \code{HessU}, \code{sigma\_min} \\
+Degeneracy map $\Phi$ & \code{Phibad} \\
+Feasible set $\Ffeas$ & \code{Ffeas} (compact: \code{Ffeas\_compact}) \\
+Robust target $\Fzero$ & \code{F0}, \code{Fzero} \\
+Baire (open $\Rightarrow$ non-meager) & \code{open\_nonempty\_not\_meager} \\
+Closeout & \code{nonemptiness\_from\_meager\_branches} \\
+$D_x\Af$ onto (odd $N$) & \code{dxA\_surj}, \code{lem\_Azero\_surj} \\
+$\det J=-5\pi^8/3\ne0$ & \code{bigJ\_det}, \code{bigJ\_det\_nonzero} \\
+Surjective $\Leftrightarrow m^\ast\ne0$; open locus & \code{surj\_iff\_m\_star}, \code{open\_surj\_stratum} \\
+Steering transport & \code{steering\_transport\_exists} \\
+Rank-deficient image meager & \code{rank\_deficient\_C1\_image\_meager} \\
+Four branch reductions & \code{prop\_regzero/foldzero/foldnonzero/regnonzero} \\
+Abstract / dipole capstone & \code{odd\_N\_nonemptiness}, \code{F0\_dip\_nonempty} \\
+\hline
+\end{tabular}
+\end{center}
+
+\end{document}

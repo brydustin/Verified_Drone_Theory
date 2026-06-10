@@ -1,0 +1,3 @@
+theory Scratch_ht imports "Applied_Math_Appendix.Nonemptiness_Robust" begin
+thm regular_value_local_chart exists_nonzero_in_kernel_with_fst0 rank_defect_of_not_inj
+end

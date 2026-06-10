@@ -2156,3 +2156,31 @@ Use lowercase `-d` + explicit session name. Heaps live in DEFAULT
 ~/.isabelle/Isabelle2025-2 (the -ap-nonemptiness HOME_USER dir is empty).
 NEXT (unchanged): uncomment+prove planar_config transport, then M4/M5/M6/M6b,
 then Capstone.
+
+### Sorry-dependency AUDIT of the heap chain (2026-06-10)
+Question: does any sorried fact get INVOKED by a proof? Swept every .thy in the
+build graph (incl. Imported_Munkres_Topology) for the 7 heap-resident sorries +
+axiomatization/oops/attribute vectors. Results:
+- rank_lower_semicont_open_dense_propagation (Paper:3826, sorry): NEVER invoked.
+  All 4 other occurrences are prose cartouches (Moment_Map:650, BigJ:1123,
+  Robust2:521, Paper:3781). Confirmed dead code (superseded by mstarg route,
+  ed8cf5f).
+- The 6 Capstone leaves: each invoked EXACTLY ONCE, all inside
+  odd_N_nonemptiness (Capstone:142-176) — the flagship skeleton. That is the
+  ONLY oracle-tainted theorem in the heap chain.
+- odd_N_nonemptiness itself: invoked NOWHERE (Robust/Robust2 never cite it).
+  Taint fully contained in Capstone. Its glue nonemptiness_from_meager_branches
+  (Nonemptiness_Spine:217) is sorry-free.
+- No sorried lemma carries [simp]/[intro]; no declare/lemmas aggregation cites
+  one; zero axiomatization project-wide; the lone oops (Higher_Differentiability:2421)
+  discards its statement (nothing enters the theory); Munkres import: 0 sorries.
+- ORPHAN FOUND: Nonemptiness_Inventory.thy (10 sorries) — imported by NOTHING,
+  absent from ROOT, NOT in any heap. Old TeX-statement checklist.
+SLEDGEHAMMER BLACKLIST while proving against the Appendix heap (7 names):
+capstone_feasible, branch_regzero_meager, branch_foldzero_meager,
+branch_foldnonzero_meager, branch_regnonzero_meager, capstone_X0_sound,
+odd_N_nonemptiness. Reject any found proof citing these.
+ENDGAME NOTE (re-confirmed): Capstone's leaves can only be discharged from
+strata that live DOWNSTREAM (Robust2) — final wiring must migrate strata
+upstream of/into Capstone.
+CLEANUP QUEUED: delete dead Paper lemma + orphan Inventory.thy (next entry).

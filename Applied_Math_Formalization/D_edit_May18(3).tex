@@ -1,0 +1,2992 @@
+\documentclass[11pt,letterpaper]{article}
+
+% PACKAGES
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb,amsthm,bm}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{comment}
+
+\usepackage{subcaption}
+
+\usepackage{hyperref} % for URL hyperlinks in Bib
+
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning}
+\usetikzlibrary{decorations.pathmorphing} % in preamble
+\usepackage{float}
+
+\usepackage{enumitem}
+
+
+\usepackage{geometry}
+  \geometry{margin=1in}
+\usepackage{tcolorbox}
+\usepackage{hyperref}
+  \hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    citecolor=blue,
+    urlcolor=blue,
+  }
+\usepackage{booktabs}
+
+\usepackage{xspace}
+\usepackage{textcomp} % for \textregistered
+
+% Sans-serif small caps; with ® on first use only
+\newif\ifMATLABfirst
+\MATLABfirsttrue
+\newcommand{\MATLAB}{%
+  \ifMATLABfirst
+    \textsf{\textsc{Matlab}}\textsuperscript{\textregistered}\xspace%
+    \global\MATLABfirstfalse
+  \else
+    \textsf{\textsc{Matlab}}\xspace%
+  \fi
+}
+
+
+\usepackage{xcolor}
+\usepackage{tikz}
+
+% Happy green checkmark
+\newcommand{\tikzcheck}{%
+  \tikz[baseline=-0.6ex, scale=0.14, line cap=round, line join=round]{
+    \draw[line width=6pt, color=green!60!black] (0,0) -- (3,-3) -- (8,3);
+  }%
+}
+
+% Extra-tiny angry red X
+\newcommand{\tikzxmark}{%
+  \tikz[baseline=-0.4ex, scale=0.05, line cap=round, line join=round]{
+    \draw[line width=1.6pt, color=red!70!black] (-4,-4) -- (4,4);
+    \draw[line width=1.6pt, color=red!70!black] (-4,4) -- (4,-4);
+  }%
+}
+
+
+% THEOREM STYLES
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+\theoremstyle{plain}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{conjecture}[theorem]{Conjecture}
+
+\title{Optimization of Passive Relay Arrays for Beamforming and Null
+Synthesis}
+\author{Dustin Bryant, Daniil Shaposhnikov, Malcolm Davies, Daniel Onofrei, and David R. Jackson }
+\date{March 2026}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This paper studies passive UAV relay arrays for directional beamforming and null synthesis through geometric optimization of relay locations. In contrast to active distributed beamforming architectures, the proposed framework does not require inter-element synchronization. Instead, for a known monochromatic incident field, the relative phases of the relay contributions are induced passively by propagation path differences determined by the array geometry. This leads naturally to a synthesis problem in which the three-dimensional placement of the passive relays is used to shape the far-field radiation pattern.
+We formulate this design task as a constrained nonlinear optimization problem over the admissible relay configurations, with objectives promoting energy concentration in prescribed beam directions and suppression in selected null directions, subject to geometric feasibility constraints such as minimum inter-relay separation. The associated objective functional depends continuously on the relay geometry, which yields an existence result for an optimal configuration by compactness of the admissible set. Numerical experiments further show that even relatively small passive UAV swarms can achieve substantial far-field pattern control through suitable spatial placement alone, highlighting the potential of passive mobile relay arrays for adaptive wireless signal shaping.
+
+\end{abstract}
+
+%Mk: IV
+\section{Introduction}
+
+Modern wireless systems are exploring the use of drone swarms as reconfigurable antenna arrays to overcome line-of-sight obstructions and dynamically direct signals.
+This idea can take several forms including whole swarms of drones each carrying such arrays 
+\cite{Onofrei2020}
+, singular drones carrying reflecting elements or meta-surfaces 
+\cite{Shang_Shafinuav_Liu2021, Park2022IRS_UAV_Survey}
+, either active transmit forms or passive reflective forms of said arrays
+\cite{Alsarayreh2023,Cui2024_CST_Survey}
+, and combined forms such as multi-hop aerial backhaul techniques where a signal is passed through several loci by daisy-chain
+\cite{Dabiri_Hasna_Khattab_Qaraqe2022}
+, or even among a grand network of satellites 
+\cite{ImazLueje2020}
+.
+In such systems, a transmitter radiates towards a drone or fleet of drones carrying such arrays, which redirect the energy toward an intended receiver. By appropriately manipulating each drone or array, the scattered signals add coherently in the desired direction, and destructively interfere in other directions, to produce a focused main lobe, deep nulls toward protected angles, and low sidelobes elsewhere~\cite{Onofrei2020}.
+
+It is important to emphasize that the mechanism considered here differs fundamentally from active distributed beamforming. In the present passive relay framework, the individual UAV elements do not act as synchronized transmitters. Rather, for a known incident monochromatic field, the contribution of each passive relay acquires a phase determined by the corresponding propagation path lengths and by the element response. Thus, coherent addition in the far field is obtained through suitable geometric placement of the relays, so that the desired phase relationships are induced passively by the configuration itself. This makes the relay geometry the primary design variable for beam steering and null synthesis.
+
+Early works established how geometry and excitations shape beamwidth, sidelobes, and nulls (e.g., Schelkunoff’s array theory, Dolph–Chebyshev and Taylor distributions for low sidelobes, and the array processing canon)~\cite{Schelkunoff1943,Dolph1946,Taylor1955,VanTrees2002,Mailloux2017_PhasedArrayBook}.  Methods in the reflectarray and metasurface literature exist which provide scalable passive phase control~\cite{HuangEncinar2007}.  Translating these ideas to UAV swarms is an open problem, since there are tight requirements on time, frequency, phase alignment and relative motion~\cite{Nanzer2021_TMTT_Review}. Tolerance analyses and correction strategies for micro-UAV arrays~\cite{PetkoWerner2009}, together with early flight demonstrations of two-to-three-drone distributed beamforming~\cite{Diao2019_USNCURSI,Mohanti2019_AirBeam}, validate feasibility at small scale. Recent advances in wireless synchronization push coherence further (picosecond timing, internode ranging, and decentralized frequency alignment)~\cite{Mghabghab2021_TMTT,Merlo2023_TMTT_PicoSync,Schlegel2023_MWTL_CoherentRadar,Ouassal2021_TWC,Rashid2023_TWC}, yet robust coherence with multiple drones  remains an open challenge~\cite{Nanzer2021_TMTT_Review}.  
+
+Classical array synthesis offers closed-form and optimization-based weight designs for fixed geometries (e.g., Chebyshev/Taylor tapers, Woodward–Lawson synthesis; see~\cite{Dolph1946,Taylor1955,Mailloux2017_PhasedArrayBook}). But when element \emph{positions} are design variables—as with mobile drones bearing passive scatterers—the mapping from geometry to the far-field pattern is highly nonconvex: small spatial perturbations induce nonlinear phase changes with many saddles and plateaus. Consequently, much of the movable-element literature adopts global or stochastic searches (GA/PSO/SA) to suppress sidelobes or place nulls~\cite{Haupt1994,RobinsonRahmatSamii2004}, which are computationally expensive and lack optimality guarantees. A recent alternative convexifies limited displacements via first-order approximations and sparse formulations to reduce peak sidelobes and enforce nulls while moving as few elements as possible~\cite{Abdelhay_2025}; still, such approaches approximate an inherently nonconvex geometric pattern relationship. In our specific context—UAV swarms acting as passive relay, scattering arrays—the ability to \emph{co-design 3D positions and (when available) per-element phases} provides more leverage than phase-only design on fixed layouts~\cite{Zarifi2010,Onofrei2020}. Indeed, in~\cite{Onofrei2020} the authors showed (in theory) that adjusting the 3D positions of drones carrying simple reflectors can produce strong main beams with low sidelobes and prescribed nulls, motivating the optimization formulation. In this paper, we explore the case of manipulating the positions of each drone in a swarm to achieve such ends in the low frequency regime (below $300$ MHz).
+
+This paper is organized as follows: we conclude this section by highlighting the main contributions of this paper. In Section 2 we derive the far field equations relevant to our work.  Section 3 then formulates the optimization problem whose solution yields the optimal drone swarm arrangement for our beamforming objectives.  In the second half of Section 3, we address the theoretical aspect of the problem, proving that a global minimizer to this highly nonconvex design problem does exist.  Section 4 introduces the various algorithms we used to solve the problem and our Ansatz approach for finding an initial configuration. Section 5 presents numerical results demonstrating our beamforming approach for a representative case (we focus on $N=9$ drones).  Finally, Section 6 discusses the implications of our work and directions for future research.
+
+\paragraph{Contributions and positioning.}
+\begin{itemize}
+  \item \textbf{Passive swarm beamforming via geometry optimization.} We formulate the
+  relay geometry design problem for a UAV swarm carrying passive scatterers directly as a
+  constrained far-field pattern synthesis problem. This distinguishes the framework from active distributed arrays~\cite{Mudumbai2005_ISIT,Mudumbai2010_TIT,Nanzer2021_TMTT_Review} and from aerial IRS/RIS
+  designs~\cite{Cui2024_CST_Survey,Cui2021_JSAC_UAV_IRS,Alsarayreh2023,Rahmatov2023_Survey_RISUAV}, where phase control is achieved electronically rather than geometrically.
+
+  \item \textbf{Existence via variational analysis.} We prove that the constrained design
+  problem admits a global minimizer, establishing well-posedness. The argument combines
+  compactness of the feasible set with upper and lower hemicontinuity of the critical point
+  correspondence $\Gamma$ (used to construct a measure of peak sidelobe level), an application of the Berge Maximum Theorem, and the implicit
+  function theorem to handle non-degenerate critical points~\cite{berge63,aliprantis06}.
+
+  \item \textbf{Physically informed initialization.} We introduce a concentric circular
+  Ansatz that places elements on two offset rings with altitudes fixed by the beam-focusing
+  condition. A coarse grid search over ring radii and offset angle identifies the best
+  symmetric starting geometry. In \texttt{MultiStart} experiments with $10{,}000$ random
+  initializations, fewer than $0.03\%$ achieved peak sidelobe levels below $-25$~dB,
+  confirming that this structured initialization is critical to the success of local methods.
+
+\item \textbf{Algorithms tailored to beampattern landscapes.} We deploy two
+  complementary methods: (i) a trust-region solver with exact subproblem solutions and a
+  curvature-gated Newton handoff, designed to escape saddles and plateaus characteristic of
+  nonconvex beampattern objectives and (ii) ZIPC, a zoom-in penalty continuation scheme on
+  the null weight that reliably achieves null depths below $-250$~dB while maintaining peak
+  sidelobe levels below a prescribed threshold. Both methods are benchmarked against
+  standard local and global solvers, including \texttt{fmincon}, \texttt{MultiStart}, and
+  NOMAD.
+\end{itemize}
+
+   
+
+\section{Far-Field Derivation}
+
+We formalize the geometry to pattern mapping, inserting classical references where the steps are standard. We work in unbounded three dimensional free space and assume a narrowband, time-harmonic regime with angular frequency $\omega$ and the $e^{-i\omega t}$ sign convention throughout. Bold symbols (e.g., $\mathbf{r}$) denote vectors. Let $\mathbf{r}_s$ denote the center of the relay swarm. We write $ \mathbf{r}_s = (r_s, \theta_s, \phi_s) $ in spherical coordinates and $\mathbf{r}_s = (x_s, y_s, z_s)$ in cartesian coordinates. The design vector $\mathbf{x}$ encodes the swarm geometry: specifically, the position of the $n$th relay element $\mathbf{r}_n(\mathbf{x})$ expressed relative to the swarm center as $\mathbf{r}'_n(\mathbf{x}) := \mathbf{r}_n(\mathbf{x}) - \mathbf{r}_s$ for $n = 1,\dots,N$. Let $\hat{\mathbf{r}}(\theta,\phi)$ be the unit vector in direction $(\theta,\phi)$, and define the plane wave vector
+\[
+\mathbf{k}(\theta,\phi) \;=\; \frac{2\pi}{\lambda_0}\,
+\big(\sin\theta\cos\phi,\; \sin\theta\sin\phi,\; \cos\theta\big),
+\]
+with $\lambda_0$ the free space wavelength. We consider an incident plane wave arriving from direction $(\theta_s,\phi_s)$ with wavevector $\mathbf{k}_{\mathrm{in}} = \mathbf{k}(\theta_s,\phi_s)$, and observe the reradiated field in direction $(\theta,\phi)$ with $\mathbf{k}_{\mathrm{out}} = \mathbf{k}(\theta,\phi)$.
+
+Electromagnetic propagation in a source-free region is governed by the homogeneous wave equation. For a Cartesian field component $E(\mathbf{r},t)$:
+\[
+\nabla^2 E(\mathbf{r},t) - \frac{1}{c^2}\,\frac{\partial^2 E}{\partial t^2} = 0.
+\]
+Under the time-harmonic ansatz $E(\mathbf{r},t) = \operatorname{Re}\{E(\mathbf{r})\,e^{-i\omega t}\}$, the spatial part satisfies the Helmholtz equation
+\[
+\nabla^2 E(\mathbf{r}) + k^2 E(\mathbf{r}) = 0, \qquad k = \omega/c.
+\]
+With the $e^{-i\omega t}$ convention the outgoing free-space Green's function is $G(\mathbf{r}-\mathbf{r}') = \frac{e^{ik|\mathbf{r}-\mathbf{r}'|}}{4\pi\,|\mathbf{r}-\mathbf{r}'|}$~\cite{Stratton1941,Jackson1999}, and the scattered field produced by a source distribution $q(\mathbf{r}')$ can be written as
+\begin{equation}
+E(\mathbf{r}) \;=\; \int_V q(\mathbf{r}')\,G(\mathbf{r}-\mathbf{r}')\,\mathrm{d}^3\mathbf{r}'
+\;=\; \frac{1}{4\pi}\int_V \frac{e^{ik|\mathbf{r}-\mathbf{r}'|}}{|\mathbf{r}-\mathbf{r}'|}\,
+q(\mathbf{r}')\,\mathrm{d}^3\mathbf{r}'.
+\label{eq:green}
+\end{equation}
+In the far field ($R = |\mathbf{r}| \gg$ array diameter), the approximation $|\mathbf{r}-\mathbf{r}'| \approx R - \hat{\mathbf{r}}\cdot\mathbf{r}'$ simplifies~\eqref{eq:green}~\cite{Balanis2016,Mailloux2017_PhasedArrayBook}. Extracting the $e^{ikR}/R$ factors yields
+\begin{equation}
+E(\mathbf{r}) \;\approx\; \frac{e^{ikR}}{4\pi R}\,
+\widetilde{q}\!\left(k\hat{\mathbf{r}}\right),
+\qquad
+\widetilde{q}(\mathbf{k}) \;=\; \int_V e^{-i\mathbf{k}\cdot\mathbf{r}'}\,q(\mathbf{r}')\,\mathrm{d}^3\mathbf{r}', \quad \mathbf{k} = k\hat{\mathbf{r}},
+\label{eq:farfield}
+\end{equation}
+showing that the far-field pattern is the Fourier transform of the source distribution: the classical array factor result~\cite{Balanis2016,Mailloux2017_PhasedArrayBook}. Modeling $N$ small scatterers as point sources, we have
+\begin{equation}
+q(\mathbf{r}') \;=\; \sum_{n=1}^N F_n\,\delta\!\big(\mathbf{r}'-\mathbf{r}'_n\big),
+\label{eq:discreteq}
+\end{equation}
+where $F_n$ is the complex scattering amplitude of element $n$ (incorporating its element pattern and the phase of the incident wave at that location), substitution of~\eqref{eq:discreteq} into~\eqref{eq:farfield} gives the canonical far-field sum
+\begin{equation}
+E(\mathbf{r}) \;\approx\; \frac{e^{ikR}}{4\pi R}
+\sum_{n=1}^N F_n\, e^{-i\mathbf{k}_{\mathrm{out}}\cdot\mathbf{r}'_n}.
+\label{eq:ff-sum}
+\end{equation}
+When the array is illuminated by a plane wave from $(\theta_s,\phi_s)$, each scatterer accumulates an incident phase factor $e^{+i\mathbf{k}_{\mathrm{in}}\cdot\mathbf{r}'_n}$. Absorbing this into $F_n$ and dropping the common propagation factor $e^{ikR}/(4\pi R)$ yields
+\begin{equation}
+E_{\infty}(\theta,\phi;\bm{x}) \;\propto\; e(\theta,\phi)\,
+\sum_{n=1}^N \exp\!\left\{-i\,[\mathbf{k}_{\mathrm{out}}-\mathbf{k}_{\mathrm{in}}]\cdot\mathbf{r}'_n(\bm{x})\right\},
+\label{eq:AF}
+\end{equation}
+where $e(\theta,\phi)$ denotes the element pattern~\cite{Balanis2016,Mailloux2017_PhasedArrayBook,HuangEncinar2007}. The radiation intensity (power per unit solid angle) in direction $(\theta,\phi)$ is then
+\begin{equation}
+U(\bm{x},(\theta,\phi)) \;=\;
+\left|\, e(\theta,\phi)\, \sum_{n=1}^N
+\exp\!\left\{-i\,[\mathbf{k}(\theta,\phi)-\mathbf{k}(\theta_s,\phi_s)]\cdot\mathbf{r}'_n(\bm{x})\right\}
+\right|^2,
+\label{eq:Udef}
+\end{equation}
+which is the quantity we shape by optimizing $\mathbf{x}$.
+
+% The derivation above holds for an arbitrary element pattern $e(\theta,\phi)$. For the numerical experiments in this paper we
+% restrict to $z$-directed half wave dipole scattering elements of length $L = \lambda_0/2$, whose
+% element pattern is modeled by
+% \begin{equation}
+%     e(\theta, \phi) = \frac{\cos\!\left(\tfrac{\pi}{2}\cos\theta\right)}{\sin\theta},
+%     \label{eq:dipole}
+% \end{equation}
+% where $e$ is independent of $\phi$ by the azimuthal symmetry of a $z$-directed dipole~\cite{Balanis2016}. This
+% expression vanishes at $\theta = 0$ and $\theta = \pi$ (broadside to the dipole axis) and attains
+% its maximum at $\theta = \pi/2$ (the broadside equatorial plane). Although $e(\theta,\phi)$ 
+%  has a removable singularity at $\theta = 0, \pi$, the radiation intensity $U$
+% depends on $e^2$, which extends smoothly to zero at the poles. We therefore assume $e^2$ is smooth on the sphere, which holds for the half wave dipole pattern used throughout.
+
+
+
+
+The derivation above holds for an arbitrary element pattern $e(\theta,\phi)$.
+For the numerical experiments in this paper we restrict to resonant $z$-directed
+half-wave dipole scattering elements (length $L = \lambda_0/2$) with a sinusoidal
+current distribution $I(z) = I_0 \cos(kz)$, $|z| \leq \lambda_0/4$.
+Integrating the radiation from this current distribution yields the exact
+far-field amplitude pattern~\cite{Balanis2016}
+\begin{equation}
+    e(\theta,\phi) = \frac{\cos\!\left(\tfrac{\pi}{2}\cos\theta\right)}{\sin\theta}.
+    \label{eq:dipole}
+\end{equation}
+The scattered field remains linearly polarized in the $\hat{\boldsymbol{\theta}}$
+direction by the azimuthal symmetry of a $z$-directed source. The incident plane
+wave arriving from $(\theta_s,\phi_s)$ is likewise taken to be vertically polarized, so that the $z$-projection that drives each dipole is
+$E^{\mathrm{inc}}_z = -E_0\sin\theta_s$; this factor is absorbed into the overall
+amplitude and does not affect the array factor optimization. The pattern
+$e(\theta,\phi)$ vanishes at $\theta = 0$ and $\theta = \pi$ (along the dipole
+axis) and attains its maximum at the equatorial plane $\theta = \pi/2$. Although
+$e$ has a removable singularity at the poles, the radiation intensity $U$ depends
+on $e^2$, which extends smoothly to zero at the poles. We therefore assume $e^2$
+is smooth on the sphere, which holds for the half-wave dipole pattern used
+throughout.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Optimization Problem Formulation}
+
+In this section we formulate the optimization problem which yields the desired pattern properties and provide proof of global minima existence.
+
+\subsection{Problem Geometry}
+
+\begin{figure}[H]
+\centering    
+    \include{PRA_system_diagram}
+    \caption{Passive Relay Array System (2D View)}
+    \label{fig:PRA_system_diagram}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Definition of variables used in the system model.}
+\begin{tabular}{c p{9cm} c}
+\hline
+\textbf{Symbol} & \textbf{Description} & \textbf{Units} \\
+\hline
+$\theta_s$ & Elevation angle of the PRA relative to the TX & radians \\
+$\phi_s$   & Azimuth angle of the PRA relative to the TX & radians \\
+$\theta_0$ & Desired main beam elevation angle & radians \\
+$\phi_0$   & Desired main beam azimuth angle & radians \\
+$R_t$      & Distance from TX (source) to PRA & meters \\
+$R_r$      & Distance from PRA to RX  & meters \\
+$z_s$      & Altitude ($z$-coordinate) of the array center point & meters \\
+$x_s$      & $x$-coordinate of the array center point & meters \\
+$y_s$      & $y$-coordinate of the array center point & meters \\
+$d$        & \(\sqrt{x_s^2 + y_s^2} \) & meters \\
+$(\theta_{\text{null}},\phi_{\text{null}})$ & Direction (relative to the PRA) of possible interference & radians\\
+
+\hline
+\end{tabular}
+\label{tab:variables}
+\end{table}
+
+
+\subsection{Beam Focusing Condition}
+There exist necessary and sufficient conditions on the element positions, $\mathbf{r}_n'$ that guarantee constructive interference of the scattered fields, thereby maximizing the radiated power in a prescribed direction.
+
+From (\ref{eq:Udef}), it follows that the scattered power in the direction $(\theta_0,\phi_0)$ is maximized precisely when the contributions from all $N$ elements are in phase. That is, the radiation intensity in the direction $(\theta_0,\phi_0)$ is maximal if and only if
+\begin{equation}
+\label{gen_beam_focusing}
+-\big( \bm k (\theta_0,\phi_0)-\bm k (\theta_s,\phi_s)\big) \cdot (x_n',y_n',z_n') \equiv 0 \pmod{2\pi}, 
+\quad 1 \leq n \leq N.
+\end{equation}
+
+Solving (\ref{gen_beam_focusing}) for $z_n'$ yields
+\begin{equation}
+\label{z_beam_focusing_unsimplified}
+(\cos\theta_0 - \cos\theta_s)\, z_n' \equiv 
+(\sin\theta_s\cos\phi_s - \sin\theta_0\cos\phi_0)\,x_n' 
++ (\sin\theta_s\sin\phi_s - \sin\theta_0\sin\phi_0)\,y_n' 
+\pmod{\lambda_0}.
+\end{equation}
+
+Since the relay system geometry enforces $0 \leq \theta_s < \pi/2$ and $\pi/2 < \theta_0 \leq \pi$, it follows that 
+$\cos\theta_0 - \cos\theta_s \neq 0$. Thus, the altitude constraint guaranteeing maximal radiation in the direction $(\theta_0,\phi_0)$ is given by
+\begin{equation}
+\label{z_beam_focusing}
+z_n' \equiv  
+\frac{ (\sin\theta_s\cos\phi_s - \sin\theta_0\cos\phi_0)\,x_n' 
+     + (\sin\theta_s\sin\phi_s - \sin\theta_0\sin\phi_0)\,y_n'}
+{\cos\theta_0 - \cos\theta_s}
+\pmod{\lambda_0(\cos\theta_0 - \cos\theta_s)^{-1}}.
+\end{equation}
+
+
+Observe that  the denominator in (\ref{z_beam_focusing}) is small when $\theta_s \approx \theta_0$ while the numerator is not small if $|\phi_s - \phi_0| \gg 0$. Thus, we will have excessively large values of $z_n'$ exactly when $\theta_s \approx \theta_0$ and $|\phi_s - \phi_0| \gg 0$. This will result in impractical array geometries and severe grating lobes.
+
+To avoid this, we instead look to impose a constraint on the $y$-coordinates. Setting $z_n'=0$ in (\ref{z_beam_focusing_unsimplified}) gives
+\begin{equation}
+\label{alt_y_constraint}
+(\sin\theta_s\cos\phi_s - \sin\theta_0\cos\phi_0)\,x_n' 
++ (\sin\theta_s\sin\phi_s - \sin\theta_0\sin\phi_0)\,y_n' 
+\equiv 0 \pmod{\lambda_0}.
+\end{equation}
+
+Since $\sin\theta_s \approx \sin\theta_0$ in the case that $\theta_s \approx \theta_0$, we obtain
+\begin{equation}
+\sin\theta_0\big[(\cos\phi_s - \cos\phi_0)\,x_n' 
++ (\sin\phi_s - \sin\phi_0)\,y_n'\big] 
+\stackrel{\approx}{\equiv} 0 \pmod{\lambda_0}.
+\end{equation}
+
+Solving for $y_n'$ in terms of $x_n'$ yields
+\begin{equation}
+y_n' \stackrel{\approx}{\equiv} 
+-\frac{\cos\phi_s - \cos\phi_0}{\sin\phi_s - \sin\phi_0}\,x_n' 
+= \tan\!\left(\tfrac{\phi_s+\phi_0}{2}\right)\,x_n' 
+\pmod{\lambda_0(\sin\theta_0)^{-1}(\sin\phi_s - \sin\phi_0)^{-1}}.
+\end{equation}
+
+For $\theta_0 \approx \tfrac{\pi}{2}$, the resulting condition simplifies to
+\begin{equation}
+\label{y_beam_focusing}
+y_n' \equiv  
+\tan\!\left(\tfrac{\phi_s+\phi_0}{2}\right)\,x_n' 
+\pmod{\lambda_0 (\sin\phi_s - 1)^{-1}}.
+\end{equation}
+
+While (\ref{y_beam_focusing}) does not yield exact phase alignment as in (\ref{z_beam_focusing}), it ensures that the scattered power in the direction $(\theta_0,\phi_0)$ remains approximately maximal without requiring impractically large element spacings.
+
+Keep in mind that we avoid the case where $\phi_s + \phi_0 \approx (2k-1)\pi, k\in\mathbb{Z}$ as this corresponds to the scenario where the relay array is directly behind the transmitter. Thus, the tangent that appears in (\ref{y_beam_focusing}) is never of excessively large magnitude.
+
+\subsection{ Null Power Functional}
+To enforce a deep null at a specified direction $(\theta_{\text{null}},\phi_{\text{null}})$, we define the null power functional:
+\[
+N(\bm x) \;:=\; U\!\left(\bm x,(\theta_{\text{null}},\phi_{\text{null}})\right).
+\]
+The optimization requires $N(\bm x) \leq \delta_{\text{null}}$ for a small threshold $\delta_{\text{null}}>0$. In the fixed $z$ case, setting $\delta_{\text{null}} = \left(10^{-2}e(\theta_0)N \right)^2$ ensures that the radiated power in the direction $(\theta_{\text{null}},\phi_{\text{null}})$ remains below -$40$ dB relative to the peak. 
+
+To ensure the problem is well posed, the null direction, $(\theta_{\text{null}},\phi_{\text{null}})$, must be distinct from both the main beam direction $ (\theta_0, \phi_0)$ as well as the source direction $(\theta_s, \phi_s)$.
+
+\subsection{Spacing Constraints}
+\label{spacingcon}
+To mitigate mutual coupling between scattering elements, we require an inter-scatterer distance of at least a quarter wavelength. Specifically, we enforce the minimum spacing condition
+
+\[
+\|\mathbf{r}'_n(\mathbf{x})-\mathbf{r}'_m(\mathbf{x})\| \ge d_{\min} = \frac{\lambda_0}{4} \qquad \forall\, n \neq m.
+\]
+
+To quantify deviations from this geometric threshold, we define the pairwise violation function
+
+\[
+c_{n,m}(\mathbf{x}) := d_{\min} - \big\|\mathbf{r}'_n(\mathbf{x})-\mathbf{r}'_m(\mathbf{x})\big\|,
+\]
+
+and the corresponding aggregate penalty function
+\[
+c(\mathbf{x}) \;:=\; \sum_{n<m} \max\{0,\,c_{n,m}(\mathbf{x})\}.
+\]
+
+Thus, the spacing constraint is satisfied exactly when
+\[
+c_{n,m}(\mathbf{x})\leq 0 \quad \forall\, n \neq m \iff c(\mathbf{x})= 0.
+\]
+
+
+
+
+\subsection{Optimization Formulation}
+
+Let $\mathcal{X} = \mathbb{R}^{3N}$ in the free-$z$ case, or $\mathcal{X} = \mathbb{R}^{2N}$ when the
+$z$-coordinates are fixed by the beam focusing condition~\eqref{z_beam_focusing}. The constrained
+optimization problem is
+\begin{equation}
+\begin{aligned}
+\min_{\mathbf{x}\in\mathcal{X}\cap B_R} \;& S(\mathbf{x}) \\[4pt]
+\text{subject to }\;& N(\mathbf{x})\leq \delta_{\mathrm{null}},\\
+                    & c(\mathbf{x}) = 0,\\
+                    & U(\mathbf x, (\theta_0,\phi_0)) \geq p_{\mathrm{min}}.
+\end{aligned}
+\label{OptProblem}
+\end{equation}
+where $B_R \subset \mathcal{X}$ is the closed ball of radius $R$ centered at the origin, $N(\mathbf{x})\leq \delta_{\mathrm{null}}  \;(\delta_{\mathrm{null}}>0)$ enforces a null depth
+requirement, $c(\mathbf{x}) = 0$ enforces the minimum inter-element spacing, and $U(\mathbf x, (\theta_0,\phi_0)) \geq p_{\mathrm{min}} \; (p_{\mathrm{min}}< |e(\theta_0))|^2 N^2)$ ensures the power in the main beam direction is at least $p_{\mathrm{min}}$. The cost functional
+$S$ penalizes energy outside the main beam. We present two alternate formulations for $\mathcal{S}$: the notch-window functional $W$
+and the peak sidelobe functional $PS$, defined in Sections~\ref{Wsec} and~\ref{PSsec}
+respectively. Note that in the fixed-$z$ case, maximal main beam power is guaranteed by
+construction~\eqref{z_beam_focusing} thus, the main beam power constraint is a null constraint.
+
+The restriction to $B_R$ serves two purposes. First, it ensures the far-field approximation
+underlying $U$ remains valid. Second, it is without loss of generality: as shown in
+Section~\ref{sec:TranInv}, both the cost $S$ and the feasibility constraints are invariant under
+global translations of the array, so the only way to leave $B_R$ is for the array diameter to grow
+without bound. Empirically, highly dispersed array configurations produce increasing sidelobe levels,
+so any minimizer of $S$ over $\mathcal{X}$ should be attained within a sufficiently large $B_R$.
+
+\subsubsection{Existence of Global Minimizer}
+\label{ExistenceofGlobalMinimizer}
+
+The feasible set, $\mathcal{F}$, of the optimization problem \eqref{OptProblem} can be expressed as 
+\begin{equation}
+\mathcal{F} = c^{-1}(\{0\}) \cap N^{-1}([0, \delta_{\text{null}}]) \cap P^{-1}([p_{\mathrm{min}}, |e(\theta_0))|^2 N^2]) \cap B_R,
+\end{equation}
+where $P(\mathbf{x}) := U(\mathbf{x}, (\theta_0, \phi_0))$.
+
+\medskip 
+
+Since $c$, $N$, and $P$ are continuous, each preimage above is closed, and hence $\mathcal{F}$ is closed. As $\mathcal{F} \subset B_R$ and $B_R$ is bounded, it follows that $\mathcal{F}$ is compact.
+
+\medskip
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% For example take $x_n = d_{\mathrm{min}}\cdot n,$ for $ 1\leq n\leq N$. This separation between elements in the $x$ dimension ensures that $c(\mathbf{x}) \leq 0$, so our spacing constraint is satisfied. 
+ 
+%  And choose $y_n$ such that 
+%  \[
+%  (\mathbf{k}(\theta_{\text{null}},\phi_{\text{null}}) - \mathbf{k}(\theta_s, \phi_s)) \cdot (x_n, y_n, z_n) = \frac{2\pi (n-1)}{N}, \quad 1\leq n\leq N.
+%  \]
+%  That is, so the phases of the $N$ complex numbers which are summed in the expression (\ref{eq:Udef}) are exactly the roots of unity and therefore it follows that
+%  \[
+%  N(\mathbf{x}) = U( \mathbf{x}, (\theta_{\text{null}},\phi_{\text{null}})) = 0 \leq \delta_{\mathrm{null}}.
+%  \]
+% Finally choose the $z$-coordinates to satisfy the beam focusing condition (\ref{z_beam_focusing}) so that $P(\mathbf x)  = N^2$.
+Moreover, $\mathcal{F}$ can be verified to be nonempty by construction of an explicit point $\mathbf{\bar{x}}\in\mathcal{F}$. First, choose the $z_n'$ values of $\mathbf{\bar{x}}$ to satisfy the beam focusing condition~\eqref{z_beam_focusing}. We set
+\begin{align*}
+    z'_n \;=\; \frac{A\,x'_n + B\,y'_n}{D},
+    \text{ where }
+    &A \;:=\; \sin\theta_s\cos\phi_s - \sin\theta_0\cos\phi_0, \\
+    &B \;:=\; \sin\theta_s\sin\phi_s - \sin\theta_0\sin\phi_0, \text{ and } D \;:=\; \cos\theta_0 - \cos\theta_s \neq 0,
+\end{align*}
+
+Since $z'_n$ satisfies the beam focusing condition exactly, $P(\mathbf{\bar{x}})=N^2\bigl|e(\theta_0)\bigr|^2 \geq  p_{\min}$, thus one of the constraints is satisfied.
+
+For brevity set $\Delta\mathbf{k}_{\mathrm{null}}
+  := \mathbf{k}(\theta_{\mathrm{null}},\phi_{\mathrm{null}})
+   - \mathbf{k}(\theta_s,\phi_s)
+   =: (\Delta k_x,\Delta k_y,\Delta k_z)$.
+Expressing $z_n'$ in terms of $x_n'$ and $y_n'$ yields
+\begin{equation}\label{eq:reduced_phase}
+    \Delta\mathbf{k}_{\mathrm{null}}\cdot r'_n
+    \;=\;
+    \underbrace{\Bigl(\Delta k_x
+              + \frac{\Delta k_z\,A}{D}\Bigr)}_{\displaystyle=:\;\mathcal{Q}}\,x'_n
+    \;+\;
+    \underbrace{\Bigl(\Delta k_y
+              + \frac{\Delta k_z\,B}{D}\Bigr)}_{\displaystyle=:\;\mathcal{P}}\,y'_n
+    \;=:\;
+    \mathcal{Q}\,x'_n + \mathcal{P}\,y'_n.
+\end{equation}
+
+
+\medskip
+
+Now seeking a contradiction suppose that $(\mathcal{Q},\mathcal{P})=(0,0)$.
+Setting $\alpha:=(\cos\theta_{\mathrm{null}}-\cos\theta_s)/(\cos\theta_0-\cos\theta_s)$
+one can verify that
+$(\mathcal{Q},\mathcal{P})=(0,0)$ if and only if
+\begin{equation}\label{eq:chord}
+    \hat{k}_{\mathrm{null}}
+    \;=\; (1-\alpha)\,\hat{k}_s + \alpha\,\hat{k}_0.
+\end{equation}
+Thus, we have 
+\[
+   1=|\hat{k}_{\mathrm{null}}|^2 = |(1-\alpha)\,\hat{k}_s + \alpha\,\hat{k}_0 |^2 \implies 2\alpha\bigl[(\alpha-1)(1-\hat{k}_s\cdot\hat{k}_0)\bigr] = 0,
+\]
+so either $\alpha=0$, $\alpha=1$, or $\hat{k}_s=\hat{k}_0$. Plugging into equation~\eqref{eq:chord},
+\begin{itemize}[nosep]
+    \item $\alpha=0$ gives $\hat{k}_{\mathrm{null}}=\hat{k}_s$,
+          i.e.\ $(\theta_{\mathrm{null}},\phi_{\mathrm{null}})=(\theta_s,\phi_s)$,
+          contradicting the standing assumption that the null direction differs
+          from the source direction.
+    \item $\alpha=1$ gives $\hat{k}_{\mathrm{null}}=\hat{k}_0$,
+          i.e.\ $(\theta_{\mathrm{null}},\phi_{\mathrm{null}})=(\theta_0,\phi_0)$,
+          contradicting the standing assumption that the null direction differs
+          from the main beam direction.
+    \item $\hat{k}_s=\hat{k}_0$ means $(\theta_s,\phi_s)=(\theta_0,\phi_0)$,
+          contradicting the standing assumption $\theta_s\neq\theta_0$.
+\end{itemize}
+Hence, $(\mathcal{Q},\mathcal{P})\neq(0,0)$, as claimed.
+
+\medskip
+The construction therefore splits into two cases.
+
+\medskip
+\begin{enumerate}
+\item[Case~1:] $\mathcal{P}\neq 0$.\quad
+Define, for $n=1,\ldots,N$,
+\begin{equation}\label{eq:constr1}
+    x'_n \;:=\; d_{\min}\,n,
+    \qquad
+    y'_n \;:=\; \frac{1}{\mathcal{P}}\!\left[
+                  \frac{2\pi(n-1)}{N} - \mathcal{Q}\,d_{\min}\,n
+                \right],
+    \qquad
+    z'_n \;:=\; \frac{A\,x'_n+B\,y'_n}{D}.
+\end{equation}
+
+\item[Case~2:] $\mathcal{P}=0$, $\mathcal{Q}\neq 0$.\quad
+Define, for $n=1,\ldots,N$,
+\begin{equation}\label{eq:constr2}
+    x'_n \;:=\; \frac{2\pi(n-1)}{N\mathcal{Q}},
+    \qquad
+    y'_n \;:=\; d_{\min}\,n,
+    \qquad
+    z'_n \;:=\; \frac{A\,x'_n+B\,y'_n}{D}.
+\end{equation}
+
+\end{enumerate}
+
+In both cases either, $x_n' = d_{\min}\,n$, or $y_n' = d_{\min}\,n$ which is enough to satisfy the minimal spacing constraint. Thus, $c(\mathbf{\bar{x}}) = 0$.
+
+By~\eqref{eq:reduced_phase} and the definitions~\eqref{eq:constr1}--\eqref{eq:constr2},
+direct substitution gives
+\[
+    \mathcal{Q}\,x'_n + \mathcal{P}\,y'_n
+    \;=\;
+    \frac{2\pi(n-1)}{N}
+    \qquad\text{for }n=1,\ldots,N,
+\]
+in both cases. Therefore the array factor at the null direction is
+\[
+    \sum_{n=1}^{N}
+    \exp\!\bigl(-i\,\Delta\mathbf{k}_{\mathrm{null}}\cdot r'_n\bigr) \;=\; \sum_{n=1}^{N}e^{-2\pi i(n-1)/N}\;=\; 0,
+\]
+as the sum of the $N$th roots of unity vanishes.
+Hence,
+\[
+   N(\mathbf{\bar{x}})
+    \;=\;
+    U\!\bigl(\mathbf{\bar{x}},(\theta_{\mathrm{null}},\phi_{\mathrm{null}})\bigr)
+    \;=\;
+    \bigl|e(\theta_{\mathrm{null}})\bigr|^2\cdot 0
+    \;=\; 0
+    \;\leq\;
+    \delta_{\mathrm{null}}.
+\]
+
+\begin{remark}
+\label{ball_inside_F}
+   Note that for a  small enough $\rho>0$,  $B_{\rho}(\mathbf{\bar{x}})\subset\mathcal{F}$.
+\end{remark}
+
+% \begin{proof}[Proof]
+%   Let $\mathbf{\bar{x}}\in\mathcal{F}$ be the explicit feasible point constructed above, so
+%   \[
+%   c(\mathbf{\bar{x}})=0,\qquad N(\mathbf{\bar{x}})=0,\qquad P(\mathbf{\bar{x}})=|e(\theta_0)|^2N^2.
+%   \]
+%   In particular, the inequality constraints hold with slack:
+%   $N(\mathbf{\bar{x}})=0<\delta_{\mathrm{null}}$ and $P(\mathbf{\bar{x}})>p_{\min}$.
+%   Also choose $R$ so that $\|\mathbf{\bar{x}}\|<R$.
+
+%   For the spacing constraint, write
+%   \[
+%   d_{n,m}(\mathbf{x}) := \|\mathbf{r}'_n(\mathbf{x})-\mathbf{r}'_m(\mathbf{x})\|\qquad (n<m).
+%   \]
+%   At $\mathbf{\bar{x}}$ we have $d_{n,m}(\mathbf{\bar{x}})>d_{\min}$ for every pair, so the finite
+%   minimum
+%   \[
+%   \eta := \min_{n<m}\bigl(d_{n,m}(\mathbf{\bar{x}})-d_{\min}\bigr)
+%   \]
+%   is strictly positive. Since each mapping $\mathbf{x}\mapsto d_{n,m}(\mathbf{x})$ is continuous,
+%   there exists
+%   $\rho_c>0$ such that $\|\mathbf{x}-\mathbf{\bar{x}}\|<\rho_c$ implies
+%   $d_{n,m}(\mathbf{x})\ge d_{\min}$ for all $n<m$, and hence $c(\mathbf{x})=0$.
+
+%   Similarly, continuity of $N$ and $P$ gives radii $\rho_N,\rho_P>0$ such that
+%   $\|\mathbf{x}-\mathbf{\bar{x}}\|<\rho_N \Rightarrow N(\mathbf{x})\le \delta_{\mathrm{null}}$ and
+%   $\|\mathbf{x}-\mathbf{\bar{x}}\|<\rho_P \Rightarrow P(\mathbf{x})\ge p_{\min}$.
+%   Finally, if $\|\mathbf{x}-\mathbf{\bar{x}}\|<R-\|\mathbf{\bar{x}}\|$, then the triangle
+%   inequality yields
+%   $\|\mathbf{x}\|<R$, so $\mathbf{x}\in B_R$.
+
+%   Taking
+%   \[
+%   \rho := \min\{\rho_c,\rho_N,\rho_P,\,R-\|\mathbf{\bar{x}}\|\}>0
+%   \]
+%   gives $B_\rho(\mathbf{\bar{x}})\subset \mathcal{F}$.
+%   \end{proof}
+
+
+% \medskip
+
+
+
+We now state a general existence result.
+
+
+\begin{theorem}
+\label{thm:existence_general}
+Let $\mathcal{F} \subset \mathcal{X}$ be the feasible set defined above. If 
+$\mathcal{S} : \mathcal{X} \to \mathbb{R}$ is lower semicontinuous, then the optimization problem \eqref{OptProblem} admits a global minimizer; that is, there exists $\mathbf{x}^\star \in \mathcal{F}$ such that
+\[
+\mathcal{S}(\mathbf{x}^\star) = \min_{\mathbf{x}\in\mathcal{F}} \mathcal{S}(\mathbf{x}).
+\]
+\end{theorem}
+
+\begin{proof}
+Since $\mathcal{F}$ is a compact, nonempty, and $\mathcal{S}$ is lower semicontinuous, the claim follows from the Weierstrass Extreme Value Theorem.
+\end{proof}
+
+\subsection{Intro ...}
+
+\subsection{Exclusion Rectangle (Notch Window) Functional}
+\label{Wsec}
+
+We start by defining a exclusion, or \emph{notch}, window $w:\Omega \to \{0,1\}$  by
+\[
+w(\theta,\phi) \;=\;
+\begin{cases}
+0, & \text{if } |\theta-\theta_0|<M_\theta \ \text{and}\ |\phi-\phi_0|<M_\phi,\\[4pt]
+1, & \text{otherwise}.
+\end{cases}
+\]
+The region that $w$ maps to $0$ is exactly a rectangle centered at $(\theta_0,\phi_0)$ (corresponding to the intended main beam direction), of dimensions $2M_{\theta}$ (in elevation) and $2M_{\phi}$ (in azimuth). Here, $M_\theta$ must be in $(0, \frac{\pi}{2})$ and $M_\phi \in (0, \pi)$.
+
+We then define the functional $W: \mathcal{X} \to \mathbb{R}_{\geq 0}$, by,
+\begin{equation}
+W(\mathbf{x}) \;=\; \max_{(\theta,\phi)\in\Omega}\; w(\theta,\phi)\; U\!\left(\mathbf{x},(\theta,\phi)\right) = \max_{(\theta,\phi)\in w^{-1}(\{1\})} U\!\left(\mathbf{x},(\theta,\phi)\right).
+\label{Wfun}
+\end{equation}
+Continuity of $W$ on $\mathcal{X}$ follows from the Berge Maximum Theorem, since $U$ is continuous in both arguments and $w^{-1}(\{1\})$ is compact.
+
+Intuitively, $W(\mathbf{x})$ measures the maximum radiation intensity outside the general vicinity of the main beam, making it useful for the purpose of peak sidelobe estimation. However, note that $W(\mathbf{x})$ is not necessarily equal to the peak sidelobe value. 
+
+For optimization restricted to the $\theta_0$ azimuthal plane we take 
+\begin{equation}\label{Wfun2D}
+W^{(2D)}(\mathbf{x})\;:=\; \max_{(\theta_0,\phi)\in\Omega}\; w(\theta_0,\phi)\; U\!\left(\mathbf{x},(\theta_0,\phi)\right).
+\end{equation}
+\begin{corollary}
+Let $\mathcal{S}(\mathbf{x}) = W(\mathbf{x})$, where $W$ is defined in \eqref{Wfun}. 
+Then the optimization problem \eqref{OptProblem} admits a global minimizer.
+\end{corollary}
+
+\begin{proof}
+As shown above, $W$ is continuous on $\mathcal{X}$, and hence lower semicontinuous. 
+The result follows from Theorem~\ref{thm:existence_general}.
+\end{proof}
+
+% \begin{theorem}
+% Let $\mathcal{S}(\mathbf{x}) = W(\mathbf{x})$, where $W$ is defined in \eqref{Wfun}. 
+% Then the optimization problem \eqref{OptProblem} admits a global minimizer.
+% \end{theorem}
+
+% \begin{proof}
+% As shown above, $W$ is continuous on $\mathcal{X}$, and hence lower semicontinuous. 
+% Therefore, by the result of Section~\ref{ExistenceofGlobalMinimizer}, the objective 
+% function, $\mathcal{S}(\mathbf{x})$, attains its minimum on the compact feasible set $\mathcal{F}$.
+% \end{proof}
+
+
+% Thus, one option for the objective $\mathcal{S}$ in the optimization problem (\ref{OptProblem}) is to define $\mathcal{S} (\mathbf{x}) = W(\mathbf{x})$.
+
+
+% Thus in this way, $W$ acts as both a minimizer of the peak sidelobe level and the main beam width.
+
+
+
+% \subsection{Peak Sidelobe Functional - 2D Case}
+% \label{PSsec2D}
+
+
+% We define a functional that maps an array geometry $\mathbf{x} \in \mathcal{X}$ to the peak sidelobe level in the $\theta_0$ azimuthal plane of its associated radiation pattern $U(\mathbf{x}, (\theta_0, \cdot))$, and establish conditions under which it is continuous. Throughout this section we assume the $z$-coordinates are determined by the beamfocusing condition \eqref{z_beam_focusing}, so the decision space is $\mathcal{X} = \mathbb{R}^{2N}$. The angular domain is taken to be
+% \[
+% \Omega = [\phi_0 - \pi, \phi_0 + \pi].
+% \]
+
+
+% By construction, the main beam is steered toward $(\theta_0, \phi_0)$, so
+% \[
+% \max_{\phi \in \Omega}  U(\mathbf{x}, (\theta_0, \phi)) =  U(\mathbf{x}, (\theta_0, \phi_0)) \quad \text{for all } \mathbf{x} \in \mathcal{X}.
+% \]
+% We isolate the sidelobe peak points by defining the correspondence $\Gamma_\varepsilon : \mathcal{X} \rightrightarrows \Omega$,
+% \begin{equation}\label{Gamma_eps}
+% \Gamma_\varepsilon(\mathbf{x}) := \bigl\{ \phi \in \Omega \mid \partial_{\phi} U(\mathbf{x}, (\theta_0, \phi)) = 0 \bigr\} \setminus B_\varepsilon( \phi_0),
+% \end{equation}
+% which collects the critical points of $U(\mathbf{x}, \cdot)$ outside an $\varepsilon$-ball around the main beam. We augment this with the set $I := w^{-1}(\{1\})$ (as defined in the preceding section) by setting
+% \[
+% \Gamma(\mathbf{x}) := \Gamma_\varepsilon(\mathbf{x}) \cup I,
+% \]
+% which ensures that $\Gamma(\mathbf{x})$ is always nonempty. Note that $I$ can be arbitrarily small in measure (although nonzero). Then we define the peak sidelobe functional as
+% \begin{equation}
+%     PS(\mathbf{x}) := \max_{\phi \in \Gamma(\mathbf{x})} U(\mathbf{x}, (\theta_0, \phi)).
+%     \label{PSfun}
+% \end{equation}
+
+% To apply the Berge Maximum Theorem to \eqref{PSfun}, we must establish that $\Gamma$ is nonempty, compact valued, and hemicontinuous. The first two properties hold globally while lower hemicontinuity requires a restriction of $\mathcal{X}$ to exclude degenerate critical points, which we now introduce.
+
+
+
+% Let $\tilde{\Omega} = \Omega \setminus B_\varepsilon(\phi_0)$ and let $H(\mathbf{x}, (\theta_0, \phi)) = \partial_{\phi}^2 U(\mathbf{x}, (\theta_0, \phi))$ denote the second derivative of $U$ with respect to $\phi$. Note that $U$ is a smooth function. For $\kappa>0$ define
+% \begin{equation}
+%     X_{\mathrm{robust}}(\kappa) = \{\mathbf{x}\in\mathcal{X} : |\partial_\phi U(\mathbf{x},(\theta_0, \omega))|\geq \kappa
+% \quad\text{ for }\quad
+% \omega\in \partial B_\varepsilon(\phi_0) \}.
+% \end{equation}
+% This set excludes array configurations whose main beam has plateaus around the focus direction or the focus direction is a weakly curved maxima where gradients become arbitrarily small nearby.
+% Then, for a fixed $\xi > 0$, define
+% \begin{equation} \label{X0def}
+% X_0(\xi, \kappa) = \left\{ x \in X_{\mathrm{robust}}(\kappa) \;\Big|\; |\partial_\phi U(x, (\theta_0, y))| + |H(x, (\theta_0, y))| \ge \xi \quad \forall y \in \tilde{\Omega} \right\},
+% \end{equation}
+
+% This set in turn also excludes array configurations that produce degenerate or near-degenerate sidelobe critical points.
+
+% Note that by the compactness of $\partial B_\varepsilon(\phi_0)$ and continuity of $|\partial_{\phi} U|$ it follows that $X_{\mathrm{robust}}(\kappa)$ is closed in $\mathcal{X}$. Also, by the compactness of $\tilde{\Omega}$, and continuity of $|\partial_{\phi} U| + |H|$, $X_0(\xi, \kappa)$ is closed in $X_{\mathrm{robust}}(\kappa)$. Thus, $X_0(\xi, \kappa)$ is closed in $\mathcal{X}$.
+
+
+% \begin{lemma}
+% \label{prop:Gamma}
+% The correspondence $\Gamma : \mathcal{X} \rightrightarrows \Omega$ satisfies the following:
+% \begin{enumerate}[label=\emph{(\roman*)}]
+%     \item $\Gamma(\mathbf{x})$ is nonempty for all $\mathbf{x} \in \mathcal{X}$.
+%     \item $\Gamma(\mathbf{x})$ is compact for all $\mathbf{x} \in \mathcal{X}$.
+%     \item $\Gamma$ is upper hemicontinuous on $\mathcal{X}$.
+%     \item $\Gamma$ is lower hemicontinuous on $X_0(\xi, \kappa)$.
+% \end{enumerate}
+% \end{lemma}
+
+% \begin{proof}
+% \emph{(i)} Immediate, since $I \subseteq \Gamma(\mathbf{x})$ and $I$ is nonempty.
+
+% \smallskip\noindent\emph{(ii)} 
+% By definition, $I = w^{-1}(\{1\})$, which is the  complement of the open interval in $\Omega$. Hence $I$ is closed in $\Omega$. Since $\Omega$ is compact, it follows that $I$ is compact.
+
+% \medskip
+
+% Next, consider
+% \[
+% \Gamma_\varepsilon(\mathbf{x}) 
+% = \left\{ \phi\in \Omega \;\middle|\; \partial_{\phi} U(\mathbf{x},(\theta_0,\phi)) = 0 \right\}
+% \setminus B_\varepsilon(\phi_0).
+% \]
+% Since $U$ is continuously differentiable, $\partial_\phi U(\mathbf{x},(\theta_0,\phi))$ is continuous in $\phi$. It follows that the set
+% \[
+% \left\{ \phi\in \Omega \;\middle|\; \partial_{\phi} U(\mathbf{x},(\theta_0,\phi)) = 0 \right\}
+% \]
+% is closed in $\Omega$ as the preimage of $0$ under a continuous mapping. 
+
+% Moreover, $B_\varepsilon(\phi_0)$ is open, so its complement is closed. Hence $\Gamma_\varepsilon(\mathbf{x})$ is the intersection of two closed subsets of $\Omega$, and is therefore closed in $\Omega$. Since $\Omega$ is compact, it follows that $\Gamma_\varepsilon(\mathbf{x})$ is compact.
+
+% \medskip
+
+% Finally, $\Gamma(\mathbf{x}) = \Gamma_\varepsilon(\mathbf{x}) \cup I$ is the union of two compact sets, and is therefore compact.
+
+% \smallskip\noindent\emph{(iii)} We use the sequential characterization of upper hemicontinuity. Let $\mathbf{x}_k \to \mathbf{x}^*$ in $\mathcal{X}$ and suppose $ \phi_k \in \Gamma(\mathbf{x}_k)$ with $( \phi_k \to \phi^*$. If infinitely many terms, $ \phi_k$, lie in $I$, then $\phi^* \in I \subseteq \Gamma(\mathbf{x}^*)$ due to $I$ being closed and thus, the proof is complete.
+% % , and the constant correspondence $\mathbf{x} \mapsto I$ is trivially upper hemicontinuous. 
+% Otherwise, there is a subsequence $\{n_k\}$ such that $ \phi_{n_k} \in \Gamma_\varepsilon(\mathbf{x}_{n_k})$ for all $k$, so $\partial_{\phi} U(\mathbf{x}_{n_k}, (\theta_0, \phi_{n_k})) = 0$. By continuity of $\partial_\phi U$, taking $k \to \infty$ gives $\partial_\phi U(\mathbf{x}^*, (\theta_0, \phi^*)) = 0$. Since each $\phi_k \notin B_\varepsilon( \phi_0)$ and this ball is open, the limit satisfies $\phi^* \notin B_\varepsilon(\phi_0)$. Hence $ \phi^* \in \Gamma_\varepsilon(\mathbf{x}^*) \subseteq \Gamma(\mathbf{x}^*)$, as required.
+
+% \smallskip\noindent\emph{(iv)} We use the sequential characterization of lower hemicontinuity. Let $x_0 \in X_0(\xi, \kappa)$ and $y_0 \in \Gamma(x_0)$. Let $\{x_k\} \subset X_0(\xi, \kappa)$ be any sequence such that $x_k \to x_0$. We must show there exists a sequence $y_k \in \Gamma(x_k)$ such that $y_k \to y_0$. 
+
+% Because $\Gamma(x_0) = \Gamma_\epsilon(x_0) \cup I$, we proceed by analyzing two cases for $y_0$:
+
+% \textit{Case 1:} $y_0 \in I$. 
+% Since set $I$ is a fixed region independent of the configuration $x$ for any $k$, $y_0 \in \Gamma(x_k)$. We simply define the constant sequence $y_k = y_0$. Trivially, $y_k \in \Gamma(x_k)$ and $y_k \to y_0$.
+
+% \textit{Case 2:} $y_0 \in \Gamma_\varepsilon(x_0)$. 
+% By definition, $y_0 \in \tilde{\Omega}$ and $\partial_\phi U(x_0, (\theta_0, y_0)) = 0$. Because $x_0 \in X_0(\xi, \kappa)$, we have that
+% $$ |\partial_\phi U(x_0, (\theta_0, y_0))| + |H(x_0, (\theta_0, y_0))| \ge \xi. $$
+% Since the gradient norm is zero, this  implies $|H(x_0, (\theta_0, y_0))| \ge \xi > 0$. Thus, the Hessian $H(x_0, (\theta_0, y_0))$ is invertible.
+
+% Define the derivative mapping $F(x, y) = \partial_\phi U(x, (\theta_0, y))$. We have $F(x_0, y_0) = 0$ and its partial Jacobian $D_y F(x_0, y_0) = H(x_0, (\theta_0, y_0))$ is non-singular. By the Implicit Function Theorem, there exist open neighborhoods $N(x_0) \subset \mathcal{X}$ of $x_0$ and $W(y_0) \subset \Omega$ of $y_0$, along with a unique continuous mapping $y: N(x_0) \to W(y_0)$, such that $y(x_0) = y_0$ and $F(x, y(x)) = 0$ for all $x \in N(x_0)$.
+
+% Because $x_k \to x_0$, there exists an integer $K$ such that for all $k \ge K$, $x_k \in N(x_0)$. For these $k$, we define $y_k = y(x_k)$. By the continuity of the implicit function, $y$, as $x_k \to x_0$, we have $y_k \to y_0$. Note that as established before $F(x_0,y_0) = 0$. But, since $x_0\in X_0(\xi, \kappa)\subset X_{\mathrm{robust}}(\kappa)$, we also have that $|F(x_0, \omega)|\geq \kappa>0$ for all $\omega\in \partial B_{\varepsilon}(\phi_0)$. Hence, it must be that $y_0\not\in \partial B_{\varepsilon}(\phi_0)$. So, $y_0$ is strictly in the interior of $\tilde{\Omega}$, and therefore the sequence $y_k$ will eventually reside entirely within $\tilde{\Omega}$. This, combined with the fact that $F(x_k,y_k) = 0$ lets us conclude that $y_k \in \Gamma_\epsilon(x_k) \subset \Gamma(x_k)$ for sufficiently large $k$.
+
+
+% \end{proof}
+
+% \begin{theorem}
+% \label{thm:PS_continuity}
+% The peak sidelobe functional $PS : \mathcal{X} \to \mathbb{R}$ defined in \eqref{PSfun} is continuous on $X_0$ defined in \eqref{X0def}.
+% \end{theorem}
+
+% \begin{proof}
+% On $X_0(\xi, \kappa) $, Lemma~\ref{prop:Gamma} gives that $\Gamma$ is nonempty, compact-valued, and both upper and lower hemicontinuous. Since $U(\mathbf{x}, (\theta_0, \phi))$ is jointly continuous in $\mathbf{x}$ and $\phi$, the Berge Maximum Theorem applies directly to \eqref{PSfun}, yielding continuity of $PS$ on $X_0(\xi, \kappa)$.
+% \end{proof}
+
+
+
+% \begin{lemma} For appropriately chosen $\xi, \kappa, \varepsilon>0$, the feasible set, $\mathcal{F}_0$, given by 
+%     \begin{equation}
+% \mathcal{F}_0 := c^{-1}(\{0\}) \cap N^{-1}([0, \delta_{\mathrm{null}}])\cap P^{-1}([p_{\min}, e(\theta_0)^2N^2]) \cap X_0(\xi, \kappa) \cap B_R = \mathcal{F}\cap X_0(\xi, \kappa),
+% \label{F0}
+% \end{equation}
+% is nonempty.
+% \label{F0_nonempty_proof_2D}
+% \end{lemma}
+
+% \begin{proof}
+% By Section~3.5.1, the explicit point $\bar{x}$ lies in $F$. Moreover, by
+% Remark~3.1, there exists $\rho>0$ such that
+% \[
+% B_\rho(\bar{x})\subset F.
+% \]
+% Thus feasibility alone is not the remaining issue; indeed, every point chosen in
+% $B_\rho(\bar{x})$ is already feasible. The purpose of the present lemma is
+% to show that one can choose such a feasible point with enough regularity to
+% belong to $X_0(\xi,\kappa)$ for suitable positive constants
+% $\xi,\kappa$.
+
+% We proceed in two steps. First, we choose a point
+% $x_0\in B_\rho(\bar{x})$ whose one-variable radiation pattern
+% \[
+% g(\phi):=U(x_0,(\theta_0,\phi))
+% \]
+% has only nondegenerate critical points on $\Omega$. Second, we use this
+% nondegeneracy to choose $\epsilon,\kappa,\xi>0$ such that
+% $x_0\in X_0(\xi,\kappa)$.
+
+% \emph{Step 1: choosing a nearby feasible configuration with only
+% nondegenerate critical points.}
+% For a fixed configuration $x$, set $g_x : \Omega \to \mathbb{R}$ to:
+% \[
+% g_x(\phi):=U(x,(\theta_0,\phi)).
+% \]
+% The reason we seek nondegenerate critical points is that, in Step~2, we
+% will need a uniform lower bound of the form
+% \[
+% |\partial_\phi U(x,(\theta_0,\phi))|
+% +
+% |\partial_\phi^2 U(x,(\theta_0,\phi))|
+% \geq \xi
+% \]
+% on the sidelobe domain. Such a positive lower bound can fail only at
+% points where both terms vanish simultaneously. But simultaneous vanishing
+% means precisely that $\phi$ is a degenerate critical point of $g_x$: the
+% condition
+% \[
+% \partial_\phi U(x,(\theta_0,\phi))=0
+% \]
+% says that $\phi$ is a critical point of $g_x$, while
+% \[
+% \partial_\phi^2 U(x,(\theta_0,\phi))=0
+% \]
+% says that this critical point is degenerate. Therefore, before choosing
+% $\epsilon,\kappa,\xi$, we first choose a nearby feasible configuration
+% $x_0$ for which no such simultaneous vanishing occurs.
+
+% Define the smooth function
+% \[
+% F:X\times \Omega\to \mathbb{R},
+% \qquad
+% F(x,\phi):=\partial_\phi U(x,(\theta_0,\phi)).
+% \]
+% For each fixed $x$, the zeros of $F(x,\cdot)$ are exactly the critical
+% points of the one-variable function
+% \[
+% \phi\mapsto U(x,(\theta_0,\phi)).
+% \]
+% Moreover, if $F(x,\phi_*)=0$, then $\phi_*$ is a nondegenerate critical
+% point precisely when
+% \[
+% \partial_\phi F(x,\phi_*)
+% =
+% \partial_\phi^2 U(x,(\theta_0,\phi_*))
+% \neq 0.
+% \]
+% Thus our goal in this step is to find
+% \[
+% x_0\in B_\rho(\bar{x})
+% \]
+% such that
+% \[
+% F(x_0,\phi)=0
+% \quad\Longrightarrow\quad
+% \partial_\phi F(x_0,\phi)\neq 0
+% \]
+% for every $\phi\in\Omega$. Equivalently, we want to avoid configurations
+% $x$ for which there exists some $\phi\in\Omega$ satisfying
+% \[
+% F(x,\phi)=0
+% \quad\text{and}\quad
+% \partial_\phi F(x,\phi)=0.
+% \]
+% These are precisely the configurations whose angular pattern has a
+% degenerate critical point.
+
+% Assume that $0$ is a regular value of $F$, i.e. that
+% \[
+% DF(x,\phi)\neq 0
+% \]
+% at every $(x,\phi)\in F^{-1}\{0\}$. This regularity hypothesis is
+% verified in the remark following the proof; it follows from the
+% trigonometric structure of the array factor. Since $0$ is a regular value of $F$, the Constant-Rank Level Set Theorem
+% \cite[Theorem~5.12]{lee2013smooth} implies that
+% \[
+% Z:=F^{-1}\{0\} \subset X \times \Omega
+% \]
+% is a properly embedded smooth submanifold of $X\times\Omega$ of
+% codimension one. Since
+% $\dim X=2N$ and $\dim \Omega=1$, it follows that
+% \[
+% \dim Z=2N.
+% \]
+
+% Consider the smooth projection
+% \[
+% \pi:Z\to X,
+% \qquad
+% \pi(x,\phi):=x.
+% \]
+
+% Moreover, since $F$ is a local defining map for $Z$, Lee's tangent-space
+% characterization for embedded submanifolds
+% \cite[Proposition~5.38]{lee2013smooth} gives
+% \[
+% T_{(x,\phi)}Z=\ker dF_{(x,\phi)}.
+% \]
+
+
+% Under the identification
+% \[
+% T_{(x,\phi)}(X\times\Omega)\cong \mathbb{R}^{2N}\times\mathbb{R},
+% \]
+% a tangent vector is represented by a pair $(v,s)$. By definition of the
+% differential, $dF_{(x,\phi)}(v,s)$ is the derivative of $F$ along any
+% smooth curve through $(x,\phi)$ with velocity $(v,s)$. Taking the curve
+% \[
+% \gamma(t)=(x+tv,\phi+ts),
+% \]
+% we obtain
+% \[
+% dF_{(x,\phi)}(v,s)
+% =
+% \left.\frac{d}{dt}\right|_{t=0}
+% F(x+tv,\phi+ts).
+% \]
+% Applying the ordinary chain rule gives
+% \[
+% dF_{(x,\phi)}(v,s)
+% =
+% \sum_{i=1}^{2N}\frac{\partial F}{\partial x_i}(x,\phi)v_i
+% +
+% \frac{\partial F}{\partial \phi}(x,\phi)s.
+% \]
+% Equivalently,
+% \[
+% dF_{(x,\phi)}(v,s)
+% =
+% \nabla_xF(x,\phi)\cdot v+\partial_\phi F(x,\phi)s.
+% \]
+
+% Therefore
+% \[
+% T_{(x,\phi)}Z
+% =
+% \left\{
+% (v,s)\in\mathbb{R}^{2N}\times\mathbb{R}
+% :
+% \nabla_xF(x,\phi)\cdot v+\partial_\phi F(x,\phi)s=0
+% \right\}.
+% \]
+
+% The differential of $\pi$ is given by
+% \[
+% d\pi(v,s)=v.
+% \]
+% We claim that $d\pi$ is surjective onto $\mathbb{R}^{2N}$ if and only if
+% \[
+% \partial_\phi F(x,\phi)\neq 0.
+% \]
+% Indeed, $d\pi$ is surjective precisely when, for every
+% $v\in\mathbb{R}^{2N}$, there exists $s\in\mathbb{R}$ such that
+% \[
+% \nabla_xF(x,\phi)\cdot v+\partial_\phi F(x,\phi)s=0.
+% \]
+% If $\partial_\phi F(x,\phi)\neq 0$, then for each $v$ we can solve for
+% $s$ by taking
+% \[
+% s
+% =
+% -\frac{\nabla_xF(x,\phi)\cdot v}{\partial_\phi F(x,\phi)}.
+% \]
+% Conversely, if $\partial_\phi F(x,\phi)=0$, then the tangent condition
+% reduces to
+% \[
+% \nabla_xF(x,\phi)\cdot v=0.
+% \]
+% Since $0$ is a regular value of $F$, we have
+% $DF(x,\phi)\neq 0$ on $Z$. In the case
+% $\partial_\phi F(x,\phi)=0$, this implies
+% $\nabla_xF(x,\phi)\neq 0$. Hence not every
+% $v\in\mathbb{R}^{2N}$ satisfies
+% \[
+% \nabla_xF(x,\phi)\cdot v=0,
+% \]
+% and therefore $d\pi$ is not surjective.
+
+% Thus a point $(x,\phi)\in Z$ is a critical point of the projection
+% $\pi:Z\to X$ if and only if
+% \[
+% \partial_\phi F(x,\phi)=0.
+% \]
+% Equivalently, the critical points of $\pi$ are precisely the pairs
+% $(x,\phi)$ for which $\phi$ is a degenerate critical point of
+% $\phi\mapsto U(x,(\theta_0,\phi))$.
+
+% We have shown that the critical points of the projection
+% \[
+% \pi:Z\to X
+% \]
+% are exactly the points \((x,\phi)\in Z\) satisfying
+% \[
+% \partial_\phi F(x,\phi)=0.
+% \]
+% Define the corresponding set of critical values by
+% \[
+% B
+% :=
+% \pi\left(
+% \{(x,\phi)\in Z:\partial_\phi F(x,\phi)=0\}
+% \right).
+% \]
+% Thus \(x\in B\) if and only if there exists some \(\phi\in\Omega\) such
+% that
+% \[
+% F(x,\phi)=0
+% \qquad\text{and}\qquad
+% \partial_\phi F(x,\phi)=0.
+% \]
+% Since
+% \[
+% F(x,\phi)=\partial_\phi U(x,(\theta_0,\phi)),
+% \]
+% the set \(B\) is exactly the set of configurations \(x\in X\) for which
+% the one-variable pattern
+% \[
+% \phi\mapsto U(x,(\theta_0,\phi))
+% \]
+% has at least one degenerate critical point.
+
+% By Sard's theorem \cite[Theorem~6.10]{lee2013smooth}, applied to the
+% smooth map \(\pi:Z\to X\), the set of critical values of \(\pi\) has
+% measure zero in the smooth manifold \(X\). Hence \(B\) has measure zero
+% in \(X\). Since in the present setting \(X\cong\mathbb{R}^{2N}\), this
+% means that \(B\) has Lebesgue measure zero.
+
+% Since $B_\rho(\bar{x})$ is an open ball in $X$, it has positive Lebesgue
+% measure. Since $B$ has measure zero, we may choose
+% \[
+% x_0\in B_\rho(\bar{x})\setminus B.
+% \]
+% Because $x_0\in B_\rho(\bar{x})\subset F$, this point is feasible.
+% Because $x_0\notin B$, every critical point of
+% \[
+% \phi\mapsto U(x_0,(\theta_0,\phi))
+% \]
+% on $\Omega$ is nondegenerate.
+
+% \emph{Step 2: choosing $\epsilon,\kappa,\xi$.}
+% Set
+% \[
+% g(\phi):=U(x_0,(\theta_0,\phi)).
+% \]
+% By Step~1, \(x_0\) was chosen so that every critical point of \(g\) on
+% \(\Omega\) is nondegenerate.
+% Hence every zero of $g'$ is isolated. Since $\Omega$ is compact, $g'$ has
+% only finitely many zeros. For if \(g'\) did have infinitely many zeros, \(\phi_j\), in \(\Omega\),
+% then by compactness there would be a convergent subsequence
+% \(\phi_{j_k}\to \phi_*\in \Omega\), and since \(g'\) is continuous
+% \[
+% g'(\phi_*) = \lim_{k\to \infty} g'(\phi_{j_k}) = 0.
+% \]
+% Hence \(\phi_*\) would also be a zero of \(g'\) which is not isolated,
+% contradicting our assumption. Denote these critical points by
+% \[
+% \phi_0,\phi_1,\ldots,\phi_M,
+% \]
+% where $\phi_0$ is the main-beam direction.
+
+% Choose $\epsilon>0$ sufficiently small so that $\phi_0$ is the only
+% critical point of $g$ in $\overline{B_\epsilon(\phi_0)}$. Define
+% \[
+% \widetilde{\Omega}:=\Omega\setminus B_\epsilon(\phi_0).
+% \]
+% and note that $\partial B_\epsilon(\phi_0)$ contains no critical point of $g$.
+% Therefore
+% \[
+% \partial_\phi U(x_0,(\theta_0,\omega))\neq 0
+% \qquad
+% \text{for all } \omega\in \partial B_\epsilon(\phi_0).
+% \]
+% Since $\partial B_\epsilon(\phi_0)$ is compact and
+% $\omega\mapsto |\partial_\phi U(x_0,(\theta_0,\omega))|$ is continuous,
+% we may define
+% \[
+% \kappa
+% :=
+% \min_{\omega\in \partial B_\epsilon(\phi_0)}
+% \left|
+% \partial_\phi U(x_0,(\theta_0,\omega))
+% \right|.
+% \]
+% The preceding observation implies that
+% \[
+% \kappa>0.
+% \]
+% Hence
+% \[
+% x_0\in X_{\mathrm{robust}}(\kappa).
+% \]
+
+% It remains to choose $\xi>0$. Define
+% \[
+% h(y)
+% :=
+% \left|
+% \partial_\phi U(x_0,(\theta_0,y))
+% \right|
+% +
+% \left|
+% \partial_\phi^2 U(x_0,(\theta_0,y))
+% \right|.
+% \]
+% We claim that
+% \[
+% h(y)>0
+% \qquad
+% \text{for every } y\in \widetilde{\Omega}.
+% \]
+% Indeed, if
+% \[
+% \partial_\phi U(x_0,(\theta_0,y))\neq 0,
+% \]
+% then the first term in $h(y)$ is positive. On the other hand, if
+% \[
+% \partial_\phi U(x_0,(\theta_0,y))=0,
+% \]
+% then $y$ is a critical point of $g$. Since $y\in\widetilde{\Omega}$, this
+% critical point is one of the sidelobe critical points
+% $\phi_1,\ldots,\phi_M$. By Step~1, all critical points of $g$ are
+% nondegenerate, so
+% \[
+% \partial_\phi^2 U(x_0,(\theta_0,y))\neq 0.
+% \]
+% Thus the second term in $h(y)$ is positive. In either case,
+% \[
+% h(y)>0.
+% \]
+
+% Since $h$ is continuous and $\widetilde{\Omega}$ is compact, $h$ attains
+% a minimum on $\widetilde{\Omega}$. Define
+% \[
+% \xi
+% :=
+% \min_{y\in\widetilde{\Omega}}
+% \left(
+% \left|
+% \partial_\phi U(x_0,(\theta_0,y))
+% \right|
+% +
+% \left|
+% \partial_\phi^2 U(x_0,(\theta_0,y))
+% \right|
+% \right).
+% \]
+% In fact, $\xi >0$; suppose, toward a contradiction, that \(\xi=0\). Since \(h\) is continuous
+% and \(\widetilde{\Omega}\) is compact, \(h\) attains its minimum on
+% \(\widetilde{\Omega}\). Hence there exists \(y_*\in\widetilde{\Omega}\)
+% such that
+% \[
+% h(y_*)=\min_{y\in\widetilde{\Omega}} h(y)=\xi=0.
+% \]
+% But we have already shown that \(h(y)>0\) for every
+% \(y\in\widetilde{\Omega}\). In particular, \(h(y_*)>0\), a contradiction.
+% Therefore \(\xi>0\).
+% Therefore, for every $y\in\widetilde{\Omega}$,
+% \[
+% \left|
+% \partial_\phi U(x_0,(\theta_0,y))
+% \right|
+% +
+% \left|
+% \partial_\phi^2 U(x_0,(\theta_0,y))
+% \right|
+% \geq \xi.
+% \]
+% Together with $x_0\in X_{\mathrm{robust}}(\kappa)$, this shows that
+% \[
+% x_0\in X_0(\xi,\kappa).
+% \]
+
+% Finally, since $x_0\in B_\rho(\bar{x})\subset F$ and
+% $x_0\in X_0(\xi,\kappa)$, we conclude that
+% \[
+% x_0\in F\cap X_0(\xi,\kappa)=F_0.
+% \]
+% Hence $F_0$ is nonempty.
+% \end{proof}
+
+% \begin{remark}
+% \label{rem:regular_value_2D}
+% The assumption that $0$ is a regular value of $F(\mathbf{x},\phi)=\partial_{\phi}U(\mathbf{x},(\theta_0,\phi))$
+% used in Step~1 amounts to the statement: at every $(\mathbf{x}_*,\phi_*)$ with
+% $\partial_{\phi}U(\mathbf{x}_*,(\theta_0,\phi_*))=0$, either some component of
+% $\nabla_{\mathbf{x}}\partial_{\phi}U(\mathbf{x}_*,(\theta_0,\phi_*))$ or
+% $\partial_{\phi}^{2}U(\mathbf{x}_*,(\theta_0,\phi_*))$ is nonzero. From the explicit form
+% \eqref{eq:Udef}, $\partial_{\phi}U$ is a finite trigonometric polynomial in $\phi$ with
+% coefficients that depend nontrivially on each pair $(x_n,y_n)$ through $\mathbf{r}'_n(\mathbf{x})$;
+% a direct computation shows that joint vanishing of all partials of $\partial_{\phi}U$ at a single
+% point cannot occur (away from the trivial case where $U$ is constant in $\mathbf{x}$, which is
+% excluded once $N\geq 2$). If preferred, one may replace this verification by working only on the
+% open dense set $\mathcal{X}^{\mathrm{reg}}\subset\mathcal{X}$ on which $DF\neq 0$ wherever $F=0$;
+% the same argument applies on $\mathcal{X}^{\mathrm{reg}}\cap B_{\rho}(\mathbf{\bar{x}})$, which
+% remains an open set of positive measure (it is nonempty since $\bar{\mathbf{x}}$ itself satisfies
+% this nondegeneracy assumption for non-pathological array configurations).
+% \end{remark}
+
+
+
+% \begin{corollary}
+% The optimization problem \eqref{OptProblem} with $\mathcal{S}(\mathbf{x}) = PS(\mathbf{x})$ admits a global minimizer on $\mathcal{F}_0$.
+% \end{corollary}
+
+% \begin{proof}
+% By Theorem~\ref{thm:PS_continuity}, $PS$ is continuous (hence lower semicontinuous) on $X_0$. The feasible set $\mathcal{F}_0$ is compact as the intersection of closed sets with the compact ball $B_R$. Furthermore, $\mathcal{F}_0$ is nonempty by Lemma~\ref{F0_nonempty_proof_2D}. The conclusion follows from the Weierstrass Extreme Value Theorem.
+% % Theorem~\ref{thm:existence_general}.
+% \end{proof}
+
+
+
+
+\subsection{Peak Sidelobe Functional}
+\label{PSsec}
+
+
+We define a functional that maps an array geometry $\mathbf{x} \in \mathcal{X}$ to the peak sidelobe level of its associated radiation pattern $U(\mathbf{x}, \cdot)$, and establish conditions under which it is continuous. Throughout this section we assume the $z$-coordinates are determined by the beamfocusing condition \eqref{z_beam_focusing}, so the decision space is $\mathcal{X} = \mathbb{R}^{2N}$. The angular domain is taken to be
+\[
+\Omega := [\theta_0 - \pi/2,\, \theta_0 + \pi/2] \times [\phi_0 - \pi,\, \phi_0 + \pi],
+\]
+reduced to $\Omega = \{\theta_0\} \times[\phi_0 - \pi, \phi_0 + \pi]$ (or equivalently $\Omega = [\phi_0 - \pi, \phi_0 + \pi]$)  when restricting to a 2D cut of the pattern.
+
+By construction, the main beam is steered toward $(\theta_0, \phi_0)$, so
+\[
+\max_{(\theta,\phi) \in \Omega} e(\theta_0)^{-1}\cdot U(\mathbf{x}, (\theta, \phi)) = e(\theta_0)^{-1}\cdot U(\mathbf{x}, (\theta_0, \phi_0)) \quad \text{for all } \mathbf{x} \in \mathcal{X}.
+\]
+We isolate the sidelobe peak points by defining the correspondence $\Gamma_\varepsilon : \mathcal{X} \rightrightarrows \Omega$,
+\begin{equation}\label{Gamma_eps}
+\Gamma_\varepsilon(\mathbf{x}) := \bigl\{ (\theta, \phi) \in \Omega \mid \nabla_\Omega U(\mathbf{x}, (\theta, \phi)) = \mathbf{0} \bigr\} \setminus B_\varepsilon((\theta_0, \phi_0)),
+\end{equation}
+which collects the critical points of $U(\mathbf{x}, \cdot)$ outside an $\varepsilon$-ball around the main beam. We augment this with the set $I := w^{-1}(\{1\})$ (as defined in the preceding section) by setting
+\[
+\Gamma(\mathbf{x}) := \Gamma_\varepsilon(\mathbf{x}) \cup I,
+\]
+which ensures that $\Gamma(\mathbf{x})$ is always nonempty. Note that $I$ can be arbitrarily small in measure (although nonzero). Then we define the peak sidelobe functional as
+\begin{equation}
+    PS(\mathbf{x}) := \max_{(\theta,\phi) \in \Gamma(\mathbf{x})} U(\mathbf{x}, (\theta, \phi)).
+    \label{PSfun}
+\end{equation}
+
+To apply the Berge Maximum Theorem to \eqref{PSfun}, we must establish that $\Gamma$ is nonempty, compact valued, and hemicontinuous. The first two properties hold globally while lower hemicontinuity requires a restriction of $\mathcal{X}$ to exclude degenerate critical points, which we now introduce.
+
+
+
+Let $\tilde{\Omega} = \Omega \setminus B_\varepsilon((\theta_0, \phi_0))$ and let $H(\mathbf{x}, (\theta, \phi)) = \nabla_\Omega^2 U(\mathbf{x}, (\theta, \phi))$ denote the $2 \times 2$ Hessian of $U$ with respect to $(\theta, \phi)$. Note that $U$ is smooth and $H$ is symmetric. For $\kappa>0$ define
+\begin{equation}
+    X_{\mathrm{robust}}(\kappa) = \{\mathbf{x}\in\mathcal{X} : \|\nabla_\Omega U(\mathbf{x},\omega)\|\geq \kappa
+\quad\text{ for }\quad
+\omega\in \partial B_\varepsilon((\theta_0,\phi_0)) \}.
+\end{equation}
+This set excludes array configurations whose main beam has plateaus around the focus direction,
+ridges or nearly flat saddles extending outward from the focus direction, or the focus direction is a weakly curved maxima where gradients become arbitrarily small nearby.
+Then, for a fixed $\xi > 0$, define
+\begin{equation} \label{X0def}
+X_0(\xi, \kappa) = \left\{ x \in X_{\mathrm{robust}}(\kappa) \;\Big|\; \|\nabla_{\Omega} U(x, y)\| + \sigma_{\min}(H(x, y)) \ge \xi \quad \forall y \in \tilde{\Omega} \right\},
+\end{equation}
+
+where $\sigma_{\min}$ denotes the smallest singular value. This set in turn also excludes array configurations that produce degenerate or near-degenerate sidelobe critical points.
+
+Note that by the compactness of $\partial B_\varepsilon(\theta_0,\phi_0)$ and continuity of $\|\nabla_\Omega U\|$ it follows that $X_{\mathrm{robust}}(\kappa)$ is closed in $\mathcal{X}$. Also, by the compactness of $\tilde{\Omega}$, and continuity of $\|\nabla_{\Omega} U\| + \sigma_{\min}(H)$, $X_0(\xi, \kappa)$ is closed in $X_{\mathrm{robust}}(\kappa)$. Thus, $X_0(\xi, \kappa)$ is closed in $\mathcal{X}$.
+
+
+\begin{lemma}
+\label{prop:Gamma}
+The correspondence $\Gamma : \mathcal{X} \rightrightarrows \Omega$ satisfies the following:
+\begin{enumerate}[label=\emph{(\roman*)}]
+    \item $\Gamma(\mathbf{x})$ is nonempty for all $\mathbf{x} \in \mathcal{X}$.
+    \item $\Gamma(\mathbf{x})$ is compact for all $\mathbf{x} \in \mathcal{X}$.
+    \item $\Gamma$ is upper hemicontinuous on $\mathcal{X}$.
+    \item $\Gamma$ is lower hemicontinuous on $X_0(\xi, \kappa)$.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+\emph{(i)} Immediate, since $I \subseteq \Gamma(\mathbf{x})$ and $I$ is nonempty.
+
+\smallskip\noindent\emph{(ii)} 
+By definition, $I = w^{-1}(\{1\})$, which is the  complement of the open rectangle in $\Omega$. Hence $I$ is closed in $\Omega$. Since $\Omega$ is compact, it follows that $I$ is compact.
+
+\medskip
+
+Next, consider
+\[
+\Gamma_\varepsilon(\mathbf{x}) 
+= \left\{ (\theta,\phi)\in \Omega \;\middle|\; \nabla_\Omega U(\mathbf{x},(\theta,\phi)) = \mathbf{0} \right\}
+\setminus B_\varepsilon((\theta_0,\phi_0)).
+\]
+Since $U$ is continuously differentiable, $\nabla_\Omega U(\mathbf{x},(\theta,\phi))$ is continuous in $(\theta,\phi)$. It follows that the set
+\[
+\left\{ (\theta,\phi)\in \Omega \;\middle|\; \nabla_\Omega U(\mathbf{x},(\theta,\phi)) = \mathbf{0} \right\}
+\]
+is closed in $\Omega$ as the preimage of $\{\mathbf{0}\}$ under a continuous mapping. 
+
+Moreover, $B_\varepsilon((\theta_0,\phi_0))$ is open, so its complement is closed. Hence $\Gamma_\varepsilon(\mathbf{x})$ is the intersection of two closed subsets of $\Omega$, and is therefore closed in $\Omega$. Since $\Omega$ is compact, it follows that $\Gamma_\varepsilon(\mathbf{x})$ is compact.
+
+\medskip
+
+Finally, $\Gamma(\mathbf{x}) = \Gamma_\varepsilon(\mathbf{x}) \cup I$ is the union of two compact sets, and is therefore compact.
+
+\smallskip\noindent\emph{(iii)} We use the sequential characterization of upper hemicontinuity. Let $\mathbf{x}_k \to \mathbf{x}^*$ in $\mathcal{X}$ and suppose $(\theta_k, \phi_k) \in \Gamma(\mathbf{x}_k)$ with $(\theta_k, \phi_k) \to (\theta^*, \phi^*)$. If infinitely many terms, $(\theta_k, \phi_k)$, lie in $I$, then $(\theta^*, \phi^*) \in I \subseteq \Gamma(\mathbf{x}^*)$ due to $I$ being closed and thus, the proof is complete.
+% , and the constant correspondence $\mathbf{x} \mapsto I$ is trivially upper hemicontinuous. 
+Otherwise, there is a subsequence $\{n_k\}$ such that $(\theta_{n_k}, \phi_{n_k}) \in \Gamma_\varepsilon(\mathbf{x}_{n_k})$ for all $k$, so $\nabla_\Omega U(\mathbf{x}_{n_k}, (\theta_{n_k}, \phi_{n_k})) = \mathbf{0}$. By continuity of $\nabla_\Omega U$, taking $k \to \infty$ gives $\nabla_\Omega U(\mathbf{x}^*, (\theta^*, \phi^*)) = \mathbf{0}$. Since each $(\theta_k, \phi_k) \notin B_\varepsilon((\theta_0, \phi_0))$ and this ball is open, the limit satisfies $(\theta^*, \phi^*) \notin B_\varepsilon((\theta_0, \phi_0))$. Hence $(\theta^*, \phi^*) \in \Gamma_\varepsilon(\mathbf{x}^*) \subseteq \Gamma(\mathbf{x}^*)$, as required.
+
+\smallskip\noindent\emph{(iv)} We use the sequential characterization of lower hemicontinuity. Let $x_0 \in X_0(\xi, \kappa)$ and $y_0 \in \Gamma(x_0)$. Let $\{x_k\} \subset X_0(\xi, \kappa)$ be any sequence such that $x_k \to x_0$. We must show there exists a sequence $y_k \in \Gamma(x_k)$ such that $y_k \to y_0$. 
+
+Because $\Gamma(x_0) = \Gamma_\epsilon(x_0) \cup I$, we proceed by analyzing two cases for $y_0$:
+
+\textit{Case 1:} $y_0 \in I$. 
+Since set $I$ is a fixed region independent of the configuration $x$ for any $k$, $y_0 \in \Gamma(x_k)$. We simply define the constant sequence $y_k = y_0$. Trivially, $y_k \in \Gamma(x_k)$ and $y_k \to y_0$.
+
+\textit{Case 2:} $y_0 \in \Gamma_\varepsilon(x_0)$. 
+By definition, $y_0 \in \tilde{\Omega}$ and $\nabla_{\Omega} U(x_0, y_0) = \mathbf{0}$. Because $x_0 \in X_0(\xi, \kappa)$, we have that
+$$ \|\nabla_{\Omega} U(x_0, y_0)\| + \sigma_{\min}(H(x_0, y_0)) \ge \xi. $$
+Since the gradient norm is zero, this  implies $\sigma_{\min}(H(x_0, y_0)) \ge \xi > 0$. Thus, the Hessian $H(x_0, y_0)$ is invertible.
+
+Define the gradient mapping $F(x, y) = \nabla_{\Omega} U(x, y)$. We have $F(x_0, y_0) = \mathbf{0}$ and its partial Jacobian $D_y F(x_0, y_0) = H(x_0, y_0)$ is non-singular. By the Implicit Function Theorem, there exist open neighborhoods $N(x_0) \subset \mathcal{X}$ of $x_0$ and $W(y_0) \subset \Omega$ of $y_0$, along with a unique continuous mapping $y: N(x_0) \to W(y_0)$, such that $y(x_0) = y_0$ and $F(x, y(x)) = 0$ for all $x \in N(x_0)$.
+
+Because $x_k \to x_0$, there exists an integer $K$ such that for all $k \ge K$, $x_k \in N(x_0)$. For these $k$, we define $y_k = y(x_k)$. By the continuity of the implicit function, $y$, as $x_k \to x_0$, we have $y_k \to y_0$. Note that as established before $F(x_0,y_0) = \mathbf{0}$. But, since $x_0\in X_0(\xi, \kappa)\subset X_{\mathrm{robust}}(\kappa)$, we also have that $\|F(x_0, \omega)\|\geq \kappa>0$ for all $\omega\in \partial B_{\varepsilon}((\theta_0,\phi_0))$. Hence, it must be that $y_0\not\in \partial B_{\varepsilon}((\theta_0,\phi_0))$. So, $y_0$ is strictly in the interior of $\tilde{\Omega}$, and therefore the sequence $y_k$ will eventually reside entirely within $\tilde{\Omega}$. This, combined with the fact that $F(x_k,y_k) = \mathbf{0}$ lets us conclude that $y_k \in \Gamma_\epsilon(x_k) \subset \Gamma(x_k)$ for sufficiently large $k$.
+
+
+\end{proof}
+
+\begin{theorem}
+\label{thm:PS_continuity}
+The peak sidelobe functional $PS : \mathcal{X} \to \mathbb{R}$ defined in \eqref{PSfun} is continuous on $X_0$ defined in \eqref{X0def}.
+\end{theorem}
+
+\begin{proof}
+On $X_0(\xi, \kappa) $, Lemma~\ref{prop:Gamma} gives that $\Gamma$ is nonempty, compact-valued, and both upper and lower hemicontinuous. Since $U(\mathbf{x}, (\theta, \phi))$ is jointly continuous in $\mathbf{x}$ and $(\theta, \phi)$, the Berge Maximum Theorem applies directly to \eqref{PSfun}, yielding continuity of $PS$ on $X_0(\xi, \kappa)$.
+\end{proof}
+
+
+\begin{conjecture} For appropriately chosen $\xi, \kappa, \varepsilon>0$, the feasible set, $\mathcal{F}_0$, given by 
+    \begin{equation}
+\mathcal{F}_0 := c^{-1}(\{0\}) \cap N^{-1}([0, \delta_{\mathrm{null}}])\cap P^{-1}([0, e(\theta_0)^2N^2]) \cap X_0(\xi, \kappa) \cap B_R = \mathcal{F}\cap X_0(\xi, \kappa),
+\label{F0}
+\end{equation}
+is nonempty.
+\label{F0_nonempty_proof}
+\end{conjecture}
+
+\begin{corollary}
+The optimization problem \eqref{OptProblem} with $\mathcal{S}(\mathbf{x}) = PS(\mathbf{x})$ admits a global minimizer on $\mathcal{F}_0$.
+\end{corollary}
+
+\begin{proof}
+By Theorem~\ref{thm:PS_continuity}, $PS$ is continuous (hence lower semicontinuous) on $X_0$. The feasible set $\mathcal{F}_0$ is compact as the intersection of closed sets with the compact ball $B_R$. Furthermore, $\mathcal{F}_0$ is nonempty by Conjecture~\ref{F0_nonempty_proof}. The conclusion follows from the Weierstrass Extreme Value Theorem.
+% Theorem~\ref{thm:existence_general}.
+\end{proof}
+
+
+
+% \subsection{Peak Sidelobe Functional}
+% \label{PSsec}
+
+% We define a functional that maps a given array geometry $\mathbf{x}\in \mathcal{X}$ to the peak sidelobe value of the associated radiation pattern $U(\mathbf{x},:)$. We prove this functional is upper semicontinuous on $\mathcal{X}$ and lower semicontinuous on a restriction of $\mathcal{X}$ by application of the Berge Maximum Theorem. 
+% Here we restrict ourselves to the case in which the $z$-coordinates of the array elements, $z_n$, are determined as a linear combination of $x_n$ and $y_n$ according to (\ref{z_beam_focusing}). In this scenario, we define the decision space as $\mathcal{X} = \mathbb{R}^{2N}$. We define the angular domain as
+% \[
+% \Omega:= [\theta_0-\pi/2, \theta_0+\pi/2] \times [\phi_0-\pi,\phi_0+\pi].
+% \]
+% For analyses restricted to a 2D cut of the radiation pattern, we reduce the angular domain to $\Omega:= \{\theta_0\} \times [\phi_0-\pi,\phi_0+\pi]$, or equivalently, $\Omega = [\phi_0-\pi,\phi_0+\pi]$ for brevity.\\
+
+% By construction the main beam is steered towards the direction $(\theta_0,\phi_0)$. Thus,
+
+% \begin{equation*}
+%  \max_{(\theta,\phi) \in \Omega} U(\mathbf{x},(\theta,\phi) = U(\mathbf{x}, (\theta_0,\phi_0) ) \text{ for all } \mathbf{x} \in \mathcal{X}.
+% \end{equation*}
+
+
+
+
+% We define the correspondence, $\Gamma_{\varepsilon}: \mathcal{X} \rightrightarrows \Omega$, by
+% \begin{equation}
+% \Gamma_{\varepsilon}(\mathbf{x}) := \left\{ (\theta,\phi) \in \Omega \ \middle| \ \nabla_{\Omega} U(\mathbf{x}, (\theta,\phi)) = \bm 0 \right\}   \setminus B_\varepsilon ((\theta_0,\phi_0)).
+% \end{equation}
+
+% And we define the correspondence, $\Gamma: \mathcal{X} \rightrightarrows \Omega$, by
+% \begin{equation}
+% \Gamma(\mathbf{x}): = \Gamma_\varepsilon (\mathbf{x}) \cup I
+% \end{equation}
+% where we take $I : = w^{-1}(\{1\})$ with the definition of $w$ given in the preceding section.
+
+% Then we define 
+% \begin{equation}
+% PS(\mathbf{x}) := \max_{(\theta,\phi) \in \Gamma(\mathbf{x})} U(\mathbf{x},(\theta,\phi).
+% \label{Sfun}
+% \end{equation}
+
+% \begin{lemma}
+% The following properties of $\Gamma$ hold:
+% \begin{enumerate}[label=(\roman*)]
+%     \item $\Gamma(\mathbf{x}) \neq \emptyset$ for all $\mathbf{x} \in \mathcal{X}$. 
+%     \begin{proof}
+%     This follows from the fact that $I$ is nonempty.
+%     \end{proof}
+    
+%     \item $\Gamma(\mathbf{x})$ is compact for all $\mathbf{x} \in \mathcal{X}$. 
+
+% \begin{proof}
+% By definition, $I = w^{-1}(\{1\})$ which is the  complement of the open rectangle in $\Omega$. Hence $I$ is closed in $\Omega$. Since $\Omega$ is compact, it follows that $I$ is compact.
+
+% \medskip
+
+% Next, consider
+% \[
+% \Gamma_\varepsilon(\mathbf{x}) 
+% = \left\{ (\theta,\phi)\in \Omega \;\middle|\; \nabla_\Omega U(\mathbf{x},(\theta,\phi)) = \mathbf{0} \right\}
+% \setminus B_\varepsilon((\theta_0,\phi_0)).
+% \]
+% Since $U$ is continuously differentiable, $\nabla_\Omega U(\mathbf{x},(\theta,\phi))$ is continuous in $(\theta,\phi)$. It follows that the set
+% \[
+% \left\{ (\theta,\phi)\in \Omega \;\middle|\; \nabla_\Omega U(\mathbf{x},(\theta,\phi)) = \mathbf{0} \right\}
+% \]
+% is closed in $\Omega$ as the preimage of $\{\mathbf{0}\}$ under a continuous mapping. 
+
+% Moreover, $B_\varepsilon((\theta_0,\phi_0))$ is open, so its complement is closed. Hence $\Gamma_\varepsilon(\mathbf{x})$ is the intersection of two closed subsets of $\Omega$, and is therefore closed in $\Omega$. Since $\Omega$ is compact, it follows that $\Gamma_\varepsilon(\mathbf{x})$ is compact.
+
+% \medskip
+
+% Finally, $\Gamma(\mathbf{x}) = \Gamma_\varepsilon(\mathbf{x}) \cup I$ is the union of two compact sets, and is therefore compact.
+% \end{proof}
+
+
+%     \item $\Gamma$ is upper hemicontinuous at every point $\mathbf{x} \in \mathcal{X}$. 
+
+%     \begin{proof}
+%     We employ the sequential definition of upper hemicontinuity. 
+    
+%     Suppose $\mathbf{x}_n \to \mathbf{x}^* \in \mathcal{X}$ and there exists a sequence $(\theta_n,\phi_n) \in \Gamma(\mathbf{x}_n)$ such that 
+    
+%     $(\theta_n,\phi_n)\to (\theta^*,\phi^*) \in \Omega$. 
+%     If infinitely many $(\theta_n,\phi_n) \in I \subseteq \Gamma(\mathbf{x}_n)$, we are done since the constant correspondence given by $\mathbf{x} \to I$ is trivially upper hemicontinuous. 
+%     Otherwise, there exists a subsequence $(\theta_{n_k}, \phi_{n_k})$ such that $(\theta_{n_k},\phi_{n_k}) \in \Gamma_{\varepsilon}(\mathbf{x}_{n_k})$. 
+%     Then $\nabla_{\Omega}U (\mathbf{x}_{n_k}, (\theta_{n_k},\phi_{n_k})) = \mathbf{0}$, and by the smoothness of $U$, it follows that $\nabla_{\Omega} U (\mathbf{x}^*, (\theta^*,\phi^*)) = \mathbf{0}$. 
+%     Furthermore, since $(\theta_{n_k},\phi_{n_k}) \notin B_{\varepsilon}((\theta_0,\phi_0))$ and $(\theta_{n_k},\phi_{n_k})\to (\theta^*,\phi^*)$, we must have $(\theta^*,\phi^*) \notin B_{\varepsilon}((\theta_0,\phi_0))$. 
+%     Hence, $(\theta^*,\phi^*) \in \Gamma_{\varepsilon}(\mathbf{x}^*) \subseteq \Gamma(\mathbf{x}^*)$, and $\Gamma$ is upper hemicontinuous at $\mathbf{x}^*$.
+%     \end{proof}
+
+
+%     \item $\Gamma$ is lower hemicontinuous on $X_{robust}(\xi)$ defined below.
+% \end{enumerate}
+% \end{lemma}
+
+
+
+% To prove the lower hemicontinuity of $\Gamma$  we would have to contend with the degenerate critical points of $U$. This is because degenerate critical points can vanish suddenly. Thus, we introduce a restriction to the decision variable space $\mathcal{X}$.
+
+
+% Let $r_n(x) = (x_n, y_n, z_n(x_n,y_n))$ where $z_n$ is given by the beam-forming condition (9).
+
+% Define
+% $$X_{\text{phys}} = \left\{ x \in \mathbb{R}^{2N}: (x_n,y_n) \in [-\lambda_0, \lambda_0]^2, \| r_n'(x) - r_m'(x) \| \geq \frac{\lambda_0}{4} \ \forall n \neq m \right\} $$
+
+% Note $X_{\text{phys}} \subset \mathbb{R}^{2N}$ is compact. Let $H(x,y) = \nabla_{\Omega}^2 U(x,y)$ be the $2 \times 2$ Hessian w.r.t. $y = (\theta, \phi)$. Define
+% $$ X_{\text{robust}}(\xi) = \left\{ x \in X_{\text{phys}}: \forall \gamma \in \Gamma_{\epsilon}(x), \sigma_{\mathrm{min}}H(x,y) > \xi \right\}  $$
+% for $\xi>0$ an arbitrarily small fixed parameter and $\sigma_{\mathrm{min}}$ is the smallest singular value of $H$. Note that $X_{\text{robust}}(\xi)$ is open.
+
+% This set excludes degenerate or nearly degenerate critical points, and is open in $X_{\text{phys}}$. We have that
+
+% \begin{enumerate}
+%     \item $\Gamma$ is nonempty and compact as in Prop 3.1.
+%     \item $\Gamma$ is upper hemicontinuous as in Prop 3.1.
+%     \item $\Gamma$ is lower hemicontinuous on $X_{\text{robust}}(\xi)$
+% \end{enumerate}
+
+% \begin{proof}
+% Let $x_0 \in X_{\text{robust}}(\xi)$ and $y_0 = (\theta_0, \phi_0) \in \Gamma_{\epsilon}(x_0)$.
+
+% Define $F(x,y) = \nabla U(x,y)\in\mathbb{R}^2$. Then, $F(x_0,y_0) = 0$, $D_y F(x_0,y_0) = H(x_0,y_0)$, and by definition, since $x_0 \in X_{\text{robust}}(\xi) $ we have $\sigma_{min}(H(x_0,y_0))>\xi>0$ which implies $D_y F(x_0,y_0)$ invertible.
+
+% The implicit function theorem implies there exist $N(x_0)$, $W(y_0)$, neighborhoods of $x_0$ and respectively $y_0$, and a continuous map $y:N\to W$ such that $y(x_0) = y_0$ and $F(x,y(x)) = 0$ for all $x\in N(x_0)$.
+
+% Next, for any sequence $x_n\to x_0$ in $X_{\text{robust}}(\xi)$ we have that $x_n\in N(x_0)$ for large enough $n$ and defining $y_n = y(x_n)$, we obtain $y_n\in \Gamma_{\varepsilon}(x_n)$, $y_n\to y_0$, 
+% implying the lower hemicontinuity of $\Gamma_{\varepsilon}$ on $X_{\text{robust}}(\xi)$ (where we used the sequential characterization of lower hemicontinuity). Since $x_0$ was arbitrary in $X_{\text{robust}}(\xi)$, $\Gamma_{\varepsilon}$ is lower hemicontinuous on $X_{\text{robust}}(\xi)$. Thus, $\Gamma = \Gamma_{\varepsilon}\cup I$ is lower hemicontinuous on $X_{\text{robust}}(\xi)$ since $I$ is fixed.
+
+% Thus, we can conclude that $\Gamma$ is both upper and lower hemicontinuous on 
+% \[
+% X_0 = \left\{ x \in X_{\text{phys}} \; \middle| \; \forall y\in \Gamma_{\varepsilon} (x), \ \sigma_{\min}(H(x,y))\geq 2\xi \right\}.
+% \]
+% \end{proof}
+% \begin{theorem}
+% \label{thm:PS_continuity}
+% The peak sidelobe functional $PS : \mathcal{X} \to \mathbb{R}$ defined in \eqref{Sfun} is continuous on $X_0$.
+% \end{theorem}
+
+% \begin{proof}
+% On $X_0$, the correspondence $\Gamma$ is nonempty, compact-valued, and both upper and lower hemicontinuous. Moreover, $U(\mathbf{x},(\theta,\phi))$ is continuous in both $\mathbf{x}$ and $(\theta,\phi)$. 
+
+% Therefore, by the Berge Maximum Theorem, the value function
+% \[
+% PS(\mathbf{x}) = \max_{(\theta,\phi)\in \Gamma(\mathbf{x})} U(\mathbf{x},(\theta,\phi))
+% \]
+% is continuous on $X_0$.
+% \end{proof}
+
+% \begin{corollary}
+% Let $\mathcal{S}(\mathbf{x}) = PS(\mathbf{x})$. Then the optimization problem \eqref{OptProblem} admits a global minimizer on the feasible set
+% \[
+% \mathcal{F}_{0} = C^{-1}(\{0\}) \cap N^{-1}([0,\delta_{\mathrm{null}}]) \cap B_R \cap X_0.
+% \]
+% \end{corollary}
+
+% \begin{proof}
+% By Theorem~\ref{thm:PS_continuity}, $PS$ is continuous on $X_0$, and hence lower semicontinuous. The set $\mathcal{F}_0$ is compact as it is the intersection of closed subsets of the compact set $B_R$. The result follows from Theorem~\ref{thm:existence_general}.
+% \end{proof}
+
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Differentiable Surrogates}
+
+Notice that the functionals, $\mathcal{S}$ and $c$, in the previous sections, are not differentiable due to the presence of the max operator. To enable the use of derivative-based optimization methods, we introduce smooth surrogate functions whose gradients and Hessians can be computed analytically.
+
+We define
+\begin{equation}
+W_p(\mathbf{x}) = \frac{1}{p} \log\left( \int_I \text{exp}(p\cdot U(\mathbf{x}, (\theta, \phi)) \; d(\theta,\phi) \right) \to W(\mathbf{x}) \text{ as } p \to \infty.
+\end{equation}
+
+Here we employed a continuous analogue of the well known LogSumExp operator, defined for a vector $\mathbf{v} \in \mathbb{R}^n$, as
+
+\[
+\text{LSE}_p(\mathbf{v}) := \frac{1}{p} \log\sum_{i=1}^n e^{p v_i}, \;\mathbf v = (v_1,v_2,..., v_n) . 
+\]
+For the numerical implementation we take,
+\[
+W_p(\mathbf{x}) \;:=\; \frac{1}{p}\log\!\sum_{(\theta,\phi)\in I}
+\exp\!\Big( p\cdot U(\mathbf{x},(\theta,\phi))\Big)
+\]
+where \(\mathcal G\subset I\) denotes a discrete angular grid used to mesh $I$. Although a $p$-norm can also be used as smooth maximum but we found this formulation to be more numerically stable.
+
+To regularize the spacing constraint we approximate $\max\{0, c_{n,m}(\mathbf{x})\}$ using the SoftPlus function:
+\[
+\text{SoftPlus}_p(c_{n,m}(\mathbf{x})) = \frac{1}{p}\log(1+\text{exp}(p\cdot c_{n,m})(\mathbf{x})) \to\max\{0, c_{n,m}(\mathbf{x})\} \text{ as } p\to \infty.
+\]
+Then, we define
+\begin{equation}
+c_p(\mathbf{x}) := \sum_{n < m} \frac{1}{p} \log ( 1+ \text{exp}(p\cdot c_{n,m}(\mathbf{x})) ) \to c(\mathbf{x}) \text{ as } p \to \infty.
+\end{equation}
+
+An concise derivation of the gradients and hessians of $c$, $N$, and $\mathcal{S}$ is provided in Appendix $2$.
+
+
+
+
+
+
+\subsection{Translational Invariance of the Array Response}
+\label{sec:TranInv}
+Let $\Delta\mathbf{k}=\mathbf{k}(\theta,\phi)-\mathbf{k}(\theta_s,\phi_s)$ for brevity.
+Then
+\[
+U(\mathbf{x},(\theta,\phi))=\Big|\,e(\theta,\phi)\sum_{n=1}^N
+e^{\,\mathrm{i}\,\Delta\mathbf{k}\cdot \mathbf{r}'_n}\Big|^2.
+\]
+If we translate all elements by $\mathbf{t}$, i.e. $\mathbf{r}''_n=\mathbf{r}'_n+\mathbf{t}$, then
+\[
+\sum_{n=1}^N e^{\,\mathrm{i}\,\Delta\mathbf{k}\cdot \mathbf{r}''_n}
+= e^{\,\mathrm{i}\,\Delta\mathbf{k}\cdot \mathbf{t}}\sum_{n=1}^N e^{\,\mathrm{i}\,\Delta\mathbf{k}\cdot \mathbf{r}'_n},
+\]
+so the magnitude squared (and hence $U$) is unchanged since $\big|e^{\,\mathrm{i}\,\Delta\mathbf{k}\cdot \mathbf{t}}\big|=1$.
+Moreover, $\|\mathbf{r}''_n-\mathbf{r}''_m\|=\|\mathbf{r}'_n-\mathbf{r}'_m\|$, so spacing constraints are preserved.
+Thus any translated configuration is equally feasible and has the same $U$. Hence we fix one of our array elements to the center of the swarm, $(x_s, y_s, z_s)$, without loss of generality throughout our entire optimization scheme. 
+
+\subsection{Constraint Handling Strategies}
+
+For unconstrained optimization methods we enforce constraints through reformulation the problem as an unconstrained penalized minimization. Specifically, we consider
+\begin{equation}
+\label{UnCon_Obj}
+\min_{\mathbf{x}\in\mathbb{R}^{3N}} \; f_\mu(\mathbf{x})
+\;:=\; S(\mathbf{x}) + \mu_1\,N(\mathbf{x}) +\mu_2\,c(\mathbf{x}),
+\end{equation}
+where the penalty parameters $\mu_1,\mu_2>0$ control the strength of the constraint enforcement. In practice we set $\mu_1 = 1$ and $\mu_2 = 100$.
+
+
+Alternatively, for constrained optimization methods we rely on the Lagrangian formulation:
+
+\begin{equation}
+f(\mathbf{x}, \boldsymbol{\lambda}) 
+= S(\mathbf{x}) 
++ \lambda_0 \big(N(\mathbf{x}) - \delta_{\text{null}}\big) 
++ \sum_{n>m} \lambda_{n,m}\, c_{n,m}(\mathbf{x}),
+\label{eq:lagrangian_full}
+\end{equation}
+where each spacing constraint $c_{n,m}$ is treated individually with its own multiplier.
+
+
+
+
+
+\section{Optimization Algorithms}
+\subsection{Ansatz initialization: Concentric Circular Array}
+
+We consider the following physically informed array configuration. The $z$ coordinates are determined by the beam focusing condition. The $(x,y)$ coordinates of the elements are determined as follows: one element is fixed at the origin, and the remaining elements are arranged to lie on a pair of concentric circles: $N_1$ elements uniformly spaced on a ring of
+radius $d_1$, and $N_2$ elements uniformly spaced on a ring of radius $d_2$. The rings are azimuthally offset from each other by an angle of $\Delta\in[0,2\pi)$. 
+
+That is, for
+\[
+\alpha_m=\frac{2\pi (m-1)}{N_1}\quad(m=1,\dots,N_1),\qquad
+\beta_m=\frac{2\pi (m-1)}{N_2}\quad(m=1,\dots,N_2),
+\]
+the element positions are given by
+\begin{align*}
+\mathbf{r}'_{m}(d_1)&=\big(d_1\cos\alpha_m,\; d_1\sin\alpha_m,\; z_{m}\big),\qquad 1\leq m \leq N_1, \\
+\mathbf{r}'_{m+N_1}(d_2,\Delta)&=\big(d_2\cos(\beta_m+\Delta),\; d_2\sin(\beta_m+\Delta),\; z_{m+N_1}\big), \qquad 1\leq m \leq N_2,\\
+\text{ and }\mathbf{r}'_{N} &= (0,0,z_N).
+\end{align*}
+
+
+We select the best $(d_1,d_2,\Delta)$, through a direct grid search, to minimize a chosen cost function $S$. Concretely, we solve the discrete problem
+\begin{equation}
+(d_1^\star,d_2^\star,\Delta^\star)\in
+\arg\min_{\,d_1, d_2\in\mathcal{D},\; \Delta\in\mathcal{A}}
+\; S(d_1,d_2,\Delta),
+\label{d1d2_opt}
+\end{equation}
+where $\mathcal{D}$ and $\mathcal{A}$ are discretizations of the spaces $(0, \lambda_0)$ and $[0, 2\pi)$ respectively ($\lambda_0$ is the free space wavelength). Notice here we don't yet worry about synthesizing a null (so its not necessarily the case that $N(\mathbf{x}(d_1^\star,d_2^\star,\Delta^\star)) \leq \delta_{null}$).
+
+In particular, for the $N=9$ case with $N_1=N_2=4$, this procedure selected $\;\Delta^\star = 45^\circ\;$, $d_1^\star = 0.48786$, and $ d_2^\star = 0.34374$, after which we use $\mathbf{x}(d_1^\star,d_2^\star,\Delta^\star)$
+as the initialization for subsequent optimizations.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.4\linewidth]{D1D2Illustration.png}% was 0.7
+  % \caption{\small Initialization: one center drone and two concentric rings with radii $d_1$ and $d_2$, and ring offset angle $\Delta$. The inner/outer rings each have $N_1$ and $N_2$ equally spaced drones.}
+  \caption{Optimized element positions in the $xy$-plane (in units of wavelength), obtained by solving (\ref{d1d2_opt}) for focus direction $\phi_0 = 45^\circ$. The cost function used is $S=W^{(2D)}$ with parameter $M_{\phi} = 60^\circ$.}
+  \label{fig:init-two-rings}
+\end{figure}
+
+\subsection{Optimization Algorithms}
+
+Starting from the physically informed concentric circular initialization described in Section~4.1, we evaluate both gradient-based local methods and more computationally intensive global strategies.
+
+\subsubsection{Local Descent Methods}
+
+We employ the following local optimizers:
+\begin{enumerate}
+    \item[(i)] \MATLAB\ second-order solvers:
+    \begin{itemize}
+        \item \texttt{fminunc} (trust region),
+        \item \texttt{fmincon} (interior point).
+    \end{itemize}
+    \item[(ii)] RMSProp with classical momentum.
+    \item[(iii)] Zoom-In Penalty Continuation (ZIPC), a geometric continuation strategy on the null penalty parameter. \textcolor{purple}{explain that we apply ZIPC w/ TR somewhere}
+    \item[(iv)] Trust–Region with Exact Subproblem 
+    \item[(v)] Tunneling Applied to solutions of (iv).
+\end{enumerate}
+
+The trust region, interior point, and Newton based methods use both gradient and Hessian information. RMSProp is purely first-order.
+
+For RMSProp, classical momentum is applied directly to the velocity variable, while the effective step size is normalized by the moving average of squared gradients. We fix the learning rate and momentum parameters to
+\[
+\alpha = 0.01, 
+\qquad 
+\beta = 0.7.
+\]
+
+For unconstrained solvers (\texttt{fminunc}, RMSProp, ZIPC) we minimize the penalized functional $f_\mu$ defined previously. For \texttt{fmincon}, constraints are enforced directly through a Lagrangian formulation.
+
+\subsubsection{Global Benchmarking Methods}
+
+To benchmark the performance of our tailored local methods, we compare against more computationally intensive global strategies:
+\begin{enumerate}
+    \item[(i)] \texttt{MultiStart} with \texttt{fmincon} (interior-point) as the local solver.
+    \item[(ii)] NOMAD (Nonlinear Optimization by Mesh Adaptive Direct Search).
+\end{enumerate}
+
+For \texttt{MultiStart}, we sample $10{,}000$ initial points in the decision-variable domain via Latin Hypercube Sampling and launch an independent \texttt{fmincon} solve from each. The best final solution among all runs is retained.
+
+NOMAD is a black-box optimization method that does not rely on derivative information and is designed for nonlinear optimization problems; it is based on the Mesh Adaptive Direct Search (MADS) algorithm~\cite{G-2018-16}. Unlike the other global solvers considered here, NOMAD relies on a user-supplied initial starting point, and so it may be viewed more as a local optimization method with global exploration heuristics~\cite{AlAuGhKoLed2020}.
+
+
+
+\subsection{Sensitivity to Initialization}
+
+The optimizers are highly sensitive to the chosen initial point. In the \texttt{MultiStart} experiments, only 3 out of 10{,}000 randomly sampled initializations converged to solutions with peak sidelobe level below $-25$~dB; the vast majority stagnated above $-10$~dB.
+
+This observation highlights the importance of the physically informed concentric circular initialization. The symmetric starting geometry is crucial in enabling the local methods to achieve good results.
+
+
+
+\subsection{Trust-Region Method with Exact Subproblem}
+
+To minimize the smooth objective $f:\mathbb{R}^n \to \mathbb{R}$ defined in (\ref{UnCon_Obj}), we employ a trust-region framework utilizing an exact solution to the underlying quadratic subproblem.
+
+\subsubsection{Quadratic Model and Trust-Region Formulation}
+At each iterate $x_k$, let $g_k = \nabla f(x_k)$ and $H_k = \nabla^2 f(x_k)$. The step $p_k$ is obtained by solving the constrained subproblem:
+$$ \min_{\left\|p\right\| \le \Delta_k} m_k(p) := f(x_k) + g_k^\top p + \frac{1}{2} p^\top H_k p, $$
+where $\Delta_k > 0$ is the trust-region radius. Step acceptance and radius updates follow classical trust-region heuristics based on the ratio of actual to predicted reduction, $\rho_k = (f(x_k) - f(x_k + p_k)) / (m_k(0) - m_k(p_k))$.
+
+\subsubsection{Exact Subproblem Solution and the Hard Case}
+We solve the subproblem globally via the secular equation approach (Mor\'e and Sorensen (add citation)). Exploiting the spectral decomposition of the symmetric Hessian, $H_k = Q \Lambda Q^\top$, the Karush-Kuhn-Tucker conditions dictate that the global minimizer satisfies $(H_k + \mu I)p = -g_k$ for some dual multiplier $\mu \ge \max\{0, -\lambda_{\min}(H_k)\}$. Parameterizing the step by $\mu$ yields:
+$$ p(\mu) = -Q (\Lambda + \mu I)^{-1} Q^\top g_k. $$
+
+For positive definite $H_k$ where the unconstrained Newton step satisfies $\|p(0)\| \le \Delta_k$, we set $\mu = 0$. Otherwise, $\mu$ is chosen such that $\|p(\mu)\| = \Delta_k$.
+
+In the ``hard case'', where $H_k$ is indefinite and $g_k$ is nearly orthogonal to the eigenspace associated with $\lambda_{\min}(H_k)$, we construct the step by augmenting the minimal norm core step with a boundary component along the most negative eigenvector $v_{\min}$:
+$$ p_k = p(\mu_{\min}) + \tau \operatorname{sign}(-g_k^\top v_{\min}) v_{\min}, $$
+where $\mu_{\min} = -\lambda_{\min}(H_k) + \epsilon$ (for a small regularization tolerance $\epsilon > 0$) and $\tau = \sqrt{\Delta_k^2 - \|p(\mu_{\min})\|^2}$. This explicit incorporation of negative curvature guarantees robust descent from saddle points in indefinite regions of the objective landscape.
+
+\subsubsection{Termination Criteria}
+The algorithm terminates when first order stationarity is achieved and the local geometry is strictly convex, that is, when $\|g_k\| \le \epsilon_{\text{grad}}$ and $\lambda_{\min}(H_k) > 0$.
+
+\subsubsection{Comparison with Subspace Methods}
+
+We note a distinction between this exact approach and standard large scale implementations, such as the trust-region algorithm in MATLAB's \texttt{fminunc}, which is also evaluated in this work. While \texttt{fminunc} approximates the subproblem solution by restricting the step to a two dimensional subspace (typically spanned by the gradient and the Newton direction, or a direction of negative curvature), the exact method solves the full dimensional subproblem globally. Although computationally more demanding per iteration due to the required eigensystem decomposition, it is demonstrated in the numerics section below that the exact method more effectively navigates the non-convex landscape, converging to superior local minima in less iterations.
+
+
+
+\subsection{A penalty continuation method (ZIPC) for null synthesis}
+
+To balance the competing objectives of peak sidelobe minimization and null synthesis, we introduce a parameter continuation scheme on the null penalty weight, $\alpha$. The augmented objective function is given by
+
+$$f(w;\alpha,\mu)=W(w)+\alpha N(w)+\mu c(w),$$
+
+where $W(w)$ is the peak sidelobe functional defined in Section \ref{Wsec}. We employ a continuation sequence that monotonically increases the penalty parameter, $\alpha\in\{1,10^1,10^2,\dots\}$, solving the optimization subproblem for each $\alpha_{k}$ and warm starting from the preceding minimizer $w_{k-1}^\star$. The theoretical motivation for this approach relies on the distinct local scaling behaviors of the functionals $W(w)$ and $N(w)$ near a baseline optimal design $w^\star$ (obtained at $\alpha=1$). Because $W$ is smooth, bounded perturbations within a sufficiently small neighborhood $\|w-w^\star\|<\delta$ yield proportionally bounded variations in the peak sidelobe level. In contrast, the null functional $N(w)$ exhibits higher sensitivity within this same neighborhood. Because small perturbations in the element positions, and therefore phases on each scatterer, can fundamentally alter phase cancellation at specific angles, $N(w)$ can decrease by orders of magnitude even when the corresponding change in $W(w)$ is tightly bounded. The ZIPC schedule exploits this separation of sensitivities. By initially setting $\alpha=1$, we drive the trajectory toward a feasible design characterized by strictly controlled sidelobes. As we increase $\alpha$ geometrically, the contribution of the null penalty dominates the gradient, forcing the optimizer along directions in the parameter space that dramatically reduce $N(w)$ while remaining within a tight level set of $W(w)$. In practice, this sequence is managed adaptively: we enforce a strict threshold for the peak sidelobe functional (e.g., $-28$ dB). If a subproblem successfully converges while maintaining this performance bound, $\alpha$ is scaled up to further deepen the nulls. If the optimizer cannot find a feasible descent direction that respects the sidelobe constraint, the threshold is incrementally relaxed to ensure continued progress.
+
+
+% =====================================================================
+% Tunneling phase --- appended after the Trust-Region (exact
+% subproblem) section.  Citations use plain \cite{} to match the
+% document's \bibliographystyle{unsrt}.
+% =====================================================================
+\begin{comment}
+   
+
+\section{Global Optimization via Agmon-Screened Tunneling}
+\label{sec:tunneling}
+
+We now describe the global optimization method used in this work: an
+outer basin-hopping loop that wraps the local exact-subproblem
+trust-region polish of the preceding section in an Agmon-screened
+tunneling escape step.  The procedure is global in the sense of
+basin-hopping methods~\cite{WalesDoye1997, LevyMontalvo1985}: it
+produces a monotone-decreasing sequence of local minima
+$\{x_\star^{(k)}\}$ and, under unbounded budget and probe radius,
+converges to the global minimum with probability one.
+
+By itself, the trust-region method with the exact subproblem returns
+only a point $x_\star$ satisfying the second-order \emph{necessary}
+conditions $\nabla f(x_\star) \approx 0$ and
+$\nabla^2 f(x_\star) \succeq 0$; because $f$ is non-convex with many
+basins, this $x_\star$ is in general only a \emph{local} minimum.  To
+drive the iterate toward the \emph{global} minimum, we therefore wrap
+the local trust-region polish in a basin-hopping outer
+loop~\cite{WalesDoye1997} whose escape step is a tunneling phase in
+the spirit of the classical global tunneling methods of Levy and
+Montalvo~\cite{LevyMontalvo1985} and G\'omez and
+Levy~\cite{GomezLevy1982}, but with the escape direction selected
+using the Agmon / WKB picture of sub-barrier
+transport~\cite{Agmon1982, Simon1984, HelfferSjostrand1984}.
+Concretely, instead of ranking escape directions $v$ by the barrier
+\emph{height}
+\[
+  \Delta E(v) \;=\; \max_{t \in [0,1]}\bigl[\,f(x_\star + t v) - f(x_\star)\,\bigr],
+\]
+which controls the classical (Arrhenius) hopping rate
+$\sim \exp(-\Delta E / k_B T)$, we rank them by the barrier
+\emph{action} $S_0(v)$ defined in~\eqref{eq:agmon}, which controls the
+semiclassical (WKB) tunneling rate $\sim \exp(-S_0/\hbar)$~\cite{LandauLifshitzQM, Griffiths2018}.
+Because $S_0$ depends on both the height \emph{and} the width of the
+barrier, a thin tall barrier can have a smaller $S_0$ than a wide
+shallow one --- so screening by $S_0$ favors directions that are
+jointly thin and low, which is exactly the population of escape
+channels we want.
+
+The overall procedure is a global optimization scheme:
+each \emph{outer} iteration consists of (i) the two-stage tunneling
+attempt described below, followed by (ii) an exact-subproblem
+trust-region polish from the escaped point.  This outer loop is
+repeated until tunneling fails to produce a strictly lower minimum
+for $N_\mathrm{fail}$ consecutive attempts, with the probe radius
+$\rho$ enlarged after each failed attempt to enable longer-range
+escapes.  Each individual tunneling attempt itself has two stages.
+
+\subsection{Stage 1: Hessian-shaped probing with Agmon screening}
+
+Let $H_\star = \nabla^2 f(x_\star)$, symmetrized and floored at
+$\epsilon_H = 10^{-6}$ via its eigendecomposition $H_\star = V\Lambda V^{\top}$
+to remove the (numerically) flat modes.  We sample $N_\mathrm{screen}$
+candidate displacements from the anisotropic Gaussian
+\begin{equation}
+  v \;\sim\; \mathcal{N}\!\bigl(0,\,H_\star^{-1}\bigr),
+  \qquad
+  v \;\leftarrow\; \rho\, \frac{v}{\|v\|},
+\end{equation}
+which biases the trial directions toward the \emph{soft} eigenmodes of
+$H_\star$ (the directions in which $f$ rises most slowly), and then
+rescales to a fixed Euclidean probe radius $\rho$.  This
+inverse-Hessian (``Mahalanobis'') scaling is the discrete-optimization
+analogue of the harmonic ground-state covariance at the well
+bottom~\cite{Simon1983}, and is closely related to the negative-curvature
+and saddle-escape moves used in modern non-convex
+optimization~\cite{NesterovPolyak2006, JinNetrapalliJordan2017}.
+Each probe endpoint $x_\star + v$ is scored by the discrete
+Agmon distance along the straight segment from $x_\star$,
+\begin{equation}
+\label{eq:agmon}
+  S_0(v) \;=\; \|v\|\,\int_{0}^{1}
+              \sqrt{\bigl[\,f(x_\star + t\,v) - f(x_\star)\,\bigr]_+}\;dt,
+\end{equation}
+evaluated by composite Simpson quadrature with $N_q$ (odd)
+nodes~\cite{StoerBulirsch2002}; only function values are required, no
+gradients.  In semiclassical analysis~\cite{Agmon1982, HelfferSjostrand1984}
+the integral~\eqref{eq:agmon} controls the exponential decay of the
+tunneling tail, so directions with small $S_0$ correspond to barriers
+that are jointly \emph{thin} and \emph{low}, and are the most promising
+channels through which to escape the current basin.  The $K$ probes
+with the smallest $S_0$ (typically $K = N_\mathrm{screen}/4$) are passed
+to Stage~2.
+
+\subsection{Stage 2: Pole-repelled auxiliary descent}
+
+For each surviving probe $x^{(0)}$ we then perform unconstrained
+descent on the auxiliary tunneling objective
+\begin{equation}
+\label{eq:tunnel-obj}
+  T(x) \;=\; \bigl[f(x) - f(x_\star)\bigr] \;+\; \frac{\mu}{r(x)^{2}},
+  \qquad
+  r(x)^{2} = \|x - x_\star\|^{2} + \delta^{2},
+\end{equation}
+with pole strength $\mu>0$ and softening $\delta>0$ (so $T$ is smooth
+everywhere).  The pole term is a smoothed variant of the repulsive
+factor introduced by Levy and Montalvo~\cite{LevyMontalvo1985} and
+refined in subsequent tunneling
+work~\cite{GomezBarron1991, YaoChen1989}: it dominates near $x_\star$
+and forces the iterate outward, but decays rapidly so that
+$T(x) \to f(x) - f(x_\star)$ for $\|x - x_\star\| \gg \delta$.
+Consequently, any stationary point of $T$ that lies away from
+$x_\star$ is essentially a stationary point of $f$, but in a
+\emph{different} basin.  The analytic gradient
+\begin{equation}
+  \nabla T(x) \;=\; \nabla f(x) \;-\; \frac{2\mu\,(x-x_\star)}{\bigl(r(x)^{2}\bigr)^{2}}
+\end{equation}
+is used inside a steepest-descent loop with Armijo
+backtracking~\cite{Armijo1966, NocedalWright2006} (constant
+$c_{1} = 10^{-4}$, halving step), capped at a small number of inner
+iterations per restart.
+
+\subsection{Outer loop: iterated basin escape and global termination}
+
+After Stage~2, let $x_b$ be the endpoint, among all $K$ restarts, with
+the lowest \emph{original} cost $f(x_b)$.  If
+$f(x_b) < f(x_\star) - \tau$ for a small margin $\tau$, the tunneling
+attempt is declared \emph{successful}: we re-run the exact-subproblem
+trust-region method~\cite{MoreSorensen1983} from $x_b$ to drive the
+new iterate back to second-order stationarity, replace $x_\star$ with
+the result, reset the failure counter, and return the radius $\rho$ to
+its base value.  Otherwise the attempt is a \emph{failure}: $x_\star$
+is retained, the failure counter is incremented, and the probe radius
+is enlarged ($\rho \leftarrow \gamma\,\rho$ with $\gamma > 1$) to
+sample basins farther from the current iterate.
+
+The outer loop terminates once $N_\mathrm{fail}$ consecutive attempts
+have failed (so no escape has been found even after the probe sphere
+has been expanded several times), at which point $x_\star$ is reported
+as the global minimum.  Because $x_\star$ is only ever replaced by a
+strictly lower point, the sequence $\{f(x_\star^{(k)})\}$ is monotone
+decreasing and the algorithm is well-defined as a global optimizer
+that cannot stall above a deeper accessible basin.  Two features make
+this more than a random multistart heuristic: (i) the Agmon screening
+focuses the probes on directions of small WKB action, so escapes are
+attempted along physically plausible tunneling channels rather than
+arbitrary directions; and (ii) the expanding radius $\rho$ couples
+short-range escapes (small $\rho$, neighboring basins) to long-range
+escapes (large $\rho$, distant basins) in a single mechanism, so the
+method does not commit to a single length scale.  In the limit of
+unlimited budget and unbounded $\rho$, the procedure inherits the
+probability-1 coverage argument standard for basin-hopping-type global
+methods~\cite{WalesDoye1997, LevyMontalvo1985}.
+
+In practice each tunneling attempt costs only a few hundred extra
+function/gradient evaluations (one Hessian at $x_\star$, $N_q$
+function values per screened probe, and an Armijo loop per surviving
+probe), and the overall global procedure typically terminates after a
+small number of outer iterations: it consistently recovers deeper
+minima that the trust-region method alone cannot reach once it has
+converged inside a shallow basin.
+ 
+ 
+\end{comment}
+
+\section{Numerical Results}
+\subsection{Azimuthal Plane Optimization}
+We consider just a simple optimization restricted to controlling the radiation pattern in just the azimuthal plane, i.e. only for radiation directions in the horizontal plane (inclination angle $\theta = 90^\circ$). 
+
+\subsubsection{Comparing Results for a Single Configuration}
+
+We study the performance of all optimizers mentioned above for a single fixed configuration. The fixed parameters are:
+\[
+N = 9, \quad \lambda_0 = 10~\text{m}, \quad \Omega := \{\theta_0\} \times [\phi_0-\pi,\,\phi_0+\pi],
+\]
+\[
+(\theta_0,\phi_0) = (90^\circ,120^\circ), \quad
+(\theta_s,\phi_s) = (85^\circ,120^\circ), \quad
+(\theta_{\text{null}},\phi_{\text{null}}) = (90^\circ,60^\circ),
+\]
+with a main beam exclusion radius of $60^\circ$. Radiation intensities are normalized to the
+peak and converted to decibels via
+\begin{equation}
+U^{\mathrm{dB}}(\mathbf{x}, (90^\circ,\phi))
+= 10\log_{10}
+\!\left(
+\frac{U(\mathbf{x}, (90^\circ,\phi))}
+{\displaystyle\max_{\phi'\in\Omega} U(\mathbf{x}, (90^\circ,\phi'))}
+\right).
+\end{equation}
+
+Figure~\ref{fig:ompcomp} summarizes the convergence diagnostics for all methods. Note that the optimality
+criteria reported: gradient norm and minimum Hessian eigenvalue, have different interpretations
+depending on the optimizer and should not be compared directly across methods. RMSProp and TR-E-N
+achieve a residual spacing-constraint violation of order $10^{-6}$, whereas all other methods
+ drive it well below $10^{-75}$.
+% , reflecting a slight improvement in constraint handling of the second order and
+% % interior point solvers.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{optcomp.png}
+  \caption{Convergence diagnostics comparison between optimizers on the fixed test configuration. See appendix for alternative version of this plot.}
+  \label{fig:ompcomp}
+\end{figure}
+
+Figures~\ref{fig:fmincon2d} and~\ref{fig:fmincon3d} show the \texttt{fmincon} result.
+The polar plot (Fig.~\ref{fig:fmincon2d}a) shows the azimuthal radiation pattern with the main
+beam steered to $\phi_0 = 120^\circ$ and a null placed at $\phi_{\text{null}} = 60^\circ$. The corresponding
+optimized element positions are shown alongside. The full 3D pattern
+(Fig.~\ref{fig:fmincon3d}) reveals that since azimuthal only optimization leaves the elevation
+beamwidth entirely unconstrained the beam is very broad in $\theta$ as a consequence. A relatively wide main beam is expected in any case because the array is small ($N=9$) and the elements are omnidirectional half-wave dipoles with inherently low directivity. The sidelobe levels visible in the 3D view therefore reflect only
+the azimuthal optimization objective and should not be interpreted as a fully optimized 3D
+pattern.
+\begin{figure}[htbp]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{ExactTR_2D.png}
+        \caption{Azimuthal radiation pattern (polar plot).}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{ExactTR_Pos.png}
+        \caption{Optimized dipole element positions.}
+    \end{subfigure}
+    \caption{Exact TR azimuthal optimization result.}
+    \label{fig:ExactTR_2D}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{ExactTR_3D.png}
+  \caption{Full 3D radiation pattern (rectangular view) for the Exact TR azimuthal
+  solution. Elevation beamwidth is unconstrained; sidelobe levels reflect azimuthal
+  optimization only.}
+  \label{fig:ExactTR_3D}
+\end{figure}
+
+Figures~\ref{fig:zipc2d} and~\ref{fig:zipc3d} show the ZIPC result. By progressively
+increasing the null penalty weight, ZIPC reliably achieves a substantially deeper null at
+$\phi_{\text{null}} = 60^\circ$ while holding the peak azimuthal sidelobe level below the prescribed
+threshold of $-28$~dB, a target that \texttt{fmincon} alone does not consistently meet.
+The 3D pattern again exhibits broad elevation beamwidth for the same reasons as above.
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{MultiStart_2D.png}
+        \caption{Azimuthal radiation pattern (polar plot).}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{MultiStart_Pos.png}
+        \caption{Optimized dipole element positions.}
+    \end{subfigure}
+    \caption{MultiStart azimuthal optimization result.}
+    \label{fig:MultiStart_2D}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{MultiStart_3D.png}
+  \caption{Full 3D radiation pattern (rectangular view) for the MultiStart solution.}
+  \label{fig:MultiStart_3D}
+\end{figure}
+\subsubsection{Comparison of Algorithms across Parameter Sweep}
+For a more rigorous evaluation of performance we compare the results of our methods across a sweep of parameters. Namely we sweep the main beam focus direction from $\phi_0 = 120^\circ$ to $\phi_0 = 360^\circ$ with increments of 1 degree while synthesizing a null in a fixed direction $(\theta_{\text{null}},\phi_{\text{null}}) = (90^\circ, 60^\circ)$.
+
+
+
+
+\begin{figure}[H]
+    \centering
+    \begin{subfigure}[t]{0.46\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Wsweep.png}
+        \caption{Achieved Azimuthal Sidelobe Level in dB, $W(\mathbf{x}^*)$, vs main beam direction, $\phi_0$, compared across different optimization methods.}
+        % \label{fig:img1}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.50\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{Nsweep.png}
+        \caption{Achieved Null Power in dB, $N(\mathbf{x}^*)$, vs main beam direction, $\phi_0$, compared across different optimization methods.}
+        % \label{fig:img2}
+    \end{subfigure}
+    \caption{2D Optimizer Parameter Sweep Results}
+    % \label{fig:combined}
+\end{figure}
+
+
+We see that the performance remains stable across the full angular range, indicating that the methods are not tuned to a single favorable geometry but are robust with respect to the chosen main beam focus direction.
+
+Across the sweep we see that fmincon consistently achieves the lowest peak sidelobe levels. On the other hand ZIPC consistently produces the deepest null while achieving fairly low peak sidelobe values.
+
+
+\begin{table}[htpb]
+    \centering
+    \caption{Comparison of average CPU times for each optimizer over the sweep.}
+    \label{tab:optimizer_times}
+    \begin{tabular}{lc}
+        \toprule
+        \textbf{Optimizer} & \textbf{Avg. CPU Time (s)} \\
+        \midrule
+        fminunc & 9.4844 \\
+        fmincon & 1.7031 \\
+        RMSProp &  \\
+        ZIPC &  \\
+        TR-E-N (SPD) &  364.8444\\
+        TR-E-N (Full) &  501.3262\\
+        NOMAD &  368.5156\\
+        MultiStart &  \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
+
+
+
+
+
+\section{Conclusion}
+This paper studied the design of passive UAV relay arrays for directional beamforming and null synthesis through geometric optimization of relay locations. Unlike active distributed beamforming architectures, the proposed framework exploits the phase shifts induced by propagation path differences under known monochromatic illumination, so that coherent far-field shaping is achieved through spatial placement rather than oscillator synchronization.
+The design problem was formulated as a constrained nonlinear optimization problem in the three-dimensional positions of the passive relays, with objectives promoting energy concentration in a prescribed main beam and suppression in selected null directions, subject to geometric feasibility constraints such as minimum inter-relay separation. Within this framework, the beampattern becomes a continuous function of the relay geometry, which allows the design task to be treated rigorously as a finite-dimensional variational problem.
+An existence result for an optimal configuration was established by combining compactness of the admissible set with continuity of the objective functional. Numerical investigations further showed that even relatively small relay swarms can achieve significant beam steering and null-forming capability when the relay positions are chosen appropriately. These computations illustrate the flexibility offered by mobile passive arrays and highlight the additional design freedom created by three-dimensional spatial reconfiguration.
+Overall, the results support the feasibility of passive UAV relay arrays as a mathematically structured and practically relevant architecture for adaptive far-field pattern control. Future work will address robustness to perturbations, real-time reconfiguration strategies, and experimental validation.
+
+
+\nocite{*}
+%\bibliographystyle{plainurl} %Original
+\bibliographystyle{unsrt} % Set bibliography to be in the same order that they are typed
+\bibliography{bibliography}  
+
+\newpage
+
+\section{Appendix I: Berge Maximum Theorem}
+
+Here we review some basic definitions and conclude the section by citing the Berge Maximum Theorem in generality.
+
+\begin{definition}[Correspondence]
+
+
+A \emph{correspondence} from a set \( X \) to a set \( Y \) is a map
+\[
+\Gamma: X \rightrightarrows Y
+\]
+which assigns to each element \( x \in X \) a subset \( \Gamma(x) \subseteq Y \). That is, $\Gamma(x) \subseteq Y \quad \text{for each } x \in X$.
+
+\end{definition}
+
+\begin{definition}[Upper Hemicontinuity]
+A correspondence \( \Gamma: X \rightrightarrows Y \) is said to be \emph{upper hemicontinuous} at \( x_0 \in X \), if for every open set \( V \subset Y \) such that \( \Gamma(x_0) \subset V \), there exists a neighborhood \( U \) of \( x_0 \) such that,
+\[
+\Gamma(x) \subset V \quad \text{for all } x \in U.
+\]
+Equivalently, if \( x_n \to x_0 \) in \( X \) and \( y_n \in \Gamma(x_n) \to y_0\) in \(Y\), then \( y_0 \in \Gamma(x_0) \).
+\end{definition}
+
+\begin{definition}[Lower Hemicontinuity]
+
+A correspondence \( \Gamma: X \rightrightarrows Y \) is \emph{lower hemicontinuous} at \( x_0 \in X \), if for every open set \( V \subset Y \) such that \( \Gamma(x_0) \cap V \neq \emptyset \), there exists a neighborhood \( U \) of \( x_0 \) such that, 
+\[
+\Gamma(x) \cap V \neq \emptyset \text{ for all } x \in U. 
+\]
+Equivalently, if \( x_n \to x_0 \) in $X$ and \( y_0 \in \Gamma(x_0) \), then there exists \( y_n \in \Gamma(x_n) \) such that $y_n \to y_0$ in $Y$.
+\end{definition}
+
+\begin{theorem}[Berge's Maximum Theorem {\cite{berge63,aliprantis06}}]
+Let \( X \) and \( Y \) be topological spaces. Let \( F: X \times Y \to \mathbb{R} \) be a continuous function, and suppose \( \Gamma: X \rightrightarrows Y \) is a correspondence with the properties:
+
+\begin{enumerate}[label=(\roman*)] 
+    \item For each \( x \in X \), the set \( \Gamma(x) \subset Y\) is nonempty and compact.
+    \item The correspondence \( \Gamma \) is upper hemicontinuous.
+\end{enumerate}
+
+Define the value function:
+\[
+f(x) = \max_{y \in \Gamma(x)} F(x, y).
+\]
+
+Then it follows that:
+\begin{enumerate}[label=(\roman*)]
+    \item The function \( f: X \to \mathbb{R} \) is upper semicontinuous.
+    
+    \item The argmax correspondence $M:  X\rightrightarrows Y$, given by
+    \[
+    \displaystyle M(x) := \arg \max_{y \in \Gamma(x)} F(x, y),
+    \]
+    is nonempty, compact-valued, and upper hemicontinuous.
+\end{enumerate}
+
+\end{theorem}
+\section{Appendix II: Gradient and Hessian of $f_\mu$}
+
+
+\subsection*{Notation and basic identities}
+Let $\mathbf r_m=(x_m,y_m,z_m)\in\mathbb R^3$ ($m=1,\dots,N$), $R\in\mathbb R^{N\times 3}$ with rows $\mathbf r_m^\top$, and
+\[
+\mathbf C(\theta,\phi)
+=\mathbf k(\theta,\phi)-\mathbf k(\theta_s,\phi_s),\qquad
+\mathbf k(\theta,\phi)=\tfrac{2\pi}{\lambda_0}(\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta).
+\]
+Set $A:=R\mathbf C$ with $A_m=\mathbf C\!\cdot\!\mathbf r_m$, and
+\[
+c_m:=\cos A_m,\quad s_m:=\sin A_m,\quad
+\alpha:=\sum_{n=1}^N c_n,\quad \beta:=\sum_{n=1}^N s_n,\quad
+\gamma:=\beta\,c-\alpha\,s\in\mathbb R^N.
+\]
+The array power at $(\theta,\phi)$ is
+\[
+U(\mathbf x; \theta,\phi)
+= e(\theta)^2 \left|\sum_{n=1}^N e^{iA_n}\right|^2
+= e(\theta)^2\big(\alpha^2+\beta^2\big),
+\]
+and we use $\sin(a-b)=\sin a\cos b-\cos a\sin b$ throughout.
+
+\subsection*{Gradients}
+
+\paragraph{Free-$z$ case.}
+Since $z$ does not depend on $x,y$, a short computation gives, componentwise,
+\[
+\partial_{w_m}U = 2\,C_w\,e(\theta)^2(\beta c_m-\alpha s_m)
+\qquad (w\in\{x,y,z\}).
+\]
+Stacking over $m$ yields the rank-1 form
+\[
+\boxed{\ \nabla_R U \;=\; 2\,e(\theta)^2\,\gamma\,\mathbf C^\top\ } \quad
+\big((\nabla_R U)_{m,w}=2\,e(\theta)^2 C_w\,\gamma_m\big).
+\]
+
+\paragraph{Fixed-$z$ (focusing) case.}
+Here $z_n=z_n(x_n,y_n)$ with constants
+\[
+D_x:=\partial_{x_n}z_n,\qquad D_y:=\partial_{y_n}z_n
+\quad(\text{independent of }n),
+\]
+and we define the “steering” vector in the active plane
+\[
+\widehat{\mathbf C}:=\big(C_x+C_z D_x,\; C_y+C_z D_y\big)\in\mathbb R^2.
+\]
+Then for $w\in\{x,y\}$,
+\[
+\partial_{w_m}U
+=2\,(C_w+C_z D_w)\,e(\theta)^2\,(\beta c_m-\alpha s_m),
+\qquad
+\boxed{\ \nabla_R U \;=\; 2\,e(\theta)^2\,\gamma\,\widehat{\mathbf C}^{\!\top}\ } .
+\]
+
+\subsection*{Hessians}
+
+\paragraph{Free-$z$ case.}
+Let $\gamma_{n,m}:=\mathbf C\!\cdot(\mathbf r_n-\mathbf r_m)$ and $\delta_{ij}$ be the Kronecker delta. Then
+\[
+\partial_{v_b}\partial_{w_m}U
+=2\,C_w C_v\,e(\theta)^2 \sum_{n=1}^N \cos\gamma_{n,m}\,(\delta_{nb}-\delta_{mb}).
+\]
+Hence $H(\mathbf x;\theta,\phi)$ (w.r.t.\ $(x_1,y_1,z_1,\dots,x_N,y_N,z_N)$) has the Kronecker structure
+\[
+\boxed{\ H(\mathbf x;\theta,\phi)=2\,e(\theta)^2\,(\mathbf C\mathbf C^\top)\otimes M(\mathbf x;\theta,\phi)\ },
+\]
+with the $N\times N$ matrix $M$ given entrywise by
+\[
+M_{mb}=
+\begin{cases}
+\cos\!\big(\mathbf C\!\cdot(\mathbf r_b-\mathbf r_m)\big), & b\neq m,\\[2mm]
+1-\sum_{n=1}^N \cos\!\big(\mathbf C\!\cdot(\mathbf r_n-\mathbf r_m)\big), & b=m.
+\end{cases}
+\]
+Using $c_m=\cos A_m,\ s_m=\sin A_m$ and $\alpha,\beta$,
+\[
+\boxed{\ M = c c^\top + s s^\top\;-\;\operatorname{diag}(\alpha c+\beta s)\ },
+\]
+so $M$ is a rank-$\le2$ update of a diagonal matrix.
+
+\paragraph{Fixed-$z$ case.}
+The same Kronecker form holds after replacing $\mathbf C$ by $\widehat{\mathbf C}$:
+\[
+\boxed{\ H(\mathbf x;\theta,\phi)=2\,e(\theta)^2\,(\widehat{\mathbf C}\,\widehat{\mathbf C}^{\!\top})\otimes M(\mathbf x;\theta,\phi)\ }.
+\]
+
+\subsection*{Derivatives of $W_p$}
+Let
+\[
+W_p(\mathbf x)=\Big(\!\int_I U(\mathbf x,\omega)^p\,d\omega\Big)^{1/p},\qquad p\ge1.
+\]
+Under standard regularity (dominated convergence), differentiation under the integral gives
+\[
+\boxed{\ \nabla W_p(\mathbf x)
+= W_p(\mathbf x)^{\,1-p}\!\int_I U^{p-1}(\cdot,\omega)\,\nabla U(\cdot,\omega)\,d\omega\ }.
+\]
+For the Hessian (write $W=W_p$, $U=U(\mathbf x,\omega)$),
+\[
+\boxed{\ 
+\nabla^2 W
+=(1-p)\,W^{-1}\,(\nabla W)(\nabla W)^\top
+\;+\; W^{\,1-p}\!\int_I\!\Big[(p-1)\,U^{p-2}\,\nabla U\,\nabla U^\top
++ U^{p-1}\,\nabla^2 U\Big]\,d\omega\ }.
+\]
+
+\subsection*{Soft spacing constraint: compact formulas}
+Let $d_{n,m}=\|\mathbf r_n-\mathbf r_m\|_2$ and
+\[
+c_{n,m}=\frac{\lambda_0}{4}-d_{n,m},\qquad
+c_p(\mathbf x)=\frac1p\sum_{n\ne m}\log\!\big(1+e^{p\,c_{n,m}}\big)
+=\frac1p\sum_{n\ne m}\mathrm{SoftPlus}\!\big(p\,c_{n,m}\big).
+\]
+With $\sigma(t):=\frac{1}{1+e^{-t}}$ and $\sigma'(t)=\sigma(t)(1-\sigma(t))$,
+\[
+\boxed{\ \partial_{v_k} c_p(\mathbf x)=\sum_{n\ne m}\sigma\!\big(p\,c_{n,m}\big)\,\partial_{v_k}c_{n,m}\ },
+\]
+\[
+\boxed{\ \partial_{w_j}\partial_{v_k} c_p
+=\sum_{n\ne m}\!\left[
+p\,\sigma\!\big(p c_{n,m}\big)\!\big(1-\sigma\!\big(p c_{n,m}\big)\big)\,
+(\partial_{w_j}c_{n,m})(\partial_{v_k}c_{n,m})
++\sigma\!\big(p c_{n,m}\big)\,\partial_{w_j}\partial_{v_k} c_{n,m}
+\right]\! }.
+\]
+Since $c_{n,m}=\lambda_0/4-d_{n,m}$, use $\partial c_{n,m}=-\partial d_{n,m}$ and $\partial^2 c_{n,m}=-\partial^2 d_{n,m}$.
+
+\paragraph{Derivatives of $d_{n,m}$ (free-$z$).}
+For $n\ne m$, $d_{n,m}=\sqrt{(x_n-x_m)^2+(y_n-y_m)^2+(z_n-z_m)^2}$,
+\[
+\boxed{\ \frac{\partial d_{n,m}}{\partial w_j}
+=\frac{(\delta_{nj}-\delta_{mj})(w_n-w_m)}{d_{n,m}}\ },
+\]
+\[
+\boxed{\ \frac{\partial^2 d_{n,m}}{\partial v_k\,\partial w_j}
+=\frac{(\delta_{nj}-\delta_{mj})(\delta_{nk}-\delta_{mk})}{d_{n,m}^3}
+\left[d_{n,m}^2\delta_{vw}-(w_n-w_m)(v_n-v_m)\right]\ }.
+\]
+
+\paragraph{Derivatives of $d_{n,m}$ (fixed-$z$).}
+Assume $z_n$ depends affinely on $(x_n,y_n)$ with constants $D_x=\partial_{x_n}z_n$, $D_y=\partial_{y_n}z_n$. For $w\in\{x,y\}$ define
+\[
+\Delta w:=w_n-w_m,\quad \Delta z:=z_n-z_m,\quad
+\widetilde{\Delta w}:=\Delta w + D_w\,\Delta z,\quad
+a_j:=\delta_{nj}-\delta_{mj}.
+\]
+Then, for $n\ne m$,
+\[
+\boxed{\ \frac{\partial d_{n,m}}{\partial w_j}
+=\frac{a_j\,\widetilde{\Delta w}}{d_{n,m}}\ },
+\qquad
+\boxed{\ \frac{\partial^2 d_{n,m}}{\partial v_k\,\partial w_j}
+=\frac{a_j a_k}{d_{n,m}^3}
+\left[\big(\delta_{vw}+D_w D_v\big)\,d_{n,m}^2-\widetilde{\Delta w}\,\widetilde{\Delta v}\right]\ }.
+\]
+
+\medskip
+\noindent\textit{Remarks.} (i) The Kronecker forms for $H$ make assembly/code generation straightforward. (ii) In all formulas, replace $\mathbf C$ by $\widehat{\mathbf C}$ in the fixed-$z$ case. (iii) Differentiation under the integral sign for $W_p$ is justified by standard dominated-convergence assumptions on $U$ over $I$.
+
+\section{Appendix III: Alternate version for optimizer comparison plot}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.95\linewidth]{optcompv2.png}
+  \caption{Convergence diagnostics comparison between optimizers on the fixed test configuration.}
+  \label{fig:ompcomp}
+\end{figure}
+\begin{comment}
+    
+
+\subsection{Helpful Notation}
+
+Let $ \bm r_m := (x_m,y_m,z_m) \in \mathbb R^3,\ \ m=1,\dots,N,$  $
+\quad\text{and}\quad
+\mathbf C := (C_x,C_y,C_z) \in \mathbb R^3$, be column vectors.
+Define the stacked position matrix \(R\in\mathbb R^{N\times 3}\) by
+\[
+R \;:=\;
+\begin{bmatrix}
+\mathbf r_1^\top\\
+\vdots\\
+\mathbf r_N^\top
+\end{bmatrix},
+\qquad\text{so that } (R)_{m,:}=\mathbf r_m^\top = [x_m, y_m, z_m].
+\]
+
+
+
+Define the phase vector \(A\in\mathbb R^N\) by
+\[
+A := R\,\mathbf C
+\quad\Longrightarrow\quad
+A_m = \mathbf C\!\cdot\!\mathbf r_m .
+\]
+Set
+% given the \alpha notation I think you want c and s vertical.
+\[
+c_m:=\cos A_m,\qquad s_m:=\sin A_m,\qquad
+c:=(c_1,\dots,c_N),\quad s:=(s_1,\dots,s_N),
+\]
+and the scalar sums
+\[
+\alpha := \mathbf 1^\top c = \sum_{n=1}^N c_n,
+\qquad
+\beta := \mathbf 1^\top s = \sum_{n=1}^N s_n.
+\]
+
+We use the convention that $(\ldots)$ denotes a column vector and $[\ldots]$ denotes a row vector.
+
+\subsection{Free \texorpdfstring{$z$}{z} Case}
+
+In this case, the $z$-coordinates of the array elements are independent of the beam focusing condition. In particular, $z$ is free and does not depend on $x$ or $y$, which simplifies the derivative computations.
+
+For brevity, let
+\[
+\bm C = \bm C(\theta,\phi) =  \bm k(\theta,\phi) - \bm k(\theta_s,\phi_s) \text{ where } \bm k(\theta,\phi) = \frac{2\pi}{\lambda_0} (\sin\theta\cos\phi,\sin\theta\sin\phi,\cos\theta).
+\]
+Then the array response can be written as
+\[
+U(\bm x,(\theta,\phi)) 
+= e(\theta)^2 \left| \sum_{n=1}^N e^{i \bm C \cdot \bm r_n} \right|^2
+= e(\theta)^2 \left[ \left(\sum_{n=1}^N \cos(\bm C \cdot \bm r_n)\right)^2 
++ \left(\sum_{n=1}^N \sin(\bm C \cdot \bm r_n)\right)^2 \right].
+\]
+
+Here $\bm r_n = (x_n, y_n, z_n) =  x_n \bm \hat{\bm x} + y_n \bm \hat{\bm y} + z_n \bm \hat{\bm z}   $.
+
+\subsubsection{Vectorization}
+
+Recall,
+\[
+\partial_{w_m} U(\mathbf x,(\theta,\phi)) \;=\; 2\,C_w\,e(\theta)^2 \sum_{n=1}^N \sin(A_n-A_m).
+\]
+
+Use \(\sin(a-b)=\sin a\cos b-\cos a\sin b\):
+\[
+\sum_{n=1}^N \sin(A_n-A_m)
+= \Big(\sum_{n=1}^N s_n\Big)c_m - \Big(\sum_{n=1}^N c_n\Big)s_m
+= \beta\,c_m - \alpha\,s_m.
+\]
+
+Thus, entry-wise
+\[
+\boxed{\;\partial_{w_m} U \;=\; 2\,C_w\,e(\theta)^2\big(\beta\,c_m-\alpha\,s_m\big).\;}
+\]
+
+Now collect these for all \(m\) and all coordinates \(w\).
+
+Define the vector $\gamma\in \mathbb{R}^N$:
+  \[
+  \gamma \;:=\; \beta\,c - \alpha\,s \;\in\; \mathbb R^N .
+  \]
+
+
+Then the \(N\times 3\) gradient matrix (row \(m\) is the gradient w.r.t. \(\bm r_m\)) is the rank-1 outer product
+\[
+\boxed{\;\nabla_{\!R} U \;=\; 2\,e(\theta)^2\,\gamma\,C^\top, \qquad
+(\nabla_{\!R} U)_{m,w}=2\,e(\theta)^2\,C_w\,\gamma_m\;=\;2\,C_w\,e(\theta)^2(\beta c_m-\alpha s_m). \;}
+\]
+
+Equivalently, as a single \(3N\)-vector (stacking \(\nabla_{\bm r_1}U,\dots,\nabla_{\bm r_N}U\)):
+\[
+\boxed{\;\nabla_{\!\mathbf r} U \;=\; 2\,e(\theta)^2\,(\gamma \otimes C)\in\mathbb R^{3N}. \;}
+\]
+
+\subsection{Second Derivative, Free $z$ Case}
+
+For $v \in \{x,y,z\}$ and $1 \le b \le N$, write 
+\[
+\gamma_{n,m} := \bm C \cdot (\bm r_n - \bm r_m),
+\quad\text{and let }\delta_{ij}\text{ denote the Kronecker delta.}
+\]
+Since $e(\theta)$ and the components of $\bm C$ do not depend on the  variables, we have
+\begin{align*}
+\partial_{v_b}\partial_{w_m} U(\bm x,(\theta,\phi))
+&= \partial_{v_b}\!\left[ 2\,C_w\,e(\theta)^2 \sum_{n=1}^N \sin\!\big(\gamma_{n,m}\big) \right] \\
+&= 2\,C_w\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\;\partial_{v_b}\!\big(\gamma_{n,m}\big) \\
+&= 2\,C_w\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\; \bm C\!\cdot\!\partial_{v_b}(\bm r_n-\bm r_m) \\
+&= 2\,C_w\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\; \bm C\!\cdot\!\partial_{v_b}\left[(x_n - x_m) \hat{\bm x} + (y_n - y_m)\hat{\bm y} + (z_n - z_m)\hat{\bm z} \right]\\
+&= 2\,C_w\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\; \bm C\!\cdot\ \left[(\delta_{bn} - \delta_{bm}) \hat{\bm v}\right]\\
+&= 2\,C_w\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\; C_v\,(\delta_{bn}-\delta_{bm}) \\
+&= 2\,C_w C_v\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\bm C \cdot (\bm r_n - \bm r_m)\big)\; \,(\delta_{bn}-\delta_{bm}) 
+\end{align*}
+
+When the $z$-coordinates are determined by the focusing condition, they are no longer independent variables. Let $(\theta_0,\phi_0)$ denote the \textit{focus} direction then we have
+
+\begin{align*}
+z_n &=  \frac{1}{\cos\theta_s - \cos\theta_0} \left[  (\sin \theta_0 \cos \phi_0 -  \sin \theta_s \cos \phi_s)x_n + (\sin \theta_0 \sin \phi_0 - \sin \theta_s \sin \phi_s)y_n \right] \\
+\end{align*}
+
+so $z_n$ depends on $x_n$ and $y_n$. Differentiating gives
+\[
+\partial_{x_n} z_n =  \frac{(\sin\theta_0\cos\phi_0 - \sin\theta_s\cos\phi_s)}{\cos\theta_s - \cos\theta_0} := D_x  (\text{for brevity}), 
+\]
+\[   
+\partial_{y_n} z_n =  \frac{(\sin\theta_0\sin\phi_0 - \sin\theta_s\sin\phi_s)}{\cos\theta_s - \cos\theta_0}:= D_y  (\text{for brevity}).
+\]
+
+\subsection{First Derivative, Fixed $z$ Case}
+  When computing the derivative with respect to $x$ or $y$ the dependence of $z$ on these terms, $z = z(x,y)$ changes things. Thus, we restrict ourself to the case when $w\in \{x,y\}$ and let $\alpha_n = \bm C \cdot \bm r_n$ and let $\beta = \bm C \cdot \bm r_m$ then: 
+
+\begin{align*}
+\partial_{w_m} U(\bm x,(\theta,\phi))
+&= e(\theta)^2 \left[
+2\Bigg(\sum_{n=1}^N \cos(\alpha_n)\Bigg)\big(\partial_{w_m} \cos(\alpha_m) \big)
++ 2\Bigg(\sum_{n=1}^N \sin(\alpha_n)\Bigg)\big(\partial_{w_m} \sin(\alpha_m)\big)
+\right] \\
+&=2 [C_w+D_wC_z] e(\theta)^2 \left[
+\Bigg(\sum_{n=1}^N \cos(\alpha_n)\Bigg)\big(-\sin(\beta)\,  \big)
++ \Bigg(\sum_{n=1}^N \sin(\alpha_n)\Bigg)\cos(\beta)
+\right] \quad \textrm{(see comment below)} \\
+&= 2 [C_w+D_wC_z] e(\theta)^2 \left[ \sum_{n=1}^N \sin(\alpha_n)\cos(\beta) - \cos(\alpha_n) \sin(\beta) \right] \\
+&= 2 [C_w+D_wC_z] e(\theta)^2 \sum_{n=1}^N \sin(\alpha_n - \beta) \\
+&= 2 [C_w+D_wC_z] e(\theta)^2 \sum_{n=1}^N \sin(\bm C \cdot (\bm r_n - \bm r_m))
+\end{align*}
+
+
+
+ Where we use the fact that
+\begin{align*}
+\partial_{w_m} \cos(\bm C \cdot \bm r_m) 
+  &= -\sin(\bm C \cdot \bm r_m)\,\partial_{w_m}(\bm C \cdot \bm r_m) \\
+  &= -\sin(\bm C \cdot \bm r_m)\,\bm C \cdot \partial_{w_m} (x_m\hat{\bm x} + y_m\hat{\bm y} + z_m\hat{\bm z}) \\
+  &= -\sin(\bm C \cdot \bm r_m)\, \bm C \cdot (\hat{\bm w} + \frac{\partial z_m}{\partial_{w_m}} \hat{\bm z})\\
+  &= -\sin(\bm C \cdot \bm r_m)\, \bm C \cdot (\hat{\bm w} + D_w \hat{\bm z})\\
+  &= -\sin(\bm C \cdot \bm r_m)\, \left[C_w  +  D_w  C_z\right]
+\end{align*}
+since $\bm r_n = (x_n, y_n, z_n)^\top$ and similarly $\partial_{w_m} \sin(\bm C \cdot \bm r_m) = \cos(\bm C \cdot \bm r_m)[C_w +D_wC_z] $.
+
+\subsection{Vectorization}
+
+Again, recall, if $w\in \{x,y\}$ and $1\le m\le N$ then:
+\[
+\partial_{w_m} U(\mathbf x,(\theta,\phi)) \;=\; 2\,[C_w+D_wC_z]\,e(\theta)^2 \sum_{n=1}^N \sin(A_n-A_m).
+\]
+Again, use \(\sin(a-b)=\sin a\cos b-\cos a\sin b\):
+\[
+\sum_{n=1}^N \sin(A_n-A_m)
+= \Big(\sum_{n=1}^N s_n\Big)c_m - \Big(\sum_{n=1}^N c_n\Big)s_m
+= \beta\,c_m - \alpha\,s_m.
+\]
+
+Thus, entry-wise
+\[
+\boxed{\;\partial_{w_m} U \;=\; 2\,[C_w+D_wC_z]\,e(\theta)^2\big(\beta\,c_m-\alpha\,s_m\big).\;}
+\]
+
+Again, collect all  of these expressions for each \(m\) and \(w\) by defining the vector $\gamma\in \mathbb{R}^N$:
+  \[
+  \gamma \;:=\; \beta\,c - \alpha\,s \;\in\; \mathbb R^N .
+  \]
+
+Then, in a manner similar to the free-$z$ case we have for $w \in \{x,y\}$ and $\bm r = (x,y) \in \mathbb{R}^2$:
+
+The \(N\times 2\) gradient matrix  (row \(m\) is the gradient w.r.t. \(\bm r_m\)) is the rank-1 outer product
+\[
+\boxed{\;\nabla_{\!R} U \;=\; 2\,e(\theta)^2\,\gamma\,\widehat{C}^\top, \qquad
+(\nabla_{\!R} U)_{m,w}=2\,e(\theta)^2\,C_w\,\gamma_m\;=\;2\,C_w\,e(\theta)^2(\beta c_m-\alpha s_m). \;}
+\]
+where $\widehat{C} = \big(C_x +C_z D_x,\; C_y+ C_z D_y\big)$.
+
+\subsection{Second Derivative, Fixed $z$ Case}
+
+For $v,w \in \{x,y\}$, $1 \le b,m \le N$, and
+\[
+\gamma_{n,m} := \bm C \cdot (\bm r_n - \bm r_m), \qquad \text{let }\delta_{ij}\text{ denote the Kronecker delta.}
+\]
+Since $e(\theta)$ and $\bm C$ do not depend on the spatial variables, we obtain
+\begin{align*}
+\partial_{v_b}\partial_{w_m} U(\bm x,(\theta,\phi))
+&= \partial_{v_b}\!\left[ 2\,(C_w +D_wC_z)\,e(\theta)^2 \sum_{n=1}^N \sin\!\big(\gamma_{n,m}\big) \right] \\
+&= 2\,(C_w + D_w C_z)\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\;\partial_{v_b}\!\big(\gamma_{n,m}\big) \\
+&= 2\,(C_w + D_w C_z)\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\;\bm C\!\cdot\!\partial_{v_b}(\bm r_n-\bm r_m) \\
+&= 2\,(C_w + D_w C_z)\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\;\bm C\!\cdot\! \left[ \delta_{bn}(\hat{\bm v} + D_v \hat{\bm z}) - \delta_{bm}(\hat{\bm v} + D_v \hat{\bm z})\right] \\
+&= 2\,(C_w + D_w C_z)\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\;\left[ \bm C\!\cdot\!(\hat{\bm v} + D_v \hat{\bm z}) \right](\delta_{bn}-\delta_{bm}) \\
+&= 2\,(C_w + D_w C_z)\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\;(C_v + D_v C_z)\,(\delta_{bn}-\delta_{bm}) \\
+&= 2\,(C_w + D_w C_z)(C_v + D_v C_z)\,e(\theta)^2 \sum_{n=1}^N 
+      \cos\!\big(\gamma_{n,m}\big)\;\,(\delta_{bn}-\delta_{bm})
+\end{align*}
+
+
+
+\section{Hessian Structure and Properties}
+
+For clarity, denote by $H(\bm x; \theta,\phi)$ the Hessian of $U(\bm x,(\theta,\phi))$ with respect to the spatial coordinates $\{x_m,y_m,z_m\}_{m=1}^N$. Each block of $H$ corresponds to mixed second derivatives between $(w_m)$ and $(v_b)$, where $w,v \in \{x,y,z\}$ and $1 \leq m,b \leq N$.
+
+We work with the Hessian of the scalar field \(U(\bm x,(\theta,\phi))\) with respect to the stacked coordinate vector
+
+$$\bm x = (x_1,y_1,z_1, \ldots, x_N,y_N,z_N) \in \mathbb{R}^{3N}.$$
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection*{Free $z$ Case}
+From the previous derivation ($\dagger$),
+% MALCOLM
+\begin{align*}
+\partial_{v_b} \partial_{w_m} U(\bm x,(\theta,\phi))
+&= 2 C_w C_v e(\theta)^2
+\sum_{n=1}^N \cos\big(\bm C \cdot (\bm r_n - \bm r_m)\big) (\delta_{nb} - \delta_{mb}),
+\end{align*}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+
+Hence the Hessian $H$ admits the block representation
+\begin{align*}
+H(\bm x;\theta,\phi) &= 2 e(\theta)^2 
+\begin{bmatrix}
+C_x^2 M & C_x C_y M & C_x C_z M \\
+C_y C_x M & C_y^2 M & C_y C_z M \\
+C_z C_x M & C_z C_y M & C_z^2 M
+\end{bmatrix},\\
+\end{align*}
+
+where each block is an $N\times N$ matrix, and $M$ is defined component-wise by
+% MALCOLM
+\begin{align*}
+M_{mb}(\bm x;\theta,\phi)
+&= \sum_{n=1}^N \cos\!\big(\bm C \cdot (\bm r_n - \bm r_m)\big)\,(\delta_{nb} - \delta_{mb}) \\
+&= \sum_{n=1}^N \Big[ \delta_{nb}\,\cos\!\big(\bm C \cdot (\bm r_n - \bm r_m)\big)
+                      - \delta_{mb}\,\cos\!\big(\bm C \cdot (\bm r_n - \bm r_m)\big) \Big] \\
+&= \cos\!\big(\bm C \!\cdot\! (\bm r_b - \bm r_m)\big)
+   - \delta_{mb}\!\sum_{n=1}^N \cos\!\big(\bm C \!\cdot\! (\bm r_n - \bm r_m)\big).
+\end{align*}
+
+Thus, 
+\[
+M_{mb}(\bm x;\theta,\phi) = 
+\begin{cases}
+\displaystyle
+\,\cos\!\big(\bm C\!\cdot\!(\bm r_b-\bm r_m)\big),
+& \text{if } b\neq m,\\[8pt]
+\displaystyle
+\,1-\sum_{n=1}^N
+\cos\!\big(\bm C\!\cdot\!(\bm r_n-\bm r_m)\big),
+& \text{if } b=m.
+\end{cases}
+\]
+
+
+and \(\bm C\in\mathbb{R}^3\) as defined earlier.\\
+
+
+
+
+Notice $H$ can also be expressed compactly using a Kronecker product (type this in code form to get the vectorized version of the numerical hessian computation):
+\[
+H(\bm x;\theta,\phi) = 2 e(\theta)^2  \big( \bm C\bm C^\top \big) \otimes M(\bm x;\theta,\phi).
+\]
+
+
+In the fixed $z$ case the same Kronecker structure holds after replacing \(\bm C\) by 
+\[
+\widehat{\bm C} := \big(C_x +C_z D_x,\; C_y+ C_z D_y\big),
+\]
+so that
+\[
+H(\bm x;\theta,\phi) = 2 e(\theta)^2 \; \big( \widehat{\bm C}\,\widehat{\bm C}^\top \big) \otimes M(\bm x;\theta,\phi).
+\]
+
+\section{Explicit formula and properties of the matrix \(M\)}
+
+
+Recall (from the previous section) that, for a fixed direction \((\theta,\phi)\),
+
+
+
+\[
+M_{mb}(\bm x;\theta,\phi) = \sum_{n=1}^N \cos\!\left(\bm C \cdot (\bm r_n - \bm r_m)\right)(\delta_{nb} - \delta_{mb}),
+\qquad 1\le m,b\le N,
+\]
+where \(\bm C=\bm k(\theta,\phi)-\bm k(\theta_s,\phi_s)\) and \(\delta_{ab}\) is the Kronecker delta.
+
+
+
+\subsection*{Vectorization}
+
+Recall,
+
+\[
+\boxed{
+M_{mb} =
+\begin{cases}
+\displaystyle
+ \cos\!\big(\bm C\!\cdot\!(\bm r_m-\bm r_b)\big), 
+& \text{if } b\neq m,\\[8pt]
+\displaystyle
+1-\sum_{n=1}^N \cos\!\big(\bm C\!\cdot\!(\bm r_m-\bm r_n)\big)
+& \text{if } b= m.
+\end{cases} }
+\]
+
+
+Consider the off-diagonal term $M_{mb}$ (with $m\neq b)$, since
+
+\[
+M_{mb} = \cos\!\big(\bm C\!\cdot(\bm r_m-\bm r_b)\big)
+= \cos(\bm C\cdot (r_m-r_b)) 
+= \cos (C\cdot r_m)\,\cos(C \cdot r_b)+\sin(C\cdot r_m)\,\sin (C \cdot r_b) = c_mc_b + s_m s_b
+\]
+
+
+equivalently when $m\neq b$ then
+$$M_{mb} = \left(cc^T + ss^T\right)_{mb}$$
+
+Now consider the diagonal term $M_{mm}$ recall $A_m = C\cdot r_m$ then:
+
+\begin{align*}
+M_{mm} 
+&= 1 - \sum_{n=1}^N \cos\!\big(\bm C\!\cdot(\bm r_m-\bm r_n)\big) \\[4pt]
+&= 1 - \sum_{n=1}^N \cos(A_m - A_n) \\[4pt]
+&= 1 - \left( \cos A_m \sum_{n=1}^N \cos A_n \;+\; \sin A_m \sum_{n=1}^N \sin A_n \right) \\[4pt]
+&= 1 - \bigl(\alpha c_m + \beta s_m\bigr) \\[4pt]
+&= \bigl(c_m^2 + s_m^2\bigr) - \bigl(\alpha c_m + \beta s_m\bigr) \\[4pt]
+&= (cc^\top + ss^\top)_{mm} - \bigl(\alpha c_m + \beta s_m\bigr).
+\end{align*}
+
+Consequently \(M\) admits the decomposition
+\[
+\boxed{ 
+M \;=\; c c^\top + s s^\top \;-\; \operatorname{diag} \big(\alpha c + \beta s\big),
+}
+\]
+
+Here, $ c c^\top$ and $ s s^\top$ are both rank $1$ matrices (unless $s=0$ or $c=0$). Hence their sum had rank less than or equal to $2$.
+
+\section{Derivatives of $W_p$}
+
+\subsection{Gradient}
+
+Let
+\[
+W_p(\bm x)\;=\;\Bigg(\int_I U(\bm x,\omega)^p\,d\omega\Bigg)^{\!1/p},
+\qquad p\ge 1.
+\]
+Set
+\[
+M(\bm x)\;:=\;\int_I U(\bm x,\omega)^p\,d\omega
+\quad\Rightarrow\quad
+W_p(\bm x)=M(\bm x)^{1/p}.
+\]
+
+
+Let $f(t)=t^{1/p}$ so $f'(t)=\tfrac1p\,t^{1/p-1}$ and $W_p(x) = f(M(x))$. Then
+\[
+\partial_{w_m} W_p(\bm x)
+= f'\!\big(M(\bm x)\big)\,\partial_{w_m}M(\bm x)
+= \frac1p\,M(\bm x)^{\frac1p-1}\,\partial_{w_m}M(\bm x).
+\]
+
+\paragraph{Differentiation under the integral sign.}
+By Leibniz’ rule %(and dominated convergence),
+\[
+\partial_{w_m}M(\bm x)
+= \partial_{w_m}\!\int_I U(\bm x,\omega)^p\,d\omega
+= \int_I \partial_{w_m}\big(U(\bm x,\omega)^p\big)\,d\omega
+= \int_I p\,U(\bm x,\omega)^{p-1}\,\partial_{w_m}U(\bm x,\omega)\,d\omega.
+\]
+
+Therefore
+\begin{align*}
+\partial_{w_m} W_p(\bm x)
+&= \frac1p\,M(\bm x)^{\frac1p-1}\,
+    \int_I p\,U(\bm x,\omega)^{p-1}\,\partial_{w_m}U(\bm x,\omega)\,d\omega \\[2mm]
+&= M(\bm x)^{\frac1p-1}
+   \int_I U(\bm x,\omega)^{p-1}\,\partial_{w_m}U(\bm x,\omega)\,d\omega.
+\end{align*}
+Since $M(\bm x)=W_p(\bm x)^p$, we have $M(\bm x)^{\frac1p-1}= (W^p)^{\frac{1}{p}-1}=W_p(\bm x)^{\,1-p}$. Thus
+\[
+\boxed{\;
+\partial_{w_m} W_p(\bm x)
+= W_p(\bm x)^{\,1-p}\!
+   \int_I U(\bm x,\omega)^{p-1}\,\partial_{w_m}U(\bm x,\omega)\,d\omega.
+\;}
+\]
+
+\subsection{Hessian of $W_p$}
+
+
+\[
+\partial_{w_m} W
+= W^{\,1-p}\!\int_I U(\bm x,\omega)^{p-1}\,\partial_{w_m}U(\bm x,\omega)\,d\omega.
+\]
+
+% Differentiate once more w.r.t. v_b
+\begin{align*}
+\partial_{v_b}\partial_{w_m} W
+&= \partial_{v_b}\!\big(W^{\,1-p}\big)\,\int_I U^{p-1}\partial_{w_m}U\,d\omega
+\;+\;W^{\,1-p}\,\partial_{v_b}\!\int_I U^{p-1}\partial_{w_m}U\,d\omega \\[2mm]
+&= (1-p)\,W^{-p}\,\partial_{v_b}W\;\int_I U^{p-1}\partial_{w_m}U\,d\omega
+\;+\;W^{\,1-p}\!\int_I\!\Big[(p-1)U^{p-2}(\partial_{v_b}U)(\partial_{w_m}U)
++U^{p-1}\partial_{v_b}\partial_{w_m}U\Big]\,d\omega \\[2mm]
+&= (1-p)\,W^{-p}\,\Big(W^{\,1-p}\!\int_I U^{p-1}\partial_{v_b}U\,d\omega\Big)\,
+                         \Big(\int_I U^{p-1}\partial_{w_m}U\,d\omega\Big) \\
+&\qquad\quad+\;W^{\,1-p}\!\int_I\!\Big[(p-1)U^{p-2}(\partial_{v_b}U)(\partial_{w_m}U)
++ U^{p-1}\partial_{v_b}\partial_{w_m}U\Big]\,d\omega \\[2mm]
+&= (1-p)\,\Big(W^{\,1-p}\!\int_I U^{p-1}\partial_{v_b}U\,d\omega\Big)\,
+                         \Big(\frac{WW^{-p}}{W}\int_I U^{p-1}\partial_{w_m}U\,d\omega\Big) \\
+&\qquad\quad+\;W^{\,1-p}\!\int_I\!\Big[(p-1)U^{p-2}(\partial_{v_b}U)(\partial_{w_m}U)
++U^{p-1}\partial_{v_b}\partial_{w_m}U\Big]\,d\omega \\[2mm]
+\end{align*}
+
+\[
+\boxed{\;
+\begin{aligned}
+\partial_{v_b}\partial_{w_m} W
+&= (1-p) W^{-1}\, \left(\partial_{v_b}W\right)\left(\partial_{w_m}W\right) + W^{\,1-p}\!\int_I\!\Big[(p-1)\,U^{p-2}\,(\partial_{v_b}U)(\partial_{w_m}U)
++U^{p-1}\,\partial_{v_b}\partial_{w_m}U\Big]\,d\omega.
+\end{aligned}
+\;}
+\]
+
+\section{Constraint Gradient and Hessian}
+
+
+
+
+
+We have
+\[
+c_p(\bm x) = \dfrac{1}{p}\sum_{n \neq m} \log\big(1 + e^{p\,c_{n,m}(\bm x)}\big), \quad
+c_{n,m}(\bm x) = \frac{\lambda_0}{4} - d_{n,m}(\bm x),
+= c_{m,n}(\bm x)\]
+where
+\[
+d_{n,m}(\bm x) = \sqrt{(x_n-x_m)^2 + (y_n-y_m)^2 + (z_n-z_m)^2 } = d_{m,n}(\bm x).
+\]
+
+And we can rewrite the constraint as:
+
+\[
+c_p(\mathbf{x}) = \dfrac{1}{p}\sum_{n\neq m} \textbf{SoftPlus}(pc_{n,m}(x))
+\]
+
+where $\textbf{SoftPlus}(s) := \log(1+e^s)$.
+
+Notice that 
+\[
+\textbf{SoftPlus}(s) = \max(s, 0) + \log(1 + e^{-|s|}).
+\]
+
+which gives a numerically more stable evaluation.
+
+
+
+
+\subsection{Partial derivatives of \(c_p\)}
+
+We have
+\[
+c_p(\bm x) = \dfrac{1}{p}\sum_{n \neq m} \log\big(1 + e^{p\,c_{n,m}(\bm x)}\big), \quad
+c_{n,m}(\bm x) = \frac{\lambda_0}{4} - d_{n,m}(\bm x),
+= c_{m,n}(\bm x)\]
+
+Then
+\begin{align*}
+    \frac{\partial c_p(\mathbf x)}{\partial v_k}
+    &= \frac{1}{p}\sum_{n \neq m} \partial_{v_k} \left[ \log\big(1 + e^{p\,c_{n,m}(\bm x)}\big) \right] \\
+    &= \frac{1}{p}\sum_{n \neq m} \frac{1}{1 + e^{p\,c_{n,m}(\bm x)}}  \partial_{v_k} \left[ 1 + e^{p\,c_{n,m}(\bm x)} \right] \\
+    &= \frac{1}{p}\sum_{n \neq m} \frac{e^{p\,c_{n,m}(\bm x)}}{1 + e^{p\,c_{n,m}(\bm x)}}   \left( p \frac{\partial c_{n,m}(\bm x)}{\partial_{v_k}} \right) \\
+    &= \sum_{n \neq m} \frac{1}{1 + e^{-p\,c_{n,m}(\bm x)}}   \left( \frac{\partial c_{n,m}(\bm x)}{\partial_{v_k}} \right) 
+\end{align*}
+And
+\begin{align*}
+    \frac{\partial^2 c_p(\mathbf x)}{\partial w_j \partial v_k}
+    &= \frac{\partial}{\partial w_j} \left[ \sum_{n \neq m} \frac{1}{1 + e^{-p\,c_{n,m}(\bm x)}}   \left( \frac{\partial c_{n,m}(\bm x)}{\partial_{v_k}} \right) \right] \\
+    &= \sum_{n \neq m} \frac{\partial}{\partial w_j} \left[  \frac{1}{1 + e^{-p\,c_{n,m}(\bm x)}}   \left( \frac{\partial c_{n,m}(\bm x)}{\partial_{v_k}} \right) \right] \\
+    &= \sum_{n \neq m} \frac{ \left(1 + e^{-p\,c_{n,m}(\bm x)}\right) \left( \frac{\partial^2 c_{n,m}}{\partial w_j \partial v_k}\right) 
+    - \left( \frac{\partial c_{n,m}}{\partial v_k} \right) \partial_{w_j}\left[ 1 + e^{-p\,c_{n,m}(\bm x)} \right] }{\left(1 + e^{-p\,c_{n,m}(\bm x)} \right)^2} \\
+    &= \sum_{n \neq m} \frac{ \left(1 + e^{-p\,c_{n,m}(\bm x)}\right) \left( \frac{\partial^2 c_{n,m}}{\partial w_j \partial v_k}\right) 
+    - \left( \frac{\partial c_{n,m}}{\partial v_k} \right) 
+    \left( -p\frac{\partial c_{n,m}}{\partial w_j}  e^{-p\,c_{n,m}(\bm x)} \right) }
+    {\left(1 + e^{-p\,c_{n,m}(\bm x)} \right)^2} \\
+    &= \sum_{n \neq m} \frac{ \left(1 + e^{-p\,c_{n,m}(\bm x)}\right) \left( \frac{\partial^2 c_{n,m}}{\partial w_j \partial v_k}\right) 
+    + p  e^{-p\,c_{n,m}(\bm x)}
+    \left( \frac{\partial c_{n,m}}{\partial v_k} \right)
+    \left( \frac{\partial c_{n,m}}{\partial w_j} \right)
+      }
+    {\left(1 + e^{-p\,c_{n,m}(\bm x)} \right)^2}
+\end{align*}
+
+
+
+
+
+
+We must now compute the partial derivatives of $c_{n,m}$ however since $\frac{\partial c_{n,m}}{\partial w_j} =  -\frac{\partial d_{n,m}}{\partial w_j}$ and $\frac{\partial^2 d_{n,m}}{\partial v_k \partial w_j}  = -\frac{\partial^2 d_{n,m}}{\partial v_k\partial w_j}$, we find computing the derivatives of $d_{n,m}$ more practical.
+
+
+
+\subsection{FREE Z CASE: Partial derivatives of \(d_{n,m}\) whenever $n\neq m$} 
+
+
+\begin{align*}
+\frac{\partial d_{n,m}}{\partial w_j} 
+&= \frac{(\delta_{nj} - \delta_{mj})}{d_{n,m}}(w_n - w_m)
+\end{align*}
+and
+\begin{align*}
+\frac{\partial^2 d_{n,m}}{\partial v_k \partial w_j} 
+&= \partial v_k \left[ \frac{(\delta_{nj} - \delta_{mj})(w_n - w_m)}{d_{n,m}} \right] \\
+&= (\delta_{nj} - \delta_{mj}) 
+\partial v_k \left[ \frac{(w_n - w_m)}{d_{n,m}} \right] \\
+&= (\delta_{nj} - \delta_{mj}) 
+\left[ \frac{d_{n,m} \partial v_k (w_n - w_m) - (w_n - w_m)\partial v_k (d_{n,m})}
+{d^2_{n,m}} \right] \\
+&= (\delta_{nj} - \delta_{mj}) 
+\left[ 
+\frac{d_{n,m} (\delta_{vw}) (\delta_{nk} - \delta_{mk}) - (w_n - w_m)\partial v_k (d_{n,m})}
+{d^2_{n,m}} 
+\right] \\
+&= \frac{(\delta_{nj} - \delta_{mj})}{d^2_{n,m}}  
+\left[
+d_{n,m} (\delta_{vw}) (\delta_{nk} - \delta_{mk})
+-\frac{  (w_n - w_m)(v_n - v_m)(\delta_{nk} - \delta_{mk})}
+{d_{n,m}} 
+\right] \\
+&= \frac{(\delta_{nj} - \delta_{mj})(\delta_{nk} - \delta_{mk})}{d^2_{n,m}}  
+\left[
+\frac{d^2_{n,m} (\delta_{vw})}{d_{n,m}} 
+-\frac{  (w_n - w_m)(v_n - v_m)}
+{d_{n,m}} 
+\right] \\
+&= \frac{(\delta_{nj} - \delta_{mj})(\delta_{nk} - \delta_{mk})}{d^3_{n,m}}  
+\left[
+d^2_{n,m} (\delta_{vw}) 
+- (w_n - w_m)(v_n - v_m)
+\right]
+\end{align*}
+
+\subsection*{FIXED $z$ CASE: Partial derivatives of $d_{n,m}$ whenever $n\neq m$}
+
+We assume the (affine) dependencies
+\[
+\partial_{x_n} z_n \;=\; D_x,\qquad
+\partial_{y_n} z_n \;=\; D_y,
+\]
+where \(D_x,D_y\) are constants (w.r.t.\ the variables).
+Let
+\[
+\Delta x := x_n-x_m,\quad
+\Delta y := y_n-y_m,\quad
+\Delta z := z_n-z_m,\quad
+d_{n,m} := \sqrt{(\Delta x)^2+(\Delta y)^2+(\Delta z)^2},
+\]
+and for indices \(j,k\) set
+\[
+a_j := \delta_{nj}-\delta_{mj},\qquad
+a_k := \delta_{nk}-\delta_{mk}.
+\]
+For \(w\in\{x,y\}\) define
+\[
+D_w :=
+\begin{cases}
+D_x,& w=x,\\
+D_y,& w=y,
+\end{cases}
+\qquad\text{and}\qquad
+\Delta w :=
+\begin{cases}
+\Delta x,& w=x,\\
+\Delta y,& w=y.
+\end{cases}
+\]
+
+\paragraph{First derivatives (with \(w\in\{x,y\}\)).}
+Since \(z\) depends on \(x,y\),
+\[
+\partial_{w_j}\Delta z \;=\; \partial_{w_j}(z_n-z_m) \;=\; a_j D_w.
+\]
+Hence
+\begin{align*}
+\frac{\partial d_{n,m}}{\partial w_j}
+&= \frac{1}{d_{n,m}}\Big[ \Delta x\,\partial_{w_j}\Delta x
+                         + \Delta y\,\partial_{w_j}\Delta y
+                         + \Delta z\,\partial_{w_j}\Delta z \Big] \\
+&= \frac{1}{d_{n,m}}\Big[ \Delta w\cdot a_j + \Delta z\cdot (a_j D_w) \Big] \\
+&= \frac{\delta_{nj}-\delta_{mj}}{d_{n,m}}\Big( w_n- w_m + D_w\, (z_n-z_m) \Big).
+\end{align*}
+
+\paragraph{Second derivatives (with \(v,w\in\{x,y\}\)).}
+Differentiate the first derivative w.r.t.\ \(v_k\):
+\begin{align*}
+\frac{\partial^2 d_{n,m}}{\partial v_k\,\partial w_j}
+&= \partial_{v_k}\!\left[ \frac{a_j}{d_{n,m}}\Big( \Delta w + D_w\,\Delta z \Big) \right] \\
+&= a_j\,\partial_{v_k}\!\left[ \frac{\mathrm{Num}}{d_{n,m}} \right],
+\quad\text{where }\mathrm{Num}:=\Delta w + D_w\,\Delta z \\
+&= a_j \left[ \frac{ d_{n,m}\,\partial_{v_k}\mathrm{Num}
+                 - \mathrm{Num}\,\partial_{v_k} d_{n,m} }
+                 { d_{n,m}^{2} } \right].
+\end{align*}
+Compute the pieces:
+\begin{align*}
+\partial_{v_k}\mathrm{Num}
+&= \partial_{v_k}\Delta w + D_w\,\partial_{v_k}\Delta z \\
+&= a_k\,\delta_{vw} + D_w\,(a_k D_v) \\
+&= a_k\big(\delta_{vw} + D_w D_v\big),
+\\[0.5ex]
+\partial_{v_k} d_{n,m}
+&= \frac{a_k}{d_{n,m}}\Big( \Delta v + D_v\,\Delta z \Big),
+\qquad\left(D_v=\begin{cases}D_x,& v=x,\\ D_y,& v=y.\end{cases}\right)
+\end{align*}
+Substitute and simplify:
+\begin{align*}
+\frac{\partial^2 d_{n,m}}{\partial v_k\,\partial w_j}
+&= a_j \left[
+\frac{ d_{n,m}\,a_k(\delta_{vw}+D_w D_v)
+      - (\Delta w + D_w \Delta z)\,\dfrac{a_k}{d_{n,m}}(\Delta v + D_v \Delta z)}
+     { d_{n,m}^2 } \right] \\
+&= a_j a_k \left[
+\frac{\delta_{vw}+D_w D_v}{d_{n,m}}
+- \frac{(\Delta w + D_w \Delta z)(\Delta v + D_v \Delta z)}{d_{n,m}^3}
+\right] \\
+&= \frac{a_j a_k}{d_{n,m}^3}
+\left[
+(\delta_{vw}+D_w D_v)\,d_{n,m}^2
+- (\Delta w + D_w \Delta z)(\Delta v + D_v \Delta z)
+\right].\\
+&= \frac{(\delta_{nj}-\delta_{mj})(\delta_{nk}-\delta_{mk})}{d_{n,m}^3}
+\left[
+(\delta_{vw}+D_w D_v)\,d_{n,m}^2
+- \big((w_n - w_m) + D_w (z_n - z_m)\big)\big((v_n - v_m) + D_v (z_n - z_m)\big)
+\right]
+\end{align*}
+
+\noindent
+(These formulas hold for \(d_{n,m}>0\). As usual, if \(j\notin\{n,m\}\) or \(k\notin\{n,m\}\), the derivatives vanish.)
+
+\end{comment}
+
+\end{document}

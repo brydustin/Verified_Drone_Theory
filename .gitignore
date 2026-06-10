@@ -1,0 +1,10 @@
+# Editor backups / locks
+*~
+\#*\#
+.\#*
+.Rhistory
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
