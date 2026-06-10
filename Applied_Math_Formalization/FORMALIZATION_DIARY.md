@@ -2272,3 +2272,47 @@ nowhere_dense_mstarg_zeros. Both need a "critical points over a nowhere-dense
 ω-locus project to a meager set" argument — different engine (no
 transversality), think product of nowhere-dense with slice compactness or the
 σ-compact Crit machinery.
+
+### M6 OBSTRUCTION ANALYSIS (2026-06-10 night) — not a quick wrapper
+Attempted M6 (meager_steering_singular_stratum). The 2026-06-03 Tier-C note
+"#13 = #7" was optimistic; even the careful note ("funnels through #9 → engine")
+doesn't work as stated. FINDINGS (all verified against current sources):
+1. ENGINE CANNOT EAT M6 DIRECTLY: planar_config needs regular_value_on gradU
+   on V×Ω, and joint regularity (A6) genuinely requires det Dcvec ≠ 0 at every
+   zero (A3's x-partial surjectivity consumes it: the 2×6 moment block has
+   rank 2 ONLY when the steering Jacobian is nonsingular). M6 witnesses live
+   exactly where det Dcvec = 0 — any box containing one falsifies the engine
+   hypothesis. Same obstruction for M5 (¬surj DM breaks dE∘DM surjectivity).
+2. Σ-STRUCTURE: det Dcvec = sin(ω1)·(cos(ω1) − sin(ω1)·g(ω2)) (Dcvec_det_eq).
+   So Σ = {sin ω1 = 0 lines} ∪ {h=0 curve}; on sin≠0, h=0 ⟹ ∂1h ≠ 0 (checked:
+   h=0 ∧ ∂1h=0 forces cos² = −sin², impossible) — the curve part is a regular
+   1-manifold (graph charts via IFT). Curve-chart route still dies at the
+   pole-lines AND at the broken x-partial (point 1).
+3. POLE-LINE PHENOMENON (the real danger): along {ω1 = kπ}, kx=ky=0, kz=±1,
+   so cvec_dip and gain_dip are CONSTANT along the line; ∂φU ≡ 0 there, and
+   criticality reduces to ∂θU(x,kπ,φ) = cosφ·P(x) + sinφ·Q(x) = 0 (the a/b
+   steering terms vanish with sin kπ; ∂θcvec = ±(cosφ,sinφ)) — which has a
+   solution φ for EVERY x (any (P,Q) gives zeros). I.e. ALL configurations
+   have critical angles on the pole lines; M6's meagerness rests ENTIRELY on
+   the det Hess = 0 conjunct being non-generic along the witness family.
+   That needs a (∂θU, detHessU)-style JOINT argument with 1-dim parameter —
+   second-order data, outside the current engine (2-param, first-order).
+4. DECOMPOSITION FACT: M6 ⊆ M6a (surj DM case) ∪ M5-bad (¬surj case), so
+   M5-first ordering helps; but both M5 and M6a hit obstruction 1.
+CANDIDATE ROUTES (decreasing preference, none cheap):
+(R1) Kernel-direction reduction: on Σ, rank(Dcvec)≤1 with kernel direction
+   explicit; criticality with A≠0 forces |A|²∇gain + 2·gain·Im(conj A·w)·(α,β)
+   = 0; off the locus ∇gain ∥ (α,β) this forces A=0 (excluded) — reduces M6a
+   to (i) a countability/structure analysis of {ω∈Σ. ∇gain ∥ kerdir} and
+   (ii) fixed-ω analytic slices in x (nowhere_dense via rline_entire, M2-style).
+   Pole-lines: ∇gain = (gdip'(kπ),0) and kernel dir = e_φ ⟹ parallel iff
+   gdip'(kπ)=0 — check gdip'; if gdip'(kπ)=0 the lines are IN the parallel
+   locus and need the second-order argument of point 3.
+(R2) 1-parameter engine variant (core_1d): rebuild the chart machinery for
+   G:(x,t)↦ℝ² over V×I, I⊆ℝ — heavy (weeks-scale, mirrors core_2d).
+(R3) Re-cut the strata (M7 only needs the UNION to cover {Φ=0}): no free
+   lunch — the deep content (critical-with-A≠0 over degenerate loci) remains.
+STATUS: no proof code written for M6 (honest zero). M6b (A=0 stratum) may be
+much easier and is not blocked — consider doing it next while the M5/M6
+strategy is decided. PAPER GAP: the tex hand-waves "positive codimension";
+the formal content is genuinely new mathematics.
