@@ -2246,3 +2246,29 @@ CENSUS: the "1 transport lemma" of the endgame is DONE. Remaining: 4 strata
 NEXT: M4 (meager_bad_regular_stratum) — product-box cover of the open
 non-product locus + planar_config on each box; needs
 regular_value_on_gradU_dip restricted to boxes.
+
+### M4 PROVEN (2026-06-10 night) — meager_bad_regular_stratum
+Proven sorry-free in 4 scratch iterations and baked into Robust2 (leaf 5s,
+BUILD_EXIT=0) together with three REUSABLE helpers for the remaining strata:
+- regular_value_on_subset (restriction along ⊆ via has_derivative_subset);
+- open_prod_nat_cover (countable open product-box cover of any open set in a
+  product of second-countable spaces; ex_countable_basis + topological_basisE +
+  from_nat_into; handles W={} via empty boxes);
+- dip_slice_no_surj_deriv (det HessU = 0 ⟹ no surjective slice derivative:
+  slice deriv IS the Hessian by gradU_dip_has_derivative + at_within_open +
+  has_derivative_unique + surj_matrix_vector_iff_det).
+M4 assembly: WV = triple-regularity locus over V (open by open_A_cart_nonzero;
+regular value by regular_value_on_gradU_dip); box-cover WV; per box run
+planar_config (gradU_dip_joint_C1 restricts; engine residual-guard swallowed
+by blast per the known trap); M4-bad ⊆ ⋃ engine-bad via the helper-3 injection;
+meager_Union_nat + meager_subset close it.
+NEW TRAP for the canon: the Munkres import (Top1_Ch3) SHADOWS `countable` —
+qualify Countable_Set.countable in any statement mixing with library countable
+lemmas. (Joins vec_eq_iff/set_eqI/linearI on the qualify-always list.)
+Census: strata remaining M5/M6/M6b, then 6 Capstone leaves.
+NEXT: M6 (meager_steering_singular_stratum) likely easiest next (uses M3
+steering_singular_nowhere_dense already proven in Robust3), or M5 via
+nowhere_dense_mstarg_zeros. Both need a "critical points over a nowhere-dense
+ω-locus project to a meager set" argument — different engine (no
+transversality), think product of nowhere-dense with slice compactness or the
+σ-compact Crit machinery.

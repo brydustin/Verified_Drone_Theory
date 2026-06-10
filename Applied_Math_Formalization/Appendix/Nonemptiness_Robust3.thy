@@ -957,15 +957,10 @@ text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open 
   {thm parametric_transversality_meager_planar_config} on each, the degenerate-critical projection
   over the regular stratum is meager.\<close>
 
-lemma meager_bad_regular_stratum:
-  fixes V :: "((real^2)^'n) set"
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
-                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-                  \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
-  sorry
+text \<open>\<open>meager_bad_regular_stratum\<close> (M4) is DONE --- proven sorry-free in
+  \<open>Nonemptiness_Robust2\<close> (in the heap), together with the reusable helpers
+  \<open>regular_value_on_subset\<close>, \<open>open_prod_nat_cover\<close>, \<open>dip_slice_no_surj_deriv\<close>.
+  Development history in \<open>Scratch_m4\<close>.\<close>
 
 text \<open>\<^bold>\<open>(M5) Rank-deficient stratum is meager.\<close>  The set of configurations carrying a degenerate
   critical point (with \<open>A \<noteq> 0\<close>) at an angle where the moment map \<^emph>\<open>fails\<close> to be a submersion.  This
