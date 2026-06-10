@@ -1,5 +1,5 @@
 theory Nonemptiness_Robust3
-  imports Nonemptiness_Robust2
+  imports "Applied_Math_Appendix.Nonemptiness_Robust2"
 begin
 
 lemma M12_moment_applyT:
@@ -943,6 +943,13 @@ lemma steering_singular_nowhere_dense:
     show ?thesis
       using closedE intE by (simp add: feq nowhere_dense_def closure_closed)
   qed
+
+text \<open>\<^bold>\<open>The planar-config transversality engine is DONE\<close> --- proven sorry-free as
+  \<open>parametric_transversality_meager_planar_config\<close> in \<open>Nonemptiness_Robust2\<close>
+  (in the \<open>Applied_Math_Appendix\<close> heap; development history in \<open>Scratch_planar\<close>).
+  It is available here via the import.  CAUTION (sledgehammer): do NOT accept
+  proofs citing the 7 sorried facts (capstone_feasible, branch_*_meager,
+  capstone_X0_sound, odd_N_nonemptiness).\<close>
 
 text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open locus where \<open>A \<noteq> 0\<close>, \<open>surj (DM_paper_x \<dots>)\<close>,
   and \<open>det (Dcvec) \<noteq> 0\<close>, \<open>0\<close> is a regular value (@{thm regular_value_on_gradU_dip}); covering this

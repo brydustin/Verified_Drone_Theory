@@ -2218,3 +2218,31 @@ block now sits in Robust1 (heap) — develop the lemma in Robust3, migrate later
 in one batch (one Base rebake).
 NEXT (unchanged): uncomment+prove parametric_transversality_meager_planar_config
 (develop in Robust3), then strata M4/M5/M6/M6b, then Capstone.
+
+### planar_config PROVEN (2026-06-10 evening) — the transport lemma is done
+parametric_transversality_meager_planar_config proven sorry-free and baked into
+Robust2/heap (leaf rebuild 5s, BUILD_EXIT=0). Proof: flatten (real^2)^'n ≅
+real^('n bit0) via the Φ/Ψ iso lifted from negligible_singular_image_2n
+('n bit0 is {finite,wellorder} for free — Numeral_Type:350!); conjugate G/G'
+through the bounded-linear pair map pm=(Ψ∘fst,snd) as blinfun P (Blinfun +
+bounded_linear_Blinfun_apply); chain rule diff_chain_at for derG_e; contG'_e via
+continuous_on_compose2 + bounded_bilinear.bounded_linear_left[OF
+bounded_bilinear_blinfun_compose]; regular_value_on transports by
+has_derivative_in_compose (NB: concludes in LAMBDA form, not ∘) + comp_surj;
+engine at 'm='n bit0; pull back via meager_homeo_image.
+TRAPS HIT (all now canon): (1) blast/metis on rule-shaped facts with
+higher-order atoms (derG, regular_value_on ∀) HANGS — replace with
+deterministic rule/OF/bspec/mp chains; heartbeats via build -v name the line.
+(2) set_eqI is JNF-SHADOWED like vec_eq_iff — use Set.set_eqI. (3) linearI from
+the Paper-template proof resolves differently in the Robust2 context
+(HigherDiff/Smooth_Manifolds shadowing) — use Real_Vector_Spaces.linearI with
+explicit componentwise shows. (4) NEVER write through /tmp symlinks to "copy"
+a file (clobbered the master once; restored from context).
+WORKFLOW THAT WORKED: /tmp scratch session (ROOT: Scratch_Planar =
+Applied_Math_Appendix + Scratch_planar) → ~20s verify cycles; bisect hangs by
+python-truncating at markers with `show ?thesis sorry`.
+CENSUS: the "1 transport lemma" of the endgame is DONE. Remaining: 4 strata
+(M4/M5/M6/M6b in Robust3) + 6 Capstone assembly leaves.
+NEXT: M4 (meager_bad_regular_stratum) — product-box cover of the open
+non-product locus + planar_config on each box; needs
+regular_value_on_gradU_dip restricted to boxes.
