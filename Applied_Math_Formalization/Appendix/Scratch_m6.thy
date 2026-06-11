@@ -65,6 +65,9 @@ text \<open>At every M6 witness off the poles, the \<open>\<theta>\<close>-deriv
   \<open>col\<^sub>2 \<bullet> w = 0\<close>; rank-1 dependence \<open>col\<^sub>1 = t col\<^sub>2\<close> kills the moment term in
   component 1, leaving \<open>gd' \<bar>A\<bar>\<^sup>2 = 0\<close> with \<open>\<bar>A\<bar>\<^sup>2 > 0\<close>.\<close>
 
+lemma frechet_gdip_zero_arg: "frechet_derivative gdip (at \<theta>) 0 = 0" for \<theta> :: real
+  using linear_frechet_derivative[OF gdip_differentiable] linear_0 by blast
+
 lemma M6_witness_gdip_deriv_zero:
   fixes x :: "(real^2)^'n" and \<omega> \<omega>0 \<omega>s :: "real^2"
   assumes pfw: "sin (\<omega> $ 1) \<noteq> 0"
@@ -72,7 +75,58 @@ lemma M6_witness_gdip_deriv_zero:
     and anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
     and detz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
   shows "frechet_derivative gdip (at (\<omega>$1)) 1 = 0"
-  sorry
+proof -
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  define gd where "gd = frechet_derivative gdip (at (\<omega>$1)) 1"
+  define aa where "aa = (cmod (M_paper x c $ 1))\<^sup>2"
+  define g where "g = gain_dip \<omega>"
+  define col1 where "col1 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)"
+  define col2 where "col2 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+  define T :: "(real^2) \<Rightarrow> real"
+    where "T v = 2 * Re (cnj (M_paper x c $ 1)
+       * ((- \<i>) * complex_of_real (v $ 1) * (M_paper x c $ 2)
+        + (- \<i>) * complex_of_real (v $ 2) * (M_paper x c $ 3)))" for v
+  have gnz: "g \<noteq> 0"
+    unfolding g_def using pfw by (rule gain_dip_nonzero_of_sin)
+  have aanz: "0 < aa"
+  proof -
+    have "M_paper x c $ 1 = A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>"
+      unfolding c_def by (rule M_paper_proj_A)
+    hence "M_paper x c $ 1 \<noteq> 0" using anz by simp
+    thus ?thesis unfolding aa_def by simp
+  qed
+  have g0c: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ j = 0" for j
+    using g0 by simp
+  \<comment> \<open>the two component equations in scalar form\<close>
+  have e1: "gd * aa + g * T col1 = 0"
+  proof -
+    have "gd * aa + g * T col1 = gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1"
+      unfolding gd_def aa_def g_def col1_def T_def c_def
+      by (simp add: gradU_dip_component_moments axis_def)
+    thus ?thesis using g0c[of 1] by simp
+  qed
+  have e2: "g * T col2 = 0"
+  proof -
+    have "g * T col2 = gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2"
+      unfolding g_def col2_def T_def c_def
+      using frechet_gdip_zero_arg[of "\<omega>$1"]
+      by (simp add: gradU_dip_component_moments axis_def)
+    thus ?thesis using g0c[of 2] by simp
+  qed
+  have Tc2: "T col2 = 0" using e2 gnz by simp
+  \<comment> \<open>rank-1 dependence of the steering columns\<close>
+  have c2nz: "col2 \<noteq> 0" unfolding col2_def by (rule Dcvec_col2_nz[OF pfw])
+  have det0': "col1 $ 1 * col2 $ 2 - col2 $ 1 * col1 $ 2 = 0"
+    using detz unfolding col1_def col2_def by (simp add: det_2 matrix_def)
+  obtain t where t: "col1 = t *\<^sub>R col2"
+    using cols_dependent_2d[OF det0' c2nz] by blast
+  have Tt: "T (t *\<^sub>R col2) = t * T col2"
+    unfolding T_def by (simp add: of_real_mult algebra_simps)
+  \<comment> \<open>conclude\<close>
+  have "gd * aa = 0" using e1 t Tt Tc2 by simp
+  with aanz have "gd = 0" by simp
+  thus ?thesis unfolding gd_def .
+qed
 
 section \<open>Brick R4: gdip-derivative zeros are exactly \<open>cos \<theta> = 0\<close> (off poles)\<close>
 

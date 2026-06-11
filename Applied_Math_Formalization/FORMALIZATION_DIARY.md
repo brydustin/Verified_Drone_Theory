@@ -2636,3 +2636,17 @@ polynomial bounds / u >= 1.2 boundary estimate — worked out in analysis,
 ~1-2 sessions); R5 fixed-omega slices nowhere dense (rline_entire moment
 machinery + explicit two-cluster configuration for the nonvanishing
 witness); assembly (finite witness-angle set + finite-union meagerness).
+
+### M6 R3 PROVEN FIRST-PASS — the kernel-direction reduction (2026-06-11)
+M6_witness_gdip_deriv_zero: every steering-singular witness off the poles
+(gradU=0, A/=0, det Dcvec=0, sin theta /= 0) forces gdip'(theta) = 0.
+Proof exactly as designed: scalarize via gradU_dip_component_moments
+(j=1: gd*aa + g*T(col1) = 0; j=2: g*T(col2) = 0 — the
+frechet_derivative-at-0-argument vanishes via linear_frechet_derivative
+[OF gdip_differentiable] + linear_0); rank-1 dependence col1 = t *R col2
+(R1 + R2 + det_2/matrix_def bridge); T is scaleR-linear (simp +
+of_real_mult + algebra_simps, vector_scaleR_component is [simp]); so
+gd*aa = 0 with aa = cmod(A)^2 > 0. ZERO iteration debugging — the
+deterministic-OF + scalarize discipline is now routine.
+M6 board: R1+R2+R3 proven; remaining R4 (gdip monotonicity grind),
+R5 (slice nowhere-dense), assembly.
