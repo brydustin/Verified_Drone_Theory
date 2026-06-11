@@ -2531,3 +2531,20 @@ User requires solvability assurance before further investment. Analysis:
    odd CARD('n) entered the formalization at dxA_surj long ago and the
    Capstone's odd_N_nonemptiness always carried it. The 2026-06-10 pass
    only THREADED the existing forced hypothesis through the chain.
+
+### M6b B4 COMPLETE — det_HessU_at_null proven (2026-06-11)
+det HessU = 4 gain^2 (det(matrix Dcvec) * Im(cnj mu1 mu2))^2 at Afun-nulls
+(mu_k = Mcfun first moments). Proof: scalarize everything (g, four Jacobian
+entries j11..j22, Gram data n1 n2 r12 i12); Gram relation n1 n2 = r12^2+i12^2
+via cmod_power2 + norm_mult; qform expansion (inner_vec_def +
+matrix_vector_mult_def + sum_2 + a general ReSym fact); det_2; then the
+det-bracket ring identity. TRAPS: (1) `algebra` (Groebner) FAILED on the
+degree-6 ring identity both with and without the hypothesis — but plain
+`simp add: algebra_simps` proves it; split hypothesis-substitution (sub:
+n1n2 - r12^2 = i12^2) from the pure ring step. (2) M_paper$1 simp-normalizes
+to A_moment — bridge A_moment = Afun via phase_def before nulls match.
+(3) Re_cnj/Im_cnj lemma names don't exist; plain simp knows Re/Im of cnj.
+B4 status: Hcmat_at_null, gradUc_at_null, Uc_at_null, HessU_at_null,
+det_HessU_at_null ALL GREEN. The same quantity detJ*Im(cnj mu1 mu2) will BE
+the slice-Jacobian determinant of afR2 (B4'), closing the loop.
+Remaining M6b: B2 (joint C1), B3 (global regular value), B4' (slice), assembly.
