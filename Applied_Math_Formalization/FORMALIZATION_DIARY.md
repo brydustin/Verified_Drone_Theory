@@ -2404,3 +2404,33 @@ NOTE FOR PAPER AUTHORS: the full-box statements in the tex (X0def over
 Omega-tilde of the 2D box + thm:final via F0) inherit the pole issue for the
 dipole element pattern; the 2D-cut reduction (or a pole-free shrink) is
 needed in the prose too.
+
+### OmegaPF RESTATEMENT LANDED — pole-free chain verified (2026-06-10 night)
+Phase A (Robust2 leaf, 5s green): OmegaPF def + OmegaPF_compact +
+compact_minus_ball + sphere_subset_OmegaPF + meager_bad_regular_stratum_on
+(M4 over ANY witness domain K — free via meager_subset from proven M4).
+Phase B (Robust3, 30 edits, batch-verified 11:43 green via /tmp Scratch_R3
+session on top of the Appendix heap): M5/M6/M6b + Phi_bad_meager_dip now
+EX/ALL omega IN OmegaPF ctr delta with hyps d0: 0<delta and pf: sin nonzero
+on the box; regular_config_exists concl. bounded (now satisfiable);
+no_degenerate_to_sphere_annulus + regular_feasible_point/witness_dip over
+OmegaPF (eps picked in {0<..delta} - R; sphere_subset_OmegaPF[OF epspi dpi]);
+F0_nonempty_of_witness generalized to a compact Omega-dom PARAMETER
+(compact_minus_ball[OF cOm] replaces the box-specific lemma); FLAGSHIP
+F0_dip_nonempty now exhibits 0<delta and F0 ... (OmegaPF ctr delta) ...,
+instantiated delta=pi/4 at the broadside design with an explicit
+sin>0-on-[pi/4,3pi/4] discharge (mem_box_cart + sin_gt_zero).
+Robust3 batch-verify workflow: /tmp/scratchr3 ROOT (Scratch_R3 =
+Applied_Math_Appendix + Nonemptiness_Robust3), threads=4, ~12 min (the
+pre-existing Lmat/mstarg proofs dominate; restatements are cheap).
+NEXT PASS (designed, not yet applied): add `odd CARD('n)` to M6b -> M7 ->
+regular_config_exists -> regular_feasible_point/witness -> F0_dip_nonempty
+(aligns with odd_N_nonemptiness; capstone IS the odd-N theorem). PAYOFF
+(M6b discovery): for ODD N the collinear-phase case of A-nulls is EMPTY
+(sum of +-1 cannot vanish), so M6b = engine run on G = cplx_r2 o A_cart with
+GLOBAL regular value on V x UNIV: at any zero, cvec=0 => A=N/=0 (vacuous),
+else dxA_surj (Spine:139, odd N!) gives x-partial surjectivity. Witness
+bridge: at A-null, HessU = g * 2Re(conj grad-A (x) grad-A), so det HessU=0
+with g/=0 (gain_dip_nonzero_of_sin + pf) forces singular A-slice-Jacobian.
+To build for M6b: joint C1 field of A (template gradU_dip_joint_C1),
+dxA-is-the-x-derivative lemma, Hessian-at-null computation.

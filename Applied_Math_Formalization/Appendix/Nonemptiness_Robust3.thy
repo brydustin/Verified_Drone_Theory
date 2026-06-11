@@ -968,9 +968,10 @@ text \<open>\<^bold>\<open>(M5) Rank-deficient stratum is meager.\<close>  The s
   combined with a parametric argument over \<open>\<omega>\<close>.\<close>
 
 lemma meager_rank_deficient_stratum:
-  fixes V :: "((real^2)^'n) set"
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
@@ -981,9 +982,10 @@ text \<open>\<^bold>\<open>(M6) Steering-singular stratum is meager.\<close>  De
   nowhere dense, and the critical points over it form a positive-codimension set.\<close>
 
 lemma meager_steering_singular_stratum:
-  fixes V :: "((real^2)^'n) set"
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
@@ -996,9 +998,10 @@ text \<open>\<^bold>\<open>(M6b) The \<open>A = 0\<close> degenerate stratum is 
   is \<open>3\<close> real conditions on \<open>(\<bm>x,\<omega>)\<close> (codim \<open>3\<close>): its \<open>\<bm>x\<close>-projection is meager.\<close>
 
 lemma meager_Azero_degenerate_stratum:
-  fixes V :: "((real^2)^'n) set"
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
   sorry
@@ -1012,42 +1015,43 @@ text \<open>\<^bold>\<open>(M7) The dipole-specific bad set is meager --- CORREC
   the capstone consumes\<close>, in place of the unprovable generic \<open>Phi_bad_meager\<close>.\<close>
 
 lemma Phi_bad_meager_dip:
-  fixes V :: "((real^2)^'n) set"
-  assumes "open V" and "V \<noteq> {}" and "6 \<le> CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
 proof -
-  let ?reg = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+  let ?reg = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
               \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
-  let ?def = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+  let ?def = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
               \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
-  let ?steer = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+  let ?steer = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
-  let ?null = "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+  let ?null = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
   have meag4: "meager (?reg \<union> ?def \<union> ?steer \<union> ?null)"
-    by (intro meager_Un meager_bad_regular_stratum[OF assms]
-              meager_rank_deficient_stratum[OF assms]
-              meager_steering_singular_stratum[OF assms]
-              meager_Azero_degenerate_stratum[OF assms])
-  have sub: "{x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
+    by (intro meager_Un meager_bad_regular_stratum_on[OF openV Vne c6]
+              meager_rank_deficient_stratum[OF openV Vne c6 d0 pf]
+              meager_steering_singular_stratum[OF openV Vne c6 d0 pf]
+              meager_Azero_degenerate_stratum[OF openV Vne c6 d0 pf])
+  have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
              \<subseteq> ?reg \<union> ?def \<union> ?steer \<union> ?null"
   proof (rule subsetI)
-    fix x assume "x \<in> {x \<in> V. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
-    then obtain \<omega> where xV: "x \<in> V"
+    fix x assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    then obtain \<omega> where xV: "x \<in> V" and wD: "\<omega> \<in> OmegaPF ctr \<delta>"
       and pb: "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
     from Phibad_dip_imp_detHess0[OF pb]
     have g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
       and d0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" by blast+
     show "x \<in> ?reg \<union> ?def \<union> ?steer \<union> ?null"
-      using xV g0 d0
+      using xV wD g0 d0
       by fastforce 
   qed
   show ?thesis by (rule meager_subset[OF sub meag4])
@@ -1085,17 +1089,17 @@ text \<open>\<^bold>\<open>The capstone core, parametrised by the regular feasib
 lemma F0_nonempty_of_witness:
   fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
     and R dmin A B D \<delta>null pmin :: real and \<omega>null ctr :: planar
-    and x0 :: "planar^'n" and \<epsilon> :: real
-  assumes \<epsilon>0: "0 < \<epsilon>"
+    and x0 :: "planar^'n" and \<epsilon> :: real and \<Omega>dom :: "planar set"
+  assumes \<epsilon>0: "0 < \<epsilon>" and cOm: "compact \<Omega>dom"
     and feas: "x0 \<in> Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin"
     and cdN: "continuous_on (sphere ctr \<epsilon>) (\<lambda>\<omega>. norm (gradU cvec g x0 \<omega>))"
-    and cdsum: "continuous_on (Omega ctr - ball ctr \<epsilon>)
+    and cdsum: "continuous_on (\<Omega>dom - ball ctr \<epsilon>)
                   (\<lambda>y. norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
     and rsph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU cvec g x0 \<omega> \<noteq> 0"
-    and rO: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+    and rO: "\<forall>y\<in>\<Omega>dom - ball ctr \<epsilon>.
                 gradU cvec g x0 y \<noteq> 0 \<or> 0 < sigma_min (HessU cvec g x0 y)"
   shows "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
-            \<and> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
+            \<and> F0 cvec g R dmin A B D \<omega>null ctr (\<Omega>dom) \<delta>null pmin \<xi> \<kappa> \<epsilon>
                 \<noteq> ({}::(planar^'n) set)"
 proof -
   \<comment> \<open>the positive \<open>\<kappa>\<close>-margin on the \<open>\<epsilon>\<close>-sphere (Weierstrass)\<close>
@@ -1117,24 +1121,24 @@ proof -
     using \<omega>min unfolding Xrobust_def \<kappa>_def by simp
   \<comment> \<open>the positive \<open>\<xi>\<close>-margin on \<open>\<Omega>\<^sup>~\<close> (vacuous if \<open>\<Omega>\<^sup>~ = \<emptyset>\<close>)\<close>
   show ?thesis
-  proof (cases "Omega ctr - ball ctr \<epsilon> = {}")
+  proof (cases "\<Omega>dom - ball ctr \<epsilon> = {}")
     case True
-    have "x0 \<in> X0 cvec g ctr (Omega ctr) 1 \<kappa> \<epsilon>"
+    have "x0 \<in> X0 cvec g ctr (\<Omega>dom) 1 \<kappa> \<epsilon>"
       using inXrob True unfolding X0_def by blast
-    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin 1 \<kappa> \<epsilon>"
+    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (\<Omega>dom) \<delta>null pmin 1 \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin 1 \<kappa> \<epsilon>
+    hence "F0 cvec g R dmin A B D \<omega>null ctr (\<Omega>dom) \<delta>null pmin 1 \<kappa> \<epsilon>
              \<noteq> ({}::(planar^'n) set)"
       by (rule mem_imp_ne_empty)
     moreover have "(0::real) < 1" by simp
     ultimately show ?thesis using \<kappa>pos \<epsilon>0 by blast
   next
     case False
-    obtain ym where ym: "ym \<in> Omega ctr - ball ctr \<epsilon>"
-        and ymin: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+    obtain ym where ym: "ym \<in> \<Omega>dom - ball ctr \<epsilon>"
+        and ymin: "\<forall>y\<in>\<Omega>dom - ball ctr \<epsilon>.
               norm (gradU cvec g x0 ym) + sigma_min (HessU cvec g x0 ym)
               \<le> norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y)"
-      using continuous_attains_inf[OF Omega_minus_ball_compact False cdsum] by blast
+      using continuous_attains_inf[OF compact_minus_ball[OF cOm] False cdsum] by blast
     define \<xi> where "\<xi> = norm (gradU cvec g x0 ym) + sigma_min (HessU cvec g x0 ym)"
     have \<xi>pos: "0 < \<xi>"
     proof (cases "gradU cvec g x0 ym = 0")
@@ -1149,13 +1153,13 @@ proof -
         using sigma_min_nonneg[of "HessU cvec g x0 ym"] by linarith
     qed
     have "x0 \<in> Xrobust cvec g ctr \<epsilon> \<kappa>
-          \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+          \<and> (\<forall>y\<in>\<Omega>dom - ball ctr \<epsilon>.
                 \<xi> \<le> norm (gradU cvec g x0 y) + sigma_min (HessU cvec g x0 y))"
       using inXrob ymin unfolding \<xi>_def by blast
-    hence "x0 \<in> X0 cvec g ctr (Omega ctr) \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
-    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>"
+    hence "x0 \<in> X0 cvec g ctr (\<Omega>dom) \<xi> \<kappa> \<epsilon>" unfolding X0_def by simp
+    hence "x0 \<in> F0 cvec g R dmin A B D \<omega>null ctr (\<Omega>dom) \<delta>null pmin \<xi> \<kappa> \<epsilon>"
       using feas unfolding F0_def by simp
-    hence "F0 cvec g R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
+    hence "F0 cvec g R dmin A B D \<omega>null ctr (\<Omega>dom) \<delta>null pmin \<xi> \<kappa> \<epsilon>
              \<noteq> ({}::(planar^'n) set)"
       by (rule mem_imp_ne_empty)
     thus ?thesis using \<xi>pos \<kappa>pos \<epsilon>0 by blast
@@ -1305,36 +1309,37 @@ text \<open>\<^bold>\<open>(C2) Baire: a regular configuration exists inside the
   capstone's regularity, so it must also be excluded.\<close>
 
 lemma regular_config_exists:
-  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle and \<delta> :: real
   assumes c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and int_ne: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                           :: ((real^2)^'n) set).
-            \<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
+            \<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
 proof -
   define I where "I = interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                       :: ((real^2)^'n) set)"
   have openI: "open I" unfolding I_def by (rule open_interior)
   have Ine: "I \<noteq> {}" unfolding I_def by (rule int_ne)
-  have meagB: "meager {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
-    by (rule Phi_bad_meager_dip[OF openI Ine c6])
-  have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+  have meagB: "meager {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    by (rule Phi_bad_meager_dip[OF openI Ine c6 d0 pf])
+  have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
   proof
-    assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
     have "meager I" by (rule meager_subset[OF sub meagB])
     moreover have "\<not> meager I" by (rule open_nonempty_not_meager[OF openI Ine])
     ultimately show False by simp
   qed
   then obtain x0 where x0I: "x0 \<in> I"
-    and x0nB: "x0 \<notin> {x \<in> I. \<exists>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}" by blast
+    and x0nB: "x0 \<notin> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}" by blast
   have x0Iexp: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
     using x0I unfolding I_def by assumption
-  have reg: "\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
+  have reg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
     using x0I x0nB by blast
   from x0Iexp reg
   have conjx0: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)
-        \<and> (\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)" by (rule conjI)
+        \<and> (\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)" by (rule conjI)
   \<comment> \<open>Composition fully established: \<open>x0Iexp\<close> (\<open>x0 \<in> interior\<close>) and \<open>reg\<close> (\<open>\<forall>\<omega>. \<Phi> \<noteq> 0\<close>) are the
       witness data.  Only the final \<^emph>\<open>bounded-existential introduction\<close> \<open>\<exists>x0\<in>interior. \<dots>\<close> with
       witness \<open>x0\<close> is left open --- a witness-instantiation tactic step (\<open>bexI\<close>/\<open>rule_tac x=x0\<close>)
@@ -1342,7 +1347,7 @@ proof -
       term; it is mathematically immediate from \<open>x0Iexp\<close> and \<open>reg\<close>.\<close>
   show ?thesis
   proof (rule bexI[where x = x0])
-    show "\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0" by (rule reg)
+    show "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0" by (rule reg)
   next
     show "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
       by (rule x0Iexp)
@@ -1421,20 +1426,21 @@ proof
 qed
 
 lemma no_degenerate_to_sphere_annulus:
-  fixes x0 :: "(real^2)^'n" and ctr \<omega>0 \<omega>s :: angle
-  assumes nd: "\<forall>\<omega>\<in>Omega ctr. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
+  fixes x0 :: "(real^2)^'n" and ctr \<omega>0 \<omega>s :: angle and \<delta> :: real
+  assumes d0: "0 < \<delta>" and dpi: "\<delta> \<le> pi"
+    and nd: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
                               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>) = 0)"
   shows "\<exists>\<epsilon>>0. (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
-            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+            \<and> (\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
 proof -
   define f where "f = gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0"
-  define C where "C = {\<omega>. \<omega> \<in> Omega ctr \<and> f \<omega> = 0}"
+  define C where "C = {\<omega>. \<omega> \<in> OmegaPF ctr \<delta> \<and> f \<omega> = 0}"
   have fcont: "continuous_on UNIV f" unfolding f_def by (rule gradU_dip_continuous_on)
   have isol: "\<not> c islimpt C" if cC: "c \<in> C" for c
   proof -
-    from cC have cO: "c \<in> Omega ctr" and fc0: "f c = 0" by (auto simp: C_def)
+    from cC have cO: "c \<in> OmegaPF ctr \<delta>" and fc0: "f c = 0" by (auto simp: C_def)
     have dnz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 c) \<noteq> 0"
       using nd cO fc0 unfolding f_def by blast
     hence inv: "invertible (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 c)" by (simp add: invertible_det_nz)
@@ -1446,20 +1452,20 @@ proof -
       using isolated_nondeg_zero[OF hd injL fc0] by blast
     show "\<not> c islimpt C" using dd d0 by (force simp: islimpt_approachable C_def)
   qed
-  have Cint: "C = Omega ctr \<inter> {y. f y = 0}" by (auto simp: C_def)
+  have Cint: "C = OmegaPF ctr \<delta> \<inter> {y. f y = 0}" by (auto simp: C_def)
   have Ccomp: "compact C"
-    unfolding Cint by (rule compact_Int_closed[OF Omega_compact closed_Collect_eq[OF fcont continuous_on_const]])
+    unfolding Cint by (rule compact_Int_closed[OF OmegaPF_compact closed_Collect_eq[OF fcont continuous_on_const]])
   have Cfin: "finite C" using Ccomp isol by (metis compact_eq_Bolzano_Weierstrass order_refl)
   define R where "R = (\<lambda>c. dist c ctr) ` C"
   have Rfin: "finite R" unfolding R_def using Cfin by simp
-  have "infinite {0<..pi/2::real}" using pi_gt_zero by (simp add: infinite_Ioc)
-  hence "infinite ({0<..pi/2::real} - R)" using Rfin by (rule Diff_infinite_finite[rotated])
-  then obtain \<epsilon> where \<epsilon>m: "\<epsilon> \<in> {0<..pi/2::real} - R" using infinite_imp_nonempty by blast
-  have \<epsilon>0: "0 < \<epsilon>" and \<epsilon>pi: "\<epsilon> \<le> pi/2" and \<epsilon>R: "\<epsilon> \<notin> R" using \<epsilon>m by auto
+  have "infinite {0<..\<delta>::real}" using d0 by (simp add: infinite_Ioc)
+  hence "infinite ({0<..\<delta>::real} - R)" using Rfin by (rule Diff_infinite_finite[rotated])
+  then obtain \<epsilon> where \<epsilon>m: "\<epsilon> \<in> {0<..\<delta>::real} - R" using infinite_imp_nonempty by blast
+  have \<epsilon>0: "0 < \<epsilon>" and \<epsilon>pi: "\<epsilon> \<le> \<delta>" and \<epsilon>R: "\<epsilon> \<notin> R" using \<epsilon>m by auto
   have sphere: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. f \<omega> \<noteq> 0"
   proof
     fix \<omega> assume w: "\<omega> \<in> sphere ctr \<epsilon>"
-    hence wO: "\<omega> \<in> Omega ctr" using sphere_subset_Omega[OF \<epsilon>pi] by blast
+    hence wO: "\<omega> \<in> OmegaPF ctr \<delta>" using sphere_subset_OmegaPF[OF \<epsilon>pi dpi] by blast
     have dw: "dist \<omega> ctr = \<epsilon>" using w by (simp add: dist_commute sphere_def)
     show "f \<omega> \<noteq> 0"
     proof
@@ -1469,11 +1475,11 @@ proof -
       thus False using \<epsilon>R dw by simp
     qed
   qed
-  have annulus: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+  have annulus: "\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                    f y \<noteq> 0 \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
   proof
-    fix y assume "y \<in> Omega ctr - ball ctr \<epsilon>"
-    hence yO: "y \<in> Omega ctr" by simp
+    fix y assume "y \<in> OmegaPF ctr \<delta> - ball ctr \<epsilon>"
+    hence yO: "y \<in> OmegaPF ctr \<delta>" by simp
     show "f y \<noteq> 0 \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
     proof (cases "f y = 0")
       case True
@@ -1488,14 +1494,16 @@ proof -
 qed
 
 lemma regular_feasible_point_dip:
-  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle and \<delta> :: real
   assumes c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and dpi: "\<delta> \<le> pi"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                       :: (planar^'n) set) \<noteq> {}"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
-            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+            \<and> (\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
   \<comment> \<open>\<^bold>\<open>SOUNDNESS FIX:\<close> requires \<open>feasible\<close> (the feasible body has nonempty interior).  Without
@@ -1505,14 +1513,14 @@ lemma regular_feasible_point_dip:
 proof -
   obtain x0 :: "planar^'n"
     where x0I: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
-      and x0reg: "\<forall>\<omega>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-    using regular_config_exists[OF c6 feasible] by blast
+      and x0reg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
+    using regular_config_exists[OF c6 d0 pf feasible] by blast
   have x0F: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
     using x0I interior_subset by blast
-  have nondeg: "\<forall>\<omega>\<in>Omega ctr. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
+  have nondeg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
                               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>) = 0)"
   proof (intro ballI notI)
-    fix \<omega> assume "\<omega> \<in> Omega ctr"
+    fix \<omega> assume "\<omega> \<in> OmegaPF ctr \<delta>"
       and deg: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
                 \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>) = 0"
     from deg have g: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0"
@@ -1527,18 +1535,18 @@ proof -
                     = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> $ 1 $ 2)\<^sup>2" by simp
     with g have "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0"
       using Phibad_zero_iff by blast
-    with x0reg show False by simp
+    with x0reg \<open>\<omega> \<in> OmegaPF ctr \<delta>\<close> show False by auto
   qed
   obtain \<epsilon> :: real where \<epsilon>0: "0 < \<epsilon>"
       and sph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-      and ann: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+      and ann: "\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
-    using no_degenerate_to_sphere_annulus[OF nondeg] by blast
+    using no_degenerate_to_sphere_annulus[OF d0 dpi nondeg] by blast
   have c1: "0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
-            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+            \<and> (\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
     using \<epsilon>0 x0F sph ann by (intro conjI)
@@ -1547,7 +1555,7 @@ proof -
     show "0 < \<epsilon>
           \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
           \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
-          \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+          \<and> (\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                 gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                 \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
       by (rule c1)
@@ -1560,19 +1568,21 @@ text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with con
   the regular feasible point, so what remains assumed is purely the existence of that point.\<close>
 
 lemma regular_feasible_witness_dip:
-  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle
+  fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle and \<delta> :: real
   assumes c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and dpi: "\<delta> \<le> pi"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                       :: (planar^'n) set) \<noteq> {}"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> continuous_on (sphere ctr \<epsilon>)
                   (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))
-            \<and> continuous_on (Omega ctr - ball ctr \<epsilon>)
+            \<and> continuous_on (OmegaPF ctr \<delta> - ball ctr \<epsilon>)
                   (\<lambda>y. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)
                        + sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))
             \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
-            \<and> (\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+            \<and> (\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
 proof -
@@ -1580,14 +1590,14 @@ proof -
     where \<epsilon>0: "0 < \<epsilon>"
       and feas: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
       and rsph: "\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-      and rO: "\<forall>y\<in>Omega ctr - ball ctr \<epsilon>.
+      and rO: "\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
-    using regular_feasible_point_dip[OF c6 feasible] by blast
+    using regular_feasible_point_dip[OF c6 d0 dpi pf feasible] by blast
   have c1: "continuous_on (sphere ctr \<epsilon>)
               (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))"
     by (rule norm_gradU_dip_continuous_on)
-  have c2: "continuous_on (Omega ctr - ball ctr \<epsilon>)
+  have c2: "continuous_on (OmegaPF ctr \<delta> - ball ctr \<epsilon>)
               (\<lambda>y. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)
                    + sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
     by (intro continuous_on_add norm_gradU_dip_continuous_on
@@ -1603,9 +1613,9 @@ text \<open>\<^bold>\<open>The concrete capstone: \<open>\<F>\<^sub>0\<close> fo
 
 theorem F0_dip_nonempty:
   assumes c6: "6 \<le> CARD('n)"
-  shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
-            0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
-          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (Omega ctr) \<delta>null pmin \<xi> \<kappa> \<epsilon>
+  shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr \<delta> R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
+            0 < \<delta> \<and> 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (OmegaPF ctr \<delta>) \<delta>null pmin \<xi> \<kappa> \<epsilon>
               \<noteq> ({}::(planar^'n) set)"
   \<comment> \<open>\<^bold>\<open>Unconditional capstone.\<close>  The only hypothesis is the dimension restriction \<open>c6\<close>; the design
       (steering \<open>\<omega>\<^sub>0,\<omega>\<^sub>s,\<omega>\<^sub>null\<close>, geometry \<open>A,B,D\<close>, tolerances \<open>d\<^sub>min,\<delta>\<^sub>null,p\<^sub>min,R\<close> and margins) is
@@ -1620,6 +1630,21 @@ proof -
   define \<omega>null :: planar where "\<omega>null = vector [pi, 0]"
   have hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     by (simp add: \<omega>s_def \<omega>0_def kz_def)
+  have d0: "(0::real) < pi/4" by simp
+  have dpi: "(pi::real)/4 \<le> pi" by simp
+  have pf: "\<forall>\<omega>\<in>OmegaPF \<omega>0 (pi/4). sin (\<omega> $ 1) \<noteq> 0"
+  proof
+    fix \<omega> :: planar assume "\<omega> \<in> OmegaPF \<omega>0 (pi/4)"
+    hence mb: "(\<omega>0 - vector [pi/4, pi]) $ 1 \<le> \<omega> $ 1 \<and> \<omega> $ 1 \<le> (\<omega>0 + vector [pi/4, pi]) $ 1"
+      unfolding OmegaPF_def mem_box_cart by blast
+    have l1: "(\<omega>0 - vector [pi/4, pi]) $ 1 = pi/4"
+      by (simp add: \<omega>0_def vector_minus_component vector_2)
+    have l2: "(\<omega>0 + vector [pi/4, pi]) $ 1 = 3*pi/4"
+      by (simp add: \<omega>0_def vector_add_component vector_2)
+    have lo: "0 < \<omega> $ 1" and hi: "\<omega> $ 1 < pi" using mb l1 l2 pi_gt_zero by linarith+
+    have "0 < sin (\<omega> $ 1)" by (rule sin_gt_zero[OF lo hi])
+    thus "sin (\<omega> $ 1) \<noteq> 0" by simp
+  qed
   have cn: "cvec_dip \<omega>0 \<omega>s \<omega>null \<noteq> 0"
   proof -
     have "cvec_dip \<omega>0 \<omega>s \<omega>null $ 1 = - 2"
@@ -1666,11 +1691,11 @@ proof -
     ultimately show ?thesis by blast
   qed
   have "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
-          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 (Omega \<omega>0) 1 0 \<xi> \<kappa> \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 (OmegaPF \<omega>0 (pi/4)) 1 0 \<xi> \<kappa> \<epsilon>
               \<noteq> ({}::(planar^'n) set)"
-    using regular_feasible_witness_dip[OF c6 feasible]
-    by (blast intro: F0_nonempty_of_witness)
-  thus ?thesis by blast
+    using regular_feasible_witness_dip[OF c6 d0 dpi pf feasible]
+    by (blast intro: F0_nonempty_of_witness OmegaPF_compact)
+  thus ?thesis using d0 by blast
 qed
 
 end

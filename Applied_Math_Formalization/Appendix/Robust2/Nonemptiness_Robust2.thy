@@ -655,4 +655,76 @@ proof -
 qed
 
 
+
+
+section \<open>The pole-free angular domain \<open>OmegaPF\<close> (soundness fix)\<close>
+
+text \<open>The paper's full angular box \<open>Omega ctr\<close> (theta-half-width \<open>\<pi>/2\<close>) ALWAYS
+  contains pole points \<open>\<omega>\<^sub>1 \<in> \<pi>\<int>\<close>, where the dipole gain vanishes to second
+  order and hence EVERY configuration is degenerate-critical (gradU = 0 with
+  singular Hessian).  All robust-margin statements over that box are
+  unsatisfiable.  Following the paper's own 2D-cut reduction (D_edit L1253),
+  the spine is restated over the fat pole-free box \<open>OmegaPF ctr \<delta>\<close> with
+  \<open>\<delta> < \<pi>/2\<close> chosen so the theta-interval avoids \<open>\<pi>\<int>\<close>.\<close>
+
+definition OmegaPF :: "planar \<Rightarrow> real \<Rightarrow> planar set" where
+  "OmegaPF ctr \<delta> = cbox (ctr - vector [\<delta>, pi]) (ctr + vector [\<delta>, pi])"
+
+lemma OmegaPF_compact: "compact (OmegaPF ctr \<delta>)"
+  unfolding OmegaPF_def by (rule compact_cbox)
+
+lemma compact_minus_ball: "compact S \<Longrightarrow> compact (S - ball c \<epsilon>)"
+proof -
+  assume cS: "compact S"
+  have "S - ball c \<epsilon> = S \<inter> (- ball c \<epsilon>)" by auto
+  moreover have "compact (S \<inter> (- ball c \<epsilon>))"
+    by (rule compact_Int_closed[OF cS closed_Compl[OF open_ball]])
+  ultimately show ?thesis by simp
+qed
+
+lemma sphere_subset_OmegaPF:
+  fixes ctr :: "real^2"
+  assumes ed: "\<epsilon> \<le> \<delta>" and dpi: "\<delta> \<le> pi"
+  shows "sphere ctr \<epsilon> \<subseteq> OmegaPF ctr \<delta>"
+proof
+  fix y assume "y \<in> sphere ctr \<epsilon>"
+  hence dy: "dist y ctr = \<epsilon>" by (simp add: dist_commute sphere_def)
+  show "y \<in> OmegaPF ctr \<delta>"
+    unfolding OmegaPF_def mem_box_cart
+  proof (intro allI)
+    fix i :: 2
+    have b: "\<bar>y$i - ctr$i\<bar> \<le> \<delta>"
+    proof -
+      have "\<bar>y$i - ctr$i\<bar> = \<bar>(y - ctr)$i\<bar>" by simp
+      also have "\<dots> \<le> norm (y - ctr)" by (rule component_le_norm_cart)
+      also have "\<dots> = \<epsilon>" using dy by (simp add: dist_norm)
+      finally show ?thesis using ed by simp
+    qed
+    have v: "\<delta> \<le> (vector [\<delta>, pi] :: real^2) $ i"
+      using exhaust_2[of i] dpi by (auto simp: vector_2)
+    have lo: "(ctr - vector [\<delta>, pi]) $ i = ctr $ i - vector [\<delta>, pi] $ i"
+      by (simp add: vector_minus_component)
+    have hi: "(ctr + vector [\<delta>, pi]) $ i = ctr $ i + vector [\<delta>, pi] $ i"
+      by (simp add: vector_add_component)
+    have b1: "y$i - ctr$i \<le> \<delta>" using abs_le_D1[OF b] .
+    have b2: "ctr$i - y$i \<le> \<delta>" using abs_le_D2[OF b] by simp
+    show "(ctr - vector [\<delta>, pi]) $ i \<le> y $ i \<and> y $ i \<le> (ctr + vector [\<delta>, pi]) $ i"
+      using lo hi v b1 b2 by linarith
+  qed
+qed
+
+text \<open>(M4 restricted) The regular stratum over ANY witness domain \<open>K\<close> is meager ---
+  free from the unrestricted version by \<open>meager_subset\<close>.\<close>
+
+lemma meager_bad_regular_stratum_on:
+  fixes V :: "((real^2)^'n) set" and \<omega>0 \<omega>s :: "real^2" and K :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>K. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+                  \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+  by (rule meager_subset[OF _ meager_bad_regular_stratum[OF openV Vne c6]]) auto
+
+
 end
