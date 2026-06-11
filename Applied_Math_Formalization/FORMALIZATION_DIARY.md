@@ -2650,3 +2650,24 @@ gd*aa = 0 with aa = cmod(A)^2 > 0. ZERO iteration debugging — the
 deterministic-OF + scalarize discipline is now routine.
 M6 board: R1+R2+R3 proven; remaining R4 (gdip monotonicity grind),
 R5 (slice nowhere-dense), assembly.
+
+### CHECKPOINT REFLECTION (2026-06-11, user-requested) — direction + provability audit
+DIRECTION CONFIRMED: since the soundness repair, every step has landed as
+designed (planar_config, M4, M6b, M6-R1/R2/R3 — several first-pass). Risk
+is concentrated in exactly ONE residual design (M5b below).
+R4 STRATEGY UPGRADE (found during this audit): instead of the tan-inequality
+grind, use the LOG-DERIVATIVE route: gdip' = C sin(theta) [gsinc'(u-)gsinc(u+)
+- gsinc(u-)gsinc'(u+)], and the bracket > 0 for u- < u+ in (0,pi) iff
+h(x) = gsinc'/gsinc = cot x - 1/x is strictly decreasing, which holds since
+h'(x) = 1/x^2 - 1/sin^2 x < 0 <=> sin x < x. ONE elementary inequality.
+gsinc = sin x/x off 0 (def 422); off-zero derivative by DERIV rules.
+CAPSTONE DISPOSITION CLARIFIED: odd_N_nonemptiness + its 6 sorried leaves
+are the OLD abstract scaffold, fully superseded by the concrete flagship
+F0_dip_nonempty (= TeX thm:final). They are an architecture-retirement
+decision (user sign-off), NOT remaining mathematics.
+ENDGAME REQUIREMENT noted: Robust3 must enter a session (ROOT edit + bake)
+so `isabelle build` certifies the flagship end-to-end — currently only the
+Scratch_R3 harness checks it.
+THE FINITE GOAL LIST (with strategies) — see the session report; provability
+classes: G1-G4 HIGH (established patterns), G5 (M5b) MEDIUM-direct with a
+guaranteed fallback ladder, G6-G9 trivial/decision-grade.
