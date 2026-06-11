@@ -2548,3 +2548,26 @@ B4 status: Hcmat_at_null, gradUc_at_null, Uc_at_null, HessU_at_null,
 det_HessU_at_null ALL GREEN. The same quantity detJ*Im(cnj mu1 mu2) will BE
 the slice-Jacobian determinant of afR2 (B4'), closing the loop.
 Remaining M6b: B2 (joint C1), B3 (global regular value), B4' (slice), assembly.
+
+### M6b B2 PROVEN — afR2_joint_C1 (2026-06-11)
+The joint C1 blinfun derivative field for G = cplx_r2 o af: x-partial from
+has_derivative_A_moment_x (+ Afun/A_moment/DA bridges), omega-partial chained
+through has_derivative_cvec_dip + has_derivative_Afun_c + cplx_r2, assembled
+with has_derivative_partialsI; full-field continuity componentwise
+(Basis_prod_def cases, dcw0/da0 vanishing, the inner_sum intro chain).
+NEW TRAPS (canon):
+- `at x` ABBREVIATES `at x within UNIV`: any rewrite rule "at ?a within
+  UNIV = at ?a" (e.g. at_within_open[OF UNIV_I open_UNIV] in a simp set) is
+  the IDENTITY and LOOPS FOREVER — this caused every Interrupt_Breakdown /
+  hang of the session. Only UNIV_Times_UNIV is needed; the within-UNIV form
+  then IS the at-form syntactically.
+- bounded_linear.continuous_on is the COMPOSED form (bounded_linear f ==>
+  continuous_on s g ==> continuous_on s (f o g)) — feed continuous_on_id'
+  (the (\\x. x) form; continuous_on_id is the `id` form and won't match).
+- continuous_on_compose2 cannot HO-invert pairing lambdas (g = \\p. F (fst p)
+  (snd p) composed with a pairing f) — unfold the definition and use the
+  flat intro chain instead.
+- [of]-instantiation order: use [where x = ... and ...] (schematic order
+  surprises); pin `for z`-binder types (decoupled-type-var trap again).
+M6b board: B1 done (library), B2 PROVEN, B4 PROVEN (det identity), remaining:
+B3 (regular value, assembly-grade), B4' (slice bridge), final assembly.

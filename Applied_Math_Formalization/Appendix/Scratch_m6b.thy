@@ -140,12 +140,188 @@ section \<open>B1/B2: the array factor as an \<open>\<real>\<^sup>2\<close>-valu
 definition afR2 :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (((real^2)^'n) \<times> (real^2)) \<Rightarrow> real^2" where
   "afR2 \<omega>0 \<omega>s p = cplx_r2 (af (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p))"
 
+lemma af_eq_Afun: "af cvec x \<omega> = Afun x (cvec \<omega>)"
+  by (simp add: af_def Afun_def)
+
+lemma Afun_eq_A_moment: "Afun x c = A_moment x c"
+  by (simp add: Afun_def A_moment_def phase_def)
+
+lemma cplx_r2_zero: "cplx_r2 0 = 0"
+  using bounded_linear_cplx_r2 by (simp add: linear_0 bounded_linear.linear)
+
 lemma afR2_joint_C1:
   fixes \<omega>0 \<omega>s :: "real^2"
   shows "\<exists>G'::(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2)).
             (\<forall>z. (afR2 \<omega>0 \<omega>s has_derivative blinfun_apply (G' z)) (at z))
           \<and> continuous_on UNIV G'"
-  sorry
+proof -
+  define dcw :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2) \<Rightarrow> real^2"
+    where "dcw z = (\<lambda>k. cplx_r2 (\<Sum>n\<in>UNIV.
+      (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s (snd z) k) \<bullet> ((fst z) $ n))
+        * cis (- ((cvec_dip \<omega>0 \<omega>s (snd z)) \<bullet> ((fst z) $ n)))))" for z
+  define D :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (((real^2)^'n) \<times> (real^2)) \<Rightarrow> real^2"
+    where "D z = (\<lambda>w. cplx_r2 (DA_paper_x (fst z) (cvec_dip \<omega>0 \<omega>s (snd z)) (fst w))
+                      + dcw z (snd w))" for z
+
+  \<comment> \<open>the \<open>\<bm>x\<close>-partial\<close>
+  have FX: "((\<lambda>y. cplx_r2 (Afun y (cvec_dip \<omega>0 \<omega>s \<omega>))) has_derivative
+             (\<lambda>h. cplx_r2 (DA_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h))) (at x within UNIV)"
+    for x :: "(real^2)^'n" and \<omega> :: "real^2"
+  proof -
+    have eqf: "(\<lambda>y. Afun y (cvec_dip \<omega>0 \<omega>s \<omega>)) = (\<lambda>y. A_moment y (cvec_dip \<omega>0 \<omega>s \<omega>))"
+      by (rule ext) (rule Afun_eq_A_moment)
+    have eqd: "DA_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) = d_A_moment_x x (cvec_dip \<omega>0 \<omega>s \<omega>)"
+      by (rule ext) (simp add: DA_paper_x_def d_A_moment_x_def)
+    have "((\<lambda>y. A_moment y (cvec_dip \<omega>0 \<omega>s \<omega>)) has_derivative
+           d_A_moment_x x (cvec_dip \<omega>0 \<omega>s \<omega>)) (at x within UNIV)"
+      by (rule has_derivative_A_moment_x)
+    hence "((\<lambda>y. Afun y (cvec_dip \<omega>0 \<omega>s \<omega>)) has_derivative
+           DA_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>)) (at x within UNIV)"
+      unfolding eqf eqd by assumption
+    thus ?thesis
+      by (rule bounded_linear.has_derivative[OF bounded_linear_cplx_r2])
+  qed
+
+  \<comment> \<open>the \<open>\<omega>\<close>-partial (chain through \<open>Dcvec\<close>, into \<open>cplx_r2\<close>)\<close>
+  have FY0: "((\<lambda>u. cplx_r2 (Afun x (cvec_dip \<omega>0 \<omega>s u))) has_derivative dcw (x, \<omega>)) (at \<omega>)"
+    for x :: "(real^2)^'n" and \<omega> :: "real^2"
+  proof -
+    have c1: "(cvec_dip \<omega>0 \<omega>s has_derivative Dcvec_dip \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+      by (rule has_derivative_cvec_dip)
+    have c2: "(Afun x has_derivative
+        (\<lambda>h. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n))
+              * cis (-((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x$n))))) (at (cvec_dip \<omega>0 \<omega>s \<omega>))"
+      by (rule has_derivative_Afun_c)
+    have chain: "((\<lambda>u. Afun x (cvec_dip \<omega>0 \<omega>s u)) has_derivative
+        (\<lambda>k. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) \<bullet> (x$n))
+              * cis (-((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x$n))))) (at \<omega>)"
+      using diff_chain_at[OF c1 c2] by (simp add: o_def)
+    show ?thesis
+      unfolding dcw_def fst_conv snd_conv
+      by (rule bounded_linear.has_derivative[OF bounded_linear_cplx_r2 chain])
+  qed
+  have blw: "bounded_linear (dcw z)" for z
+  proof -
+    obtain x \<omega> where zxy: "z = (x, \<omega>)" by fastforce
+    show ?thesis
+      using FY0[of x \<omega>] has_derivative_bounded_linear unfolding zxy by blast
+  qed
+  have FY: "x' \<in> (UNIV :: ((real^2)^'n) set) \<Longrightarrow> \<omega>' \<in> (UNIV :: (real^2) set) \<Longrightarrow>
+       ((\<lambda>u. cplx_r2 (Afun x' (cvec_dip \<omega>0 \<omega>s u))) has_derivative
+          blinfun_apply (Blinfun (dcw (x', \<omega>')))) (at \<omega>' within UNIV)"
+    for x' :: "(real^2)^'n" and \<omega>' :: "real^2"
+    using FY0[of x' \<omega>'] has_derivative_at_withinI
+    by (simp add: bounded_linear_Blinfun_apply blw)
+
+  \<comment> \<open>joint continuity of the \<open>\<omega>\<close>-partial field, componentwise\<close>
+  have cvs: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set)
+               (\<lambda>z. cvec_dip \<omega>0 \<omega>s (snd z))"
+    by (rule continuous_on_compose2[OF continuous_on_cvec_dip
+          continuous_on_snd[OF continuous_on_id] subset_UNIV])
+  have xn: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set)
+               (\<lambda>z. (fst z) $ n)" for n
+    by (rule bounded_linear.continuous_on[OF
+          bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_fst]
+          continuous_on_id])
+  have contdcw: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set) (\<lambda>z. dcw z w)"
+    for w :: "real^2"
+  proof -
+    have inner_sum: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set)
+        (\<lambda>z. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s (snd z) w) \<bullet> ((fst z) $ n))
+              * cis (- ((cvec_dip \<omega>0 \<omega>s (snd z)) \<bullet> ((fst z) $ n))))"
+      by (intro continuous_on_sum continuous_on_cis continuous_intros
+            continuous_on_Dcvec_dip_snd cvs xn)
+    show ?thesis
+      unfolding dcw_def
+      by (rule bounded_linear.continuous_on[OF bounded_linear_cplx_r2 inner_sum])
+  qed
+  have contB: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set)
+                 (\<lambda>z. Blinfun (dcw z))"
+  proof (rule continuous_on_blinfun_componentwise)
+    fix w :: "real^2" assume "w \<in> Basis"
+    show "continuous_on UNIV (\<lambda>z. blinfun_apply (Blinfun (dcw z)) w)"
+      using contdcw by (simp add: bounded_linear_Blinfun_apply blw)
+  qed
+  have FYC: "continuous (at (x, \<omega>) within UNIV \<times> UNIV)
+               (\<lambda>(x', \<omega>'). Blinfun (dcw (x', \<omega>')))"
+    for x :: "(real^2)^'n" and \<omega> :: "real^2"
+  proof -
+    have "continuous (at (x, \<omega>) within UNIV)
+            (\<lambda>z. Blinfun (dcw z))"
+      using contB unfolding continuous_on_eq_continuous_within by blast
+    thus ?thesis by (simp add: case_prod_unfold UNIV_Times_UNIV)
+  qed
+
+  \<comment> \<open>joint derivative at every point\<close>
+  have blDA: "bounded_linear (\<lambda>h. cplx_r2 (DA_paper_x (fst z) (cvec_dip \<omega>0 \<omega>s (snd z)) h))"
+    for z :: "((real^2)^'n) \<times> (real^2)"
+    by (rule has_derivative_bounded_linear[OF FX[where x = "fst z" and \<omega> = "snd z"]])
+  have blD: "bounded_linear (D z)" for z
+    unfolding D_def
+    by (intro bounded_linear_add
+          bounded_linear_compose[OF blDA bounded_linear_fst]
+          bounded_linear_compose[OF blw bounded_linear_snd])
+  have hd: "(afR2 \<omega>0 \<omega>s has_derivative D z) (at z)" for z
+  proof -
+    obtain x \<omega> where zxy: "z = (x, \<omega>)" by fastforce
+    have pd: "((\<lambda>(x', \<omega>'). cplx_r2 (Afun x' (cvec_dip \<omega>0 \<omega>s \<omega>'))) has_derivative
+             (\<lambda>(tx, ty). cplx_r2 (DA_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) tx)
+                + blinfun_apply (Blinfun (dcw (x, \<omega>))) ty))
+           (at (x, \<omega>) within UNIV \<times> UNIV)"
+      by (rule has_derivative_partialsI[OF FX FY FYC UNIV_I convex_UNIV])
+    have feq: "(\<lambda>(x', \<omega>'). cplx_r2 (Afun x' (cvec_dip \<omega>0 \<omega>s \<omega>'))) = afR2 \<omega>0 \<omega>s"
+      by (rule ext) (simp add: afR2_def af_eq_Afun split_beta)
+    have deq: "(\<lambda>(tx, ty). cplx_r2 (DA_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) tx)
+                 + blinfun_apply (Blinfun (dcw (x, \<omega>))) ty) = D (x, \<omega>)"
+      unfolding D_def
+      by (rule ext) (simp add: split_beta bounded_linear_Blinfun_apply[OF blw])
+    have filt2: "(at (x, \<omega>) within (UNIV :: ((real^2)^'n) set) \<times> (UNIV :: (real^2) set))
+                 = at (x, \<omega>)"
+      by (simp add: UNIV_Times_UNIV)
+    show ?thesis
+      using pd unfolding zxy feq deq filt2 .
+  qed
+
+  \<comment> \<open>continuity of the full field\<close>
+  have dcw0: "dcw z 0 = 0" for z
+    unfolding dcw_def
+    by (simp add: Dcvec_dip_def cplx_r2_zero)
+  have da0: "DA_paper_x x c 0 = 0" for x :: "(real^2)^'n" and c :: "real^2"
+    by (simp add: DA_paper_x_def d_phase_def)
+  have cont: "continuous_on UNIV (\<lambda>z. Blinfun (D z))"
+  proof (rule continuous_on_blinfun_componentwise)
+    fix w :: "((real^2)^'n) \<times> (real^2)" assume "w \<in> Basis"
+    then consider b where "b \<in> Basis" "w = (b, 0)" | e where "e \<in> Basis" "w = (0, e)"
+      unfolding Basis_prod_def by auto
+    thus "continuous_on UNIV (\<lambda>z. blinfun_apply (Blinfun (D z)) w)"
+    proof cases
+      case 1
+      have cDA: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set)
+          (\<lambda>z. DA_paper_x (fst z) (cvec_dip \<omega>0 \<omega>s (snd z)) b)"
+        unfolding DA_paper_x_def d_phase_def
+        by (intro continuous_on_sum continuous_on_cis continuous_intros cvs xn)
+      have cDA2: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set)
+          (\<lambda>z. cplx_r2 (DA_paper_x (fst z) (cvec_dip \<omega>0 \<omega>s (snd z)) b))"
+        by (rule bounded_linear.continuous_on[OF bounded_linear_cplx_r2 cDA])
+      have "continuous_on UNIV (\<lambda>z. D z w)"
+        unfolding D_def \<open>w = (b, 0)\<close> fst_conv snd_conv
+        by (simp add: dcw0 cDA2)
+      thus ?thesis by (simp add: bounded_linear_Blinfun_apply blD)
+    next
+      case 2
+      have "continuous_on UNIV (\<lambda>z. D z w)"
+        unfolding D_def \<open>w = (0, e)\<close> fst_conv snd_conv
+        using contdcw da0 by (simp add: cplx_r2_zero)
+      thus ?thesis by (simp add: bounded_linear_Blinfun_apply blD)
+    qed
+  qed
+  show ?thesis
+  proof (intro exI[where x="\<lambda>z. Blinfun (D z)"] conjI allI)
+    fix z
+    show "(afR2 \<omega>0 \<omega>s has_derivative blinfun_apply (Blinfun (D z))) (at z)"
+      using hd[of z] by (simp add: bounded_linear_Blinfun_apply blD)
+  qed (rule cont)
+qed
 
 section \<open>B3: global regular value (odd \<open>N\<close>)\<close>
 
