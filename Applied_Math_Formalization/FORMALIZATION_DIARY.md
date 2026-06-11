@@ -2571,3 +2571,19 @@ NEW TRAPS (canon):
   surprises); pin `for z`-binder types (decoupled-type-var trap again).
 M6b board: B1 done (library), B2 PROVEN, B4 PROVEN (det identity), remaining:
 B3 (regular value, assembly-grade), B4' (slice bridge), final assembly.
+
+### M6b B3 PROVEN — afR2_regular_value (2026-06-11)
+Global regular value of G = cplx_r2 o af on V x UNIV (odd N), NO openness
+hypothesis needed. Proof: at a zero, cvec = 0 forces af = of_nat CARD /= 0
+(odd => CARD /= 0 by presburger) — vacuous; else dxA_surj fires. The
+witness derivative is B2's joint field at z; its restriction to
+x-directions IS the x-partial by has_derivative_unique (embed via
+has_derivative_Pair[OF ident const] + diff_chain_at), so surjectivity
+lifts: surj(x-partial) => surj(joint) via range inclusion.
+Bridges: dxA_eq_DA (dxA = DA_paper_x; needs scaleR_conv_of_real — d_phase
+uses *R, dxA uses of_real-mult), comp_surj with surj_cplx_r2.
+M6b board: B1 done, B2 PROVEN, B3 PROVEN, B4 PROVEN. Remaining: B4'
+(null => no surjective slice derivative: the omega-slice derivative of afR2,
+its 2x2 Jacobian determinant = detJ * Im(cnj mu1 mu2) connecting to
+det_HessU_at_null, + uniqueness at interior points) and the final assembly
+(M4 pattern, V x UNIV, no box cover). Two sorries left in the scratch.

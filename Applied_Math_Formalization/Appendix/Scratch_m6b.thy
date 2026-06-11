@@ -325,11 +325,85 @@ qed
 
 section \<open>B3: global regular value (odd \<open>N\<close>)\<close>
 
+lemma dxA_eq_DA: "dxA cvec x \<omega> h = DA_paper_x x (cvec \<omega>) h"
+  by (simp add: dxA_def DA_paper_x_def d_phase_def sum_distrib_left
+        scaleR_conv_of_real algebra_simps)
+
 lemma afR2_regular_value:
   fixes \<omega>0 \<omega>s :: "real^2" and V :: "((real^2)^'n) set"
   assumes oddN: "odd CARD('n)"
   shows "regular_value_on (afR2 \<omega>0 \<omega>s) (V \<times> (UNIV :: (real^2) set)) 0"
-  sorry
+proof (rule regular_value_onI)
+  fix z :: "((real^2)^'n) \<times> (real^2)"
+  assume zin: "z \<in> V \<times> UNIV" and z0: "afR2 \<omega>0 \<omega>s z = 0"
+  obtain x \<omega> where zxy: "z = (x, \<omega>)" by fastforce
+  have af0: "af (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0"
+    using z0 unfolding zxy afR2_def by simp
+  have cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  proof
+    assume c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
+    have "af (cvec_dip \<omega>0 \<omega>s) x \<omega> = of_nat (CARD('n))"
+      by (simp add: af_def c0)
+    moreover have "CARD('n) \<noteq> 0" using oddN by presburger
+    ultimately show False using af0 by simp
+  qed
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  have cnz': "c \<noteq> 0" unfolding c_def by (rule cnz)
+  \<comment> \<open>the \<open>\<bm>x\<close>-partial at the zero\<close>
+  have FXz: "((\<lambda>y. cplx_r2 (Afun y c)) has_derivative
+              (\<lambda>h. cplx_r2 (DA_paper_x x c h))) (at x)"
+  proof -
+    have eqf: "(\<lambda>y. Afun y c) = (\<lambda>y. A_moment y c)"
+      by (rule ext) (rule Afun_eq_A_moment)
+    have eqd: "DA_paper_x x c = d_A_moment_x x c"
+      by (rule ext) (simp add: DA_paper_x_def d_A_moment_x_def)
+    have "((\<lambda>y. A_moment y c) has_derivative d_A_moment_x x c) (at x within UNIV)"
+      by (rule has_derivative_A_moment_x)
+    hence "((\<lambda>y. Afun y c) has_derivative DA_paper_x x c) (at x within UNIV)"
+      unfolding eqf eqd by assumption
+    thus ?thesis
+      by (rule bounded_linear.has_derivative[OF bounded_linear_cplx_r2])
+  qed
+  \<comment> \<open>the joint derivative from B2, and the embedded slice\<close>
+  obtain G' :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+    where derG: "\<And>u. (afR2 \<omega>0 \<omega>s has_derivative blinfun_apply (G' u)) (at u)"
+    using afR2_joint_C1[of \<omega>0 \<omega>s] by blast
+  define D where "D = blinfun_apply (G' z)"
+  have derD: "(afR2 \<omega>0 \<omega>s has_derivative D) (at z)"
+    unfolding D_def by (rule derG)
+  have emb: "((\<lambda>y. (y, \<omega>)) has_derivative (\<lambda>h. (h, 0))) (at x)"
+    by (rule has_derivative_Pair[OF has_derivative_ident has_derivative_const])
+  have sliceD: "((\<lambda>y. afR2 \<omega>0 \<omega>s (y, \<omega>)) has_derivative (\<lambda>h. D (h, 0))) (at x)"
+    using diff_chain_at[OF emb derD[unfolded zxy]] by (simp add: o_def)
+  have sliceF: "(\<lambda>y. afR2 \<omega>0 \<omega>s (y, \<omega>)) = (\<lambda>y. cplx_r2 (Afun y c))"
+    by (rule ext) (simp add: afR2_def af_eq_Afun c_def)
+  have uniq: "(\<lambda>h. D (h, 0)) = (\<lambda>h. cplx_r2 (DA_paper_x x c h))"
+    by (rule has_derivative_unique[OF sliceD[unfolded sliceF] FXz])
+  \<comment> \<open>surjectivity, lifted from \<open>dxA_surj\<close>\<close>
+  have surjDA: "surj (\<lambda>h. DA_paper_x x c h)"
+    unfolding surj_def
+  proof
+    fix w :: complex
+    obtain h where "dxA (cvec_dip \<omega>0 \<omega>s) x \<omega> h = w"
+      using dxA_surj[OF oddN cnz af0] by blast
+    hence "DA_paper_x x c h = w"
+      unfolding c_def by (simp add: dxA_eq_DA)
+    thus "\<exists>h'. w = DA_paper_x x c h'" by auto
+  qed
+  have surjcDA: "surj (\<lambda>h. cplx_r2 (DA_paper_x x c h))"
+    using comp_surj[OF surjDA surj_cplx_r2] by (simp add: o_def)
+  have surjslice: "surj (\<lambda>h. D (h, 0))"
+    unfolding uniq by (rule surjcDA)
+  have surjD: "surj D"
+    unfolding surj_def
+  proof
+    fix y :: "real^2"
+    obtain h where "y = D (h, 0)" using surjslice unfolding surj_def by blast
+    thus "\<exists>w. y = D w" by blast
+  qed
+  show "\<exists>f'. (afR2 \<omega>0 \<omega>s has_derivative f') (at z within V \<times> UNIV) \<and> surj f'"
+    using has_derivative_at_withinI[OF derD] surjD by blast
+qed
 
 section \<open>B4': degenerate null forbids a surjective slice derivative\<close>
 
