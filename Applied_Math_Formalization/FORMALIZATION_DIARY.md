@@ -2688,3 +2688,44 @@ openness: Blinfun-field continuity (continuous_on_gradU_dip_xpartial_applied)
 + continuous_open_vimage[OF open_surj_blinfun]. Engine + box cover verbatim
 M4. Fleet status: G1 (R4), G2 (R5), G3 (M6 assembly), G5/G6 (M5 analysis)
 still running.
+
+### PARALLEL WAVE 1 — G1 (R4) GREEN; G5/G6 ANALYSIS DELIVERED (2026-06-11)
+G1: gdip_deriv_zero_iff PROVEN (agent + one resume; independently verified,
+0 sorries, 4s build). Route exactly as designed: explicit gsincd off zero
+(has_field_derivative_transform_within_open), DERIV chain/product for gdip,
+bracket positivity via h x = cos x/sin x - 1/x strictly decreasing
+(DERIV_neg_imp_decreasing; sin x < x by MVT + cos monotone), frechet-eval
+bridge g1_frechet_eval. R4 is the last analysis brick of M6.
+G5/G6 ANALYSIS (M5 gate + M5b design) — headline findings:
+1. M5 TRUTH GATE: PASSED — no counterexample mechanism; but a GENUINE
+   near-miss found: THE BEAM-CENTER ANGLE. cvec_dip w0 ws w0 = 0
+   IDENTICALLY (the lift term cancels), w0 IS in the box, and at c=0:
+   d_phase = 0 => NOT surj DM for EVERY x; moments real => steering term
+   of gradU vanishes; gdip'(pi/2) = 0 => gradU(x, w0) = 0 for EVERY x.
+   Three of M5's four conjuncts hold x-UNIVERSALLY at w0. M5 survives only
+   because det HessU(., w0) is a nontrivial polynomial (covariance form
+   Hess = N^2 gdip''(pi/2) e1e1^T + C^T(-2N Cov x)C; gdip''(pi/2) =
+   (16-4pi^2)/8 /= 0; phi-column of Dcvec /= 0 pole-free). The c(w)=0
+   angles MUST be treated by dedicated polynomial slices (design piece D2).
+2. ROUTING CORRECTION: my earlier claim "det Dcvec = 0 witnesses route to
+   M6" is FALSE for the not-surj case: current M7 cut sends
+   (A/=0, not-surj, det=0) to M5. Agent recommends re-cut D0 (det/=0 into
+   M5, drop surj from M6). COORDINATION DECISION (mine): do NOT re-cut now
+   — G2/G3 are mid-flight on current statements, and M6's R5 slice proof
+   USES the surj conjunct (c=0 slices empty). Instead M5b gains piece D5:
+   the (not-surj, det=0) corner reuses R3's reduction (which needs NO surj)
+   to the same finite angle set as M6, with R5-variant slices (component-2
+   criticality needs no surj) at c/=0 and D2-polynomial slices at c=0.
+3. M5b DESIGN (full table in agent report, recorded here abridged):
+   D1 joint-regular part via engine (M4 pattern; subsumes M5a) HIGH 2-4d;
+   D2 c(w)=0 angles: countable + det-Hess covariance-polynomial slices
+   HIGH 3-5d; D3 phase-collinear branch via a 3-equation/2-parameter
+   "excess engine" (IFT charts -> (2N-1)-dim graphs -> negligible
+   projections; NO Sard needed) + Z^3 lattice union MED-HIGH ~1.5w;
+   D4 Branch-P residual: explicit rank-drop dichotomy (gamma parallel-or-
+   not to c) + excess engine on (star-n)/Hess.u(w) rows MEDIUM 1.5-3w;
+   D5 (new, mine) det=0 corner via M6 machinery sans surj. Fallbacks for
+   D4: deeper stratification; core_3d ruled out structurally by the agent
+   (gradU rows degenerate at exactly the residual witnesses); 1-dim cut
+   last resort.
+Fleet: G2 (R5), G3 (M6 assembly) still running.
