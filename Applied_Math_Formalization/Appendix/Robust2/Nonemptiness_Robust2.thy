@@ -1059,13 +1059,22 @@ lemma dxA_eq_DA: "dxA cvec x \<omega> h = DA_paper_x x (cvec \<omega>) h"
   by (simp add: dxA_def DA_paper_x_def d_phase_def sum_distrib_left
         scaleR_conv_of_real algebra_simps)
 
-lemma afR2_regular_value:
-  fixes \<omega>0 \<omega>s :: "real^2" and V :: "((real^2)^'n) set"
+text \<open>The TIGHT form: \<open>0\<close> is a regular value of the array factor on ALL of
+  configuration-times-angle space --- no domain hypothesis whatsoever.  The
+  witness derivative is the globally-defined joint \<open>C\<^sup>1\<close> field; its
+  restriction to \<open>\<bm>x\<close>-directions equals the \<open>\<bm>x\<close>-partial by
+  \<open>has_derivative_unique\<close>, so \<open>dxA_surj\<close>'s surjectivity lifts by pure range
+  inclusion.  Any set-restricted form follows by \<open>regular_value_on_subset\<close>.\<close>
+
+lemma afR2_regular_value_UNIV:
+  fixes \<omega>0 \<omega>s :: "real^2"
   assumes oddN: "odd CARD('n)"
-  shows "regular_value_on (afR2 \<omega>0 \<omega>s) (V \<times> (UNIV :: (real^2) set)) 0"
+  shows "regular_value_on (afR2 \<omega>0 \<omega>s)
+           (UNIV :: ((((real^2)^'n) \<times> (real^2)) set)) 0"
 proof (rule regular_value_onI)
   fix z :: "((real^2)^'n) \<times> (real^2)"
-  assume zin: "z \<in> V \<times> UNIV" and z0: "afR2 \<omega>0 \<omega>s z = 0"
+  assume zin: "z \<in> (UNIV :: ((((real^2)^'n) \<times> (real^2)) set))"
+    and z0: "afR2 \<omega>0 \<omega>s z = 0"
   obtain x \<omega> where zxy: "z = (x, \<omega>)" by fastforce
   have af0: "af (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0"
     using z0 unfolding zxy afR2_def by simp
@@ -1131,9 +1140,15 @@ proof (rule regular_value_onI)
     obtain h where "y = D (h, 0)" using surjslice unfolding surj_def by blast
     thus "\<exists>w. y = D w" by blast
   qed
-  show "\<exists>f'. (afR2 \<omega>0 \<omega>s has_derivative f') (at z within V \<times> UNIV) \<and> surj f'"
-    using has_derivative_at_withinI[OF derD] surjD by blast
+  show "\<exists>f'. (afR2 \<omega>0 \<omega>s has_derivative f') (at z within UNIV) \<and> surj f'"
+    using derD surjD by blast
 qed
+
+lemma afR2_regular_value:
+  fixes \<omega>0 \<omega>s :: "real^2" and V :: "((real^2)^'n) set"
+  assumes oddN: "odd CARD('n)"
+  shows "regular_value_on (afR2 \<omega>0 \<omega>s) (V \<times> (UNIV :: (real^2) set)) 0"
+  by (rule regular_value_on_subset[OF afR2_regular_value_UNIV[OF oddN] subset_UNIV])
 
 section \<open>B4': degenerate null forbids a surjective slice derivative\<close>
 

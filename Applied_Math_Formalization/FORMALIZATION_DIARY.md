@@ -2606,3 +2606,13 @@ MONOTONE METRIC: true-and-remaining obligations 3 -> 2 (M5 designed+gated,
 M6 designed). M6b took ~1 day from brick list to heap — the de-risking
 discipline (B4-first) paid off.
 Robust3 full-chain re-verify (M7 now consumes the heap M6b) running.
+
+### B3 TIGHTENED to the global form (2026-06-11, user-directed)
+afR2_regular_value_UNIV: regular_value_on (afR2 w0 ws) UNIV 0 — odd N is
+the ONLY hypothesis; no domain/openness at all (the proof never used
+membership). The V x UNIV form is now a 1-line corollary via
+regular_value_on_subset. Bonus elegance: the within-UNIV show closes with
+the bare global derivative — `at z within UNIV` IS `at z` (abbreviation),
+so has_derivative_at_withinI is unnecessary. Phantom-'n pinned via an
+explicit UNIV type annotation (the decoupled-type-var trap).
+Leaf 6s green; full chain re-verify running.
