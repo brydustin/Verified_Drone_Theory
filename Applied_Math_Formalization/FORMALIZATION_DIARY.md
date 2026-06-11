@@ -2616,3 +2616,23 @@ the bare global derivative — `at z within UNIV` IS `at z` (abbreviation),
 so has_derivative_at_withinI is unnecessary. Phantom-'n pinned via an
 explicit UNIV type annotation (the decoupled-type-var trap).
 Leaf 6s green; full chain re-verify running.
+
+### M6 CAMPAIGN OPENED — restatement + bricks R1/R2 proven (2026-06-11)
+RESTATEMENT (chain-verified 12:21, committed 313ef39): M6 gains the
+surj-DM conjunct (cvec=0 witnesses belong to M5: DM's A-component is 0 at
+c=0 — DA_paper_x x 0 = 0 — so DM never surjective there; M7 coverage
+re-partitions cleanly) + hsep/kdiff hypotheses ((a,b) /= 0 for the curve
+analysis; capstone discharges kdiff: kx values 1 vs 0 at the design).
+SCRATCH (Scratch_m6, ~20s cycles): R1 cols_dependent_2d (det=0 + v/=0 =>
+columns dependent; vec_eq_iff must be QUALIFIED in metis — the shadowing
+trap struck again inside metis, hanging a build) and R2 Dcvec_col2/
+Dcvec_col2_nz (second steering column = sin-theta*(-sin-phi, cos-phi),
+NEVER zero off poles) both proven first-pass.
+REMAINING BRICKS: R3 kernel-direction reduction (witnesses force
+gdip'(theta)=0; pure linear algebra + gradU_dip_component_moments);
+R4 gdip'-zeros = {cos theta = 0} off poles (THE GRIND: gdip strict
+monotonicity on (0,pi/2) via tan u > 4u/(pi^2-4u^2), split u <= 1.2
+polynomial bounds / u >= 1.2 boundary estimate — worked out in analysis,
+~1-2 sessions); R5 fixed-omega slices nowhere dense (rline_entire moment
+machinery + explicit two-cluster configuration for the nonvanishing
+witness); assembly (finite witness-angle set + finite-union meagerness).
