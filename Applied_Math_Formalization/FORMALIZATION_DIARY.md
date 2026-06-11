@@ -2316,3 +2316,43 @@ STATUS: no proof code written for M6 (honest zero). M6b (A=0 stratum) may be
 much easier and is not blocked — consider doing it next while the M5/M6
 strategy is decided. PAPER GAP: the tex hand-waves "positive codimension";
 the formal content is genuinely new mathematics.
+
+### SOUNDNESS FINDING: M6/M7 AS STATED ARE FALSE — pole-line counterexample (2026-06-10)
+gdip = (pi^2/4)*gsinc((pi/2)(1-cos t))*gsinc((pi/2)(1+cos t)) has gdip(0) =
+gdip'(0) = 0 (gsinc(pi)=0; both derivative terms carry sin t). Consequence,
+verified by hand from the definitions:
+- gradU(x,(0,phi)) = gdip'*|A|^2*e1 + gdip*(...) = 0 for EVERY x, EVERY phi;
+- HessU(x,(0,phi)) = gdip''(0)*|A|^2*e1e1^T (gdip''(0)=pi^2/8 > 0), rank<=1,
+  so det HessU = 0 for every x;
+- det Dcvec = sin(0)*(...) = 0; A_cart(x,c-bar) != 0 on a dense open x-set
+  (c-bar = the constant pole steering vector, nonzero for generic omega0/omegas).
+Hence M6's set contains a dense open subset of V (every x with A != 0 at the
+pole witnesses ALL of M6's conjuncts at omega=(0,phi)) — NOT meager. Same for
+M7/Phi_bad_meager_dip's full set {x. EX omega. Phibad = 0}. The pole lines
+{omega1 = k*pi} are degenerate-critical for ALL configurations because the
+dipole gain vanishes to second order there. The paper's unrestricted
+quantification was never right; the capstone consumer
+(regular_feasible_point_dip) only needs omega on the eps-SPHERE and the
+ANNULUS Omega-tilde, which must be pole-free for the theorem to be true at all.
+THE FIX (next session): restrict the omega-domain in M5/M6/M6b/M7 to the
+pole-free region the consumers actually use (read regular_feasible_point_dip /
+F0_nonempty_of_witness / no_degenerate_to_sphere_annulus for the exact set;
+likely {omega. omega1 in a compact subinterval of (0,pi)} or the sidelobe set).
+PAYOFFS of the restriction:
+- M4 (proven) restricts for free (subset => meager_subset; zero rework).
+- On the pole-free strip, gdip > 0 (gsinc factors vanish ONLY at cos t = -+1),
+  and Sigma = {det Dcvec = 0} is the single explicit GRAPH curve
+  theta = arccot(g(phi)) (cot bijective on (0,pi); h=0 => d1h != 0 already
+  checked) — no pole lines.
+- M6-restricted then reduces via the kernel-direction argument: on the curve,
+  rank(Dcvec) = 1, criticality with A != 0 forces (gdip'(theta),0) parallel to
+  the rank-1 range direction r(omega): test = gdip'(theta)*r2(omega) = 0. So
+  witnesses live in {phi. gdip'(theta(phi)) = 0} u {phi. r2 = 0} — countable
+  unless degenerate (a=b=0 subcase: omega0/omegas with equal transverse
+  wavevectors makes the curve theta == pi/2 with gdip'(pi/2) = 0 identically —
+  needs either a standing hypothesis excluding it or the L-component scalar
+  equation route). Then fixed-omega x-slices are nowhere dense via the
+  rline_entire machinery (M2-style), countable union => meager.
+- M5-restricted: still needs its own argument (mstarg = 0 coupling); park.
+NO CODE COMMITTED for M6 (nothing false, nothing half-baked). M4 proof is
+unaffected (its statement is true and stays).
