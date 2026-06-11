@@ -2434,3 +2434,33 @@ bridge: at A-null, HessU = g * 2Re(conj grad-A (x) grad-A), so det HessU=0
 with g/=0 (gain_dip_nonzero_of_sin + pf) forces singular A-slice-Jacobian.
 To build for M6b: joint C1 field of A (template gradU_dip_joint_C1),
 dxA-is-the-x-derivative lemma, Hessian-at-null computation.
+
+### M6b RECON COMPLETE — brick list (2026-06-10 late night)
+Verified facts for the M6b engine plan:
+- af = A_cart definitionally (identical Sum-cis RHS; Spine:19 vs Paper:66);
+  A_cart_eq_Afun bridges to the c-parametrized Afun x c (Robust1:2078).
+- dxA (Spine:127) is the explicit x-partial FORMULA; dxA_surj (Spine:139,
+  odd N + cvec/=0 + af=0 => onto C) is proven. MISSING: the lemma that dxA
+  IS the x-derivative of af — prove by mirroring has_derivative_M_paper_x
+  (termwise cis differentiation; same shape with weight 1).
+- HessU_dip_entry_moments machinery exists (Robust1:~2906 joint
+  matrix-vector helper) — route for the Hessian-at-null bridge:
+  at A=0: grad|A|^2 = 2Re(conj A grad A) = 0 and
+  Hess U = g * 2Re(conj gradA (x) gradA) (the conjA*Hess-A term drops),
+  so det HessU = g^2 * det(2x2 A-Jacobian-Gram) and with g/=0:
+  det HessU = 0 <=> A-slice-Jacobian singular <=> no surjective slice deriv.
+M6b BRICKS:
+  B1: has_derivative_afx: ((lam y. af cvec y w) has_derivative dxA cvec x w) (at x)
+      [mirror has_derivative_M_paper_x; cis-sum termwise]
+  B2: af joint C1 as G = cplx_r2 o (lam p. af (cvec_dip w0 ws) (fst p) (snd p)):
+      joint derivative field via has_derivative_partialsI
+      [mirror gradU_dip_joint_C1; omega-partial through Dcvec_dip]
+  B3: regular_value_on G (V x UNIV) 0: at zero, cvec=0 => af = CARD /= 0
+      (vacuous); else dxA_surj + cplx_r2-conjugation + x-partial => joint.
+  B4: Hessian-at-null bridge (the only second-order brick):
+      af=0 ∧ gain/=0 ∧ det HessU=0 => slice-Jacobian of G singular.
+  B5: helper-3 analogue (unique slice derivative + surj_matrix_vector_iff_det)
+      + assembly: M6b-bad subset of engine-bad(G, V x UNIV); engine; done.
+ESTIMATE: B1 hours; B2 day-ish (template exists); B3 half-day; B4 the
+risky one (second-order at nulls — investigate HessU_dip_entry_moments
+first); B5 hours.
