@@ -2483,3 +2483,36 @@ afR2_joint_C1 (B2, mirror gradU_dip_joint_C1), afR2_regular_value (B3,
 dxA_surj + d_A_moment_x bridges + cvec=0 vacuity), null_no_surj_slice (B4',
 needs slice-derivative formula + det bridge), assembly (M4 pattern, no
 boxes). Verify loop: /tmp/scratchm6b session, ~17s cycles.
+
+### M5 SOLVABILITY DESIGN — rank stratification (2026-06-11)
+User requires solvability assurance before further investment. Analysis:
+1. TRUTH: no pole-like forcing mechanism exists for M5 (mstarg(c)x = 0 is
+   nowhere dense in x for EVERY fixed c (M2); the only fat families found are
+   themselves meager, e.g. all-elements-coincident configs). Statement is
+   credibly true on OmegaPF. A dedicated counterexample stress-test is the
+   FIRST gate before proof investment.
+2. KEY REALIZATION dissolving the old "obstruction": the engine needs ACTUAL
+   joint-derivative surjectivity at zeros, and surj(DM) was merely the
+   SUFFICIENT condition A6 used. On the ¬surj-DM locus, Dx gradU = dE∘DM can
+   PERFECTLY WELL still have rank 2 (dE rank-2 needs only det Dcvec ≠ 0;
+   range(DM) is codim ≥ 1 but generically transverse to ker dE). So:
+   RANK-STRATIFY by the explicit x-partial field Dx(x,ω):
+   - Stratum R2 = {(x,ω). Dx gradU surjective}: OPEN (explicit continuous
+     2-row field, A5 bricks; rank lower semicont). M5-bad ∩ R2 handled by the
+     EXISTING engine + open_prod_nat_cover, verbatim M4 pattern (joint
+     regularity holds BY DEFINITION on R2: joint ⊇ x-partial).
+   - Stratum R≤1 = rank Dx ≤ 1: rows of the explicit 2×(2N) field parallel —
+     many analytic equations; combined with gradU=0 ∧ A≠0 ∧ det Dcvec≠0,
+     resolve by one more concrete reduction (kernel-direction style) or
+     fixed-ω slices. Bounded, concrete, same toolbox.
+3. FREE NEW TOOL (from this analysis): a 1-parameter projection corollary of
+   the EXISTING engine: for G(x,ω) := F(x,ω₁) (constant in ω₂), no slice can
+   ever be surjective, so the engine yields meager {x. ∃ω. G = 0} for ANY
+   jointly-regular 2-equation 1-parameter family — the x-projection of the
+   FULL zero set, not just degenerate zeros. Useful for M6's curve/pole work.
+4. FALLBACK LADDER if (2) resists: (a) map-switch a la M6b; (b) core_3d
+   engine generalization (mirrors core_2d, bounded); (c) the paper's literal
+   1-dim 2D-cut domain. ODD-N NOTE: the paper's tex never assumes odd N, but
+   its lem:Azero-surj is false without it (collinear zeros); odd-N was forced
+   at dxA_surj long before today — the formalization converges on the
+   strongest currently-provable version.
