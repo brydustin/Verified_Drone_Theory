@@ -2516,3 +2516,18 @@ User requires solvability assurance before further investment. Analysis:
    its lem:Azero-surj is false without it (collinear zeros); odd-N was forced
    at dxA_surj long before today — the formalization converges on the
    strongest currently-provable version.
+
+### PROCESS DISCIPLINE (user directive, 2026-06-11) — monotone metric + solvability-first
+1. THE MONOTONE METRIC, reported every session: count of TRUE-and-remaining
+   obligations (progress against false statements is illusory; soundness
+   restatements SHRINK this metric even when hypotheses grow).
+   Trajectory: 22 (2026-06-02) -> 13 -> 4 (engine done, planar_config done)
+   -> 3 (M4 done) -> CURRENT: 3 with M6b HALF-PROVEN (B4 core done),
+   M6 designed, M5 designed+gated.
+2. Never report an obligation "unsolved": every open item carries a proof,
+   or a written design with go/no-go gates, or a fallback ladder.
+3. ODD-N CLARIFICATION (for the record): the paper's tex never assumes odd
+   N, but its lem:Azero-surj is false without it (collinear-phase zeros);
+   odd CARD('n) entered the formalization at dxA_surj long ago and the
+   Capstone's odd_N_nonemptiness always carried it. The 2026-06-10 pass
+   only THREADED the existing forced hypothesis through the chain.
