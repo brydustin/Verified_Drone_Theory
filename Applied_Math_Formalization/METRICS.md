@@ -20,22 +20,22 @@ snapshot and will keep growing until the last on-path `sorry` is closed.
 
 ---
 
-## 1. Project statistics — snapshot (as of 2026-06-11)
+## 1. Project statistics — snapshot (as of 2026-06-12)
 
 Mirror of the paper's Table 3. Code/git rows are recomputable any time with
 `metrics/code_metrics.sh`; session rows with `metrics/transcript_metrics.py`.
 
 | Metric | Value | Status |
 |---|---:|---|
-| **Theory (.thy) files** | 40 | grows |
-| **Lines of code (total / non-blank)** | 29,826 / 26,777 | grows |
+| **Theory (.thy) files** | 45 | grows |
+| **Lines of code (total / non-blank)** | 33,585 / 30,307 | grows |
 | **Theorems** | 34 | grows |
-| **Lemmas** | 1,026 | grows |
+| **Lemmas** | 1,131 | grows |
 | **Corollaries / Propositions** | 53 | grows |
-| **Definitions** | 176 | grows |
-| **sorry's remaining (total, incl. scratch files)** | 15 | → 0 at completion |
-| &nbsp;&nbsp;of which on the `F0_dip_nonempty` path (M5/M6/M6b) | 3 | → 0 at completion |
-| &nbsp;&nbsp;of which Capstone assembly leaves (`odd_N_nonemptiness` path) | 6 | → 0 at completion |
+| **Definitions** | 179 | grows |
+| **sorry's remaining (total, incl. scratch files)** | 13 | → 0 at completion |
+| &nbsp;&nbsp;of which on the `F0_dip_nonempty` path | 1 (M5) | → 0 at completion |
+| &nbsp;&nbsp;of which Capstone assembly leaves (superseded scaffold) | 6 | retirement decision |
 | **Git commits touching .thy** (monorepo mirror) | 188 | grows |
 | **Development span** (mirror: 05-25→06-04) | 11 days | grows |
 | **Development span** (incl. pre-mirror sessions) | 2026-05-05 → 06-05 | grows |

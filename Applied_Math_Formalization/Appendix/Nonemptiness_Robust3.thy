@@ -981,18 +981,11 @@ text \<open>\<^bold>\<open>(M6) Steering-singular stratum is meager.\<close>  De
   angle where the steering Jacobian is singular.  Meager by (M3): the singular-\<open>\<omega>\<close> locus is
   nowhere dense, and the critical points over it form a positive-codimension set.\<close>
 
-lemma meager_steering_singular_stratum:
-  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
-    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
-    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
-    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
-  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
-                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-                  \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
-  sorry
+text \<open>\<open>meager_steering_singular_stratum\<close> (M6) is DONE --- proven sorry-free in
+  \<open>Nonemptiness_Robust2\<close> (in the heap): kernel-direction reduction +
+  gdip-derivative zero classification + finite witness-angle set + fixed-angle
+  analytic slices.  Development history: Scratch_m6 / Scratch_g1_r4 /
+  Scratch_g2_r5 / Scratch_g3_asm (parallel agent wave).\<close>
 
 text \<open>\<^bold>\<open>(M6b) The \<open>A = 0\<close> degenerate stratum is meager --- ADDED (soundness).\<close>  The bad set in
   M4--M6 carries \<open>A \<noteq> 0\<close> (the transversality argument needs it).  But every array-factor null

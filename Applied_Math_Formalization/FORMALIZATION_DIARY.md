@@ -2729,3 +2729,42 @@ G5/G6 ANALYSIS (M5 gate + M5b design) — headline findings:
    (gradU rows degenerate at exactly the residual witnesses); 1-dim cut
    last resort.
 Fleet: G2 (R5), G3 (M6 assembly) still running.
+
+### M6 COMPLETE + M5a IN HEAP — the parallel wave integrated (2026-06-11/12)
+THE SPLICE WORKED FIRST-TRY: G1 (gdip_deriv_zero_iff) + G2
+(M6_slice_nowhere_dense) + G3 (assembly, stubs swapped for the real proofs)
+grafted into Robust2 as one section; leaf green 13s, zero sorries in the
+graft. meager_steering_singular_stratum (M6) IS PROVEN. G4's
+meager_grad_x_regular_part (M5a) grafted too. Robust3: ONE sorry left (M5).
+MONOTONE METRIC: 2 -> 1 (+ M5 already half-covered by M5a and fully
+designed as D1-D5).
+PARALLEL-WAVE RETROSPECTIVE (first multi-agent run, 5 agents):
+- All four provers landed GREEN (G1 needed one resume after ending its
+  turn mid-build; G2/G3/G4 single-shot). Wall-clock for the whole wave
+  ~26 min of agent time, run concurrently; independent re-verification
+  of every result before commit (never-trust rule held).
+- The sorry-stub protocol worked exactly as designed: G3 proved the
+  assembly against stubbed R4/R5 while G1/G2 proved them; splice = text
+  substitution + one leaf build.
+NEW TRAP-CANON ENTRIES (from agents):
+- finite_UNIV is SHADOWED by Containers' phantom-type constant: 
+  sum.remove[OF finite_UNIV UNIV_I] fails; use `by (rule sum.remove)
+  simp_all`.
+- image_eqI[OF ...]/UN_I[OF ...] die with "multiple unifiers" (HO ?f ?x);
+  use proof (rule image_eqI[where x = ...]) so the conclusion pins first.
+- default simp rewrites c-inner-c /= 0 to c /= 0 (feed original facts);
+  `unfolding` applies its rule-set jointly (sequence dependent unfolds);
+  goal-side simp pre-normalization defeats equation facts (use
+  `unfolding fact by (rule ...)`).
+- cline_entire combinators (sum/mult/add/cnj/const/cis_linear/
+  of_real_linear) + rline_entire_{Re,scale} are generic over 'n in Paper
+  ~2237-2660; PLAIN-moment cline facts did not exist — G2's
+  clA_moment/clM1_moment/clM2_moment are new reusable infrastructure.
+- meager_Union_finite exists (Paper:3274); cos_zero_iff_int2 cleaner than
+  cos_zero_iff; sincos_total_2pi for amplitude-phase rewrites;
+  finite_affine_int_zeros (G3) is a reusable lattice-window lemma.
+NEXT: M5 = D1 (joint-regular engine pass, subsumes M5a) + D2 (beam-center
+polynomial slices) + D3 (phase-collinear lattice + excess engine) + D4
+(Branch-P residual) + D5 (det=0 corner via M6 machinery sans surj) per the
+analysis agent's design; then flagship certification (Robust3 into a
+session) + Capstone retirement decision.
