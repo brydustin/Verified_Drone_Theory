@@ -985,9 +985,12 @@ lemma meager_steering_singular_stratum:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+                  \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
                   \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
   sorry
 
@@ -1014,6 +1017,8 @@ lemma Phi_bad_meager_dip:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
     and oddN: "odd CARD('n)"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
 proof -
@@ -1029,6 +1034,7 @@ proof -
   let ?steer = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+              \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
   let ?null = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
               \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
@@ -1036,7 +1042,7 @@ proof -
   have meag4: "meager (?reg \<union> ?def \<union> ?steer \<union> ?null)"
     by (intro meager_Un meager_bad_regular_stratum_on[OF openV Vne c6]
               meager_rank_deficient_stratum[OF openV Vne c6 d0 pf]
-              meager_steering_singular_stratum[OF openV Vne c6 d0 pf]
+              meager_steering_singular_stratum[OF openV Vne c6 d0 pf hsep kdiff]
               meager_Azero_degenerate_stratum[OF openV Vne c6 oddN d0 pf])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
              \<subseteq> ?reg \<union> ?def \<union> ?steer \<union> ?null"
@@ -1308,6 +1314,8 @@ text \<open>\<^bold>\<open>(C2) Baire: a regular configuration exists inside the
 lemma regular_config_exists:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle and \<delta> :: real
   assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and int_ne: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
@@ -1320,7 +1328,7 @@ proof -
   have openI: "open I" unfolding I_def by (rule open_interior)
   have Ine: "I \<noteq> {}" unfolding I_def by (rule int_ne)
   have meagB: "meager {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
-    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN d0 pf])
+    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN hsep kdiff d0 pf])
   have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
   proof
     assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
@@ -1493,6 +1501,8 @@ qed
 lemma regular_feasible_point_dip:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle and \<delta> :: real
   assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and dpi: "\<delta> \<le> pi"
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
@@ -1511,7 +1521,7 @@ proof -
   obtain x0 :: "planar^'n"
     where x0I: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
       and x0reg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-    using regular_config_exists[OF c6 oddN d0 pf feasible] by blast
+    using regular_config_exists[OF c6 oddN hsep kdiff d0 pf feasible] by blast
   have x0F: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
     using x0I interior_subset by blast
   have nondeg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
@@ -1567,6 +1577,8 @@ text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with con
 lemma regular_feasible_witness_dip:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null ctr \<omega>0 \<omega>s :: angle and \<delta> :: real
   assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and dpi: "\<delta> \<le> pi"
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
@@ -1590,7 +1602,7 @@ proof -
       and rO: "\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
-    using regular_feasible_point_dip[OF c6 oddN d0 dpi pf feasible] by blast
+    using regular_feasible_point_dip[OF c6 oddN hsep kdiff d0 dpi pf feasible] by blast
   have c1: "continuous_on (sphere ctr \<epsilon>)
               (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))"
     by (rule norm_gradU_dip_continuous_on)
@@ -1628,6 +1640,8 @@ proof -
   define \<omega>null :: planar where "\<omega>null = vector [pi, 0]"
   have hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     by (simp add: \<omega>s_def \<omega>0_def kz_def)
+  have kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    by (simp add: \<omega>0_def \<omega>s_def kx_def sin_pi_half)
   have d0: "(0::real) < pi/4" by simp
   have dpi: "(pi::real)/4 \<le> pi" by simp
   have pf: "\<forall>\<omega>\<in>OmegaPF \<omega>0 (pi/4). sin (\<omega> $ 1) \<noteq> 0"
@@ -1691,7 +1705,7 @@ proof -
   have "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
           \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 (OmegaPF \<omega>0 (pi/4)) 1 0 \<xi> \<kappa> \<epsilon>
               \<noteq> ({}::(planar^'n) set)"
-    using regular_feasible_witness_dip[OF c6 oddN d0 dpi pf feasible]
+    using regular_feasible_witness_dip[OF c6 oddN hsep kdiff d0 dpi pf feasible]
     by (blast intro: F0_nonempty_of_witness OmegaPF_compact)
   thus ?thesis using d0 by blast
 qed
