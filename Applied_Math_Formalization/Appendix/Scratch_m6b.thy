@@ -407,6 +407,29 @@ qed
 
 section \<open>B4': degenerate null forbids a surjective slice derivative\<close>
 
+lemma afR2_omega_partial:
+  fixes x :: "(real^2)^'n" and \<omega> \<omega>0 \<omega>s :: "real^2"
+  shows "((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative
+      (\<lambda>k. cplx_r2 (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) \<bullet> (x $ n))
+            * cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ n)))))) (at \<omega>)"
+proof -
+  have c1: "(cvec_dip \<omega>0 \<omega>s has_derivative Dcvec_dip \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+    by (rule has_derivative_cvec_dip)
+  have c2: "(Afun x has_derivative
+      (\<lambda>h. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n))
+            * cis (-((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x$n))))) (at (cvec_dip \<omega>0 \<omega>s \<omega>))"
+    by (rule has_derivative_Afun_c)
+  have chain: "((\<lambda>u. Afun x (cvec_dip \<omega>0 \<omega>s u)) has_derivative
+      (\<lambda>k. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) \<bullet> (x$n))
+            * cis (-((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x$n))))) (at \<omega>)"
+    using diff_chain_at[OF c1 c2] by (simp add: o_def)
+  have feq: "(\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) = (\<lambda>u. cplx_r2 (Afun x (cvec_dip \<omega>0 \<omega>s u)))"
+    by (rule ext) (simp add: afR2_def af_eq_Afun)
+  show ?thesis
+    unfolding feq
+    by (rule bounded_linear.has_derivative[OF bounded_linear_cplx_r2 chain])
+qed
+
 lemma null_no_surj_slice:
   fixes x :: "(real^2)^'n" and \<omega> \<omega>0 \<omega>s :: "real^2" and C :: "(real^2) set"
   assumes oC: "open C" and wC: "\<omega> \<in> C"
@@ -414,9 +437,81 @@ lemma null_no_surj_slice:
     and null: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0"
     and hess0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
   shows "\<not> (\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within C) \<and> surj D)"
-  sorry
+proof
+  assume "\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within C) \<and> surj D"
+  then obtain D where
+    dD: "((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within C)"
+    and sD: "surj D" by (elim exE conjE)
+  have dD': "((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega>)"
+    using dD by (simp add: at_within_open[OF wC oC])
+  define S :: "(real^2) \<Rightarrow> complex"
+    where "S k = (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) \<bullet> (x $ n))
+            * cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ n))))" for k
+  have dT: "((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative (\<lambda>k. cplx_r2 (S k))) (at \<omega>)"
+    unfolding S_def[abs_def] by (rule afR2_omega_partial)
+  have DEq: "D = (\<lambda>k. cplx_r2 (S k))"
+    by (rule has_derivative_unique[OF dD' dT])
+  \<comment> \<open>scalarize\<close>
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  define \<mu>1 where "\<mu>1 = Mcfun x c 1"
+  define \<mu>2 where "\<mu>2 = Mcfun x c 2"
+  have Sval: "S k = (- \<i>) * (complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) $ 1) * \<mu>1
+                  + complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) $ 2) * \<mu>2)" for k
+    unfolding S_def \<mu>1_def \<mu>2_def Mcfun_def c_def
+    by (simp add: inner_vec_def sum_2 sum.distrib sum_subtractf sum_negf
+          sum_distrib_left of_real_add of_real_mult algebra_simps)
+  \<comment> \<open>the slice determinant\<close>
+  have linD: "linear D" using dD' has_derivative_linear by blast
+  have matD: "(\<lambda>y. matrix D *v y) = D"
+    by (rule matrix_vector_mul(2)[OF linD])
+  have surjM: "surj (\<lambda>y. matrix D *v y)"
+    unfolding matD by (rule sD)
+  have detD: "det (matrix D) \<noteq> 0"
+    using surjM by (simp add: surj_matrix_vector_iff_det)
+  have ent: "matrix D $ i $ j = cplx_r2 (S (axis j 1)) $ i" for i j
+    unfolding DEq matrix_def by simp
+  have e11: "matrix D $ 1 $ 1 = Re (S (axis 1 1))"
+    unfolding ent by (simp add: cplx_r2_def vector_2)
+  have e21: "matrix D $ 2 $ 1 = Im (S (axis 1 1))"
+    unfolding ent by (simp add: cplx_r2_def vector_2)
+  have e12: "matrix D $ 1 $ 2 = Re (S (axis 2 1))"
+    unfolding ent by (simp add: cplx_r2_def vector_2)
+  have e22: "matrix D $ 2 $ 2 = Im (S (axis 2 1))"
+    unfolding ent by (simp add: cplx_r2_def vector_2)
+  have detD_eq: "det (matrix D) = Im (cnj (S (axis 1 1)) * S (axis 2 1))"
+    by (simp add: det_2 e11 e12 e21 e22 algebra_simps)
+  \<comment> \<open>compute the determinant in moment form\<close>
+  define j11 where "j11 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) $ 1"
+  define j21 where "j21 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) $ 2"
+  define j12 where "j12 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) $ 1"
+  define j22 where "j22 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) $ 2"
+  have Imform: "Im (cnj (S (axis 1 1)) * S (axis 2 1))
+      = (j11 * j22 - j12 * j21) * Im (cnj \<mu>1 * \<mu>2)"
+    unfolding Sval j11_def j12_def j21_def j22_def
+    by (simp add: algebra_simps)
+  have detJ: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = j11 * j22 - j12 * j21"
+    unfolding j11_def j12_def j21_def j22_def
+    by (simp add: det_2 matrix_def axis_def)
+  \<comment> \<open>the B4 connection: degeneracy kills exactly this quantity\<close>
+  have nullA: "Afun x (cvec_dip \<omega>0 \<omega>s \<omega>) = 0"
+    using null by (simp add: A_cart_eq_Afun)
+  have "4 * (gain_dip \<omega>)\<^sup>2
+          * (det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * Im (cnj \<mu>1 * \<mu>2))\<^sup>2 = 0"
+    using det_HessU_at_null[OF nullA] hess0
+    unfolding \<mu>1_def \<mu>2_def c_def by simp
+  hence z0: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * Im (cnj \<mu>1 * \<mu>2) = 0"
+    using gnz by simp
+  have z1: "(j11 * j22 - j12 * j21) * Im (cnj \<mu>1 * \<mu>2) = 0"
+    using z0 unfolding detJ .
+  have z2: "det (matrix D) = (j11 * j22 - j12 * j21) * Im (cnj \<mu>1 * \<mu>2)"
+    unfolding detD_eq Imform by (rule refl)
+  show False using detD z2 z1 by simp
+qed
 
 section \<open>(M6b) assembly\<close>
+
+lemma A_cart_eq_af: "A_cart cvec x \<omega> = af cvec x \<omega>"
+  by (simp add: A_cart_def af_def)
 
 lemma meager_Azero_degenerate_stratum_scratch:
   fixes V :: "((real^2)^'n) set" and ctr \<omega>0 \<omega>s :: "real^2" and \<delta> :: real
@@ -426,6 +521,50 @@ lemma meager_Azero_degenerate_stratum_scratch:
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
-  sorry
+proof -
+  obtain G' :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+    where derG: "\<And>u. (afR2 \<omega>0 \<omega>s has_derivative blinfun_apply (G' u)) (at u)"
+      and contG: "continuous_on UNIV G'"
+    using afR2_joint_C1[of \<omega>0 \<omega>s] by blast
+  have derGn: "\<And>z. z \<in> V \<times> (UNIV :: (real^2) set) \<Longrightarrow>
+      (afR2 \<omega>0 \<omega>s has_derivative blinfun_apply (G' z)) (at z)"
+    by (rule derG)
+  have contGn: "continuous_on (V \<times> (UNIV :: (real^2) set)) G'"
+    by (rule continuous_on_subset[OF contG subset_UNIV])
+  have regn: "regular_value_on (afR2 \<omega>0 \<omega>s) (V \<times> (UNIV :: (real^2) set)) 0"
+    by (rule afR2_regular_value[OF oddN])
+  have core: "meager {x \<in> V. \<exists>\<omega>\<in>(UNIV :: (real^2) set).
+      afR2 \<omega>0 \<omega>s (x, \<omega>) = 0 \<and>
+      \<not> (\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within UNIV) \<and> surj D)}"
+    using parametric_transversality_meager_planar_config[OF openV Vne open_UNIV
+            derGn contGn regn] by blast
+  have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}
+       \<subseteq> {x \<in> V. \<exists>\<omega>\<in>(UNIV :: (real^2) set).
+      afR2 \<omega>0 \<omega>s (x, \<omega>) = 0 \<and>
+      \<not> (\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within UNIV) \<and> surj D)}"
+  proof
+    fix x assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
+    then obtain \<omega> where xV: "x \<in> V" and wD: "\<omega> \<in> OmegaPF ctr \<delta>"
+      and h0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+      and a0: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0"
+      by blast
+    have gnz: "gain_dip \<omega> \<noteq> 0"
+      using bspec[OF pf wD] by (rule gain_dip_nonzero_of_sin)
+    have af0: "afR2 \<omega>0 \<omega>s (x, \<omega>) = 0"
+      using a0 by (simp add: afR2_def A_cart_eq_af[symmetric])
+    have nos: "\<not> (\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D)
+                       (at \<omega> within (UNIV :: (real^2) set)) \<and> surj D)"
+      by (rule null_no_surj_slice[OF open_UNIV UNIV_I gnz a0 h0])
+    show "x \<in> {x \<in> V. \<exists>\<omega>\<in>(UNIV :: (real^2) set).
+        afR2 \<omega>0 \<omega>s (x, \<omega>) = 0 \<and>
+        \<not> (\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within UNIV) \<and> surj D)}"
+      using xV af0 nos by blast
+  qed
+  show ?thesis by (rule meager_subset[OF sub core])
+qed
 
 end

@@ -997,15 +997,10 @@ text \<open>\<^bold>\<open>(M6b) The \<open>A = 0\<close> degenerate stratum is 
   \<^emph>\<open>degenerate\<close> null also breaks regularity and must be excluded.  The locus \<open>{A = 0 \<and> det \<nabla>\<^sup>2U = 0}\<close>
   is \<open>3\<close> real conditions on \<open>(\<bm>x,\<omega>)\<close> (codim \<open>3\<close>): its \<open>\<bm>x\<close>-projection is meager.\<close>
 
-lemma meager_Azero_degenerate_stratum:
-  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
-    and oddN: "odd CARD('n)"
-    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
-  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
-                  \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
-  sorry
+text \<open>\<open>meager_Azero_degenerate_stratum\<close> (M6b) is DONE --- proven sorry-free in
+  \<open>Nonemptiness_Robust2\<close> (in the heap): the planar engine on \<open>cplx_r2 \<circ> af\<close>
+  with global regular value (odd \<open>N\<close>), plus the Hessian-at-null determinant
+  identity.  Development history in \<open>Scratch_m6b\<close>.\<close>
 
 text \<open>\<^bold>\<open>(M7) The dipole-specific bad set is meager --- CORRECTED to the FULL set.\<close>  By @{thm
   Phibad_dip_imp_detHess0}, \<open>\<Phi> = 0\<close> gives \<open>\<nabla>\<^sub>\<Omega>U = 0 \<and> det (\<nabla>\<^sup>2U) = 0\<close>; then every witnessing \<open>\<omega>\<close> falls

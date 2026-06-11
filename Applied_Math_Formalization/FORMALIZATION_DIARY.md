@@ -2587,3 +2587,22 @@ M6b board: B1 done, B2 PROVEN, B3 PROVEN, B4 PROVEN. Remaining: B4'
 its 2x2 Jacobian determinant = detJ * Im(cnj mu1 mu2) connecting to
 det_HessU_at_null, + uniqueness at interior points) and the final assembly
 (M4 pattern, V x UNIV, no box cover). Two sorries left in the scratch.
+
+### M6b COMPLETE — meager_Azero_degenerate_stratum PROVEN (2026-06-11)
+ALL bricks landed in one extended session; the full stratum is sorry-free
+and in the heap (leaf 7s green). Final pieces:
+- B4' (null_no_surj_slice): the omega-slice derivative of afR2 (standalone
+  afR2_omega_partial, FY0 hoisted), its 2x2 determinant via matrix entries
+  (cplx_r2 components) + det_2 = Im(cnj(S e1) S e2) = (j11 j22 - j12 j21) *
+  Im(cnj mu1 mu2) — EXACTLY the det_HessU_at_null quantity; degeneracy +
+  gain/=0 kills it; surj => det/=0 via matrix_vector_mul(2) (NOT
+  matrix_works — that one wants the HMA (*s)-linear!) +
+  surj_matrix_vector_iff_det. Sval moment-form needed sum_negf +
+  sum_subtractf + scaleR_conv_of_real (d_phase uses *R).
+- Assembly: engine on V x UNIV directly (NO box cover; slice-within-UNIV
+  IS at by the abbreviation insight); witnesses inject via
+  gain_dip_nonzero_of_sin[OF pf] + A_cart_eq_af; passed FIRST TRY.
+MONOTONE METRIC: true-and-remaining obligations 3 -> 2 (M5 designed+gated,
+M6 designed). M6b took ~1 day from brick list to heap — the de-risking
+discipline (B4-first) paid off.
+Robust3 full-chain re-verify (M7 now consumes the heap M6b) running.
