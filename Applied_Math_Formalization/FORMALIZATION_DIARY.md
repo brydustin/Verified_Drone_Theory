@@ -2671,3 +2671,20 @@ Scratch_R3 harness checks it.
 THE FINITE GOAL LIST (with strategies) — see the session report; provability
 classes: G1-G4 HIGH (established patterns), G5 (M5b) MEDIUM-direct with a
 guaranteed fallback ladder, G6-G9 trivial/decision-grade.
+
+### PARALLEL WAVE 1 — G4 (M5a) LANDED GREEN (2026-06-11, agent-proven)
+meager_grad_x_regular_part: the x-partial-regular part of M5 is meager —
+proven by a parallel agent in 2 build iterations, independently re-verified
+(BUILD_EXIT=0, 0 sorries). Statement is DERIVATIVE-DISCIPLINE-shaped (the
+regularity condition is an existential has_derivative + surj, equivalent to
+surjectivity of the explicit field by has_derivative_unique). Tightness:
+needs ONLY open V (Vne unused, NO CARD hypothesis — surjectivity is
+hypothesized in the stratum, not derived from the rank-12 submersion).
+AGENT DISCOVERY: regular_value_on_via_x_partial (Robust1:3204, the A1
+helper) already packages the embedding+uniqueness surjectivity lift —
+feeding it the gradU_dip_joint_C1 field + the explicit DxF gives
+regular_value_on on the whole open locus in ONE rule application. W's
+openness: Blinfun-field continuity (continuous_on_gradU_dip_xpartial_applied)
++ continuous_open_vimage[OF open_surj_blinfun]. Engine + box cover verbatim
+M4. Fleet status: G1 (R4), G2 (R5), G3 (M6 assembly), G5/G6 (M5 analysis)
+still running.
