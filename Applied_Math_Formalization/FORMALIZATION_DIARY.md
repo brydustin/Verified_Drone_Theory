@@ -2464,3 +2464,22 @@ M6b BRICKS:
 ESTIMATE: B1 hours; B2 day-ish (template exists); B3 half-day; B4 the
 risky one (second-order at nulls — investigate HessU_dip_entry_moments
 first); B5 hours.
+
+### M6b B4-CORE PROVEN — Hessian-at-null identification (2026-06-10 night)
+Scratch_m6b started; FOUR lemmas already green (3s verify cycles):
+- Hcmat_at_null: Hcmat = first-moment Gram at Afun=0 (the cnj-Afun term in
+  Hcmat_def drops by itself; `by simp`).
+- gradUc_at_null (VECTOR form): gradU (id-pattern) = 0 at M_paper$1 = 0,
+  via gradUc_component_moments[unfolded null] componentwise. TRAP: plain
+  simp re-normalizes M_paper projections to A_moment/M1_moment BEFORE null
+  can fire — use [unfolded null] on the component lemma instead.
+- Uc_at_null: V = |M1|^2 = 0 (Uc_eq_moment[unfolded null]).
+- HessU_at_null: HessU$k$l = gain * (Dcvec e_k . (Hcmat *v Dcvec e_l)) at
+  nulls — unfolding HessU_dip_entry_moments + the three vanishing lemmas.
+  THE RISK BRICK OF M6b IS DISCHARGED.
+Remaining M6b sorries (statements all parse green against the heap):
+det_HessU_at_null (2x2 det algebra: det = 4 gain^2 (detJ * Im(cnj M2 M3))^2),
+afR2_joint_C1 (B2, mirror gradU_dip_joint_C1), afR2_regular_value (B3,
+dxA_surj + d_A_moment_x bridges + cvec=0 vacuity), null_no_surj_slice (B4',
+needs slice-derivative formula + det bridge), assembly (M4 pattern, no
+boxes). Verify loop: /tmp/scratchm6b session, ~17s cycles.
