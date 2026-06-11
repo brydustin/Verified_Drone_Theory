@@ -2356,3 +2356,51 @@ PAYOFFS of the restriction:
 - M5-restricted: still needs its own argument (mstarg = 0 coupling); park.
 NO CODE COMMITTED for M6 (nothing false, nothing half-baked). M4 proof is
 unaffected (its statement is true and stays).
+
+### (1) DOMAIN AUDIT COMPLETE — the pole-free restatement design (2026-06-10)
+Read the full consumer chain + the paper. FINDINGS:
+- Omega ctr = cbox(ctr -+ vector[pi/2,pi]) (Robust1:1576) mirrors the paper's
+  FULL box (D_edit L1253). Every closed theta-interval of length pi contains a
+  multiple of pi => Omega ctr ALWAYS contains pole points => unsatisfiable
+  margins. Blast radius (all FALSE as stated): regular_config_exists
+  (concl. ALL-omega Phibad/=0), no_degenerate_to_sphere_annulus +
+  regular_feasible_point_dip (sphere/annulus margins over Omega ctr:
+  for ANY eps either the sphere hits a pole line (eps >= dist(ctr1,piZ)) or
+  the annulus retains pole points (phi-extent pi > pi/2 >= usable eps)),
+  and THE FLAGSHIP F0_dip_nonempty itself (its X0-component: xi-margin
+  ||gradU||+sigma_min >= xi > 0 over Omega ctr - ball is unsatisfiable; at
+  poles both terms are 0 for EVERY configuration).
+- THE PAPER'S OWN ESCAPE: D_edit L1253 "reduced to {theta0} x [phi0-pi,
+  phi0+pi] ... when restricting to a 2D cut" — and the formalization always
+  claimed to mirror the 2-D version (F0_nonempty_proof_2D, L1288/810).
+  The formalization over-generalized the domain to the full box.
+- KEY STRUCTURAL LUCK: F0/X0 defs (Robust1:1551-1566) take Omega AS A
+  PARAMETER; only the instantiation is poisoned. Xrobust's sphere is the
+  full planar circle — fine for eps small (pole-free).
+THE FIX — "OmegaPF" (fat pole-free box), faithful-and-true:
+  OmegaPF ctr delta = cbox (ctr - vector[delta,pi]) (ctr + vector[delta,pi]),
+  hypotheses 0 < delta and pole-free: [ctr1-delta, ctr1+delta] avoids piZ.
+  Capstone instantiates ctr=(pi/2,0), delta=pi/4 ([pi/4,3pi/4] pole-free).
+  Margins over OmegaPF are stronger than the bare 2D-cut's, still satisfiable.
+RESTATEMENT LIST (all in UNHEAPED Robust3 except one leaf addition):
+  a. Robust2 (leaf, 5s): definition OmegaPF + OmegaPF_compact +
+     OmegaPF_minus_ball_compact + sphere_subset_OmegaPF (eps <= delta) +
+     gdip_pos (sin t /= 0 ==> gdip t > 0; gsinc > 0 on (0,pi)) +
+     M4-restricted corollary (FREE via meager_subset from proven M4).
+  b. M5/M6/M6b: EX omega -> EX omega IN OmegaPF ctr delta (+ pole-free hyp).
+  c. M7 Phi_bad_meager_dip: ditto.
+  d. regular_config_exists: concl. ALL omega IN OmegaPF. Phibad /= 0.
+  e. no_degenerate_to_sphere_annulus: Omega -> OmegaPF; eps picked in
+     {0<..<min delta (pi/2)} - R (proof mechanical, same isolated-zeros body).
+  f. regular_feasible_point_dip: ditto.
+  g. F0_nonempty_of_witness: generalize the hardcoded Omega ctr to a
+     parameter with compactness hypothesis (proof identical, Weierstrass).
+  h. F0_dip_nonempty: F0 ... (OmegaPF ctr (pi/4)) ...; chosen design
+     ctr = omega0 = (pi/2,0) already in the proof.
+THEN the strata become TRUE and provable: M4-restricted free; M6 via the
+graph-curve kernel-direction reduction (pole-free => gdip>0, Sigma = single
+regular curve); M6b A=0; M5 still needs its own argument (park).
+NOTE FOR PAPER AUTHORS: the full-box statements in the tex (X0def over
+Omega-tilde of the 2D box + thm:final via F0) inherit the pole issue for the
+dipole element pattern; the 2D-cut reduction (or a pole-free shrink) is
+needed in the prose too.
