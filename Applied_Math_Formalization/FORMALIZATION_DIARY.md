@@ -3024,3 +3024,35 @@ non-surjective -> negligible_singular_image_2n. (iii) collinear_locus_finite_arc
 cover (finite C1-arc cover of the analytic curve {crossTheta=0}; needs a
 real-analytic curve-structure / continuous-IFT result). All research-grade IFT;
 the framing is now sound, the math is standard, the mechanization is the work.
+
+### M5 Core (iii) curve-cover GREEN: collinear_locus_finite_arc_cover (2026-06-19, cont.)
+Resumed post-crash. Verification discipline: trust BUILD_EXIT, not commit logs
+(parallel-agent files had parked on the heap lock => were never build-verified).
+Drove M5_Dev_curvecover/Scratch_m5_curvecover.thy to a GENUINE green build
+(BUILD_EXIT=0, "Finished Applied_Math_M5_curvecover", ~4s on warm Appendix heap):
+- collinear_locus_finite_arc_cover now PROVEN modulo ONE intended sorry,
+  locus_locally_C1_arc (the local IFT-graph of the separable equation
+  crossTheta = crossA(w1)cos w2 + crossB(w1)sin w2 + crossG(w1) = 0).
+- Entire assembly sorry-free: phase_collinear<->crossTheta=0, the separable-trig
+  reduction (K-factored crossTheta_separable_abstract), continuity, compactness
+  (compact_crossTheta_locus), Heine-Borel finite subcover, nat-reindexing via
+  the_inv_into, box containment.
+- BUG FIXED (the L341 obtain failure): locus_locally_C1_arc obtained a
+  nat-indexed family (r J g) with a NESTED where-clause "/\j. j:J ==> ...".
+  `obtain ... by (rule L[OF ...])` left a residual that auto-`assumption` cannot
+  close (it won't HO-match a rule-shaped premise against an assumption).
+  FIX: restate the obtains to yield a finite SET A of arcs (all-atomic
+  where-clauses "ALL g:A. ..."); matches the downstream set-based `good`
+  predicate, so the g`J repackaging vanishes too. Mathematically identical.
+  Committed e68046a (pushed; origin/main==HEAD verified).
+BASELINE RE-VERIFIED (BUILD_EXIT=0, up-to-date): D3fix (1 genuine sorry
+excess_arc_charts_Nn + 3 mstarg freebies), D4fix (1 genuine
+branchP_indep_charts_Nn + 4 freebies), skeleton (M5 assembly green; D2/D5/D34
+stubs). gdip2/Kfinite sorry-free.
+GENUINE OPEN MATH (honest frontier): D2 (beam-center, det-Hessian covariance
+poly; gdip2+Kfinite done), D5 (steering-singular, M6 reuse), the SHARED chart
+crux (excess_arc_charts_Nn + branchP_indep_charts_Nn = codomain-real^3 charts_
+core_Nn + Gjoint omega-partial submersion + negligible Sigma), and
+locus_locally_C1_arc (scalar IFT, explicit arccos branches). Next: engine-map
+sweep (charts_core_Nn shape, IFT availability) to choose chart-crux vs
+curve-cover residual as the next target.
