@@ -232,20 +232,8 @@ lemma Lmat_apply:
       of_real (a\<^sup>2) * w $ 4 + of_real (2 * a * b) * w $ 5 + of_real (b\<^sup>2) * w $ 6,
       of_real (a * p) * w $ 4 + of_real (a * q + b * p) * w $ 5 + of_real (b * q) * w $ 6,
       of_real (p\<^sup>2) * w $ 4 + of_real (2 * p * q) * w $ 5 + of_real (q\<^sup>2) * w $ 6 ]"
-  unfolding Finite_Cartesian_Product.vec_eq_iff
-proof (intro allI)
-  fix i :: 6
-  show "(Lmat a b p q *v w) $ i =
-    vector
-    [ w $ 1,
-      of_real a * w $ 2 + of_real b * w $ 3,
-      of_real p * w $ 2 + of_real q * w $ 3,
-      of_real (a\<^sup>2) * w $ 4 + of_real (2 * a * b) * w $ 5 + of_real (b\<^sup>2) * w $ 6,
-      of_real (a * p) * w $ 4 + of_real (a * q + b * p) * w $ 5 + of_real (b * q) * w $ 6,
-      of_real (p\<^sup>2) * w $ 4 + of_real (2 * p * q) * w $ 5 + of_real (q\<^sup>2) * w $ 6 ] $ i"
-    using exhaust_6[of i]
-    by (elim disjE; simp add: Lmat_def matrix_vector_mult_def sum_6)
-qed
+  by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_6
+                Lmat_def matrix_vector_mult_def sum_6)
 
 lemma M_paper_transport:
   fixes T :: "real^2^2"
