@@ -2788,3 +2788,25 @@ predicate is proof-internal). This is the Wave-2 launch pad: each stub is an
 independent meagerness obligation a prover agent can take, splice back by
 text substitution (same protocol that landed M6). NEXT: prover wave on
 D2/D5/D34, then graft the proven assembly into Robust3.
+
+### WAVE 2-3: D34 + D2 SCAFFOLDS GREEN; D5 still 529-blocked (2026-06-19)
+Parallel prover waves on the three M5 stubs. Anthropic 529 overload was
+intermittent all session: D34 (wave 2) and D2 (wave 3) rode it out and
+landed; D5 failed all 3 attempts, D3 failed 1 (no work lost, 0 tokens).
+Both landed scaffolds independently re-verified BUILD_EXIT=[0]:
+- M5_Dev_D34/ (Applied_Math_M5_D34): m5_D34_residual PROVEN verbatim against
+  3 inner sorries. (a) fixed_c_nonsurj_nowhere_dense = FREEBIE (it is
+  nowhere_dense_mstarg_zeros + surj_iff_mstarg, Robust3 L572-757, in scope at
+  the L970 splice; sorried only because dev imports Robust2). (b/c)
+  m5_D34_D3_collinear / m5_D34_D4_branchP: genuine, both reduce to ONE shared
+  "excess engine" (IFT-chart codim, Sard-free, Z^3 lattice via
+  finite_affine_int_zeros). phase_collinear is the proof-internal D3/D4 split.
+- M5_Dev_D2/ (Applied_Math_M5_D2): m5_D2_beamcenter assembly PROVEN sorry-free
+  (witness confinement to finite K via beamcenter_critical_cos_zero +
+  finite-union + subset, mirrors M6); reduces to 2 GENUINE leaves (not splice
+  freebies): m5_D2_beamcenter_K_finite (~hours: cos(w1)=0 pins w1; sin_cos +
+  finite_affine_int_zeros pins w2) and m5_D2_slice_nowhere_dense (~multi-day:
+  covariance-Hessian det polynomial nowhere-dense, gdip''(pi/2)=(16-4pi^2)/8).
+FRONTIER now: D5 (retry), D3+D4 (shared excess engine), D2's K_finite +
+slice_nd. The M5 assembly stays sorry-free against the top stubs; integrate
+each leaf as it closes, then graft into Robust3 L970.
