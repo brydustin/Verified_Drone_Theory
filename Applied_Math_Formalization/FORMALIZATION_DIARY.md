@@ -2810,3 +2810,19 @@ Both landed scaffolds independently re-verified BUILD_EXIT=[0]:
 FRONTIER now: D5 (retry), D3+D4 (shared excess engine), D2's K_finite +
 slice_nd. The M5 assembly stays sorry-free against the top stubs; integrate
 each leaf as it closes, then graft into Robust3 L970.
+
+### D5 + D3 SCAFFOLDS SALVAGED from the 529 "failures" (2026-06-19)
+The wave-3 D5/D3 agents 529'd on their FINAL result-return, but had already
+written + (as I re-verified) BUILD_EXIT=[0] their scaffolds on disk:
+- M5_Dev_D5/ (Applied_Math_M5_D5): m5_D5_steersing PROVEN against 4 sorries -
+  3 FREEBIES (m5_D5_hsep_freebie = Phi_bad_meager_dip's hsep; m5_D5_kdiff_freebie
+  = kdiff; fixed_c_nonsurj_nowhere_dense = mstarg) + 1 GENUINE
+  m5_D5_beamcenter_angle_meager. D5 confined steering-singular witnesses to a
+  FINITE S1xS2 SORRY-FREE (finite_cos_zeros_interval + finite_phase_zeros_interval).
+- M5_Dev_D3/ (Applied_Math_M5_D3): m5_D34_D3_collinear PROVEN against 1 freebie
+  (mstarg) + 1 GENUINE D3_excess_engine (the IFT-chart core).
+GENUINE FRONTIER CONSOLIDATED to 3 reusable cores: (A) excess engine
+(D3_excess_engine) -> D3 + D4; (B) beam-center covariance-Hessian polynomial
+nowhere-density -> D2 slice_nd + D5 beamcenter_angle (SAME lemma); (C) D2
+K_finite (~hours, mirror D5's proven finite confinement). Everything else is a
+splice freebie. Next wave: A, B, C in parallel.
