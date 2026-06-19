@@ -2848,3 +2848,30 @@ excess_projection_meager (IFT engine, D3+D4) and gdip2_nonzero_of_cos_zero
 (D2+D5) - plus splice freebies (mstarg, hsep, kdiff). Next wave: prove gdip2
 (likely closable -> kills D2+D5), attack excess_projection_meager (multi-week),
 wire D4 (m5_D34_D4_branchP) to the parametric engine.
+
+### WAVE 5: gdip2 PROVEN; SOUNDNESS CATCH on the excess engine (2026-06-19)
+WIN: gdip2_nonzero_of_cos_zero is FULLY PROVEN sorry-free (M5_Dev_gdip2,
+verified quick_and_dirty=false STRICT_EXIT=0). gdip''(pi/2)=(16-4pi^2)/8 via
+gsincdd 2nd-deriv + R4 first-deriv machinery. This kills the only genuine
+residual of BOTH D2 (slice) and D5 (beamcenter) - so D2 and D5 reduce to
+proven facts (gdip2 + K_finite) + splice freebies.
+CATCH (caught by reading statements, NOT by the green build): the wave-4
+engine lemma excess_projection_meager is stated for ANY Gamma <= OmegaPF
+(Gsub, no curve restriction) and is FALSE in general (e.g. Gamma=OmegaPF:
+~surj over a 2D omega-range is not meager in x; its proof needs the FALSE-for-2D
+phase_collinear_curve_finite_arc_cover). D3 instantiates Gamma = collinear
+CURVE (1D) -> SOUND. D4 (M5_Dev_D4) instantiates Gamma = ~collinear COMPLEMENT
+(2D) and "closes by blast" -> UNSOUND (leans on a false instance; its
+m5_D34_subset_mstarg_residual also drops the gradU=0/detHess=0 conditions D4
+needs). D4 build is green but illusory. NOT COMMITTING M5_Dev_D4 as a valid
+reduction.
+CORRECTED FRONTIER (genuine remaining math):
+  (1) phase_collinear_curve_finite_arc_cover - for the COLLINEAR CURVE only
+      (tighten statement to curve/arc-coverable Gamma; true & provable).
+  (2) excess_arc_projection_meager - per-arc IFT-chart negligible projection
+      (the deep analytic core).
+  (3) D4 Branch-P (GENUINE, NOT reduced) - meagerness of the 2D ~collinear
+      residual via the gamma||c rank-drop dichotomy, keeping gradU=0/detHess=0
+      (core_3d ruled out). The hardest piece, as the diary always said.
+LESSON: a green (quick_and_dirty) build can rest on a FALSE stubbed lemma;
+must verify intermediate STATEMENTS are true, not just that it compiles.
