@@ -2904,3 +2904,42 @@ closed_cover [D3, deep]; (2) collinear_locus_finite_arc_cover [D3, routine];
 negligible-x-projection facts (codim from arc-param vs gradU=0). All standard
 diff-topology, not open problems. Plus splice freebies (mstarg, hsep, kdiff).
 M5_Dev_CurveEngine supersedes M5_Dev_Excess (kept for history, flagged false).
+
+### WAVE 7: DEEPER SOUNDNESS BUG (analytic_arc too weak) + D4 reduced (2026-06-19)
+CORRECTION to the Wave-6 "sound" claim: the D3 engine is STILL unsound, at the
+DEFINITION level. analytic_arc is defined as merely  EX a b phi. a<=b &
+continuous_on {a..b} phi & gamma = phi`{a..b}  -- continuous only, so it ADMITS
+PEANO space-filling curves. Therefore (a) a 2-cell IS an analytic_arc =>
+finitely_arc_coverable(whole box) is vacuously TRUE => Wave-6's finitely_arc_
+coverable "fix" did NOT restore soundness, only relocated the bug; (b)
+excess_arc_projection_meager (concludes meager x-projection over an analytic_arc
+gamma) is FALSE for a Peano gamma. The ArcCover agent CAUGHT this and refused to
+close its lemma via a space-filling arc. FIX REQUIRED: strengthen analytic_arc to
+genuinely 1-D (C1 / rectifiable / negligible image - matching its name), then
+re-verify the whole D3 chain (ArcProj, CurveEngine, ArcNeg, ArcCover).
+WAVE-7 RESULTS:
+- IndepCore (M5_Dev_IndepCore, SOUND, build-green): D4's branchP_indep_core
+  reduced to one core branchP_indep_negligible_closed_cover = (2N-1)-dim graph
+  (from RETAINED gradU=0 rank-drop) has negligible x-projection via heap
+  negligible_singular_image_2n. NO analytic_arc dependency -> clean.
+- ArcCover (M5_Dev_ArcCover2, build-green, sound reductions): 4 new sorry-free
+  lemmas (component forms; phase_collinear_iff_crossTheta via heap cols_dependent_2d;
+  crossTheta_trig; collinear_locus_eq_crossTheta_zero) reduce the cover to the
+  explicit 1-D analytic curve {crossTheta=0} INTER box, crossTheta = P sin w1 +
+  cos w1 Q(w2) + R(w2) (ONE equation -> genuine curve, unlike M6's two-equation
+  finite K). Remaining cover step needs a continuous-IFT-with-compactness / real-
+  analytic curve structure theorem NOT in the heap (substantial).
+- ArcNeg: agent failed to return (StructuredOutput); partial file on disk; moot
+  until analytic_arc is fixed (its target is false under the weak def).
+HONEST CORRECTED FRONTIER. Genuinely PROVEN+sound: M5 assembly, D1, gdip2,
+K_finite => D2,D5 done modulo splice freebies. Genuine remaining:
+  (i)  STRENGTHEN analytic_arc def (small, ripples through D3 chain).
+  (ii) the shared negligible-projection CHART core (D3 per-arc + D4
+       branchP_indep_negligible_closed_cover): builds on heap
+       negligible_singular_image_2n + the moment Jacobian; genuine multi-day.
+  (iii) D3 curve-cover finiteness (collinear_locus_finite_arc_cover): needs a
+       real-analytic curve structure theorem NOT in the heap; substantial
+       independent formalization.
+These are standard results (not open problems) but (ii)+(iii) are real multi-
+day/week mechanization, (iii) needing machinery the project lacks. CHECKPOINT:
+stop autonomous grinding here; surface to user.
