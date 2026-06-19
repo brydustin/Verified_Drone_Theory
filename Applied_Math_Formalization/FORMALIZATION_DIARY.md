@@ -2768,3 +2768,23 @@ polynomial slices) + D3 (phase-collinear lattice + excess engine) + D4
 (Branch-P residual) + D5 (det=0 corner via M6 machinery sans surj) per the
 analysis agent's design; then flagship certification (Robust3 into a
 session) + Capstone retirement decision.
+
+### M5 D1-D5 SKELETON LANDED (green) (2026-06-19)
+M5_Dev/Scratch_m5_skeleton.thy (+ own ROOT, session Applied_Math_M5Dev on
+the Applied_Math_Appendix heap) builds BUILD_EXIT=0, 3s. Structure: the M5
+bad set = the ?def stratum of Phi_bad_meager_dip; covered by an exhaustive
+excluded-middle split (det Dcvec =0 ? ; cvec =0 ? ; x-partial regular ?):
+  D5  = ?def & det(matrix(Dcvec_dip w0 ws w)) = 0
+  D2  = ?def & det /= 0 & cvec_dip w0 ws w = 0
+  D1  = ?def & det /= 0 & cvec /= 0 & (EX Dx. (gradU has_derivative Dx)(at x) & surj Dx)
+  D34 = ?def & det /= 0 & cvec /= 0 & ~regular   (= D3 collinear U D4 Branch-P)
+D1 is PROVEN here: it is a subset of the heap's meager_grad_x_regular_part
+(M5a) - restricting w to OmegaPF and adding conjuncts only shrinks the set -
+so meager_subset closes it; the assembly closes the exact
+meager_rank_deficient_stratum goal via (intro meager_Un ...) + meager_subset
+with the cover proved by subsetI/blast. LIVE STUBS = 3: m5_D2_beamcenter,
+m5_D5_steersing, m5_D34_residual. D34 kept as one statement (D3/D4 separating
+predicate is proof-internal). This is the Wave-2 launch pad: each stub is an
+independent meagerness obligation a prover agent can take, splice back by
+text substitution (same protocol that landed M6). NEXT: prover wave on
+D2/D5/D34, then graft the proven assembly into Robust3.
