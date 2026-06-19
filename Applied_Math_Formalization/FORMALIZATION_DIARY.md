@@ -2943,3 +2943,28 @@ K_finite => D2,D5 done modulo splice freebies. Genuine remaining:
 These are standard results (not open problems) but (ii)+(iii) are real multi-
 day/week mechanization, (iii) needing machinery the project lacks. CHECKPOINT:
 stop autonomous grinding here; surface to user.
+
+### WAVE 8: analytic_arc FIXED to C1; user unhung the build; D3+D4 cores symmetric (2026-06-19)
+- analytic_arc strengthened to C1: "EX a b phi. a<=b & phi C1_differentiable_on
+  {a..b} & gamma = phi`{a..b}". Soundness gate analytic_arc_negligible PROVEN
+  sorry-free: C1_differentiable_on => differentiable_on, DIM(real)<DIM(real^2),
+  negligible_differentiable_image_lowdim. Peano curves excluded (not C1). The
+  Wave-7 weak-def bug is FIXED.
+- Wave-8 Agent A's build HUNG (~34 min, one runaway proof line). USER opened it in
+  jEdit and fixed the hanging line; M5_Dev_D3Sound now builds BUILD_EXIT=[0] in 5s.
+  (Orphaned poly 466493 killed; it had escaped timeout via the `| tail` pipe and
+  was blocking the wave. TRAP: timeout -s KILL on `isabelle build ... | tail` can
+  orphan poly which holds the pipe open => agent Bash hangs forever; kill the poly
+  PID to release.)
+- D3 (M5_Dev_D3Sound) and D4 (M5_Dev_D4Core) BOTH build green, each with ONE
+  sorry now in the SAME shape: the IFT chart bundle excess_arc_charts_Nn /
+  branchP_indep_charts_Nn (produce a countable family of charts with
+  non-surjective derivatives covering the bad x-fibre, in the charts_core_Nn
+  output shape). negligible_singular_image_2n + meager_negligible_closed_cover
+  (Sard session now imported) assemble the cover sorry-free ABOVE that sorry.
+- These supersede the weak-analytic_arc M5_Dev_ArcProj. M5_Dev_CurveEngine's
+  collinear_locus_finite_arc_cover / excess_projection_meager_curve still need
+  re-soundifying against the C1 def (part of finishing D3 + core 3).
+GENUINE FINAL CORES now: excess_arc_charts_Nn (D3) + branchP_indep_charts_Nn (D4)
+= the IFT chart construction (shared shape); plus collinear_locus_finite_arc_cover
+(D3 curve cover, core 3, needs real-analytic curve structure).

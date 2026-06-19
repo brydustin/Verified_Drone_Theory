@@ -1,0 +1,6 @@
+session Applied_Math_M5_D3Sound in "." = Applied_Math_Appendix +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_Sard
+  theories
+    Scratch_m5_d3sound
