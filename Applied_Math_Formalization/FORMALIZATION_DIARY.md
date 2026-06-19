@@ -2826,3 +2826,25 @@ GENUINE FRONTIER CONSOLIDATED to 3 reusable cores: (A) excess engine
 nowhere-density -> D2 slice_nd + D5 beamcenter_angle (SAME lemma); (C) D2
 K_finite (~hours, mirror D5's proven finite confinement). Everything else is a
 splice freebie. Next wave: A, B, C in parallel.
+
+### WAVE 4: K_finite CLOSED; M5 reduces to TWO genuine facts (2026-06-19)
+- (C) K_finite: m5_D2_beamcenter_K_finite is FULLY PROVEN, sorry-free -
+  verified by STRICT rebuild quick_and_dirty=false (STRICT_EXIT=0) + clean
+  grep. M5_Dev_Kfinite/Applied_Math_M5_Kfinite. (Agent 529'd on its result-
+  return but the proof was already complete on disk - salvaged.)
+- (A) Engine: M5_Dev_Engine/Applied_Math_M5_Engine, BUILD_EXIT=[0]. ALL
+  D3 plumbing proven sorry-free (engine_bad_eq_projection, D3_excess_engine,
+  m5_D34_D3_collinear, fixed_omega_slice_meager); isolated to ONE genuine
+  core excess_projection_meager, stated PARAMETRIC in the angle curve Gamma
+  so D4 reuses it verbatim. phase_collinear confirmed codim-1 (not finite-K).
+- (B) BeamHess: M5_Dev_BeamHess/Applied_Math_M5_BeamHess, BUILD_EXIT=[0].
+  BOTH m5_D2_slice_nowhere_dense AND m5_D5_beamcenter_angle_meager proven
+  verbatim via one shared engine (Hessian collapse to covariance form,
+  det-as-polynomial, line-entirety, nowhere-density); isolated to ONE genuine
+  core gdip2_nonzero_of_cos_zero (gdip''(pi/2)=(16-4pi^2)/8 /= 0, a scalar
+  2nd-derivative computation on the sinc-factored gain).
+NET: the ENTIRE M5 now reduces to exactly TWO genuine math facts -
+excess_projection_meager (IFT engine, D3+D4) and gdip2_nonzero_of_cos_zero
+(D2+D5) - plus splice freebies (mstarg, hsep, kdiff). Next wave: prove gdip2
+(likely closable -> kills D2+D5), attack excess_projection_meager (multi-week),
+wire D4 (m5_D34_D4_branchP) to the parametric engine.
