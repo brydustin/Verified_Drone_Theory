@@ -2996,3 +2996,31 @@ proven M5 scaffolding into Robust3 at L970 (where mstarg + meager_rank_deficient
 stratum live), discharging the splice freebies, leaving the two charts_Nn cores
 as the final sorries to crack WITH mstarg in scope. Big careful integration
 (~13-min full Robust3 build); user-directed.
+
+### gradU=0 SOUNDNESS FIX + Lmat_apply opt (2026-06-19)
+While attacking the charts cores, found a THIRD soundness bug (codim count,
+user-prompted): the dev D3 chain dropped gradU=0 - BadXW = {EX w. cvec!=0 &
+~surj} = {mstarg(cvec w) x = 0}. Over a 1-D arc that is ONE equation (codim 1
+per fixed w) which SWEEPS to codim 0 (full measure, NON-meager) as w varies ->
+excess_arc_charts_Nn was FALSE as stated. D4's BadXGW already kept gradU=0
+(sound). FIX: retain gradU=0 (BadXWG); bad locus {gradU=0 & mstarg=0} is codim 3
+(2 gradient eqs + 1 determinantal) -> x-projection negligible. Stopped the
+consolidation executor (it was grafting the unsound D3) + the prior core-proof
+(proving a false lemma); reset the half-graft. Re-ran corrected:
+- M5_Dev_D3fix (BUILD_EXIT=0): D3 re-stated over BadXWG, all gradU-agnostic
+  threading + the corrected connector m5_D34_D3_collinear_fixed proven sorry-free;
+  reduced to ONE true sorry excess_arc_charts_Nn (codim-3). Design agent
+  independently confirmed "D3 is FALSE as stated".
+- M5_Dev_D4fix (BUILD_EXIT=0): branchP_indep_charts_Nn, codim-3, sound.
+- Lmat_apply optimized to a single `by (simp add: vec_eq_iff forall_6 ...)`
+  (commit 0364557), verified green in jEdit + isolated heap build.
+GENUINE FRONTIER = 3 TRUE, provable analytic cores (no longer chasing false
+lemmas): (i) excess_arc_charts_Nn (D3 arc chart), (ii) branchP_indep_charts_Nn
+(D4 region chart) - BOTH reduce to a SHARED need: a negligible-projection /
+charts engine for the codim-3 joint locus {Gjoint=(gradU,mstarg)=0}, i.e. a
+codomain-real^3 generalization of charts_core_Nn; crux = is 0 a REGULAR VALUE of
+Gjoint (submersion) on the bad locus -> codim-3 manifold -> projection
+non-surjective -> negligible_singular_image_2n. (iii) collinear_locus_finite_arc_
+cover (finite C1-arc cover of the analytic curve {crossTheta=0}; needs a
+real-analytic curve-structure / continuous-IFT result). All research-grade IFT;
+the framing is now sound, the math is standard, the mechanization is the work.
