@@ -2875,3 +2875,32 @@ CORRECTED FRONTIER (genuine remaining math):
       (core_3d ruled out). The hardest piece, as the diary always said.
 LESSON: a green (quick_and_dirty) build can rest on a FALSE stubbed lemma;
 must verify intermediate STATEMENTS are true, not just that it compiles.
+
+### WAVE 6: 3 SOUND cores; over-generality FIXED; D4 done right (2026-06-19)
+Corrected wave (Munkres machinery wired in: Rpow_hyperplane_empty_interior,
+affine_span_empty_interior, finite_union_empty_interior, complete_metric_baire_aux,
+all in the heap via Base). All 3 build-green AND soundly-stated (agents ran
+extreme-instance sanity checks per the lesson):
+- ArcProj (M5_Dev_ArcProj): excess_arc_projection_meager (per SINGLE arc, no 2D
+  pitfall) reduced to ONE deep core excess_arc_negligible_closed_cover (IFT chart
+  of the per-arc bad fibre as a (2N-1)-dim graph + negligible x-projection,
+  negligible_singular_image_2n). Proved empty/point/finite-arc sanity checks to
+  confirm the cut. Genuine (not a freebie).
+- CurveEngine (M5_Dev_CurveEngine): FIXES the over-generality. New predicate
+  finitely_arc_coverable; excess_projection_meager_curve now carries it as a
+  hypothesis (TRUE), supersedes the false M5_Dev_Excess engine. collinear_locus_
+  finite_arc_cover proves the collinear LOCUS is finitely_arc_coverable (routine,
+  finite_*_zeros). Re-derived D3 (m5_D34_D3_collinear) sorry-free against the
+  sound engine. Remaining: collinear_locus_finite_arc_cover + the shared
+  excess_arc_projection_meager (= ArcProj core) + mstarg freebie.
+- BranchP (M5_Dev_BranchP): D4 done SOUNDLY. m5_D34_D4_branchP via branchP_engine
+  -> branchP_indep_core, which RETAINS gradU=0/detDcvec!=0/cvec!=0/~surj and adds
+  linear-independence ~gamma_par_c; codim from the RETAINED gradU=0 via rank-drop
+  (NOT the false 2D curve-engine). phase_collinear == gamma_par_c so ~collinear =
+  independent case = exactly branchP_indep_core. ONE genuine new core.
+GENUINE FRONTIER = 3 soundly-scoped analytic cores: (1) excess_arc_negligible_
+closed_cover [D3, deep]; (2) collinear_locus_finite_arc_cover [D3, routine];
+(3) branchP_indep_core [D4, deep]. (1) and (3) are both (2N-1)-dim-graph =>
+negligible-x-projection facts (codim from arc-param vs gradU=0). All standard
+diff-topology, not open problems. Plus splice freebies (mstarg, hsep, kdiff).
+M5_Dev_CurveEngine supersedes M5_Dev_Excess (kept for history, flagged false).
