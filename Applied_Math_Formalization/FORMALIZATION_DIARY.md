@@ -2968,3 +2968,31 @@ stop autonomous grinding here; surface to user.
 GENUINE FINAL CORES now: excess_arc_charts_Nn (D3) + branchP_indep_charts_Nn (D4)
 = the IFT chart construction (shared shape); plus collinear_locus_finite_arc_cover
 (D3 curve cover, core 3, needs real-analytic curve structure).
+
+### WAVE 9: charts_Nn cores diagnosed - the irreducible floor (2026-06-19)
+Both charts_Nn cores remain ONE sorry each (M5_Dev_D3charts excess_arc_charts_Nn
+L286; M5_Dev_D4charts branchP_indep_charts_Nn L164), both build-green
+(BUILD_EXIT=0), assembly chains above them all sorry-free. Agents added the
+empty-arc chart witness + full engine analysis. KEY DIAGNOSIS (why the heap
+engines do NOT close them):
+- charts_core_Nn / parametric_transversality_meager_planar_config / the complex
+  engine all control the OMEGA-PARTIAL non-surjectivity of their map G (for
+  G=gradU that is det(HessU)=0 - the M4/M6 steering/Hessian degeneracy).
+- M5's defining condition is the X-PARTIAL moment-Jacobian rank drop
+  ~surj(DM_paper_x x c) (= mstarg/Gram-det = 0) - a TRANSPOSED, different rank
+  drop the omega-partial engines do NOT cover. So the charts_Nn bundles need a
+  chart built from the MOMENT-map x-Jacobian rank-drop, fed to
+  negligible_singular_image_2n (which IS the right x-partial tool, Sard, now in
+  scope). negligible_singular_image_2n is the engine; the missing piece is
+  CONSTRUCTING the chart map/Crit set for the determinantal rank-drop locus.
+- BLOCKER: that construction needs mstarg / surj_iff_mstarg / m_star analyticity
+  - which live in Robust3, NOT in the Appendix heap reachable from dev files
+  (which import only Robust2). So the cores CANNOT be finished in a Robust2-dev
+  file; they need Robust3 context. (charts_core_Nn also needs OPEN Omega -> fits
+  D4's 2D region, not D3's 1-D arc.)
+STRATEGIC FLOOR REACHED: the autonomous dev-file grind is exhausted - the two
+remaining cores need Robust3-resident mstarg machinery. NEXT = CONSOLIDATE the
+proven M5 scaffolding into Robust3 at L970 (where mstarg + meager_rank_deficient_
+stratum live), discharging the splice freebies, leaving the two charts_Nn cores
+as the final sorries to crack WITH mstarg in scope. Big careful integration
+(~13-min full Robust3 build); user-directed.
