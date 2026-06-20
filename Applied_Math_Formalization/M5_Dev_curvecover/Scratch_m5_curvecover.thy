@@ -295,6 +295,8 @@ text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST pr
 lemma locus_locally_C1_arc:
   fixes ctr :: "real^2" and \<delta> :: real and \<omega>' :: "real^2"
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and win: "\<omega>' \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0}"
   obtains r \<A> where "0 < r" "finite \<A>"
       "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
@@ -316,6 +318,8 @@ text \<open>Heine--Borel: the compact locus is covered by the per-point balls of
 lemma collinear_locus_crossTheta_finite_arc_cover:
   fixes ctr :: "real^2" and \<delta> :: real
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
   shows "finitely_arc_coverable {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} ctr \<delta>"
 proof -
   define L :: "(real^2) set" where "L = {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0}"
@@ -338,7 +342,7 @@ proof -
         and ag: "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
         and cov: "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r
                     \<subseteq> \<Union>\<A>"
-      using d0 pf wlocus by (rule locus_locally_C1_arc)
+      using d0 pf hsep kdiff wlocus by (rule locus_locally_C1_arc)
     \<comment> \<open>The local family is already a finite SET of arcs.\<close>
     have g0: "good \<omega>' r \<A>"
       unfolding good_def using r0 finA ag cov unfolding L_def by auto
@@ -418,8 +422,10 @@ qed
 lemma collinear_locus_finite_arc_cover:
   fixes ctr :: "real^2" and \<delta> :: real
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
   shows "finitely_arc_coverable {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
   unfolding collinear_locus_eq_crossTheta_zero
-  by (rule collinear_locus_crossTheta_finite_arc_cover[OF d0 pf])
+  by (rule collinear_locus_crossTheta_finite_arc_cover[OF d0 pf hsep kdiff])
 
 end
