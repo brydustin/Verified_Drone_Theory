@@ -424,6 +424,41 @@ text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST pr
   @{text analytic_arc_negligible} gate needs negligibility, which a space-filling
   (Peano) continuous curve would violate.  NOT a splice freebie.\<close>
 
+subsection \<open>The Fréchet derivative of \<open>crossTheta\<close> (explicit partials)\<close>
+
+text \<open>\<open>crossTheta\<close> is \<open>C\<^sup>1\<close> (indeed \<open>C\<^sup>\<infinity>\<close>): from the separable form it is a trig
+  polynomial in the two continuous components \<open>\<omega>$1, \<omega>$2\<close>.  We record the Fréchet
+  derivative with its two explicit partial coefficients \<open>\<partial>\<^sub>1, \<partial>\<^sub>2\<close>; the case split in
+  @{text locus_locally_C1_arc} (regular vs singular point) and the finiteness of the
+  singular set both read off these partials.\<close>
+
+lemma has_derivative_crossTheta:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  shows "((\<lambda>z. crossTheta \<omega>0 \<omega>s z) has_derivative
+     (\<lambda>h. ( (Bc * kz \<omega>s + ky \<omega>s) * sin (\<omega>$1) * cos (\<omega>$2)
+            - (Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>$1) * sin (\<omega>$2)
+            + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (\<omega>$1) ) * (h$1)
+        + ( - (Bc - (Bc * kz \<omega>s + ky \<omega>s) * cos (\<omega>$1)) * sin (\<omega>$2)
+            + (- Ac + (Ac * kz \<omega>s + kx \<omega>s) * cos (\<omega>$1)) * cos (\<omega>$2) ) * (h$2)
+       )) (at \<omega>)"
+proof -
+  have sep: "crossTheta \<omega>0 \<omega>s z
+       = (Bc - (Bc * kz \<omega>s + ky \<omega>s) * cos (z$1)) * cos (z$2)
+       + (- Ac + (Ac * kz \<omega>s + kx \<omega>s) * cos (z$1)) * sin (z$2)
+       + (Ac * ky \<omega>s - Bc * kx \<omega>s) * sin (z$1)" for z
+    unfolding Ac_def Bc_def
+    by (subst crossTheta_separable) (simp add: crossA_def crossB_def crossG_def)
+  have d1: "((\<lambda>z::real^2. z$1) has_derivative (\<lambda>h. h$1)) (at \<omega>)"
+    by (simp add: bounded_linear_vec_nth bounded_linear_imp_has_derivative)
+  have d2: "((\<lambda>z::real^2. z$2) has_derivative (\<lambda>h. h$2)) (at \<omega>)"
+    by (simp add: bounded_linear_vec_nth bounded_linear_imp_has_derivative)
+  show ?thesis
+    unfolding sep
+    by (rule derivative_eq_intros refl d1 d2 | simp add: algebra_simps)+
+qed
+
 lemma locus_locally_C1_arc:
   fixes ctr :: "real^2" and \<delta> :: real and \<omega>' :: "real^2"
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
