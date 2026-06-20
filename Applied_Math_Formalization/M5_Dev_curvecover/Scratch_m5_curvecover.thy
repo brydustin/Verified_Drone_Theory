@@ -519,6 +519,42 @@ proof -
   show ?thesis using \<epsilon>0 inj avoidN by blast
 qed
 
+text \<open>Injectivity + invariance of domain: the graph map \<open>H z = (z$1, crossTheta z)\<close> is a
+  homeomorphism of a small ball onto an OPEN image, with continuous inverse \<open>g\<close>.  This is the
+  local diffeomorphism; the \<open>C\<^sup>1\<close> graph arc is \<open>g\<close> restricted to the slice \<open>{2nd coord = 0}\<close>.\<close>
+
+lemma crossTheta_graph_homeo:
+  fixes \<omega>0 \<omega>s \<omega>' :: "real^2"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes d2: "- crossA Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2) \<noteq> 0"
+  obtains \<epsilon> g where "\<epsilon> > 0"
+    "homeomorphism (ball \<omega>' \<epsilon>)
+        ((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) ` (ball \<omega>' \<epsilon>))
+        (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z]) g"
+    "open ((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) ` (ball \<omega>' \<epsilon>))"
+proof -
+  obtain \<epsilon> where \<epsilon>0: "\<epsilon> > 0"
+      and inj: "inj_on (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) (ball \<omega>' \<epsilon>)"
+    using crossTheta_graph_inj[OF d2[unfolded Ac_def Bc_def]] by blast
+  have veq: "(\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2)
+           = (\<lambda>z. (z$1) *\<^sub>R axis 1 1 + (crossTheta \<omega>0 \<omega>s z) *\<^sub>R axis 2 1)"
+    by (rule ext)
+       (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                  vector_add_component vector_scaleR_component axis_def)
+  have contH: "continuous_on (ball \<omega>' \<epsilon>) (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2)"
+    unfolding veq
+    by (intro continuous_intros continuous_on_crossTheta
+              linear_continuous_on[OF bounded_linear_vec_nth])
+  obtain g where homeo: "homeomorphism (ball \<omega>' \<epsilon>)
+        ((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) ` (ball \<omega>' \<epsilon>))
+        (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z]) g"
+    using invariance_of_domain_homeomorphism[OF open_ball contH _ inj] by auto
+  have openimg: "open ((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) ` (ball \<omega>' \<epsilon>))"
+    by (rule invariance_of_domain[OF contH open_ball inj])
+  show ?thesis using \<epsilon>0 homeo openimg ..
+qed
+
 
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
