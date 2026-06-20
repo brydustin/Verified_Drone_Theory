@@ -392,6 +392,134 @@ proof -
 qed
 
 
+text \<open>The \<open>t\<close>-fibre (\<open>\<omega>\<^sub>2\<close>) derivative: restricting \<open>crossTheta\<close> to a vertical line
+  \<open>u \<mapsto> (s,u)\<close> gives the elementary 1-D map \<open>crossA\<cdot>cos u + crossB\<cdot>sin u + const\<close>,
+  whose derivative is \<open>\<partial>\<^sub>2 = - crossA\<cdot>sin u + crossB\<cdot>cos u\<close>.  This is the partial whose
+  nonvanishing makes the graph map @{term "\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z]"}
+  injective (via the mean value theorem), the entry point to invariance of domain.\<close>
+
+lemma has_field_derivative_crossTheta_t:
+  fixes \<omega>0 \<omega>s :: "real^2" and s t :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  shows "((\<lambda>u. crossTheta \<omega>0 \<omega>s (vector [s, u]))
+            has_field_derivative
+          (- crossA Bc \<omega>s s * sin t + crossB Ac \<omega>s s * cos t)) (at t)"
+proof -
+  have sep: "crossTheta \<omega>0 \<omega>s (vector [s, u])
+       = crossA Bc \<omega>s s * cos u + crossB Ac \<omega>s s * sin u + crossG Ac Bc \<omega>s s" for u
+    unfolding Ac_def Bc_def
+    by (subst crossTheta_separable) (simp add: vector_2)
+  show ?thesis
+    unfolding sep
+    by (auto intro!: derivative_eq_intros simp: algebra_simps)
+qed
+
+lemma continuous_on_crossTheta_t_partial:
+  fixes \<omega>0 \<omega>s :: "real^2" and S :: "(real \<times> real) set"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  shows "continuous_on S
+           (\<lambda>(s,t). - crossA Bc \<omega>s s * sin t + crossB Ac \<omega>s s * cos t)"
+  unfolding crossA_def crossB_def
+  by (auto simp: case_prod_unfold intro!: continuous_intros)
+
+
+text \<open>\<^bold>\<open>Injectivity of the graph map.\<close>  Where \<open>\<partial>\<^sub>2 \<noteq> 0\<close>, the graph map
+  \<open>H z = (z$1, crossTheta z)\<close> is injective on a small open box around \<open>\<omega>'\<close>: the first
+  coordinate pins \<open>z$1\<close>, and on the vertical fibre Rolle's theorem forbids two
+  \<open>\<omega>\<^sub>2\<close>-values with equal \<open>crossTheta\<close> (their difference would force a zero of \<open>\<partial>\<^sub>2\<close>).
+  This injectivity is the hypothesis for invariance of domain.\<close>
+
+lemma crossTheta_graph_inj:
+  fixes \<omega>0 \<omega>s \<omega>' :: "real^2"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes d2: "- crossA Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2) \<noteq> 0"
+  shows "\<exists>\<epsilon>>0. inj_on (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) (ball \<omega>' \<epsilon>)
+          \<and> (\<forall>z\<in>ball \<omega>' \<epsilon>.
+               - crossA Bc \<omega>s (z$1) * sin (z$2) + crossB Ac \<omega>s (z$1) * cos (z$2) \<noteq> 0)"
+proof -
+  define D2 :: "real^2 \<Rightarrow> real" where
+    "D2 z = - crossA Bc \<omega>s (z$1) * sin (z$2) + crossB Ac \<omega>s (z$1) * cos (z$2)" for z
+  have contD2: "continuous_on UNIV D2"
+    unfolding D2_def crossA_def crossB_def
+    by (auto intro!: continuous_intros)
+  have "D2 \<omega>' \<noteq> 0" using d2 by (simp add: D2_def)
+  hence wopen: "\<omega>' \<in> {z. D2 z \<noteq> 0}" by simp
+  have opnz: "open {z. D2 z \<noteq> 0}"
+    using contD2 by (intro open_Collect_neq continuous_on_const) auto
+  obtain \<epsilon> where \<epsilon>0: "\<epsilon> > 0" and ballsub: "ball \<omega>' \<epsilon> \<subseteq> {z. D2 z \<noteq> 0}"
+    using opnz wopen open_contains_ball by blast
+  have avoid: "D2 z \<noteq> 0" if "z \<in> ball \<omega>' \<epsilon>" for z using ballsub that by blast
+  have ftd: "((\<lambda>u. crossTheta \<omega>0 \<omega>s (vector [s, u])) has_field_derivative D2 (vector [s, u])) (at u)"
+    for s u :: real
+  proof -
+    have "((\<lambda>u'. crossTheta \<omega>0 \<omega>s (vector [s, u']))
+            has_field_derivative (- crossA Bc \<omega>s s * sin u + crossB Ac \<omega>s s * cos u)) (at u)"
+      unfolding Ac_def Bc_def by (rule has_field_derivative_crossTheta_t)
+    thus ?thesis by (simp add: D2_def vector_2)
+  qed
+  \<comment> \<open>a fibre point with \<open>\<omega>\<^sub>2\<close>-coordinate between two ball points stays in the (convex) ball\<close>
+  have fibre_in: "vector [z$1, \<xi>] \<in> ball \<omega>' \<epsilon>"
+    if zb: "z \<in> ball \<omega>' \<epsilon>" and z'b: "z' \<in> ball \<omega>' \<epsilon>" and seq: "z'$1 = z$1"
+       and bet: "\<xi> \<in> closed_segment (z$2) (z'$2)" for z z' :: "real^2" and \<xi> :: real
+  proof -
+    obtain \<alpha> where l: "0 \<le> \<alpha>" "\<alpha> \<le> 1" and xeq: "\<xi> = (1 - \<alpha>) * (z$2) + \<alpha> * (z'$2)"
+      using bet by (auto simp: closed_segment_def)
+    have eqv: "vector [z$1, \<xi>] = (1 - \<alpha>) *\<^sub>R z + \<alpha> *\<^sub>R z'"
+      using seq xeq
+      by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                    vector_add_component vector_scaleR_component algebra_simps)
+    have "vector [z$1, \<xi>] \<in> closed_segment z z'"
+      unfolding closed_segment_def using l eqv by (auto intro!: exI[where x = \<alpha>])
+    thus ?thesis
+      using zb z'b convex_ball convex_contains_segment by blast
+  qed
+  have inj: "inj_on (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) (ball \<omega>' \<epsilon>)"
+  proof (rule inj_onI)
+    fix z z' assume zb: "z \<in> ball \<omega>' \<epsilon>" and z'b: "z' \<in> ball \<omega>' \<epsilon>"
+      and Heq: "vector [z$1, crossTheta \<omega>0 \<omega>s z] = (vector [z'$1, crossTheta \<omega>0 \<omega>s z'] :: real^2)"
+    have s_eq: "z'$1 = z$1" using Heq by (metis vector_2)
+    have ct_eq: "crossTheta \<omega>0 \<omega>s z = crossTheta \<omega>0 \<omega>s z'" using Heq by (metis vector_2)
+    have zrw: "z = vector [z$1, z$2]" and z'rw: "z' = vector [z'$1, z'$2]"
+      by (simp_all add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2)
+    show "z = z'"
+    proof (rule ccontr)
+      assume ne: "z \<noteq> z'"
+      have w2: "z$2 \<noteq> z'$2" using ne s_eq zrw z'rw by (metis)
+      define f where "f = (\<lambda>u. crossTheta \<omega>0 \<omega>s (vector [z$1, u]))"
+      have fz: "f (z$2) = crossTheta \<omega>0 \<omega>s z" using zrw by (simp add: f_def)
+      have fz': "f (z'$2) = crossTheta \<omega>0 \<omega>s z'" using z'rw s_eq by (simp add: f_def)
+      have feq: "f (z$2) = f (z'$2)" using fz fz' ct_eq by simp
+      have derf: "(f has_field_derivative D2 (vector [z$1, u])) (at u)" for u
+        using ftd[of "z$1" u] by (simp add: f_def)
+      define lo where "lo = min (z$2) (z'$2)"
+      define hi where "hi = max (z$2) (z'$2)"
+      have lohi: "lo < hi" using w2 by (simp add: lo_def hi_def)
+      have flohi: "f lo = f hi"
+        using feq by (auto simp: lo_def hi_def min_def max_def)
+      have contf: "continuous_on {lo..hi} f"
+        using DERIV_isCont[OF derf] continuous_at_imp_continuous_on by blast
+      have difff: "f differentiable (at u)" if "lo < u" "u < hi" for u
+        using derf[of u] real_differentiable_def by blast
+      obtain \<xi> where xi: "lo < \<xi>" "\<xi> < hi" and d0: "DERIV f \<xi> :> 0"
+        using Rolle[OF lohi flohi contf] difff by auto
+      have "DERIV f \<xi> :> D2 (vector [z$1, \<xi>])" using derf[of \<xi>] by simp
+      hence z0: "D2 (vector [z$1, \<xi>]) = 0" using d0 DERIV_unique by blast
+      have "\<xi> \<in> closed_segment (z$2) (z'$2)"
+        using xi by (auto simp: closed_segment_eq_real_ivl lo_def hi_def)
+      hence "vector [z$1, \<xi>] \<in> ball \<omega>' \<epsilon>" by (rule fibre_in[OF zb z'b s_eq])
+      thus False using avoid z0 by blast
+    qed
+  qed
+  have avoidN: "\<forall>z\<in>ball \<omega>' \<epsilon>.
+      - crossA Bc \<omega>s (z$1) * sin (z$2) + crossB Ac \<omega>s (z$1) * cos (z$2) \<noteq> 0"
+    using avoid by (auto simp: D2_def)
+  show ?thesis using \<epsilon>0 inj avoidN by blast
+qed
+
+
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
 text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
