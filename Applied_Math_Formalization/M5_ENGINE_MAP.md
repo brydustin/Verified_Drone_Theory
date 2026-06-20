@@ -185,6 +185,14 @@ NONE is a one-liner. Build serially (heap lock). Subagents CANNOT run `isabelle 
 Two latent over-general stubs caught by parallel read-only audit (the project's recurring
 failure mode — 3 prior bugs from codim miscounts). Both cores' stated sorries had gaps.
 
+### Core iii (curve-cover) — REGULAR CASES PROVEN (2026-06-20; commits dc12da7, 0e1dc7b)
+`crossTheta_local_C1_graph` (φ-graph over ω₁ where ∂₂Θ≠0) PROVEN sorry-free; the symmetric
+`crossTheta_local_C1_graph_vert` (χ-graph over ω₂ where ∂₁Θ≠0) + 4 foundation lemmas PROVEN
+(built by 2 parallel agents). `locus_locally_C1_arc` now proves BOTH regular orientations at an
+interior locus point (CASE A φ, CASE B1 χ). Single residual `sorry` = **∇Θ=0 singular points
+(finite — see below) ∪ box boundary**. Next: boundary (clipped/component box-containment, tractable)
++ singular local cover. Detail below was the original (e750e1f) plan; the singular analysis is now the live lead.
+
 ### Core iii (curve-cover) — FIXED (e750e1f)
 `locus_locally_C1_arc` was FALSE without `kdiff`. If `Ac=Bc=0` (i.e. `kx ω0=kx ωs ∧ ky ω0=ky ωs`)
 then `crossTheta ≡ crossG(ω1) ≡ 0`, locus = whole 2-D box, NOT finitely arc-coverable. Added
