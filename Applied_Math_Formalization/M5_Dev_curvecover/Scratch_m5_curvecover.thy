@@ -260,6 +260,138 @@ proof -
 qed
 
 
+subsection \<open>Finite-zeros helpers for the singular set (inhomogeneous extensions)\<close>
+
+text \<open>The singular set of @{const crossTheta} (where both partials vanish on the locus)
+  reduces, per the design, to \<open>cos \<omega>\<^sub>1 = \<kappa>\<close> equations (degree-\<open>\<le>2\<close> polynomial roots) and
+  inhomogeneous \<open>a cos \<omega>\<^sub>2 + b sin \<omega>\<^sub>2 = k\<close> equations.  These two helpers --- the
+  inhomogeneous (\<open>k \<noteq> 0\<close>) extensions of the heap's @{thm finite_cos_zeros_interval} /
+  @{thm finite_phase_zeros_interval} --- give finiteness on a bounded interval via the
+  TWO-coset @{thm cos_eq} / @{thm sin_eq} characterizations.\<close>
+
+lemma finite_cos_eq_zeros_interval:
+  fixes lo hi K :: real
+  shows "finite {t::real. lo \<le> t \<and> t \<le> hi \<and> cos t = K}"
+proof (cases "- 1 \<le> K \<and> K \<le> 1")
+  case True
+  hence cy: "cos (arccos K) = K" by (simp add: cos_arccos)
+  have eq: "{t::real. lo \<le> t \<and> t \<le> hi \<and> cos t = K}
+          = {t::real. lo \<le> t \<and> t \<le> hi \<and> (\<exists>i::int. t = of_int i * (2*pi) + arccos K)}
+          \<union> {t::real. lo \<le> t \<and> t \<le> hi \<and> (\<exists>i::int. t = of_int i * (2*pi) + (- arccos K))}"
+  proof (rule Set.set_eqI)
+    fix t :: real
+    have ce: "cos t = K
+          \<longleftrightarrow> (\<exists>i::int. t = of_int i * (2*pi) + arccos K
+                       \<or> t = of_int i * (2*pi) + (- arccos K))"
+    proof -
+      have "cos t = K \<longleftrightarrow> cos t = cos (arccos K)" using cy by simp
+      also have "\<dots> \<longleftrightarrow> (\<exists>n\<in>\<int>. t = arccos K + 2*n*pi \<or> t = - arccos K + 2*n*pi)"
+        by (rule cos_eq)
+      also have "\<dots> \<longleftrightarrow> (\<exists>i::int. t = of_int i * (2*pi) + arccos K
+                                 \<or> t = of_int i * (2*pi) + (- arccos K))"
+        by (auto simp: Ints_def algebra_simps)
+      finally show ?thesis .
+    qed
+    show "t \<in> {t::real. lo \<le> t \<and> t \<le> hi \<and> cos t = K}
+        \<longleftrightarrow> t \<in> {t::real. lo \<le> t \<and> t \<le> hi \<and> (\<exists>i::int. t = of_int i * (2*pi) + arccos K)}
+              \<union> {t::real. lo \<le> t \<and> t \<le> hi \<and> (\<exists>i::int. t = of_int i * (2*pi) + (- arccos K))}"
+      using ce by auto
+  qed
+  have tp: "(0::real) < 2*pi" using pi_gt_zero by simp
+  show ?thesis unfolding eq
+    by (rule finite_UnI[OF finite_affine_int_zeros[OF tp] finite_affine_int_zeros[OF tp]])
+next
+  case False
+  have empty: "{t::real. lo \<le> t \<and> t \<le> hi \<and> cos t = K} = {}"
+  proof (rule equals0I)
+    fix t assume "t \<in> {t::real. lo \<le> t \<and> t \<le> hi \<and> cos t = K}"
+    hence "cos t = K" by simp
+    moreover have "- 1 \<le> cos t" by (rule cos_ge_minus_one)
+    moreover have "cos t \<le> 1" by (rule cos_le_one)
+    ultimately show False using False by simp
+  qed
+  show ?thesis unfolding empty by simp
+qed
+
+lemma finite_inhom_phase_zeros_interval:
+  fixes a b k lo hi :: real
+  assumes ab: "a \<noteq> 0 \<or> b \<noteq> 0"
+  shows "finite {u::real. lo \<le> u \<and> u \<le> hi \<and> a * cos u + b * sin u = k}"
+proof -
+  define R :: real where "R = sqrt (a\<^sup>2 + b\<^sup>2)"
+  have pos: "0 < a\<^sup>2 + b\<^sup>2" using ab by (simp add: sum_power2_gt_zero_iff)
+  have R0: "0 < R" unfolding R_def by (rule real_sqrt_gt_zero[OF pos])
+  have Rne: "R \<noteq> 0" using R0 by simp
+  have nn: "0 \<le> a\<^sup>2 + b\<^sup>2" using pos by linarith
+  have Rsq: "R\<^sup>2 = a\<^sup>2 + b\<^sup>2" unfolding R_def by (rule real_sqrt_pow2[OF nn])
+  have ne: "a\<^sup>2 + b\<^sup>2 \<noteq> 0" using pos by auto
+  have unit: "(b/R)\<^sup>2 + (a/R)\<^sup>2 = 1"
+  proof -
+    have "(b/R)\<^sup>2 + (a/R)\<^sup>2 = (b\<^sup>2 + a\<^sup>2) / R\<^sup>2"
+      by (simp add: power_divide add_divide_distrib)
+    also have "\<dots> = 1" using ne by (simp add: Rsq add.commute)
+    finally show ?thesis .
+  qed
+  obtain \<psi> :: real where psi1: "b/R = cos \<psi>" and psi2: "a/R = sin \<psi>"
+    using sincos_total_2pi[OF unit] by blast
+  have key: "a * cos u + b * sin u = R * sin (u + \<psi>)" for u :: real
+  proof -
+    have "a * cos u + b * sin u = R * (sin u * (b/R) + cos u * (a/R))"
+      using Rne by (simp add: field_simps)
+    also have "\<dots> = R * (sin u * cos \<psi> + cos u * sin \<psi>)" unfolding psi1 psi2 by (rule refl)
+    also have "\<dots> = R * sin (u + \<psi>)" by (simp add: sin_add)
+    finally show ?thesis .
+  qed
+  show ?thesis
+  proof (cases "- 1 \<le> k/R \<and> k/R \<le> 1")
+    case True
+    hence sy: "sin (arcsin (k/R)) = k/R" by (simp add: sin_arcsin)
+    have eq: "{u::real. lo \<le> u \<and> u \<le> hi \<and> a * cos u + b * sin u = k}
+            = {u::real. lo \<le> u \<and> u \<le> hi
+                  \<and> (\<exists>i::int. u = of_int i * (2*pi) + (arcsin (k/R) - \<psi>))}
+            \<union> {u::real. lo \<le> u \<and> u \<le> hi
+                  \<and> (\<exists>i::int. u = of_int i * (2*pi) + (pi - arcsin (k/R) - \<psi>))}"
+    proof (rule Set.set_eqI)
+      fix u :: real
+      have "(a * cos u + b * sin u = k) \<longleftrightarrow> (sin (u + \<psi>) = k/R)"
+        using key Rne by (auto simp: field_simps)
+      also have "\<dots> \<longleftrightarrow> sin (u + \<psi>) = sin (arcsin (k/R))" using sy by simp
+      also have "\<dots> \<longleftrightarrow> (\<exists>n\<in>\<int>. u + \<psi> = arcsin (k/R) + 2*n*pi
+                                 \<or> u + \<psi> = - arcsin (k/R) + (2*n+1)*pi)"
+        by (rule sin_eq)
+      also have "\<dots> \<longleftrightarrow> (\<exists>i::int. u = of_int i * (2*pi) + (arcsin (k/R) - \<psi>)
+                                 \<or> u = of_int i * (2*pi) + (pi - arcsin (k/R) - \<psi>))"
+        by (auto simp: Ints_def algebra_simps)
+      finally
+      show "u \<in> {u::real. lo \<le> u \<and> u \<le> hi \<and> a * cos u + b * sin u = k}
+          \<longleftrightarrow> u \<in> {u::real. lo \<le> u \<and> u \<le> hi
+                    \<and> (\<exists>i::int. u = of_int i * (2*pi) + (arcsin (k/R) - \<psi>))}
+                \<union> {u::real. lo \<le> u \<and> u \<le> hi
+                    \<and> (\<exists>i::int. u = of_int i * (2*pi) + (pi - arcsin (k/R) - \<psi>))}"
+        by auto
+    qed
+    have tp: "(0::real) < 2*pi" using pi_gt_zero by simp
+    show ?thesis unfolding eq
+      by (rule finite_UnI[OF finite_affine_int_zeros[OF tp] finite_affine_int_zeros[OF tp]])
+  next
+    case False
+    have empty: "{u::real. lo \<le> u \<and> u \<le> hi \<and> a * cos u + b * sin u = k} = {}"
+    proof -
+      have "a * cos u + b * sin u \<noteq> k" for u
+      proof -
+        have e1: "a * cos u + b * sin u = R * sin (u + \<psi>)" by (rule key)
+        have "\<bar>R * sin (u + \<psi>)\<bar> \<le> R"
+          using R0 by (simp add: abs_mult)
+        moreover have "R < \<bar>k\<bar>" using False R0 by (auto simp: divide_simps abs_real_def split: if_splits)
+        ultimately show ?thesis using e1 by auto
+      qed
+      thus ?thesis by blast
+    qed
+    show ?thesis unfolding empty by simp
+  qed
+qed
+
+
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
 text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
