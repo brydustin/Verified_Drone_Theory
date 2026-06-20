@@ -3130,3 +3130,35 @@ REMAINING BODY ROADMAP (~250 lines, NO WALL, one hard keystone). Build serially.
     (≤2-per-ω1: a cos+b sin+c=0 over the 2π ω2-range has ≤2 sols).
 (5) assembly: case-split ∇crossTheta(ω')=0? via has_derivative_crossTheta (∇=0 ⟺ d1=d2=0).
 Helpers (1)-finite + the bridge are DONE; (2) is the only genuinely hard piece.
+
+### M5 core iii: scalar IFT keystone — injectivity + fibre-derivative VERIFIED (2026-06-19, cont.)
+"grind the scalar IFT keystone". Chose the BLINFUN-FREE route: invariance_of_domain for
+existence of the continuous local inverse + has_derivative_inverse_basic_x (Derivative.thy:1188)
+for the derivative (gives psi' = -d1/d2 explicitly => C1 for free, no operator-inverse
+continuity, no blinfun topology). Verified + committed (19870e5):
+- has_field_derivative_crossTheta_t: 1-D fibre deriv d2 = -crossA*sin + crossB*cos (via the
+  separable form restricted to u |-> (s,u): crossA*cos u+crossB*sin u+const).
+- continuous_on_crossTheta_t_partial.
+- crossTheta_graph_inj: H(z)=vector[z1,crossTheta z] is inj_on (ball omega' eps) where d2!=0,
+  via Rolle on the vertical fibre (two equal-crossTheta omega2's would force a zero of d2).
+  GRIND TRAPS hit (all fixed): (a) parse-ambiguous `$` when `for z z'` left them UNTYPED ->
+  annotate `for z z' :: real^2`; (b) `lambda` is reserved -> use alpha; (c) bare vec_eq_iff is
+  JNF-shadowed (no-op) -> Finite_Cartesian_Product.vec_eq_iff; (d) convex-segment membership
+  needs explicit exI witness; (e) `define f where "f u=..."` is pointwise -> use
+  "f=(%u....)" so has_real_derivative sees f as a function; (f) DERIV_isCont +
+  continuous_at_imp_continuous_on for continuity; (g) defines need ω0 ωs FIXED.
+
+REMAINING KEYSTONE (clear path, verified foundations; ~100 lines):
+(2a) crossTheta_graph_homeo: from crossTheta_graph_inj + H continuous +
+     invariance_of_domain_homeomorphism (Further_Topology:2288) => g=inv, homeomorphism
+     (ball) (H`ball) H g, open (H`ball). [~15 lines]
+(2b) C1 graph: phi(s)=g(vector[s,0]) for s near omega'1 (vector[s,0]∈H`ball, open). phi$1=s,
+     crossTheta(phi s)=0 (H(g y)=y). phi(omega'1)=omega' (g(H z)=z). DERIVATIVE via
+     has_derivative_inverse_basic_x at x=phi s: provide g'_x = (%k. vector[k1, (k2-d1*k1)/d2]),
+     bounded_linear, g'_x o H'_x = id (H'_x from has_derivative_crossTheta + vec_nth) =>
+     g has_derivative g'_x at vector[s,0] => phi has_vector_derivative vector[1, -d1/d2] =>
+     C1 (continuous, d2!=0). [~60 lines]
+(2c) regular case of locus_locally_C1_arc: the analytic_arc = phi`[a,b]; covering from the
+     homeomorphism's relative-openness; box containment by restricting [a,b]. [~30 lines]
+(3) singular case: finite Ssing (roadmap above) => omega' isolated => point + <=2 branch arcs.
+The injectivity (the conceptual crux, Rolle) is DONE; (2b) the derivative is the next grind.
