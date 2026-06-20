@@ -822,6 +822,69 @@ proof -
 qed
 
 
+text \<open>Box-containment + arc packaging of a local \<open>C\<^sup>1\<close> graph (reusable for either the
+  \<open>\<partial>\<^sub>2\<Theta>\<noteq>0\<close> graph-over-\<open>\<omega>\<^sub>1\<close> or, symmetrically, the \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> graph-over-\<open>\<omega>\<^sub>2\<close>):
+  at an INTERIOR locus point the graph stays in the box on a small sub-interval, giving a
+  genuine @{const analytic_arc} that covers the local locus.\<close>
+
+lemma locus_arc_cover_from_graph:
+  fixes ctr \<omega>' \<omega>0 \<omega>s :: "real^2" and \<delta> a0 b0 r0 :: real and \<phi> :: "real \<Rightarrow> real^2"
+  assumes wint: "\<omega>' \<in> interior (OmegaPF ctr \<delta>)"
+    and a0w: "a0 < \<omega>'$1" and wb0: "\<omega>'$1 < b0" and r0pos: "0 < r0"
+    and phiC1: "\<phi> C1_differentiable_on {a0..b0}"
+    and phi1: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<phi> s $ 1 = s"
+    and phiw: "\<phi> (\<omega>'$1) = \<omega>'"
+    and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<phi> ` {a0..b0}"
+  obtains r \<gamma> where "0 < r" "analytic_arc \<gamma>" "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+    "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<gamma>"
+proof -
+  obtain \<rho> where \<rho>0: "0 < \<rho>" and \<rho>sub: "ball \<omega>' \<rho> \<subseteq> OmegaPF ctr \<delta>"
+    by (meson wint open_interior open_contains_ball interior_subset subset_trans)
+  have phicont: "continuous_on {a0..b0} \<phi>"
+    using phiC1 by (simp add: C1_differentiable_imp_continuous_on)
+  have w1: "\<omega>'$1 \<in> {a0..b0}" using a0w wb0 by simp
+  obtain \<sigma> where \<sigma>0: "0 < \<sigma>"
+      and \<sigma>map: "\<And>s. \<lbrakk>s \<in> {a0..b0}; dist s (\<omega>'$1) < \<sigma>\<rbrakk> \<Longrightarrow> dist (\<phi> s) \<omega>' < \<rho>"
+    using phicont[unfolded continuous_on_iff] w1 \<rho>0 phiw by metis
+  define a where "a = max a0 (\<omega>'$1 - \<sigma>/2)"
+  define b where "b = min b0 (\<omega>'$1 + \<sigma>/2)"
+  have ab_sub: "{a..b} \<subseteq> {a0..b0}" by (auto simp: a_def b_def)
+  have w_in_ab: "\<omega>'$1 \<in> {a..b}" using a0w wb0 \<sigma>0 by (auto simp: a_def b_def)
+  have phi_box: "\<phi> s \<in> OmegaPF ctr \<delta>" if "s \<in> {a..b}" for s
+  proof -
+    have sab: "s \<in> {a0..b0}" using that ab_sub by blast
+    have "dist s (\<omega>'$1) < \<sigma>" using that \<sigma>0 by (auto simp: a_def b_def dist_real_def)
+    hence "dist (\<phi> s) \<omega>' < \<rho>" using \<sigma>map[OF sab] by simp
+    thus ?thesis using \<rho>sub by (simp add: mem_ball dist_commute subset_eq)
+  qed
+  have ab_le: "a \<le> b" using w_in_ab by simp
+  have phiC1': "\<phi> C1_differentiable_on {a..b}"
+    using phiC1 ab_sub by (rule C1_differentiable_on_subset)
+  have arc: "analytic_arc (\<phi> ` {a..b})"
+    unfolding analytic_arc_def using ab_le phiC1' by blast
+  have gsub: "\<phi> ` {a..b} \<subseteq> OmegaPF ctr \<delta>" using phi_box by blast
+  define r where "r = min r0 (\<sigma>/2)"
+  have rpos: "0 < r" using r0pos \<sigma>0 by (simp add: r_def)
+  have cov: "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<phi> ` {a..b}"
+  proof
+    fix \<omega> assume "\<omega> \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r"
+    hence cz: "crossTheta \<omega>0 \<omega>s \<omega> = 0" and wb: "dist \<omega> \<omega>' < r" by (auto simp: dist_commute)
+    have "\<omega> \<in> {\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0"
+      using cz wb by (simp add: r_def dist_commute)
+    then obtain s where s: "s \<in> {a0..b0}" and weq: "\<omega> = \<phi> s" using cov0 by blast
+    have seq: "s = \<omega>$1" using phi1[OF s] weq by simp
+    have "\<bar>\<omega>$1 - \<omega>'$1\<bar> \<le> dist \<omega> \<omega>'"
+      using component_le_norm_cart[of "\<omega> - \<omega>'" 1]
+      by (simp add: dist_norm vector_minus_component)
+    hence "\<bar>s - \<omega>'$1\<bar> < \<sigma>/2" using wb seq by (simp add: r_def)
+    hence "s \<in> {a..b}" using s[unfolded atLeastAtMost_iff]
+      unfolding a_def b_def atLeastAtMost_iff by (smt (verit))
+    thus "\<omega> \<in> \<phi> ` {a..b}" using weq by blast
+  qed
+  show ?thesis by (rule that[OF rpos arc gsub cov])
+qed
+
+
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
 text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
@@ -863,11 +926,50 @@ lemma locus_locally_C1_arc:
   obtains r \<A> where "0 < r" "finite \<A>"
       "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
       "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
-  \<comment> \<open>GENUINE analytic residual (the single \<open>sorry\<close>): the locus is locally covered by
-      finitely many \<open>C\<^sup>1\<close> arcs (IFT branches of the separable equation
-      @{thm crossTheta_separable}).  All assembly around it --- continuity, compactness,
-      finite subcover, finite union, box containment --- is sorry-free below.\<close>
-  sorry
+  \<comment> \<open>REGULAR interior case (\<open>\<partial>\<^sub>2\<Theta>\<noteq>0\<close>, \<open>\<omega>'\<close> interior) is now PROVEN via
+      @{thm crossTheta_local_C1_graph} + @{thm locus_arc_cover_from_graph}.  The residual
+      \<open>sorry\<close> is confined to the \<open>\<partial>\<^sub>2\<Theta>=0\<close> / boundary case (the symmetric
+      \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> \<open>\<chi>\<close>-graph and the finitely many \<open>\<nabla>\<Theta>=0\<close> singular points).\<close>
+proof -
+  have z0: "crossTheta \<omega>0 \<omega>s \<omega>' = 0" using win by simp
+  let ?Ac = "(kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  let ?Bc = "(ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  let ?d2 = "- crossA ?Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB ?Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2)"
+  show ?thesis
+  proof (cases "?d2 \<noteq> 0 \<and> \<omega>' \<in> interior (OmegaPF ctr \<delta>)")
+    case True
+    hence d2: "?d2 \<noteq> 0" and wint: "\<omega>' \<in> interior (OmegaPF ctr \<delta>)" by auto
+    show ?thesis
+    proof (rule crossTheta_local_C1_graph[OF z0 d2])
+      fix a0 b0 and \<phi> :: "real \<Rightarrow> real^2" and r0
+      assume aw: "a0 < \<omega>'$1" and wb: "\<omega>'$1 < b0" and r0p: "0 < r0"
+         and phiC1: "\<phi> C1_differentiable_on {a0..b0}"
+         and phi1: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<phi> s $ 1 = s"
+         and phicz: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<phi> s) = 0"
+         and phiw: "\<phi> (\<omega>'$1) = \<omega>'"
+         and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<phi> ` {a0..b0}"
+      show thesis
+      proof (rule locus_arc_cover_from_graph[OF wint aw wb r0p phiC1 phi1 phiw cov0])
+        fix r \<gamma>
+        assume r0: "0 < r" and garc: "analytic_arc \<gamma>" and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+           and gcov: "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<gamma>"
+        show thesis
+        proof (rule that[of r "{\<gamma>}"])
+          show "0 < r" by (rule r0)
+          show "finite {\<gamma>}" by simp
+          show "\<forall>\<gamma>'\<in>{\<gamma>}. analytic_arc \<gamma>' \<and> \<gamma>' \<subseteq> OmegaPF ctr \<delta>" using garc gsub by simp
+          show "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>{\<gamma>}"
+            using gcov by simp
+        qed
+      qed
+    qed
+  next
+    case False
+    \<comment> \<open>RESIDUAL: \<open>\<partial>\<^sub>2\<Theta>(\<omega>')=0\<close> (needs the symmetric \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> \<open>\<chi>\<close>-graph) or
+        \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close>; the \<open>\<nabla>\<Theta>=0\<close> singular points (finite) are the hard kernel.\<close>
+    show ?thesis sorry
+  qed
+qed
 
 
 subsection \<open>ASSEMBLY (sorry-free from the local-arc residual + compactness)\<close>
