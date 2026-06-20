@@ -3056,3 +3056,39 @@ core_Nn + Gjoint omega-partial submersion + negligible Sigma), and
 locus_locally_C1_arc (scalar IFT, explicit arccos branches). Next: engine-map
 sweep (charts_core_Nn shape, IFT availability) to choose chart-crux vs
 curve-cover residual as the next target.
+
+### M5 PARALLEL SOUNDNESS AUDIT — 2 more bugs caught (2026-06-19, cont.)
+User: "proceed autonomously and in parallel". Builds serialize (heap lock) + subagents
+CANNOT isabelle build, so MATH analysis was parallelized (3 read-only agents), VERIFICATION
+stays serial w/ me. Both deep cores had latent soundness gaps — caught BEFORE grinding:
+
+(A) Chart-engine audit (charts_core_Nn_gen): the chart-EXTRACTION half is generic
+(bad_zero_chart, chart_proj_surj_iff, exists_surj_deriv_iff_partial all 'b::euclidean_space).
+Only crit_piece_compact (Paper:1486, det_2) is real^2-bound. BUT bad_zero_chart REQUIRES
+domain = 'c x 'b with codomain = 2nd factor 'b; Gjoint has param real^2 != codom real^3, so
+the "real^3 generalization" needs a domain RE-SPLIT (abstract (2N-1)-dim 'c (+) real^3), not
+just codomain relaxation. Deeper than the headers claimed.
+
+(B) **Gjoint regular value is FALSE unconditionally.** At a bad point with det HessU=0 AND
+~surj(DM_paper_x) the joint (gradU,mstarg) Jacobian has rank<=2<3 (x-block rank<=1: moment
+drop + d_x mstarg=0 at the Gram min; omega-block 3x2 rank<=2, collapses when det HessU=0).
+D4fix/D3fix excess_arc_charts_Nn / branchP_indep_charts_Nn via an unconditional Gjoint
+submersion would be UNSOUND. D4eng quarantines it via a Sigma0 excision but leans on
+Sigma0_bad_charts (D4eng:328) = UNPROVEN, no nondeg hyps, "not credibly true". SOUND ROUTE:
+split on det HessU. det HessU=0 part charts via HEAP charts_core_Nn[G=gradU] DIRECTLY --
+verified not_surj_omega_deriv_iff_detHess_dip (Robust1:4245): ~surj(omega-partial gradU) <-->
+det HessU=0. det HessU!=0 part = moment-rank-drop content (the real D-work).
+
+(C) **locus_locally_C1_arc (curve-cover core iii) was FALSE as committed (e68046a)** -- unsound
+by omission. Ac=Bc=0 (kx w0=kx ws AND ky w0=ky ws) => crossTheta == G(w1) == 0 => locus = whole
+2-D box, NOT arc-coverable. FIXED (e750e1f): added hsep (kz ws!=kz w0) + kdiff; threaded
+through both consumers; rebuilt green. WITH kdiff the singular set {crossTheta=0 & d1=d2=0}
+forces A^2+B^2=G^2, a degree-<=2 poly in cos(w1) (leading coeff = sum of 3 squares, !=0 iff
+kdiff) => FINITE. Curve-cover body is now SOUND + CLOSEABLE: regular case = explicit
+arcsin/arccos graph arc (axis-scaleR C1 pasting, NOT the abstract IFT which gives open-U/
+differentiable_on); singular case = finite point/branch cover; needs 2 short helpers
+(finite_cos_eq_zeros_interval, finite_inhom_phase_zeros_interval = c!=0 ext of
+finite_phase_zeros_interval). ~150-300 lines, NO WALL (per-w1 slice is elementary
+a*cos+b*sin+c=0, <=2 branches -> explicit finite arsenal, no Puiseux/analytic-branch theory).
+NEXT (sound, tractable): implement the curve-cover body. Chart cores need the det-HessU
+re-architecture (bigger). See M5_ENGINE_MAP.md for both.

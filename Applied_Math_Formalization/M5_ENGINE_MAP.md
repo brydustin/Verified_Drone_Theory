@@ -179,3 +179,44 @@ x-partial of gradU factors through the moment x-Jacobian:
 
 NONE is a one-liner. Build serially (heap lock). Subagents CANNOT run `isabelle build`
 (permission is main-loop only) — the main loop must drive every verification.
+
+## SOUNDNESS FINDINGS (2026-06-19 parallel audit) — READ BEFORE TOUCHING THE CORES
+
+Two latent over-general stubs caught by parallel read-only audit (the project's recurring
+failure mode — 3 prior bugs from codim miscounts). Both cores' stated sorries had gaps.
+
+### Core iii (curve-cover) — FIXED (e750e1f)
+`locus_locally_C1_arc` was FALSE without `kdiff`. If `Ac=Bc=0` (i.e. `kx ω0=kx ωs ∧ ky ω0=ky ωs`)
+then `crossTheta ≡ crossG(ω1) ≡ 0`, locus = whole 2-D box, NOT finitely arc-coverable. Added
+`hsep: kz ωs ≠ kz ω0` + `kdiff: kx ω0 ≠ kx ωs ∨ ky ω0 ≠ ky ωs` (free downstream; M5 assembly +
+Robust3:1001-1002 carry them). WITH `kdiff`: singular set `{crossTheta=0 ∧ ∂1=∂2=0}` ⟹ `A²+B²=G²`,
+a degree-≤2 poly in `cos ω1` (leading coeff = `(Ac·kyωs−Bc·kxωs)²+(Ac·kzωs+kxωs)²+(Bc·kzωs+kyωs)²`,
+a sum of 3 squares; ≡0 iff `Ac=Bc=0` = ¬kdiff) ⟹ FINITE. NOW CLOSEABLE, ~150-300 lines, NO WALL:
+- Build `has_derivative_crossTheta` (∂1,∂2 from crossTheta_separable + bounded_linear_vec_nth + derivative_intros; mirror continuous_on_crossTheta).
+- 2 helpers: `finite_cos_eq_zeros_interval` (cos t=κ, |κ|≤1; model finite_cos_zeros_interval) + `finite_inhom_phase_zeros_interval` (a·cos+b·sin=k, |k|≤√(a²+b²); model finite_phase_zeros_interval). The inhomogeneous c≠0 extension.
+- Regular case: EXPLICIT graph arc `(λt. t*R axis 1 1 + ψ t *R axis 2 1)`[a,b]`, ψ from arcsin/arccos branch, C¹ via axis-scaleR pasting (mirror cvec_dip smoothness Robust1:742). Do NOT use regular_value_local_chart — its open-U/differentiable_on output doesn't meet the closed-interval/C¹ analytic_arc contract.
+- Singular case: r < dist(ω', Ssing\{ω'}); cover by analytic_arc_singleton + ≤2 arcsin-branch graphs per orientation + point-arcs at finitely many turning points.
+
+### Chart crux (D3/D4) — NOT closeable as stated; needs re-architecture
+The `Gjoint=(gradU,mstarg)→real^3` regular value is **FALSE unconditionally**: at a bad point with
+`det HessU=0 ∧ ¬surj(DM_paper_x)`, the joint Jacobian has rank ≤ 2 < 3 (x-block rank ≤1: moment
+drop + `∇ₓmstarg=0` at the Gram-det min; ω-block is 3×2, collapses to rank ≤1 in rows 1-2 when
+`det HessU=0`). `M5_Dev_D4charts:41` states outright "nothing forces ¬surj DM ⟹ det HessU=0", so
+the degenerate stratum is non-empty. Proving `excess_arc_charts_Nn`/`branchP_indep_charts_Nn`
+(D3fix/D4fix) via an unconditional Gjoint submersion = a 4th soundness bug. D4eng quarantines via
+`Sigma0` excision but `Sigma0_bad_charts` (D4eng:328) is UNPROVEN, has NO nondeg hypotheses, and
+is "not credibly true."
+SOUND ROUTE — split the bad set on `det HessU`:
+- `det HessU = 0` part: charts via HEAP `charts_core_Nn[G=gradU]` DIRECTLY. Verified bridge
+  `not_surj_omega_deriv_iff_detHess_dip` (Robust1:4245): `¬surj(ω-partial gradU) ⟺ det HessU=0`,
+  so `{gradU=0 ∧ det HessU=0}` IS charts_core_Nn[gradU]'s bad set. NO generic-codomain engine,
+  NO Sigma0. (param=codom=real^2, fits the heap engine as-is. Paper's Phibad=(gradU,det HessU),
+  Robust1:4201, is this codim-3 map.)
+- `det HessU ≠ 0` part: `{gradU=0 ∧ ¬surj DM ∧ det HessU≠0}` = moment-rank-drop content (gradU
+  ω-regular, moment x-irregular). The genuine remaining D-work; relate to D1 = meager_grad_x_regular_part.
+NOTE on the engine: `charts_core_Nn_gen` to arbitrary codomain 'b is mechanical EXCEPT (i) re-prove
+crit_piece_compact for non-square ω-partial (rank/minor route, or trivial cball-collapse when
+DIM(param)<DIM(codom) since ω-partial then never surjective), AND (ii) bad_zero_chart needs
+domain=('c×'b)→'b with codom='b=2nd factor, so a real^3 codomain with real^2 param needs a domain
+RE-SPLIT (abstract (2N-1)-dim 'c ⊕ real^3) — not free. The det-HessU split AVOIDS all this (uses
+the real^2 heap engine directly), so it is the preferred path.
