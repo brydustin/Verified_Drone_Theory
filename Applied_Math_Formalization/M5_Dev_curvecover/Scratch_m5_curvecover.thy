@@ -556,6 +556,34 @@ proof -
 qed
 
 
+text \<open>The graph map \<open>z \<mapsto> (z$1, crossTheta z)\<close> has derivative \<open>h \<mapsto> (h$1, T h)\<close> whenever
+  \<open>crossTheta\<close> has derivative \<open>T\<close> --- a generic component-assembly helper.\<close>
+
+lemma has_derivative_graph_map:
+  fixes \<omega>0 \<omega>s z :: "real^2" and T :: "real^2 \<Rightarrow> real"
+  assumes "((\<lambda>z. crossTheta \<omega>0 \<omega>s z) has_derivative T) (at z)"
+  shows "((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) has_derivative
+            (\<lambda>h. vector [h$1, T h])) (at z)"
+proof -
+  have e: "(\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2)
+         = (\<lambda>z. (z$1) *\<^sub>R axis 1 1 + (crossTheta \<omega>0 \<omega>s z) *\<^sub>R axis 2 1)"
+    by (rule ext)
+       (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                  vector_add_component vector_scaleR_component axis_def)
+  have d1: "((\<lambda>z::real^2. z$1) has_derivative (\<lambda>h. h$1)) (at z)"
+    by (simp add: bounded_linear_vec_nth bounded_linear_imp_has_derivative)
+  have hd: "((\<lambda>z. (z$1) *\<^sub>R axis 1 1 + (crossTheta \<omega>0 \<omega>s z) *\<^sub>R (axis 2 1 :: real^2))
+          has_derivative (\<lambda>h. (h$1) *\<^sub>R axis 1 1 + (T h) *\<^sub>R (axis 2 1 :: real^2))) (at z)"
+    by (rule derivative_eq_intros d1 assms refl)+
+  have eq2: "(\<lambda>h. (h$1) *\<^sub>R axis 1 1 + (T h) *\<^sub>R (axis 2 1 :: real^2))
+               = (\<lambda>h. vector [h$1, T h] :: real^2)"
+    by (rule ext)
+       (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                  vector_add_component vector_scaleR_component axis_def)
+  from hd show ?thesis unfolding e eq2[symmetric] .
+qed
+
+
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
 text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
