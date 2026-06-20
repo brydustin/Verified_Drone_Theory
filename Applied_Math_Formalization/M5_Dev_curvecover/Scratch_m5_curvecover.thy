@@ -533,10 +533,14 @@ lemma crossTheta_graph_homeo:
         ((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) ` (ball \<omega>' \<epsilon>))
         (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z]) g"
     "open ((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) ` (ball \<omega>' \<epsilon>))"
+    "\<And>z. z \<in> ball \<omega>' \<epsilon> \<Longrightarrow>
+         - crossA Bc \<omega>s (z$1) * sin (z$2) + crossB Ac \<omega>s (z$1) * cos (z$2) \<noteq> 0"
 proof -
   obtain \<epsilon> where \<epsilon>0: "\<epsilon> > 0"
       and inj: "inj_on (\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) (ball \<omega>' \<epsilon>)"
-    using crossTheta_graph_inj[OF d2[unfolded Ac_def Bc_def]] by blast
+      and avoid: "\<forall>z\<in>ball \<omega>' \<epsilon>.
+          - crossA Bc \<omega>s (z$1) * sin (z$2) + crossB Ac \<omega>s (z$1) * cos (z$2) \<noteq> 0"
+    using crossTheta_graph_inj[OF d2[unfolded Ac_def Bc_def]] unfolding Ac_def Bc_def by blast
   have veq: "(\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2)
            = (\<lambda>z. (z$1) *\<^sub>R axis 1 1 + (crossTheta \<omega>0 \<omega>s z) *\<^sub>R axis 2 1)"
     by (rule ext)
@@ -552,7 +556,7 @@ proof -
     using invariance_of_domain_homeomorphism[OF open_ball contH _ inj] by auto
   have openimg: "open ((\<lambda>z. vector [z$1, crossTheta \<omega>0 \<omega>s z] :: real^2) ` (ball \<omega>' \<epsilon>))"
     by (rule invariance_of_domain[OF contH open_ball inj])
-  show ?thesis using \<epsilon>0 homeo openimg ..
+  show ?thesis using \<epsilon>0 homeo openimg avoid by (blast intro: that)
 qed
 
 
