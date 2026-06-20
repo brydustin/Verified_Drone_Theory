@@ -3231,3 +3231,28 @@ spaces). (2) parallel draft+self-verify with PINNED interface signatures = clean
 green-first-build. (3) the metis-on-obtains-rule hang reappears in consumers -> always use
 the structured `proof (rule <obtains-lemma>[OF ...]) fix..assume..show thesis`. See
 [[isabelle-eval-at-and-desorry-cli]], [[parallel-agents-and-derivative-discipline]].
+
+### M5 core iii: boundary + singular analysis via 4 PARALLEL AGENTS (2026-06-20, cont.)
+"Some agents on the boundary case, some on the singular kernel." Ran 4 parallel agents
+(draft+self-verify via eval_at on scratch copies); all returned, integrated, full build
+BUILD_EXIT=0 (commit 6824e43):
+- BOUNDARY (both GREEN): `locus_arc_cover_from_graph_bdry` (phi, box-CLIPPED: needs only
+  omega_2-interior, any omega_1) + `locus_arc_cover_from_graph_vert_bdry` (chi, omega_1-interior).
+  These SUBSUME the interior helpers. Used heap lemma `OmegaPF_component_bounds`.
+- SINGULAR FINITENESS (SI-A, GREEN but CORRECTED): `finite_crossTheta_d2zero` -- the plan's
+  "leading coeff = sum of 3 squares hence !=0" is FALSE (on the unit sphere all 3 vanish
+  simultaneously). Needs extra hyp `g1 = Ac*ky_s - Bc*kx_s != 0`; counterexample: omega_s=(1,atan .5),
+  omega_0=(.7,atan .5) has hsep+kdiff but g1=0 and a whole vertical fibre in the set => infinite.
+  When g1=0 that fibre is itself a C1 arc (coverable downstream). `crossTheta_d2zero_sumsq`
+  (A^2+B^2=G^2 reduction) integrated.
+- SINGULAR COVER (SI-B, DECISIVE): genuine grad(Theta)=0 pts are NEVER isolated -- ALWAYS
+  transverse crossings. Symbolic identity `det H_Theta = -E''/2` on {E=0,E'=0} (Groebner) with
+  E''>0 always; 283+792 numerical singular pts ALL saddles, ZERO isolated. So the singleton route
+  (isolated_locus_singleton_cover, verified) is sound but VACUOUS for real singular pts. The 1075
+  numerical pts were EVIDENCE for the universal claim, not per-point obligations -- the proof is
+  ONE generic crossing construction (finitely many singular pts per instance, given g1!=0).
+
+NET: locus_locally_C1_arc now PROVES both regular orientations over the FULL box (interior AND
+boundary). Single residual sorry = (a) interior transverse-crossing singular pts [needs the
+two-branch Morse/rotated-coords chart HOL-Analysis lacks -- the IRREDUCIBLE kernel] + (b) box
+boundary in the awkward orientation / corners. Strictly smaller than "all locus points".
