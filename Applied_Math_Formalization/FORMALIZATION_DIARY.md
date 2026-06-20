@@ -3207,3 +3207,27 @@ crossTheta_local_C1_graph in the d2≠0 case (need: φ`{a..b} is an analytic_arc
 of crossTheta_local_C1_graph with roles swapped), and the finitely-many ∂₁Θ=∂₂Θ=0 singular
 points (governed by the finite-zeros lemmas; crossA²+crossB²=crossG² cuts ω₁ to finite). The
 singular-point local branch structure is the genuine hard residual.
+
+### M5 core iii: chi-graph PROVEN via PARALLEL AGENTS + CASE B1 (2026-06-20, cont.)
+"Push on to the chi-graph ... make types explicit when you fix ... use multiple agents in
+parallel." Did exactly that. The chi-graph (graph over omega_2 where the omega_1-partial !=0)
+is the symmetric mirror of the proven phi-graph. Decomposed into 2 PARALLEL sub-agents that
+each DRAFTED and SELF-VERIFIED (via `isabelle eval_at` on their own scratch copies -- the
+Appendix heap is read-only/prebuilt so concurrent eval_at is fine) with interface signatures
+PINNED so integration was clean:
+- Agent A (foundation chain, self-contained, real deps): has_field_derivative_crossTheta_s,
+  has_derivative_graph_map_vert, crossTheta_graph_inj_vert, crossTheta_graph_homeo_vert.
+- Agent B (main): crossTheta_local_C1_graph_vert, verified against the 2 STUBBED prerequisites
+  (graph_map_vert + homeo_vert) -- then re-verified here against the REAL ones.
+Both returned GREEN, sorry-free. I added locus_arc_cover_from_graph_vert (omega_2 box-containment
+mirror) myself. Assembled all 6 into the file (reconstruction script: 1095->1565 lines),
+full build BUILD_EXIT=0 FIRST TIME (the pinned-signature + faithful-mirror discipline paid off).
+Then wired CASE B1 into locus_locally_C1_arc: cases (interior) -> {d2!=0: phi (CASE A) | d2=0 &
+d1!=0: chi (CASE B1)} ; the residual sorry is now ONLY the gradTheta=0 singular points (finite,
+hard kernel) UNION the box boundary. BUILD_EXIT=0, committed 0e1dc7b.
+KEY LESSONS: (1) every `fix`/`obtain`/bound var typed `:: real^2`/`:: real` -- avoids the
+`$` vec_nth parse-ambiguity (Agent B hit it once: tight `*sin` tokenizes as `*s in`, needs
+spaces). (2) parallel draft+self-verify with PINNED interface signatures = clean splice +
+green-first-build. (3) the metis-on-obtains-rule hang reappears in consumers -> always use
+the structured `proof (rule <obtains-lemma>[OF ...]) fix..assume..show thesis`. See
+[[isabelle-eval-at-and-desorry-cli]], [[parallel-agents-and-derivative-discipline]].
