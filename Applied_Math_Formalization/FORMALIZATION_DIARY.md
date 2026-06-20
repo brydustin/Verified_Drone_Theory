@@ -3092,3 +3092,41 @@ finite_phase_zeros_interval). ~150-300 lines, NO WALL (per-w1 slice is elementar
 a*cos+b*sin+c=0, <=2 branches -> explicit finite arsenal, no Puiseux/analytic-branch theory).
 NEXT (sound, tractable): implement the curve-cover body. Chart cores need the det-HessU
 re-architecture (bigger). See M5_ENGINE_MAP.md for both.
+
+### M5 core iii body: foundations proven (helpers + derivative bridge) (2026-06-19, cont.)
+"ultrathink" pass on locus_locally_C1_arc. Soundness fix landed first (e750e1f: kdiff
+required). Then proved + committed the body's FOUNDATIONS (all build green):
+- 40061e5: finite_cos_eq_zeros_interval (cos t=K, two-coset cos_eq) +
+  finite_inhom_phase_zeros_interval (a cos+b sin=k, two-coset sin_eq). The inhomogeneous
+  (k!=0) extensions of the heap finite-zeros lemmas. TRAPS hit: use Set.set_eqI (qualified,
+  bare is shadowed); `by m1 m2` errors "No subgoals" when m1 already closes (drop the
+  redundant terminal); {S}={} ==> finite S needs `unfolding empty by simp` (plain simp
+  rewrites the set-eq into pointwise form, not {}).
+- 07db9a1: has_derivative_crossTheta -- Frechet derivative w/ explicit partials d1,d2 via
+  crossTheta_separable + derivative_eq_intros + algebra_simps. TRAP: defines Ac/Bc need
+  ω0,ωs FIXED (they're free in the file) -> add `fixes ω0 ωs ω`.
+
+REMAINING BODY ROADMAP (~250 lines, NO WALL, one hard keystone). Build serially.
+(1) finite_crossTheta_singular: {ω∈OmegaPF. crossTheta=0 ∧ d1=0 ∧ d2=0} finite.
+    Math settled: d2=0 ∧ crossTheta=0 ⟹ A²+B²=Gt² (rotation identity, A=Bc-p cos ω1,
+    B=-Ac+q cos ω1, Gt=r sin ω1, p=Bc kzs+kys, q=Ac kzs+kxs, r=Ac kys-Bc kxs);
+    A²+B²-Gt² = (p²+q²+r²)c² -2(Bc p+Ac q)c + (Ac²+Bc²-r²), quadratic in c=cos ω1, the
+    poly [:Ac²+Bc²-r², -2(Bc p+Ac q), p²+q²+r²:] != 0 under kdiff (if leading=0 then
+    p=q=r=0 then const=Ac²+Bc²!=0) -> poly_roots_finite -> finite cos-ω1 values ->
+    finite_cos_eq_zeros_interval -> finite S1 of ω1. Per ω1∈S1, ω2-slice finite: case
+    (A,B)≠0 -> crossTheta=0 finite (finite_inhom_phase); case (A,B)=0 -> Gt=0 &
+    (p,q)≠0 (else ¬kdiff) -> d1=0 nontrivial phase finite. Assemble via Sigma +
+    finite_SigmaI + image (pattern: meager_steering_singular_stratum_scratch Ksub/finK,
+    Scratch_g3_asm:281-335). NOTE: must cut by d1 too (d2=0∧crossTheta=0 alone can be a
+    full vertical slice when A=B=Gt=0).
+(2) SCALAR IFT keystone (the crux): C¹ ψ with crossTheta(s,ψ s)=0 near ω' off d2=0, from
+    regular_value_local_chart (Regular_Value_Theorem:279): transport real^2↔real×real via
+    ι(s,t)=s*axis 1 1+t*axis 2 1; G=crossTheta∘ι; regular = ∇crossTheta(ω')≠0 (here d2≠0).
+    Extract closed-interval C1_differentiable_on ψ (continuity of Dφ) + LOCAL UNIQUENESS
+    (locus∩ball ⊆ graph) from the homeomorphism/relatively-open clause.
+(3) regular case: d2≠0 -> 1 graph arc (λt. t*axis 1 1+ψ t*axis 2 1)`[a,b]; d1≠0 symmetric.
+(4) singular case: ω'∈Ssing isolated (finite (1)); pick r<dist(ω',Ssing\{ω'}); cover
+    locus∩ball ω' r by analytic_arc_singleton {ω'} + ≤2 graph branches per orientation
+    (≤2-per-ω1: a cos+b sin+c=0 over the 2π ω2-range has ≤2 sols).
+(5) assembly: case-split ∇crossTheta(ω')=0? via has_derivative_crossTheta (∇=0 ⟺ d1=d2=0).
+Helpers (1)-finite + the bridge are DONE; (2) is the only genuinely hard piece.
