@@ -625,6 +625,218 @@ text \<open>\<^bold>\<open>The regular-point graph arc (the analytic heart).\<cl
   The inverse derivative (via @{thm has_derivative_inverse_basic_x}) is the EXPLICIT linear
   map, so \<open>\<phi>' = (1, -\<partial>\<^sub>1/\<partial>\<^sub>2)\<close> is continuous, giving \<open>C\<^sup>1\<close> for free.\<close>
 
+
+subsection \<open>SYMMETRIC \<open>\<chi>\<close>-graph foundation: graph over \<open>\<omega>\<^sub>2\<close> where \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close>\<close>
+
+text \<open>The \<open>u\<close>-fibre (\<open>\<omega>\<^sub>1\<close>) derivative: restricting \<open>crossTheta\<close> to the HORIZONTAL line
+  \<open>u \<mapsto> (u,s)\<close> gives, via the separable form, \<open>crossA(u)\<cdot>cos s + crossB(u)\<cdot>sin s +
+  crossG(u)\<close>, now a function of the running variable \<open>u\<close> through \<open>cos u\<close>/\<open>sin u\<close>.  Its
+  derivative is \<open>\<partial>\<^sub>1\<close>, the partial whose nonvanishing makes the vertical graph map
+  @{term "\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2]"} injective.\<close>
+
+lemma has_field_derivative_crossTheta_s:
+  fixes \<omega>0 \<omega>s :: "real^2" and s t :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  shows "((\<lambda>u. crossTheta \<omega>0 \<omega>s (vector [u, s])) has_field_derivative
+          ((Bc * kz \<omega>s + ky \<omega>s) * sin t * cos s
+           - (Ac * kz \<omega>s + kx \<omega>s) * sin t * sin s
+           + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos t)) (at t)"
+proof -
+  have sep: "crossTheta \<omega>0 \<omega>s (vector [u, s])
+       = (Bc - (Bc * kz \<omega>s + ky \<omega>s) * cos u) * cos s
+       + (- Ac + (Ac * kz \<omega>s + kx \<omega>s) * cos u) * sin s
+       + (Ac * ky \<omega>s - Bc * kx \<omega>s) * sin u" for u :: real
+    unfolding Ac_def Bc_def
+    by (subst crossTheta_separable) (simp add: vector_2 crossA_def crossB_def crossG_def)
+  show ?thesis
+    unfolding sep
+    by (auto intro!: derivative_eq_intros simp: algebra_simps)
+qed
+
+text \<open>The vertical graph map \<open>z \<mapsto> (crossTheta z, z$2)\<close> has derivative \<open>h \<mapsto> (T h, h$2)\<close>
+  whenever \<open>crossTheta\<close> has derivative \<open>T\<close> --- the symmetric component-assembly helper.\<close>
+
+lemma has_derivative_graph_map_vert:
+  fixes \<omega>0 \<omega>s z :: "real^2" and T :: "real^2 \<Rightarrow> real"
+  assumes "((\<lambda>z. crossTheta \<omega>0 \<omega>s z) has_derivative T) (at z)"
+  shows "((\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) has_derivative
+            (\<lambda>h. vector [T h, h$2])) (at z)"
+proof -
+  have e: "(\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2)
+         = (\<lambda>z. (crossTheta \<omega>0 \<omega>s z) *\<^sub>R axis 1 1 + (z$2) *\<^sub>R axis 2 1)"
+    by (rule ext)
+       (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                  vector_add_component vector_scaleR_component axis_def)
+  have d2: "((\<lambda>z::real^2. z$2) has_derivative (\<lambda>h. h$2)) (at z)"
+    by (simp add: bounded_linear_vec_nth bounded_linear_imp_has_derivative)
+  have hd: "((\<lambda>z. (crossTheta \<omega>0 \<omega>s z) *\<^sub>R axis 1 1 + (z$2) *\<^sub>R (axis 2 1 :: real^2))
+          has_derivative (\<lambda>h. (T h) *\<^sub>R axis 1 1 + (h$2) *\<^sub>R (axis 2 1 :: real^2))) (at z)"
+    by (rule derivative_eq_intros assms d2 refl)+
+  have eq2: "(\<lambda>h. (T h) *\<^sub>R axis 1 1 + (h$2) *\<^sub>R (axis 2 1 :: real^2))
+               = (\<lambda>h. vector [T h, h$2] :: real^2)"
+    by (rule ext)
+       (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                  vector_add_component vector_scaleR_component axis_def)
+  from hd show ?thesis unfolding e eq2[symmetric] .
+qed
+
+text \<open>\<^bold>\<open>Injectivity of the vertical graph map.\<close>  Where \<open>\<partial>\<^sub>1 \<noteq> 0\<close>, the vertical graph map
+  \<open>Hv z = (crossTheta z, z$2)\<close> is injective on a small ball: the second coordinate pins
+  \<open>z$2\<close>, and on the horizontal fibre Rolle's theorem forbids two \<open>\<omega>\<^sub>1\<close>-values with equal
+  \<open>crossTheta\<close>.  This is the symmetric hypothesis for invariance of domain.\<close>
+
+lemma crossTheta_graph_inj_vert:
+  fixes \<omega>0 \<omega>s \<omega>' :: "real^2"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes d1: "(Bc * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2)
+             - (Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2)
+             + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (\<omega>'$1) \<noteq> 0"
+  shows "\<exists>\<epsilon>>0. inj_on (\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) (ball \<omega>' \<epsilon>)
+          \<and> (\<forall>z\<in>ball \<omega>' \<epsilon>.
+               (Bc * kz \<omega>s + ky \<omega>s) * sin (z$1) * cos (z$2)
+             - (Ac * kz \<omega>s + kx \<omega>s) * sin (z$1) * sin (z$2)
+             + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (z$1) \<noteq> 0)"
+proof -
+  define D1 :: "real^2 \<Rightarrow> real" where
+    "D1 z = (Bc * kz \<omega>s + ky \<omega>s) * sin (z$1) * cos (z$2)
+          - (Ac * kz \<omega>s + kx \<omega>s) * sin (z$1) * sin (z$2)
+          + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (z$1)" for z :: "real^2"
+  have contD1: "continuous_on UNIV D1"
+    unfolding D1_def
+    by (auto intro!: continuous_intros)
+  have "D1 \<omega>' \<noteq> 0" using d1 by (simp add: D1_def)
+  hence wopen: "\<omega>' \<in> {z. D1 z \<noteq> 0}" by simp
+  have opnz: "open {z. D1 z \<noteq> 0}"
+    using contD1 by (intro open_Collect_neq continuous_on_const) auto
+  obtain \<epsilon> where \<epsilon>0: "\<epsilon> > 0" and ballsub: "ball \<omega>' \<epsilon> \<subseteq> {z. D1 z \<noteq> 0}"
+    using opnz wopen open_contains_ball by blast
+  have avoid: "D1 z \<noteq> 0" if "z \<in> ball \<omega>' \<epsilon>" for z :: "real^2" using ballsub that by blast
+  have ftd: "((\<lambda>u. crossTheta \<omega>0 \<omega>s (vector [u, s])) has_field_derivative D1 (vector [u, s])) (at u)"
+    for s u :: real
+  proof -
+    have "((\<lambda>u'. crossTheta \<omega>0 \<omega>s (vector [u', s]))
+            has_field_derivative ((Bc * kz \<omega>s + ky \<omega>s) * sin u * cos s
+                                  - (Ac * kz \<omega>s + kx \<omega>s) * sin u * sin s
+                                  + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos u)) (at u)"
+      unfolding Ac_def Bc_def by (rule has_field_derivative_crossTheta_s)
+    thus ?thesis by (simp add: D1_def vector_2)
+  qed
+  \<comment> \<open>a fibre point with \<open>\<omega>\<^sub>1\<close>-coordinate between two ball points stays in the (convex) ball\<close>
+  have fibre_in: "vector [\<xi>, z$2] \<in> ball \<omega>' \<epsilon>"
+    if zb: "z \<in> ball \<omega>' \<epsilon>" and z'b: "z' \<in> ball \<omega>' \<epsilon>" and seq: "z'$2 = z$2"
+       and bet: "\<xi> \<in> closed_segment (z$1) (z'$1)" for z z' :: "real^2" and \<xi> :: real
+  proof -
+    obtain \<alpha> where l: "0 \<le> \<alpha>" "\<alpha> \<le> 1" and xeq: "\<xi> = (1 - \<alpha>) * (z$1) + \<alpha> * (z'$1)"
+      using bet by (auto simp: closed_segment_def)
+    have eqv: "vector [\<xi>, z$2] = (1 - \<alpha>) *\<^sub>R z + \<alpha> *\<^sub>R z'"
+      using seq xeq
+      by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                    vector_add_component vector_scaleR_component algebra_simps)
+    have "vector [\<xi>, z$2] \<in> closed_segment z z'"
+      unfolding closed_segment_def using l eqv by (auto intro!: exI[where x = \<alpha>])
+    thus ?thesis
+      using zb z'b convex_ball convex_contains_segment by blast
+  qed
+  have inj: "inj_on (\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) (ball \<omega>' \<epsilon>)"
+  proof (rule inj_onI)
+    fix z z' :: "real^2" assume zb: "z \<in> ball \<omega>' \<epsilon>" and z'b: "z' \<in> ball \<omega>' \<epsilon>"
+      and Heq: "vector [crossTheta \<omega>0 \<omega>s z, z$2] = (vector [crossTheta \<omega>0 \<omega>s z', z'$2] :: real^2)"
+    have s_eq: "z'$2 = z$2" using Heq by (metis vector_2)
+    have ct_eq: "crossTheta \<omega>0 \<omega>s z = crossTheta \<omega>0 \<omega>s z'" using Heq by (metis vector_2)
+    have zrw: "z = vector [z$1, z$2]" and z'rw: "z' = vector [z'$1, z'$2]"
+      by (simp_all add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2)
+    show "z = z'"
+    proof (rule ccontr)
+      assume ne: "z \<noteq> z'"
+      have w1: "z$1 \<noteq> z'$1" using ne s_eq zrw z'rw by (metis)
+      define f where "f = (\<lambda>u. crossTheta \<omega>0 \<omega>s (vector [u, z$2]))"
+      have fz: "f (z$1) = crossTheta \<omega>0 \<omega>s z" using zrw by (simp add: f_def)
+      have fz': "f (z'$1) = crossTheta \<omega>0 \<omega>s z'" using z'rw s_eq by (simp add: f_def)
+      have feq: "f (z$1) = f (z'$1)" using fz fz' ct_eq by simp
+      have derf: "(f has_field_derivative D1 (vector [u, z$2])) (at u)" for u
+        using ftd[of "z$2" u] by (simp add: f_def)
+      define lo where "lo = min (z$1) (z'$1)"
+      define hi where "hi = max (z$1) (z'$1)"
+      have lohi: "lo < hi" using w1 by (simp add: lo_def hi_def)
+      have flohi: "f lo = f hi"
+        using feq by (auto simp: lo_def hi_def min_def max_def)
+      have contf: "continuous_on {lo..hi} f"
+        using DERIV_isCont[OF derf] continuous_at_imp_continuous_on by blast
+      have difff: "f differentiable (at u)" if "lo < u" "u < hi" for u
+        using derf[of u] real_differentiable_def by blast
+      obtain \<xi> where xi: "lo < \<xi>" "\<xi> < hi" and d0: "DERIV f \<xi> :> 0"
+        using Rolle[OF lohi flohi contf] difff by auto
+      have "DERIV f \<xi> :> D1 (vector [\<xi>, z$2])" using derf[of \<xi>] by simp
+      hence z0: "D1 (vector [\<xi>, z$2]) = 0" using d0 DERIV_unique by blast
+      have "\<xi> \<in> closed_segment (z$1) (z'$1)"
+        using xi by (auto simp: closed_segment_eq_real_ivl lo_def hi_def)
+      hence "vector [\<xi>, z$2] \<in> ball \<omega>' \<epsilon>" by (rule fibre_in[OF zb z'b s_eq])
+      thus False using avoid z0 by blast
+    qed
+  qed
+  have avoidN: "\<forall>z\<in>ball \<omega>' \<epsilon>.
+      (Bc * kz \<omega>s + ky \<omega>s) * sin (z$1) * cos (z$2)
+    - (Ac * kz \<omega>s + kx \<omega>s) * sin (z$1) * sin (z$2)
+    + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (z$1) \<noteq> 0"
+    using avoid by (auto simp: D1_def)
+  show ?thesis using \<epsilon>0 inj avoidN by blast
+qed
+
+text \<open>Injectivity + invariance of domain: the vertical graph map \<open>Hv z = (crossTheta z, z$2)\<close>
+  is a homeomorphism of a small ball onto an OPEN image, with continuous inverse \<open>g\<close>.\<close>
+
+lemma crossTheta_graph_homeo_vert:
+  fixes \<omega>0 \<omega>s \<omega>' :: "real^2"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes d1: "(Bc * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2)
+             - (Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2)
+             + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (\<omega>'$1) \<noteq> 0"
+  obtains \<epsilon> g where "\<epsilon> > 0"
+    "homeomorphism (ball \<omega>' \<epsilon>)
+        ((\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) ` (ball \<omega>' \<epsilon>))
+        (\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2]) g"
+    "open ((\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) ` (ball \<omega>' \<epsilon>))"
+    "\<forall>z\<in>ball \<omega>' \<epsilon>.
+         (Bc * kz \<omega>s + ky \<omega>s) * sin (z$1) * cos (z$2)
+       - (Ac * kz \<omega>s + kx \<omega>s) * sin (z$1) * sin (z$2)
+       + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (z$1) \<noteq> 0"
+proof -
+  obtain \<epsilon> where \<epsilon>0: "\<epsilon> > 0"
+      and inj: "inj_on (\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) (ball \<omega>' \<epsilon>)"
+      and avoid: "\<forall>z\<in>ball \<omega>' \<epsilon>.
+          (Bc * kz \<omega>s + ky \<omega>s) * sin (z$1) * cos (z$2)
+        - (Ac * kz \<omega>s + kx \<omega>s) * sin (z$1) * sin (z$2)
+        + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (z$1) \<noteq> 0"
+    using crossTheta_graph_inj_vert[OF d1[unfolded Ac_def Bc_def]] unfolding Ac_def Bc_def by blast
+  have veq: "(\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2)
+           = (\<lambda>z. (crossTheta \<omega>0 \<omega>s z) *\<^sub>R axis 1 1 + (z$2) *\<^sub>R axis 2 1)"
+    by (rule ext)
+       (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                  vector_add_component vector_scaleR_component axis_def)
+  have contH: "continuous_on (ball \<omega>' \<epsilon>) (\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2)"
+    unfolding veq
+    by (intro continuous_intros continuous_on_crossTheta
+              linear_continuous_on[OF bounded_linear_vec_nth])
+  obtain g where homeo: "homeomorphism (ball \<omega>' \<epsilon>)
+        ((\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) ` (ball \<omega>' \<epsilon>))
+        (\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2]) g"
+    using invariance_of_domain_homeomorphism[OF open_ball contH _ inj] by auto
+  have openimg: "open ((\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2] :: real^2) ` (ball \<omega>' \<epsilon>))"
+    by (rule invariance_of_domain[OF contH open_ball inj])
+  show ?thesis using \<epsilon>0 homeo openimg avoid by (blast intro: that)
+qed
+
+
+text \<open>\<^bold>\<open>The regular-point graph arc (the analytic heart).\<close>  Where \<open>\<partial>\<^sub>2 crossTheta \<noteq> 0\<close>,
+  the locus near \<open>\<omega>'\<close> is the graph of a genuine \<open>C\<^sup>1\<close> function \<open>\<phi>\<close>: invert the graph map
+  \<open>H z = (z$1, crossTheta z)\<close> (a local homeomorphism with invertible derivative
+  \<open>[[1,0],[\<partial>\<^sub>1,\<partial>\<^sub>2]]\<close>, \<open>det = \<partial>\<^sub>2 \<noteq> 0\<close>) and restrict the inverse \<open>g\<close> to the slice \<open>{2nd = 0}\<close>.
+  The inverse derivative (via @{thm has_derivative_inverse_basic_x}) is the EXPLICIT linear
+  map, so \<open>\<phi>' = (1, -\<partial>\<^sub>1/\<partial>\<^sub>2)\<close> is continuous, giving \<open>C\<^sup>1\<close> for free.\<close>
+
 lemma crossTheta_local_C1_graph:
   fixes \<omega>0 \<omega>s \<omega>' :: "real^2"
   defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
@@ -822,6 +1034,203 @@ proof -
 qed
 
 
+lemma crossTheta_local_C1_graph_vert:
+  fixes \<omega>0 \<omega>s \<omega>' :: "real^2"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)" and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes z0: "crossTheta \<omega>0 \<omega>s \<omega>' = 0"
+    and d1: "(Bc * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2) - (Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2) + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (\<omega>'$1) \<noteq> 0"
+  obtains a b and \<psi> :: "real \<Rightarrow> real^2" and r where "a < \<omega>'$2" "\<omega>'$2 < b" "0 < r"
+    "\<psi> C1_differentiable_on {a..b}"
+    "\<And>s. s \<in> {a..b} \<Longrightarrow> \<psi> s $ 2 = s"
+    "\<And>s. s \<in> {a..b} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<psi> s) = 0"
+    "\<psi> (\<omega>'$2) = \<omega>'"
+    "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<psi> ` {a..b}"
+proof -
+  define D1 :: "real^2 \<Rightarrow> real" where
+    "D1 = (\<lambda>z. (Bc * kz \<omega>s + ky \<omega>s) * sin (z$1) * cos (z$2)
+             - (Ac * kz \<omega>s + kx \<omega>s) * sin (z$1) * sin (z$2)
+             + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (z$1))"
+  define D2 :: "real^2 \<Rightarrow> real" where
+    "D2 = (\<lambda>z. - crossA Bc \<omega>s (z$1) * sin (z$2) + crossB Ac \<omega>s (z$1) * cos (z$2))"
+  define Hv :: "real^2 \<Rightarrow> real^2" where "Hv = (\<lambda>z. vector [crossTheta \<omega>0 \<omega>s z, z$2])"
+  define giv :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2" where
+    "giv = (\<lambda>x k. vector [(k$1 - D2 x * k$2) / D1 x, k$2])"
+  have Hder: "(Hv has_derivative (\<lambda>h. vector [D1 x * h$1 + D2 x * h$2, h$2])) (at x)" for x :: "real^2"
+  proof -
+    have "((\<lambda>z. crossTheta \<omega>0 \<omega>s z) has_derivative (\<lambda>h. D1 x * h$1 + D2 x * h$2)) (at x)"
+      using has_derivative_crossTheta[of \<omega>0 \<omega>s x]
+      unfolding Ac_def Bc_def D1_def D2_def crossA_def crossB_def by simp
+    thus ?thesis unfolding Hv_def by (rule has_derivative_graph_map_vert)
+  qed
+  obtain \<epsilon> g where \<epsilon>0: "\<epsilon> > 0"
+      and homeo: "homeomorphism (ball \<omega>' \<epsilon>) (Hv ` ball \<omega>' \<epsilon>) Hv g"
+      and openimg: "open (Hv ` ball \<omega>' \<epsilon>)"
+      and d1ne0: "\<forall>z\<in>ball \<omega>' \<epsilon>. D1 z \<noteq> 0"
+    unfolding Hv_def D1_def Ac_def Bc_def
+    by (rule crossTheta_graph_homeo_vert[OF d1[unfolded Ac_def Bc_def]])
+  have d1ne: "\<And>z::real^2. z \<in> ball \<omega>' \<epsilon> \<Longrightarrow> D1 z \<noteq> 0" using d1ne0 by blast
+  have ginv_bl: "bounded_linear (giv x)" if "D1 x \<noteq> 0" for x :: "real^2"
+  proof -
+    have "linear (giv x)"
+    proof (rule linearI)
+      fix u v :: "real^2"
+      show "giv x (u + v) = giv x u + giv x v"
+        unfolding giv_def using that
+        by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                      vector_add_component field_simps)
+    next
+      fix c :: real and u :: "real^2"
+      show "giv x (c *\<^sub>R u) = c *\<^sub>R giv x u"
+        unfolding giv_def using that
+        by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                      vector_scaleR_component field_simps)
+    qed
+    thus ?thesis by (simp add: linear_conv_bounded_linear)
+  qed
+  have ginv_id: "giv x \<circ> (\<lambda>h. vector [D1 x * h$1 + D2 x * h$2, h$2]) = id" if "D1 x \<noteq> 0" for x :: "real^2"
+    unfolding giv_def comp_def
+    by (rule ext)
+       (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2 that field_simps)
+  have gder: "(g has_derivative giv x) (at (Hv x))" if x: "x \<in> ball \<omega>' \<epsilon>" for x :: "real^2"
+  proof (rule has_derivative_inverse_basic_x[OF Hder])
+    show "bounded_linear (giv x)" by (rule ginv_bl[OF d1ne[OF x]])
+    show "giv x \<circ> (\<lambda>h. vector [D1 x * h$1 + D2 x * h$2, h$2]) = id" by (rule ginv_id[OF d1ne[OF x]])
+    show "continuous (at (Hv x)) g"
+      using homeomorphism_cont2[OF homeo] openimg x
+      by (auto simp: continuous_on_eq_continuous_at)
+    show "g (Hv x) = x" by (rule homeomorphism_apply1[OF homeo x])
+    show "open (Hv ` ball \<omega>' \<epsilon>)" by (rule openimg)
+    show "Hv x \<in> Hv ` ball \<omega>' \<epsilon>" using x by simp
+    show "\<And>y. y \<in> Hv ` ball \<omega>' \<epsilon> \<Longrightarrow> Hv (g y) = y" by (rule homeomorphism_apply2[OF homeo])
+  qed
+  define \<psi> :: "real \<Rightarrow> real^2" where "\<psi> = (\<lambda>s. g (vector [0, s]))"
+  have Hvw': "Hv \<omega>' = vector [0, \<omega>'$2]" unfolding Hv_def using z0 by simp
+  have w'ball: "\<omega>' \<in> ball \<omega>' \<epsilon>" using \<epsilon>0 by simp
+  have v0in: "vector [0, \<omega>'$2] \<in> Hv ` ball \<omega>' \<epsilon>" by (metis Hvw' imageI w'ball)
+  have iotacont: "continuous_on UNIV (\<lambda>s::real. vector [0, s] :: real^2)"
+  proof -
+    have eq: "(\<lambda>s::real. vector [0, s] :: real^2) = (\<lambda>s. s *\<^sub>R axis 2 1)"
+      by (rule ext)
+         (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                    vector_scaleR_component axis_def)
+    show ?thesis unfolding eq by (auto intro!: continuous_intros)
+  qed
+  have sopen: "open {s::real. vector [0, s] \<in> Hv ` ball \<omega>' \<epsilon>}"
+    using open_vimage[OF openimg iotacont] by (simp add: vimage_def)
+  obtain \<eta> where \<eta>0: "\<eta> > 0" and \<eta>in: "ball (\<omega>'$2) \<eta> \<subseteq> {s::real. vector [0, s] \<in> Hv ` ball \<omega>' \<epsilon>}"
+    using sopen v0in open_contains_ball by (metis (mono_tags, lifting) mem_Collect_eq)
+  define a where "a = \<omega>'$2 - \<eta>/2"
+  define b where "b = \<omega>'$2 + \<eta>/2"
+  have ab_in: "vector [0, s] \<in> Hv ` ball \<omega>' \<epsilon>" if "s \<in> {a..b}" for s :: real
+  proof -
+    have "s \<in> ball (\<omega>'$2) \<eta>" using that \<eta>0 by (auto simp: a_def b_def dist_real_def)
+    thus ?thesis using \<eta>in by blast
+  qed
+  have psiH: "Hv (\<psi> s) = vector [0, s]" if "s \<in> {a..b}" for s :: real
+    unfolding \<psi>_def using homeomorphism_apply2[OF homeo ab_in[OF that]] .
+  have psi_ball: "\<psi> s \<in> ball \<omega>' \<epsilon>" if "s \<in> {a..b}" for s :: real
+  proof -
+    have "\<psi> s \<in> g ` (Hv ` ball \<omega>' \<epsilon>)" unfolding \<psi>_def using ab_in[OF that] by simp
+    also have "g ` (Hv ` ball \<omega>' \<epsilon>) = ball \<omega>' \<epsilon>"
+      using homeo by (simp add: homeomorphism_def)
+    finally show ?thesis .
+  qed
+  have psi2: "\<psi> s $ 2 = s" if "s \<in> {a..b}" for s :: real
+  proof -
+    have "\<psi> s $ 2 = Hv (\<psi> s) $ 2" unfolding Hv_def by (simp add: vector_2)
+    also have "\<dots> = s" using psiH[OF that] by (simp add: vector_2)
+    finally show ?thesis .
+  qed
+  have psi0: "crossTheta \<omega>0 \<omega>s (\<psi> s) = 0" if "s \<in> {a..b}" for s :: real
+  proof -
+    have "crossTheta \<omega>0 \<omega>s (\<psi> s) = (Hv (\<psi> s)) $ 1" unfolding Hv_def by (simp add: vector_2)
+    also have "\<dots> = 0" using psiH[OF that] by (simp add: vector_2)
+    finally show ?thesis .
+  qed
+  define vel :: "real \<Rightarrow> real^2" where "vel = (\<lambda>s. vector [- D2 (\<psi> s) / D1 (\<psi> s), 1])"
+  have psivec: "(\<psi> has_vector_derivative vel s) (at s)" if s: "s \<in> {a..b}" for s :: real
+  proof -
+    have iotader: "((\<lambda>s::real. vector [0, s] :: real^2) has_derivative (\<lambda>t. vector [0, t])) (at s)"
+    proof -
+      have eq: "\<And>u::real. (vector [0, u] :: real^2) = u *\<^sub>R axis 2 1"
+        by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                      vector_scaleR_component axis_def)
+      show ?thesis unfolding eq by (auto intro!: derivative_eq_intros)
+    qed
+    have gd: "(g has_derivative giv (\<psi> s)) (at (vector [0, s]))"
+      using gder[OF psi_ball[OF s]] psiH[OF s] by simp
+    have "((g \<circ> (\<lambda>s::real. vector [0, s])) has_derivative (giv (\<psi> s) \<circ> (\<lambda>t. vector [0, t]))) (at s)"
+      by (rule diff_chain_at[OF iotader gd])
+    moreover have "(giv (\<psi> s) \<circ> (\<lambda>t::real. vector [0, t])) = (\<lambda>t. t *\<^sub>R vel s)"
+      unfolding giv_def vel_def comp_def
+      by (rule ext)
+         (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+                    vector_scaleR_component d1ne[OF psi_ball[OF s]] field_simps)
+    ultimately have "((g \<circ> (\<lambda>s::real. vector [0, s])) has_vector_derivative vel s) (at s)"
+      by (simp add: has_vector_derivative_def)
+    thus ?thesis by (simp add: \<psi>_def comp_def)
+  qed
+  have velcont: "continuous_on {a..b} vel"
+  proof -
+    have psicont: "continuous_on {a..b} \<psi>"
+      by (meson psivec continuous_at_imp_continuous_on has_vector_derivative_continuous)
+    have proj: "continuous_on UNIV (\<lambda>z::real^2. z $ i)" for i
+      using linear_continuous_on[OF bounded_linear_vec_nth] by blast
+    have D1c: "continuous_on UNIV D1"
+      unfolding D1_def using proj by (auto intro!: continuous_intros)
+    have D2c: "continuous_on UNIV D2"
+      unfolding D2_def crossA_def crossB_def using proj by (auto intro!: continuous_intros)
+    have num: "continuous_on {a..b} (\<lambda>s. D2 (\<psi> s))"
+      by (rule continuous_on_compose2[OF D2c psicont]) simp
+    have den: "continuous_on {a..b} (\<lambda>s. D1 (\<psi> s))"
+      by (rule continuous_on_compose2[OF D1c psicont]) simp
+    have dne: "\<And>s. s \<in> {a..b} \<Longrightarrow> D1 (\<psi> s) \<noteq> 0"
+      using d1ne psi_ball by blast
+    have kcont: "continuous_on {a..b} (\<lambda>s. - D2 (\<psi> s) / D1 (\<psi> s))"
+      using num den dne by (auto intro!: continuous_intros)
+    have velrw: "vel = (\<lambda>s. (- D2 (\<psi> s) / D1 (\<psi> s)) *\<^sub>R axis 1 1 + axis (2::2) 1)"
+      unfolding vel_def
+      by (rule ext)
+         (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2 axis_def)
+    show ?thesis
+      unfolding velrw
+      by (intro continuous_on_add continuous_on_scaleR continuous_on_const kcont)
+  qed
+  show ?thesis
+  proof (rule that[where a = a and b = b and \<psi> = \<psi> and r = "min \<epsilon> (\<eta>/2)"])
+    show "a < \<omega>'$2" using \<eta>0 by (simp add: a_def)
+    show "\<omega>'$2 < b" using \<eta>0 by (simp add: b_def)
+    show "0 < min \<epsilon> (\<eta>/2)" using \<epsilon>0 \<eta>0 by simp
+    show "\<psi> C1_differentiable_on {a..b}"
+      unfolding C1_differentiable_on_def using psivec velcont by blast
+    show "\<And>s. s \<in> {a..b} \<Longrightarrow> \<psi> s $ 2 = s" by (rule psi2)
+    show "\<And>s. s \<in> {a..b} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<psi> s) = 0" by (rule psi0)
+    show "\<psi> (\<omega>'$2) = \<omega>'"
+      unfolding \<psi>_def by (simp add: Hvw'[symmetric] homeomorphism_apply1[OF homeo w'ball])
+    show "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' (min \<epsilon> (\<eta>/2)) \<subseteq> \<psi> ` {a..b}"
+    proof
+      fix \<omega> :: "real^2" assume "\<omega> \<in> {\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' (min \<epsilon> (\<eta>/2))"
+      hence cz: "crossTheta \<omega>0 \<omega>s \<omega> = 0"
+        and wbe: "dist \<omega> \<omega>' < \<epsilon>" and wbh: "dist \<omega> \<omega>' < \<eta>/2"
+        by (auto simp: dist_commute min_less_iff_conj)
+      have wball: "\<omega> \<in> ball \<omega>' \<epsilon>" using wbe by (simp add: dist_commute)
+      have Hw: "Hv \<omega> = vector [0, \<omega>$2]" unfolding Hv_def using cz by simp
+      have "\<omega> = g (Hv \<omega>)" using homeomorphism_apply1[OF homeo wball] by simp
+      also have "\<dots> = \<psi> (\<omega>$2)" by (simp add: \<psi>_def Hw)
+      finally have eqpsi: "\<omega> = \<psi> (\<omega>$2)" .
+      have "\<bar>\<omega>$2 - \<omega>'$2\<bar> \<le> dist \<omega> \<omega>'"
+        using component_le_norm_cart[of "\<omega> - \<omega>'" 2]
+        by (simp add: dist_norm vector_minus_component)
+      hence "\<bar>\<omega>$2 - \<omega>'$2\<bar> < \<eta>/2" using wbh by simp
+      hence "\<omega>$2 \<in> {a..b}" unfolding a_def b_def atLeastAtMost_iff by (smt (verit))
+      with eqpsi show "\<omega> \<in> \<psi> ` {a..b}" by blast
+    qed
+  qed
+qed
+
+
+
+
 text \<open>Box-containment + arc packaging of a local \<open>C\<^sup>1\<close> graph (reusable for either the
   \<open>\<partial>\<^sub>2\<Theta>\<noteq>0\<close> graph-over-\<open>\<omega>\<^sub>1\<close> or, symmetrically, the \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> graph-over-\<open>\<omega>\<^sub>2\<close>):
   at an INTERIOR locus point the graph stays in the box on a small sub-interval, giving a
@@ -885,6 +1294,67 @@ proof -
 qed
 
 
+lemma locus_arc_cover_from_graph_vert:
+  fixes ctr \<omega>' \<omega>0 \<omega>s :: "real^2" and \<delta> a0 b0 r0 :: real and \<psi> :: "real \<Rightarrow> real^2"
+  assumes wint: "\<omega>' \<in> interior (OmegaPF ctr \<delta>)"
+    and a0w: "a0 < \<omega>'$2" and wb0: "\<omega>'$2 < b0" and r0pos: "0 < r0"
+    and psiC1: "\<psi> C1_differentiable_on {a0..b0}"
+    and psi2: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<psi> s $ 2 = s"
+    and psiw: "\<psi> (\<omega>'$2) = \<omega>'"
+    and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<psi> ` {a0..b0}"
+  obtains r \<gamma> where "0 < r" "analytic_arc \<gamma>" "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+    "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<gamma>"
+proof -
+  obtain \<rho> where \<rho>0: "0 < \<rho>" and \<rho>sub: "ball \<omega>' \<rho> \<subseteq> OmegaPF ctr \<delta>"
+    by (meson wint open_interior open_contains_ball interior_subset subset_trans)
+  have psicont: "continuous_on {a0..b0} \<psi>"
+    using psiC1 by (simp add: C1_differentiable_imp_continuous_on)
+  have w2: "\<omega>'$2 \<in> {a0..b0}" using a0w wb0 by simp
+  obtain \<sigma> where \<sigma>0: "0 < \<sigma>"
+      and \<sigma>map: "\<And>s. \<lbrakk>s \<in> {a0..b0}; dist s (\<omega>'$2) < \<sigma>\<rbrakk> \<Longrightarrow> dist (\<psi> s) \<omega>' < \<rho>"
+    using psicont[unfolded continuous_on_iff] w2 \<rho>0 psiw by metis
+  define a where "a = max a0 (\<omega>'$2 - \<sigma>/2)"
+  define b where "b = min b0 (\<omega>'$2 + \<sigma>/2)"
+  have ab_sub: "{a..b} \<subseteq> {a0..b0}" by (auto simp: a_def b_def)
+  have w_in_ab: "\<omega>'$2 \<in> {a..b}" using a0w wb0 \<sigma>0 by (auto simp: a_def b_def)
+  have psi_box: "\<psi> s \<in> OmegaPF ctr \<delta>" if "s \<in> {a..b}" for s
+  proof -
+    have sab: "s \<in> {a0..b0}" using that ab_sub by blast
+    have "dist s (\<omega>'$2) < \<sigma>" using that \<sigma>0 by (auto simp: a_def b_def dist_real_def)
+    hence "dist (\<psi> s) \<omega>' < \<rho>" using \<sigma>map[OF sab] by simp
+    thus ?thesis using \<rho>sub by (simp add: mem_ball dist_commute subset_eq)
+  qed
+  have ab_le: "a \<le> b" using w_in_ab by simp
+  have psiC1': "\<psi> C1_differentiable_on {a..b}"
+    using psiC1 ab_sub by (rule C1_differentiable_on_subset)
+  have arc: "analytic_arc (\<psi> ` {a..b})"
+    unfolding analytic_arc_def using ab_le psiC1' by blast
+  have gsub: "\<psi> ` {a..b} \<subseteq> OmegaPF ctr \<delta>" using psi_box by blast
+  define r where "r = min r0 (\<sigma>/2)"
+  have rpos: "0 < r" using r0pos \<sigma>0 by (simp add: r_def)
+  have cov: "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<psi> ` {a..b}"
+  proof
+    fix \<omega> :: "real^2"
+    assume "\<omega> \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r"
+    hence cz: "crossTheta \<omega>0 \<omega>s \<omega> = 0" and wb: "dist \<omega> \<omega>' < r" by (auto simp: dist_commute)
+    have "\<omega> \<in> {\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0"
+      using cz wb by (simp add: r_def dist_commute)
+    then obtain s where s: "s \<in> {a0..b0}" and weq: "\<omega> = \<psi> s" using cov0 by blast
+    have seq: "s = \<omega>$2" using psi2[OF s] weq by simp
+    have "\<bar>\<omega>$2 - \<omega>'$2\<bar> \<le> dist \<omega> \<omega>'"
+      using component_le_norm_cart[of "\<omega> - \<omega>'" 2]
+      by (simp add: dist_norm vector_minus_component)
+    hence "\<bar>s - \<omega>'$2\<bar> < \<sigma>/2" using wb seq by (simp add: r_def)
+    hence "s \<in> {a..b}" using s[unfolded atLeastAtMost_iff]
+      unfolding a_def b_def atLeastAtMost_iff by (smt (verit))
+    thus "\<omega> \<in> \<psi> ` {a..b}" using weq by blast
+  qed
+  show ?thesis by (rule that[OF rpos arc gsub cov])
+qed
+
+
+
+
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
 text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
@@ -935,6 +1405,7 @@ proof -
   let ?Ac = "(kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
   let ?Bc = "(ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
   let ?d2 = "- crossA ?Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB ?Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2)"
+  let ?d1 = "(?Bc * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2) - (?Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2) + (?Ac * ky \<omega>s - ?Bc * kx \<omega>s) * cos (\<omega>'$1)"
   show ?thesis
   proof (cases "?d2 \<noteq> 0 \<and> \<omega>' \<in> interior (OmegaPF ctr \<delta>)")
     case True
@@ -965,9 +1436,42 @@ proof -
     qed
   next
     case False
-    \<comment> \<open>RESIDUAL: \<open>\<partial>\<^sub>2\<Theta>(\<omega>')=0\<close> (needs the symmetric \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> \<open>\<chi>\<close>-graph) or
-        \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close>; the \<open>\<nabla>\<Theta>=0\<close> singular points (finite) are the hard kernel.\<close>
-    show ?thesis sorry
+    show ?thesis
+    proof (cases "?d1 \<noteq> 0 \<and> \<omega>' \<in> interior (OmegaPF ctr \<delta>)")
+      case True
+      hence d1: "?d1 \<noteq> 0" and wint: "\<omega>' \<in> interior (OmegaPF ctr \<delta>)" by auto
+      show ?thesis
+      proof (rule crossTheta_local_C1_graph_vert[OF z0 d1])
+        fix a0 b0 and \<psi> :: "real \<Rightarrow> real^2" and r0
+        assume aw: "a0 < \<omega>'$2" and wb: "\<omega>'$2 < b0" and r0p: "0 < r0"
+           and psiC1: "\<psi> C1_differentiable_on {a0..b0}"
+           and psi2: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<psi> s $ 2 = s"
+           and psicz: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<psi> s) = 0"
+           and psiw: "\<psi> (\<omega>'$2) = \<omega>'"
+           and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<psi> ` {a0..b0}"
+        show thesis
+        proof (rule locus_arc_cover_from_graph_vert[OF wint aw wb r0p psiC1 psi2 psiw cov0])
+          fix r \<gamma>
+          assume r0: "0 < r" and garc: "analytic_arc \<gamma>" and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+             and gcov: "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<gamma>"
+          show thesis
+          proof (rule that[of r "{\<gamma>}"])
+            show "0 < r" by (rule r0)
+            show "finite {\<gamma>}" by simp
+            show "\<forall>\<gamma>'\<in>{\<gamma>}. analytic_arc \<gamma>' \<and> \<gamma>' \<subseteq> OmegaPF ctr \<delta>" using garc gsub by simp
+            show "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>{\<gamma>}"
+              using gcov by simp
+          qed
+        qed
+      qed
+    next
+      case False
+      \<comment> \<open>RESIDUAL (the genuine hard kernel, strictly smaller): either \<open>\<partial>\<^sub>1\<Theta>=\<partial>\<^sub>2\<Theta>=0\<close> at
+          \<open>\<omega>'\<close> --- a \<open>\<nabla>\<Theta>=0\<close> singular point of the locus, finitely many, needing the local
+          analytic-curve branch structure HOL-Analysis lacks --- or \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close>.
+          Both regular graphs (\<open>\<phi>\<close> over \<open>\<omega>\<^sub>1\<close>, \<open>\<chi>\<close>=\<open>\<psi>\<close> over \<open>\<omega>\<^sub>2\<close>) are now PROVEN.\<close>
+      show ?thesis sorry
+    qed
   qed
 qed
 
