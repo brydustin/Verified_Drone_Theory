@@ -1,0 +1,4 @@
+session Applied_Math_Morse in "." = "HOL-Analysis" +
+  options [document = false, quick_and_dirty = true, timeout = 1800]
+  theories
+    Morse_Saddle_2D
