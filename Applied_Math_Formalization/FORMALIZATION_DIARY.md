@@ -3162,3 +3162,48 @@ REMAINING KEYSTONE (clear path, verified foundations; ~100 lines):
      homeomorphism's relative-openness; box containment by restricting [a,b]. [~30 lines]
 (3) singular case: finite Ssing (roadmap above) => omega' isolated => point + <=2 branch arcs.
 The injectivity (the conceptual crux, Rolle) is DONE; (2b) the derivative is the next grind.
+
+### M5 core iii: crossTheta_local_C1_graph FULLY PROVEN — sorry-free (2026-06-20)
+"use the cli tools eval and Sledgehammer to de-sorry". INSTALLED `isabelle eval_at` +
+`isabelle desorry` (repo's isa_agentic_cli_tools, via install.sh -> scala_build). These
+unblocked everything — see [[isabelle-eval-at-and-desorry-cli]].
+
+**THE 14-MIN HANG, DIAGNOSED + KILLED.** Root cause: the homeo `obtain` consumed
+crossTheta_graph_homeo via `... unfolding <defs> by metis` — a NON-INTERRUPTIBLE
+first-order metis loop reconciling the defines-unfolded forms (this is why `-o timeout=90`
+never fired; eval_at -t showed it instantly as the runaway line). Fix: `by (rule
+crossTheta_graph_homeo[OF d2[unfolded ...]])` after `unfolding H_def D2_def Ac_def Bc_def`
+-> **0.005s**. For the `rule` consumption to CLOSE, the obtains avoid-clause had to be
+ATOMIC (`∀z∈ball. ...`, not nested `⋀z. z∈ball ⟹ ...`) on BOTH crossTheta_graph_homeo
+and the local obtain — same atomic-clause fix as the curve-cover assembly.
+
+(2b)+(2c-partial) DONE: crossTheta_local_C1_graph now provides, off d2=∂₂Θ(ω')≠0, a genuine
+C¹ graph φ(s)=g(vector[s,0]) over s=ω₁ with φ C1_differentiable_on {a..b}, φ s$1=s,
+crossTheta(φ s)=0, φ(ω'1)=ω', and {ω. crossTheta=0}∩ball ω' (min ε (η/2)) ⊆ φ`{a..b}.
+Cascade of eval_at-pinpointed fixes (each ~35s/cycle, FAR better than mystery builds):
+- ginv_bl: gi x is linear UNCONDITIONALLY (even D2=0, since _/0=0) -> prove `linear (gi x)`
+  via explicit linearI (field_simps with `that` in each subgoal) then linear_conv_bounded_linear.
+- ginv_id / phivec moreover: `using <D2≠0> by (rule ext)(simp ...)` FAILS — chained fact hits
+  `rule ext` which can't consume it; move the ≠0 fact INTO the simp set.
+- v0in: image_eqI multiple-unifiers -> `by (metis ... imageI ...)`.
+- iotacont/iotader: `vector[s,0]` head is `vector` not vec_lambda so continuous_on_vec_lambda /
+  has_derivative_graph_map (wants vector INPUT z$1) FAIL -> rewrite `vector[u,0]=u*⇩R axis 1 1`,
+  then continuous_intros / derivative_eq_intros.
+- sopen: `open_vimage[OF openimg iotacont]` (find_theorems-confirmed) + vimage_def.
+- phi1: `metis vector_2` can't bridge H(φs)$1 to (φs)$1 -> structured like phi0 (unfold H_def).
+- ab_in: split the `s∈ball(ω'1)η` step then apply ηin by blast.
+- the velocity field's derivative: `has_derivative_compose` mismatches the ∘-form derivative ->
+  `diff_chain_at` (∘ throughout, find_theorems-confirmed); avoid over-unfolding φ_def by
+  proving for the bare `g∘(λs.vector[s,0])` then folding via `simp add: φ_def comp_def`.
+- velcont: auto's continuous_intros re-decomposes -D1/D2 (fires continuous_on_divide) -> explicit
+  `intro continuous_on_add continuous_on_scaleR continuous_on_const kcont`.
+- final covering show: named `rule that[where a=a and b=b and φ=φ and r="min ε (η/2)"]` (positional
+  mis-slots due to obtains `and`-grouping); ω$1∈{a..b} via component_le_norm_cart + smt (linear).
+isabelle build Applied_Math_M5_curvecover: **BUILD_EXIT=0, Finished 12s**. Committed dc12da7, pushed.
+
+REMAINING for locus_locally_C1_arc (the file's one intended sorry): assemble 𝒜 from
+crossTheta_local_C1_graph in the d2≠0 case (need: φ`{a..b} is an analytic_arc [C¹ image] and
+⊆ OmegaPF), PLUS the d2=0 cases — ∂₂Θ=0∧∂₁Θ≠0 needs a SYMMETRIC χ-graph (ω₁=χ(ω₂), a near-copy
+of crossTheta_local_C1_graph with roles swapped), and the finitely-many ∂₁Θ=∂₂Θ=0 singular
+points (governed by the finite-zeros lemmas; crossA²+crossB²=crossG² cuts ω₁ to finite). The
+singular-point local branch structure is the genuine hard residual.
