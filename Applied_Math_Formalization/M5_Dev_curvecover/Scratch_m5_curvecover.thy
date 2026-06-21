@@ -3158,14 +3158,188 @@ proof -
           qed
         next
           case False
-          \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL: \<open>R = Ac\<cdot>ky\<omega>s - Bc\<cdot>kx\<omega>s = 0\<close> (collinear wavevectors,
-              \<open>kx\<^sub>0\<cdot>ky\<^sub>s = ky\<^sub>0\<cdot>kx\<^sub>s\<close>).\<close>  This is the sole remaining sub-case: \<open>\<omega>'\<close> on
-              \<open>\<partial>(OmegaPF)\<close> with \<open>R = 0\<close>.  When \<open>R = 0\<close> a box edge MAY be flat (the flat-edge
-              covers @{thm crossTheta_boundary_cover_flat_horiz} / @{thm
-              crossTheta_boundary_cover_flat_vert} would then apply), and the orientation
-              bookkeeping for which incident edge is flat vs. finite is not yet wired.
-              Every \<open>R \<noteq> 0\<close> boundary case is closed above.\<close>
-          show ?thesis sorry
+          note R0 = this
+          have r0eq: "?Ac * ky \<omega>s - ?Bc * kx \<omega>s = 0" using R0 by simp
+          \<comment> \<open>\<open>R = Ac\<cdot>ky\<omega>s - Bc\<cdot>kx\<omega>s = 0\<close> (collinear wavevectors).  Three-way sub-dispatch on
+              \<open>\<partial>\<^sub>2\<Theta>\<close> and \<open>\<partial>\<^sub>1\<Theta>\<close>: the first two sub-cases reuse the \<open>\<phi>\<close>-graph (B1) and the
+              flat-edge covers; only \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and> \<partial>\<^sub>1\<Theta> = 0\<close> (singular at \<open>R = 0\<close>)
+              remains.\<close>
+          show ?thesis
+          proof (cases "?d2 \<noteq> 0")
+            case True
+            note d2 = this
+            \<comment> \<open>\<open>R = 0\<close>, \<open>\<partial>\<^sub>2\<Theta> \<noteq> 0\<close>: \<open>\<phi>\<close>-graph; horizontal edges tied (both faces at \<open>ctr\<^sub>2\<plusminus>\<pi>\<close>
+                share the same cos-coefficient \<open>A2\<close>).\<close>
+            \<comment> \<open>From \<open>notC1\<close> + \<open>d2\<close>: \<open>\<omega>'\<close> is NOT interior in coord 2, so it sits on a horizontal
+                box face \<open>\<omega>'$2 \<in> {ctr$2\<plusminus>\<pi>}\<close>.\<close>
+            have w2mem: "\<omega>'$2 = ctr$2 - pi \<or> \<omega>'$2 = ctr$2 + pi"
+            proof -
+              have nin: "\<not> (ctr$2 - pi < \<omega>'$2 \<and> \<omega>'$2 < ctr$2 + pi)" using notC1 d2 by blast
+              have box2: "ctr$2 - pi \<le> \<omega>'$2 \<and> \<omega>'$2 \<le> ctr$2 + pi"
+                using winOm unfolding OmegaPF_def mem_box_cart
+                by (auto simp: vector_minus_component vector_add_component vector_2 dest!: spec[where x=2])
+              from nin box2 show ?thesis by linarith
+            qed
+            \<comment> \<open>The horizontal-edge cos-coefficient is the same at the top and bottom faces.\<close>
+            have tie: "(- (?Bc * kz \<omega>s + ky \<omega>s) * cos (ctr$2 - pi) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (ctr$2 - pi))
+                     = (- (?Bc * kz \<omega>s + ky \<omega>s) * cos (ctr$2 + pi) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (ctr$2 + pi))"
+              by (simp add: cos_diff cos_add sin_diff sin_add)
+            show ?thesis
+            proof (cases "(- (?Bc * kz \<omega>s + ky \<omega>s) * cos (ctr$2 + pi) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (ctr$2 + pi)) \<noteq> 0")
+              case True
+              note A2ne = this
+              \<comment> \<open>\<open>A2(ctr\<^sub>2+\<pi>) \<noteq> 0\<close>: both faces nondegenerate (via \<open>tie\<close>); apply B1 to the \<open>\<phi>\<close>-graph.\<close>
+              show ?thesis
+              proof (rule crossTheta_local_C1_graph[OF z0 d2])
+                fix a0 b0 and \<phi> :: "real \<Rightarrow> real^2" and r0
+                assume aw: "a0 < \<omega>'$1" and wb: "\<omega>'$1 < b0" and r0p: "0 < r0"
+                   and phiC1: "\<phi> C1_differentiable_on {a0..b0}"
+                   and phi1: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<phi> s $ 1 = s"
+                   and phicz: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<phi> s) = 0"
+                   and phiw: "\<phi> (\<omega>'$1) = \<omega>'"
+                   and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<phi> ` {a0..b0}"
+                have ndtop: "(- (?Bc * kz \<omega>s + ky \<omega>s) * cos (ctr$2 + pi) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (ctr$2 + pi)) \<noteq> 0
+                           \<or> (?Ac * ky \<omega>s - ?Bc * kx \<omega>s) \<noteq> 0"
+                  by (rule disjI1[OF A2ne])
+                have A2ne': "(- (?Bc * kz \<omega>s + ky \<omega>s) * cos (ctr$2 - pi) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (ctr$2 - pi)) \<noteq> 0"
+                  unfolding tie by (rule A2ne)
+                have ndbot: "(- (?Bc * kz \<omega>s + ky \<omega>s) * cos (ctr$2 - pi) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (ctr$2 - pi)) \<noteq> 0
+                           \<or> (?Ac * ky \<omega>s - ?Bc * kx \<omega>s) \<noteq> 0"
+                  by (rule disjI1[OF A2ne'])
+                show thesis
+                proof (rule crossTheta_boundary_cover_phi[OF winOm less_imp_le[OF aw] less_imp_le[OF wb]
+                            r0p phiC1 phi1 phicz cov0 ndtop ndbot])
+                  fix r \<A>
+                  assume "0 < r" "finite \<A>"
+                    "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+                    "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+                  thus thesis by (rule that)
+                qed
+              qed
+            next
+              case False
+              \<comment> \<open>\<open>A2(ctr\<^sub>2+\<pi>) = 0\<close> and \<open>R = 0\<close>: the horizontal edge through \<open>\<omega>'\<close> is FLAT.\<close>
+              have A2top0: "(- (?Bc * kz \<omega>s + ky \<omega>s) * cos (ctr$2 + pi) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (ctr$2 + pi)) = 0"
+                using False by simp
+              have A2z: "(- (?Bc * kz \<omega>s + ky \<omega>s) * cos (\<omega>'$2) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$2)) = 0"
+              proof (rule disjE[OF w2mem])
+                assume e: "\<omega>'$2 = ctr$2 - pi"
+                show ?thesis unfolding e using A2top0 tie by simp
+              next
+                assume e: "\<omega>'$2 = ctr$2 + pi"
+                show ?thesis unfolding e by (rule A2top0)
+              qed
+              \<comment> \<open>Separable form of \<open>crossTheta\<close> along the horizontal line \<open>\<omega>\<^sub>2 = \<omega>'$2\<close>.\<close>
+              have sep: "crossTheta \<omega>0 \<omega>s (vector [u, \<omega>'$2])
+                       = (- (?Bc * kz \<omega>s + ky \<omega>s) * cos (\<omega>'$2) + (?Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$2)) * cos u
+                       + (?Ac * ky \<omega>s - ?Bc * kx \<omega>s) * sin u
+                       + (?Bc * cos (\<omega>'$2) - ?Ac * sin (\<omega>'$2))" for u :: real
+                by (subst crossTheta_separable) (simp add: vector_2 crossA_def crossB_def crossG_def algebra_simps)
+              \<comment> \<open>The constant term equals \<open>crossTheta \<omega>0 \<omega>s \<omega>' = 0\<close>: evaluate \<open>sep\<close> at \<open>u = \<omega>'$1\<close>,
+                  where \<open>vector [\<omega>'$1, \<omega>'$2] = \<omega>'\<close>, using \<open>A2z\<close> and \<open>r0eq\<close>.\<close>
+              have wvec: "vector [\<omega>'$1, \<omega>'$2] = (\<omega>' :: real^2)"
+                by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2)
+              have const0: "(?Bc * cos (\<omega>'$2) - ?Ac * sin (\<omega>'$2)) = 0"
+              proof -
+                have "(0::real) = crossTheta \<omega>0 \<omega>s (vector [\<omega>'$1, \<omega>'$2])" using z0 wvec by simp
+                also have "\<dots> = (?Bc * cos (\<omega>'$2) - ?Ac * sin (\<omega>'$2))"
+                  using sep[of "\<omega>'$1"] A2z r0eq by simp
+                finally show ?thesis by simp
+              qed
+              have flatedge: "crossTheta \<omega>0 \<omega>s (vector [u, \<omega>'$2]) = 0" for u :: real
+                using sep[of u] A2z r0eq const0 hsep by simp
+              show ?thesis
+              proof (rule crossTheta_local_C1_graph[OF z0 d2])
+                fix a0 b0 and \<phi> :: "real \<Rightarrow> real^2" and r0
+                assume aw: "a0 < \<omega>'$1" and wb: "\<omega>'$1 < b0" and r0p: "0 < r0"
+                   and phiC1: "\<phi> C1_differentiable_on {a0..b0}"
+                   and phi1: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<phi> s $ 1 = s"
+                   and phicz: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<phi> s) = 0"
+                   and phiw: "\<phi> (\<omega>'$1) = \<omega>'"
+                   and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<phi> ` {a0..b0}"
+                show thesis
+                proof (rule crossTheta_boundary_cover_flat_horiz[OF winOm refl d0 r0p
+                            less_imp_le[OF aw] less_imp_le[OF wb] phi1 cov0 flatedge])
+                  fix r \<A>
+                  assume "0 < r" "finite \<A>"
+                    "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+                    "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+                  thus thesis by (rule that)
+                qed
+              qed
+            qed
+          next
+            case False
+            note d2z = this
+            show ?thesis
+            proof (cases "?d1 \<noteq> 0")
+              case True
+              note d1 = this
+              \<comment> \<open>\<open>R = 0\<close>, \<open>\<partial>\<^sub>2\<Theta> = 0\<close>, \<open>\<partial>\<^sub>1\<Theta> \<noteq> 0\<close>: the vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> is FLAT.
+                  Both horizontal coefficients \<open>crossA, crossB\<close> at \<open>\<omega>'$1\<close> vanish by a \<open>2\<times>2\<close>
+                  rotation (det \<open>= cos\<^sup>2 + sin\<^sup>2 = 1\<close>) from \<open>z0+R0\<close> and \<open>d2z\<close>.\<close>
+              have d2z': "- crossA ?Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB ?Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2) = 0"
+                using d2z by simp
+              have crGz: "crossG ?Ac ?Bc \<omega>s (\<omega>'$1) = 0"
+                unfolding crossG_def using r0eq by simp
+              have eq1: "crossA ?Bc \<omega>s (\<omega>'$1) * cos (\<omega>'$2) + crossB ?Ac \<omega>s (\<omega>'$1) * sin (\<omega>'$2) = 0"
+              proof -
+                have "(0::real) = crossTheta \<omega>0 \<omega>s \<omega>'" using z0 by simp
+                also have "\<dots> = crossA ?Bc \<omega>s (\<omega>'$1) * cos (\<omega>'$2) + crossB ?Ac \<omega>s (\<omega>'$1) * sin (\<omega>'$2)
+                              + crossG ?Ac ?Bc \<omega>s (\<omega>'$1)"
+                  by (rule crossTheta_separable)
+                also have "\<dots> = crossA ?Bc \<omega>s (\<omega>'$1) * cos (\<omega>'$2) + crossB ?Ac \<omega>s (\<omega>'$1) * sin (\<omega>'$2)"
+                  using crGz by simp
+                finally show ?thesis by simp
+              qed
+              have AB0: "crossA ?Bc \<omega>s (\<omega>'$1) = 0 \<and> crossB ?Ac \<omega>s (\<omega>'$1) = 0"
+              proof -
+                have key: "x = 0 \<and> y = 0"
+                  if "x * cos (\<omega>'$2) + y * sin (\<omega>'$2) = 0"
+                     and "- x * sin (\<omega>'$2) + y * cos (\<omega>'$2) = 0" for x y :: real
+                  using that sin_cos_squared_add[of "\<omega>'$2"]
+                  by (smt (verit, ccfv_SIG) lem_h0res_Bcuts zero_compare_simps(10,6)) 
+                show ?thesis by (rule key[OF eq1 d2z'])
+              qed
+              \<comment> \<open>Hence \<open>crossTheta\<close> along the vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> is identically zero.\<close>
+              have flatedge: "crossTheta \<omega>0 \<omega>s (vector [\<omega>'$1, u]) = 0" for u :: real
+              proof -
+                have "crossTheta \<omega>0 \<omega>s (vector [\<omega>'$1, u])
+                    = crossA ?Bc \<omega>s (\<omega>'$1) * cos u + crossB ?Ac \<omega>s (\<omega>'$1) * sin u
+                      + crossG ?Ac ?Bc \<omega>s (\<omega>'$1)"
+                  by (subst crossTheta_separable) (simp add: vector_2)
+                thus ?thesis using AB0 r0eq hsep by (simp add: crossG_def)
+              qed
+              show ?thesis
+              proof (rule crossTheta_local_C1_graph_vert[OF z0 d1])
+                fix a0 b0 and \<psi> :: "real \<Rightarrow> real^2" and r0
+                assume aw: "a0 < \<omega>'$2" and wb: "\<omega>'$2 < b0" and r0p: "0 < r0"
+                   and psiC1: "\<psi> C1_differentiable_on {a0..b0}"
+                   and psi2: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<psi> s $ 2 = s"
+                   and psicz: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<psi> s) = 0"
+                   and psiw: "\<psi> (\<omega>'$2) = \<omega>'"
+                   and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<psi> ` {a0..b0}"
+                show thesis
+                proof (rule crossTheta_boundary_cover_flat_vert[OF winOm refl r0p
+                            less_imp_le[OF aw] less_imp_le[OF wb] psi2 cov0 flatedge])
+                  fix r \<A>
+                  assume "0 < r" "finite \<A>"
+                    "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+                    "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+                  thus thesis by (rule that)
+                qed
+              qed
+            next
+              case False
+              note d1z = this
+              \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL: \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and> \<partial>\<^sub>1\<Theta> = 0\<close> (singular at the
+                  collinear-wavevector degeneracy).\<close>  \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> with \<open>R = 0\<close>
+                  AND \<open>\<nabla>\<Theta> = 0\<close>: a flat vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> plus a transverse saddle
+                  branch (finitely many isolated super-degenerate points).  Genuine residual;
+                  the two regular orientations and both flat-edge orientations are closed above.\<close>
+              show ?thesis sorry
+            qed
+          qed
         qed
       qed
     qed
