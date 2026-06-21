@@ -3,6 +3,7 @@ theory Scratch_m5_curvecover
           "Applied_Math_Morse.Trig_SMOOTH3"
           "Applied_Math_Morse.Saddle_Cover"
           "Applied_Math_Morse.Disc_Pos"
+          "Applied_Math_Morse.Arc_Clip"
 begin
 
 text \<open>\<^bold>\<open>(M5) Core "3" --- the COLLINEAR LOCUS has a finite \<open>C\<^sup>1\<close>-arc cover.\<close>
@@ -1779,6 +1780,108 @@ proof -
         using cov by auto
     qed
   qed
+qed
+
+
+text \<open>Boundary clip support: edge-finiteness + face-finiteness for locus arcs.\<close>
+
+lemma finite_locus_vert_edge:
+  fixes \<omega>0 \<omega>s :: "real^2" and c lo hi :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes nd: "crossA Bc \<omega>s c \<noteq> 0 \<or> crossB Ac \<omega>s c \<noteq> 0"
+  shows "finite {u::real. lo \<le> u \<and> u \<le> hi \<and> crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0}"
+proof -
+  have sep: "crossTheta \<omega>0 \<omega>s (vector [c, u])
+           = crossA Bc \<omega>s c * cos u + crossB Ac \<omega>s c * sin u + crossG Ac Bc \<omega>s c" for u :: real
+    unfolding Ac_def Bc_def by (subst crossTheta_separable) (simp add: vector_2)
+  have eq: "{u::real. lo \<le> u \<and> u \<le> hi \<and> crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0}
+          = {u::real. lo \<le> u \<and> u \<le> hi \<and>
+               crossA Bc \<omega>s c * cos u + crossB Ac \<omega>s c * sin u = - crossG Ac Bc \<omega>s c}"
+    using sep by (auto simp: algebra_simps)
+  show ?thesis unfolding eq by (rule finite_inhom_phase_zeros_interval[OF nd])
+qed
+
+lemma finite_locus_horiz_edge:
+  fixes \<omega>0 \<omega>s :: "real^2" and c lo hi :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes nd: "(- (Bc * kz \<omega>s + ky \<omega>s) * cos c + (Ac * kz \<omega>s + kx \<omega>s) * sin c) \<noteq> 0
+             \<or> (Ac * ky \<omega>s - Bc * kx \<omega>s) \<noteq> 0"
+  shows "finite {u::real. lo \<le> u \<and> u \<le> hi \<and> crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0}"
+proof -
+  have sep: "crossTheta \<omega>0 \<omega>s (vector [u, c])
+           = (- (Bc * kz \<omega>s + ky \<omega>s) * cos c + (Ac * kz \<omega>s + kx \<omega>s) * sin c) * cos u
+           + (Ac * ky \<omega>s - Bc * kx \<omega>s) * sin u
+           + (Bc * cos c - Ac * sin c)" for u :: real
+    unfolding Ac_def Bc_def
+    by (subst crossTheta_separable) (simp add: vector_2 crossA_def crossB_def crossG_def algebra_simps)
+  have key: "(crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0)
+           = ((- (Bc * kz \<omega>s + ky \<omega>s) * cos c + (Ac * kz \<omega>s + kx \<omega>s) * sin c) * cos u
+              + (Ac * ky \<omega>s - Bc * kx \<omega>s) * sin u = - (Bc * cos c - Ac * sin c))" for u :: real
+    unfolding sep by argo
+  show ?thesis unfolding key by (rule finite_inhom_phase_zeros_interval[OF nd])
+qed
+
+text \<open>Face-finiteness for a crossTheta-locus arc: it meets each box face finitely.\<close>
+
+lemma crossTheta_arc_vert_face_finite:
+  fixes \<omega>0 \<omega>s :: "real^2" and \<gamma> :: "real \<Rightarrow> real^2" and a b c lo2 hi2 :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes inj: "inj_on \<gamma> {a..b}"
+    and loc: "\<And>s. s \<in> {a..b} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<gamma> s) = 0"
+    and bdd: "\<And>s. s \<in> {a..b} \<Longrightarrow> lo2 \<le> \<gamma> s $ 2 \<and> \<gamma> s $ 2 \<le> hi2"
+    and nd: "crossA Bc \<omega>s c \<noteq> 0 \<or> crossB Ac \<omega>s c \<noteq> 0"
+  shows "finite {s \<in> {a..b}. \<gamma> s $ 1 = c}"
+proof -
+  define V where "V = {u::real. lo2 \<le> u \<and> u \<le> hi2 \<and> crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0}"
+  have finV: "finite V" unfolding V_def
+    by (rule finite_locus_vert_edge[OF nd[unfolded Ac_def Bc_def]])
+  have img: "\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 1 = c} \<subseteq> (\<lambda>u. vector [c, u]) ` V"
+  proof
+    fix x assume "x \<in> \<gamma> ` {s \<in> {a..b}. \<gamma> s $ 1 = c}"
+    then obtain s where s: "s \<in> {a..b}" and g1: "\<gamma> s $ 1 = c" and xeq: "x = \<gamma> s" by blast
+    have veq: "vector [c, \<gamma> s $ 2] = \<gamma> s"
+      using g1 by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2)
+    have "\<gamma> s $ 2 \<in> V" unfolding V_def using bdd[OF s] loc[OF s] veq by simp
+    thus "x \<in> (\<lambda>u. vector [c, u]) ` V" using xeq veq by force
+  qed
+  have "finite (\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 1 = c})"
+    using img finV by (meson finite_imageI finite_subset)
+  moreover have "inj_on \<gamma> {s \<in> {a..b}. \<gamma> s $ 1 = c}"
+    using inj by (rule inj_on_subset) auto
+  ultimately show ?thesis by (rule finite_imageD)
+qed
+
+lemma crossTheta_arc_horiz_face_finite:
+  fixes \<omega>0 \<omega>s :: "real^2" and \<gamma> :: "real \<Rightarrow> real^2" and a b c lo1 hi1 :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes inj: "inj_on \<gamma> {a..b}"
+    and loc: "\<And>s. s \<in> {a..b} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<gamma> s) = 0"
+    and bdd: "\<And>s. s \<in> {a..b} \<Longrightarrow> lo1 \<le> \<gamma> s $ 1 \<and> \<gamma> s $ 1 \<le> hi1"
+    and nd: "(- (Bc * kz \<omega>s + ky \<omega>s) * cos c + (Ac * kz \<omega>s + kx \<omega>s) * sin c) \<noteq> 0
+           \<or> (Ac * ky \<omega>s - Bc * kx \<omega>s) \<noteq> 0"
+  shows "finite {s \<in> {a..b}. \<gamma> s $ 2 = c}"
+proof -
+  define V where "V = {u::real. lo1 \<le> u \<and> u \<le> hi1 \<and> crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0}"
+  have finV: "finite V" unfolding V_def
+    by (rule finite_locus_horiz_edge[OF nd[unfolded Ac_def Bc_def]])
+  have img: "\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 2 = c} \<subseteq> (\<lambda>u. vector [u, c]) ` V"
+  proof
+    fix x assume "x \<in> \<gamma> ` {s \<in> {a..b}. \<gamma> s $ 2 = c}"
+    then obtain s where s: "s \<in> {a..b}" and g2: "\<gamma> s $ 2 = c" and xeq: "x = \<gamma> s" by blast
+    have veq: "vector [\<gamma> s $ 1, c] = \<gamma> s"
+      using g2 by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2)
+    have "\<gamma> s $ 1 \<in> V" unfolding V_def using bdd[OF s] loc[OF s] veq by simp
+    thus "x \<in> (\<lambda>u. vector [u, c]) ` V" using xeq veq by force
+  qed
+  have "finite (\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 2 = c})"
+    using img finV by (meson finite_imageI finite_subset)
+  moreover have "inj_on \<gamma> {s \<in> {a..b}. \<gamma> s $ 2 = c}"
+    using inj by (rule inj_on_subset) auto
+  ultimately show ?thesis by (rule finite_imageD)
 qed
 
 
