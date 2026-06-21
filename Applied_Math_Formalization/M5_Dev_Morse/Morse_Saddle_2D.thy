@@ -290,6 +290,8 @@ lemma level_zero_C1_arc_2:
       "\<gamma> C1_differentiable_on {a..b}" "p \<in> \<gamma> ` {a..b}"
       "{x. lf x = 0} \<inter> ball p \<rho> \<subseteq> \<gamma> ` {a..b}"
       "\<gamma> ` {a..b} \<subseteq> ball p \<rho>0"
+      "inj_on \<gamma> {a..b}"
+      "\<gamma> ` {a..b} \<subseteq> {x. lf x = 0}"
 proof -
   have lder: "(lf has_derivative (\<lambda>h. inner (glf x) h)) (at x)" if "x \<in> ball p \<rho>0" for x :: "real^2"
     using lC1 that unfolding C1field_def by blast
@@ -582,6 +584,15 @@ proof -
       unfolding velrw
       by (intro continuous_on_add continuous_on_scaleR continuous_on_const kcont)
   qed
+  have philoc: "\<phi> ` {a..b} \<subseteq> {x. lf x = 0}" using phi0 by auto
+  have phiinj: "inj_on \<phi> {a..b}"
+  proof (rule inj_onI)
+    fix s t assume s: "s \<in> {a..b}" and t: "t \<in> {a..b}" and eq: "\<phi> s = \<phi> t"
+    have "(vector [s,0]::real^2) = H (\<phi> s)" using phiH[OF s] by simp
+    also have "\<dots> = H (\<phi> t)" using eq by simp
+    also have "\<dots> = vector [t,0]" using phiH[OF t] by simp
+    finally show "s = t" by (metis vector_2)
+  qed
   show ?thesis
   proof (rule that[where a = a and b = b and \<gamma> = \<phi> and \<rho> = "min \<epsilon>0 (\<eta>/2)"])
     show "a \<le> b" using \<eta>0 by (simp add: a_def b_def)
@@ -613,6 +624,8 @@ proof -
       with eqphi show "x \<in> \<phi> ` {a..b}" by blast
     qed
     show "\<phi> ` {a..b} \<subseteq> ball p \<rho>0" using phi_ball ballin by blast
+    show "inj_on \<phi> {a..b}" by (rule phiinj)
+    show "\<phi> ` {a..b} \<subseteq> {x. lf x = 0}" by (rule philoc)
   qed
 qed
 
@@ -691,6 +704,8 @@ lemma level_zero_C1_arc_1:
       "\<gamma> C1_differentiable_on {a..b}" "p \<in> \<gamma> ` {a..b}"
       "{x. lf x = 0} \<inter> ball p \<rho> \<subseteq> \<gamma> ` {a..b}"
       "\<gamma> ` {a..b} \<subseteq> ball p \<rho>0"
+      "inj_on \<gamma> {a..b}"
+      "\<gamma> ` {a..b} \<subseteq> {x. lf x = 0}"
 proof -
   define lf' :: "real^2 \<Rightarrow> real" where "lf' = (\<lambda>x. lf (sw x))"
   define glf' :: "real^2 \<Rightarrow> real^2" where "glf' = (\<lambda>x. sw (glf (sw x)))"
@@ -734,6 +749,8 @@ proof -
     and pin: "p' \<in> \<gamma>' ` {a..b}"
     and cov: "{x. lf' x = 0} \<inter> ball p' \<rho> \<subseteq> \<gamma>' ` {a..b}"
     and imgsub: "\<gamma>' ` {a..b} \<subseteq> ball p' \<rho>0"
+    and inj': "inj_on \<gamma>' {a..b}"
+    and loc': "\<gamma>' ` {a..b} \<subseteq> {x. lf' x = 0}"
     by (rule level_zero_C1_arc_2[OF \<rho>0 lC1' lp' reg'])
   define \<gamma> :: "real \<Rightarrow> real^2" where "\<gamma> = sw \<circ> \<gamma>'"
   show ?thesis
@@ -767,6 +784,22 @@ proof -
       also have "sw p' = p" by (simp add: p'_def)
       finally show ?thesis .
     qed
+    show "inj_on \<gamma> {a..b}"
+    proof (rule inj_onI)
+      fix s t assume "s\<in>{a..b}" "t\<in>{a..b}" "\<gamma> s = \<gamma> t"
+      hence "sw (\<gamma>' s) = sw (\<gamma>' t)" by (simp add: \<gamma>_def comp_def)
+      hence "\<gamma>' s = \<gamma>' t" by (metis sw_sw)
+      thus "s = t" using inj' \<open>s\<in>{a..b}\<close> \<open>t\<in>{a..b}\<close> by (meson inj_onD)
+    qed
+    show "\<gamma> ` {a..b} \<subseteq> {x. lf x = 0}"
+    proof
+      fix x assume "x \<in> \<gamma> ` {a..b}"
+      then obtain t where t: "t\<in>{a..b}" and "x = \<gamma> t" by blast
+      hence xe: "x = sw (\<gamma>' t)" by (simp add: \<gamma>_def comp_def)
+      have "\<gamma>' t \<in> \<gamma>' ` {a..b}" using t by (rule imageI)
+      hence "lf' (\<gamma>' t) = 0" using loc' by auto
+      thus "x \<in> {x. lf x = 0}" using xe by (simp add: lf'_def)
+    qed
   qed
 qed
 
@@ -780,6 +813,8 @@ lemma level_zero_C1_arc:
       "\<gamma> C1_differentiable_on {a..b}" "p \<in> \<gamma> ` {a..b}"
       "{x. lf x = 0} \<inter> ball p \<rho> \<subseteq> \<gamma> ` {a..b}"
       "\<gamma> ` {a..b} \<subseteq> ball p \<rho>0"
+      "inj_on \<gamma> {a..b}"
+      "\<gamma> ` {a..b} \<subseteq> {x. lf x = 0}"
 proof -
   have "glf p $ 1 \<noteq> 0 \<or> glf p $ 2 \<noteq> 0"
     using reg
@@ -817,6 +852,8 @@ theorem saddle_form_two_arcs:
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
       "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
+      "inj_on \<gamma>1 {a1..b1}" "inj_on \<gamma>2 {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}" "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
 proof -
   \<comment> \<open>STEP 1: \<open>a \<noteq> 0\<close> on a small ball around \<open>p\<close>.\<close>
   have da: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> (a has_derivative (\<lambda>h. inner (ga x) h)) (at x)"
@@ -972,6 +1009,8 @@ proof -
       and pgam1: "p \<in> \<gamma>1 ` {a1..b1}"
       and cover1: "{x. lp x = 0} \<inter> ball p \<rho>1' \<subseteq> \<gamma>1 ` {a1..b1}"
       and imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>1"
+      and inj1: "inj_on \<gamma>1 {a1..b1}"
+      and loc1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. lp x = 0}"
     show ?thesis
     proof (rule level_zero_C1_arc[OF rpos1 lmC1 lmp glmp])
       fix \<gamma>2 :: "real \<Rightarrow> real^2" and a2 b2 \<rho>2' :: real
@@ -980,6 +1019,8 @@ proof -
         and pgam2: "p \<in> \<gamma>2 ` {a2..b2}"
         and cover2: "{x. lm x = 0} \<inter> ball p \<rho>2' \<subseteq> \<gamma>2 ` {a2..b2}"
         and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>1"
+        and inj2: "inj_on \<gamma>2 {a2..b2}"
+        and loc2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. lm x = 0}"
       define r where "r = min \<rho>a (min \<rho>1 (min \<rho>1' \<rho>2'))"
       have rpos: "0 < r"
         unfolding r_def using \<rho>apos rpos1 rho1'pos rho2'pos by simp
@@ -1011,8 +1052,27 @@ proof -
       have ballsub1: "ball p \<rho>1 \<subseteq> ball p \<rho>0" using rle1 by (rule subset_ball)
       have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub1 by (rule order_trans)
       have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub1 by (rule order_trans)
+      have locf1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}"
+      proof
+        fix x assume xin: "x \<in> \<gamma>1 ` {a1..b1}"
+        hence lpx: "lp x = 0" using loc1 by blast
+        from xin have "x \<in> ball p \<rho>1" using imgsub1 by blast
+        hence "f x = a x * lp x * lm x" by (rule feq)
+        also have "\<dots> = 0" using lpx by simp
+        finally show "x \<in> {x. f x = 0}" by simp
+      qed
+      have locf2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
+      proof
+        fix x assume xin: "x \<in> \<gamma>2 ` {a2..b2}"
+        hence lmx: "lm x = 0" using loc2 by blast
+        from xin have "x \<in> ball p \<rho>1" using imgsub2 by blast
+        hence "f x = a x * lp x * lm x" by (rule feq)
+        also have "\<dots> = 0" using lmx by simp
+        finally show "x \<in> {x. f x = 0}" by simp
+      qed
       show ?thesis
-        by (rule that[OF rpos a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover img1 img2])
+        by (rule that[OF rpos a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover img1 img2
+                         inj1 inj2 locf1 locf2])
     qed
   qed
   qed
@@ -1081,6 +1141,8 @@ theorem saddle_form_two_arcs_cform:
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
       "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
+      "inj_on \<gamma>1 {a1..b1}" "inj_on \<gamma>2 {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}" "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
 proof -
   define f' :: "real^2 \<Rightarrow> real" where "f' = (\<lambda>x. f (sw x))"
   define a' :: "real^2 \<Rightarrow> real" where "a' = (\<lambda>x. c (sw x))"
@@ -1150,6 +1212,10 @@ proof -
       and cov: "{x. f' x = 0} \<inter> ball p' r \<subseteq> \<gamma>1' ` {a1..b1} \<union> \<gamma>2' ` {a2..b2}"
       and imgsub1: "\<gamma>1' ` {a1..b1} \<subseteq> ball p' \<rho>0"
       and imgsub2: "\<gamma>2' ` {a2..b2} \<subseteq> ball p' \<rho>0"
+      and inj1': "inj_on \<gamma>1' {a1..b1}"
+      and inj2': "inj_on \<gamma>2' {a2..b2}"
+      and loc1': "\<gamma>1' ` {a1..b1} \<subseteq> {x. f' x = 0}"
+      and loc2': "\<gamma>2' ` {a2..b2} \<subseteq> {x. f' x = 0}"
     define \<gamma>1 :: "real \<Rightarrow> real^2" where "\<gamma>1 = sw \<circ> \<gamma>1'"
     define \<gamma>2 :: "real \<Rightarrow> real^2" where "\<gamma>2 = sw \<circ> \<gamma>2'"
     have g1: "\<gamma>1 C1_differentiable_on {a1..b1}" unfolding \<gamma>1_def by (rule C1_sw_comp[OF g1C1])
@@ -1204,8 +1270,41 @@ proof -
       also have "sw p' = p" by (simp add: p'_def)
       finally show ?thesis .
     qed
+    have injf1: "inj_on \<gamma>1 {a1..b1}"
+    proof (rule inj_onI)
+      fix s t assume "s\<in>{a1..b1}" "t\<in>{a1..b1}" "\<gamma>1 s = \<gamma>1 t"
+      hence "sw (\<gamma>1' s) = sw (\<gamma>1' t)" by (simp add: \<gamma>1_def comp_def)
+      hence "\<gamma>1' s = \<gamma>1' t" by (metis sw_sw)
+      thus "s = t" using inj1' \<open>s\<in>{a1..b1}\<close> \<open>t\<in>{a1..b1}\<close> by (meson inj_onD)
+    qed
+    have injf2: "inj_on \<gamma>2 {a2..b2}"
+    proof (rule inj_onI)
+      fix s t assume "s\<in>{a2..b2}" "t\<in>{a2..b2}" "\<gamma>2 s = \<gamma>2 t"
+      hence "sw (\<gamma>2' s) = sw (\<gamma>2' t)" by (simp add: \<gamma>2_def comp_def)
+      hence "\<gamma>2' s = \<gamma>2' t" by (metis sw_sw)
+      thus "s = t" using inj2' \<open>s\<in>{a2..b2}\<close> \<open>t\<in>{a2..b2}\<close> by (meson inj_onD)
+    qed
+    have locf1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}"
+    proof
+      fix x assume "x \<in> \<gamma>1 ` {a1..b1}"
+      then obtain t where t: "t\<in>{a1..b1}" and "x = \<gamma>1 t" by blast
+      hence xe: "x = sw (\<gamma>1' t)" by (simp add: \<gamma>1_def comp_def)
+      have "\<gamma>1' t \<in> \<gamma>1' ` {a1..b1}" using t by (rule imageI)
+      hence "f' (\<gamma>1' t) = 0" using loc1' by auto
+      thus "x \<in> {x. f x = 0}" using xe by (simp add: f'_def)
+    qed
+    have locf2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
+    proof
+      fix x assume "x \<in> \<gamma>2 ` {a2..b2}"
+      then obtain t where t: "t\<in>{a2..b2}" and "x = \<gamma>2 t" by blast
+      hence xe: "x = sw (\<gamma>2' t)" by (simp add: \<gamma>2_def comp_def)
+      have "\<gamma>2' t \<in> \<gamma>2' ` {a2..b2}" using t by (rule imageI)
+      hence "f' (\<gamma>2' t) = 0" using loc2' by auto
+      thus "x \<in> {x. f x = 0}" using xe by (simp add: f'_def)
+    qed
     show ?thesis
-      by (rule that[OF rpos a1b1 a2b2 g1 g2 pin1 pin2 cover img1 img2])
+      by (rule that[OF rpos a1b1 a2b2 g1 g2 pin1 pin2 cover img1 img2
+                       injf1 injf2 locf1 locf2])
   qed
 qed
 
@@ -1220,6 +1319,8 @@ theorem saddle_form_two_arcs_purecross:
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
       "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
+      "inj_on \<gamma>1 {a1..b1}" "inj_on \<gamma>2 {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}" "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
 proof -
   \<comment> \<open>component derivatives and continuity from the C1field hypotheses\<close>
   have da: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> (a has_derivative (\<lambda>h. inner (ga x) h)) (at x)"
@@ -1572,6 +1673,8 @@ proof -
       and pgam1: "p \<in> \<gamma>1 ` {a1..b1}"
       and cover1: "{x. l1 x = 0} \<inter> ball p \<rho>1' \<subseteq> \<gamma>1 ` {a1..b1}"
       and imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>"
+      and inj1: "inj_on \<gamma>1 {a1..b1}"
+      and loc1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. l1 x = 0}"
     show ?thesis
     proof (rule level_zero_C1_arc[OF rpos l2C1 l2p gl2p])
       fix \<gamma>2 :: "real \<Rightarrow> real^2" and a2 b2 \<rho>2' :: real
@@ -1580,6 +1683,8 @@ proof -
         and pgam2: "p \<in> \<gamma>2 ` {a2..b2}"
         and cover2: "{x. l2 x = 0} \<inter> ball p \<rho>2' \<subseteq> \<gamma>2 ` {a2..b2}"
         and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
+        and inj2: "inj_on \<gamma>2 {a2..b2}"
+        and loc2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. l2 x = 0}"
       define r where "r = min \<rho> (min \<rho>1' \<rho>2')"
       have rpos': "0 < r"
         unfolding r_def using rpos rho1'pos rho2'pos by simp
@@ -1607,8 +1712,27 @@ proof -
       qed
       have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
       have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
+      have locf1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}"
+      proof
+        fix x assume xin: "x \<in> \<gamma>1 ` {a1..b1}"
+        hence l1x: "l1 x = 0" using loc1 by blast
+        from xin have "x \<in> ball p \<rho>" using imgsub1 by blast
+        hence "f x = l1 x * l2 x" by (rule feq)
+        also have "\<dots> = 0" using l1x by simp
+        finally show "x \<in> {x. f x = 0}" by simp
+      qed
+      have locf2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
+      proof
+        fix x assume xin: "x \<in> \<gamma>2 ` {a2..b2}"
+        hence l2x: "l2 x = 0" using loc2 by blast
+        from xin have "x \<in> ball p \<rho>" using imgsub2 by blast
+        hence "f x = l1 x * l2 x" by (rule feq)
+        also have "\<dots> = 0" using l2x by simp
+        finally show "x \<in> {x. f x = 0}" by simp
+      qed
       show ?thesis
-        by (rule that[OF rpos' a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover img1 img2])
+        by (rule that[OF rpos' a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover img1 img2
+                         inj1 inj2 locf1 locf2])
     qed
   qed
 qed

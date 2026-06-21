@@ -40,7 +40,7 @@ proof (rule ccontr)
   moreover have "k2^2 + s2^2 = 1" using pyth2 by (simp add: power2_eq_square)
   ultimately have "Ac^2 + Bc^2 = 0" by simp
   then have "Ac = 0 \<and> Bc = 0"
-    by (simp add: sum_power2_eq_zero_iff)
+    by (simp only: sum_power2_eq_zero_iff)
   with kdiff show False by simp
 qed
 

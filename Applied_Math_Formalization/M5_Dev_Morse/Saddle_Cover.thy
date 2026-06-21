@@ -14,6 +14,8 @@ theorem smooth3_saddle_cover:
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
       "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
+      "inj_on \<gamma>1 {a1..b1}" "inj_on \<gamma>2 {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}" "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
 proof -
   \<comment> \<open>STEP 1: flatness as a derivative.  From SMOOTH3, f has the gradient derivative at p; flat = G p = 0
       turns it into the zero functional.\<close>
@@ -74,10 +76,12 @@ proof -
           "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
           "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
         assume imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>" and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
+        assume inj1: "inj_on \<gamma>1 {a1..b1}" and inj2: "inj_on \<gamma>2 {a2..b2}"
+        assume loc1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}" and loc2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
         have ballsub: "ball p \<rho> \<subseteq> ball p \<rho>0" using \<rho>le by (rule subset_ball)
         have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
         have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
-        from A img1 img2 show thesis by (rule that)
+        from A img1 img2 inj1 inj2 loc1 loc2 show thesis by (rule that)
       qed
     next
       case False
@@ -93,10 +97,12 @@ proof -
             "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
             "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
           assume imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>" and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
+          assume inj1: "inj_on \<gamma>1 {a1..b1}" and inj2: "inj_on \<gamma>2 {a2..b2}"
+          assume loc1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}" and loc2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
           have ballsub: "ball p \<rho> \<subseteq> ball p \<rho>0" using \<rho>le by (rule subset_ball)
           have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
           have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
-          from A img1 img2 show thesis by (rule that)
+          from A img1 img2 inj1 inj2 loc1 loc2 show thesis by (rule that)
         qed
       next
         case False
@@ -114,10 +120,12 @@ proof -
             "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
             "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
           assume imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>" and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
+          assume inj1: "inj_on \<gamma>1 {a1..b1}" and inj2: "inj_on \<gamma>2 {a2..b2}"
+          assume loc1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. f x = 0}" and loc2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. f x = 0}"
           have ballsub: "ball p \<rho> \<subseteq> ball p \<rho>0" using \<rho>le by (rule subset_ball)
           have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
           have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
-          from A img1 img2 show thesis by (rule that)
+          from A img1 img2 inj1 inj2 loc1 loc2 show thesis by (rule that)
         qed
       qed
     qed

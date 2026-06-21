@@ -180,15 +180,15 @@ lemma H1_1_continuous_on:
 lemma H1_2_continuous_on:
   "continuous_on S (\<lambda>x. (H1abs Ac Bc KX KY KZ x)$2)"
   unfolding H1abs_def
-  apply (simp only: vector_2)
-  by (auto intro!: continuous_intros
+  by (simp only: vector_2, 
+      simp only: continuous_intros
         continuous_on_compose2[OF _ linear_continuous_on[OF bounded_linear_vec_nth]])
 
 lemma H2_2_continuous_on:
   "continuous_on S (\<lambda>x. (H2abs Ac Bc KX KY KZ x)$2)"
   unfolding H2abs_def
-  apply (simp only: vector_2)
-  by (auto intro!: continuous_intros
+  by (simp only: vector_2,
+      simp only: continuous_intros
         continuous_on_compose2[OF _ linear_continuous_on[OF bounded_linear_vec_nth]])
 
 (* Vector-field continuity: K11, K12, K22 *)
