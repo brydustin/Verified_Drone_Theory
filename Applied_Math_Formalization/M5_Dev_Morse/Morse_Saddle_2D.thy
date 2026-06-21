@@ -999,37 +999,575 @@ proof -
   qed
 qed
 
-subsection \<open>STUB 3 (Hadamard, foundational): C3 + first-order-flat = indefinite C1 form\<close>
+lemma C1field_sw:
+  fixes h :: "real^2 \<Rightarrow> real" and gh :: "real^2 \<Rightarrow> real^2" and p :: "real^2"
+  assumes hC1: "C1field h gh (ball p \<rho>0)"
+  shows "C1field (\<lambda>x. h (sw x)) (\<lambda>x. sw (gh (sw x))) (ball (sw p) \<rho>0)"
+  unfolding C1field_def
+proof (intro conjI ballI)
+  have hder: "(h has_derivative (\<lambda>k. inner (gh x) k)) (at x)" if "x \<in> ball p \<rho>0" for x :: "real^2"
+    using hC1 that unfolding C1field_def by blast
+  have gcont: "continuous_on (ball p \<rho>0) gh" using hC1 unfolding C1field_def by blast
+  have swmap: "sw x \<in> ball p \<rho>0" if "x \<in> ball (sw p) \<rho>0" for x :: "real^2"
+  proof -
+    have "sw x \<in> sw ` ball (sw p) \<rho>0" using that by simp
+    also have "sw ` ball (sw p) \<rho>0 = ball (sw (sw p)) \<rho>0" by (rule sw_ball)
+    also have "sw (sw p) = p" by simp
+    finally show ?thesis .
+  qed
+  fix x :: "real^2" assume x: "x \<in> ball (sw p) \<rho>0"
+  have swx: "sw x \<in> ball p \<rho>0" by (rule swmap[OF x])
+  have swd: "(sw has_derivative sw) (at x)" by (rule bounded_linear_imp_has_derivative[OF sw_bl])
+  have hd: "(h has_derivative (\<lambda>k. inner (gh (sw x)) k)) (at (sw x))" by (rule hder[OF swx])
+  have "((\<lambda>z. h (sw z)) has_derivative (\<lambda>z. inner (gh (sw x)) (sw z))) (at x)"
+    by (rule has_derivative_compose[OF swd hd])
+  moreover have "(\<lambda>z. inner (gh (sw x)) (sw z)) = (\<lambda>k. inner (sw (gh (sw x))) k)"
+    by (rule ext) (simp add: sw_inner)
+  ultimately show "((\<lambda>x. h (sw x)) has_derivative (\<lambda>k. inner (sw (gh (sw x))) k)) (at x)" by simp
+next
+  have gcont: "continuous_on (ball p \<rho>0) gh" using hC1 unfolding C1field_def by blast
+  have swmap: "sw x \<in> ball p \<rho>0" if "x \<in> ball (sw p) \<rho>0" for x :: "real^2"
+  proof -
+    have "sw x \<in> sw ` ball (sw p) \<rho>0" using that by simp
+    also have "sw ` ball (sw p) \<rho>0 = ball (sw (sw p)) \<rho>0" by (rule sw_ball)
+    also have "sw (sw p) = p" by simp
+    finally show ?thesis .
+  qed
+  show "continuous_on (ball (sw p) \<rho>0) (\<lambda>x. sw (gh (sw x)))"
+  proof (rule continuous_on_compose2[OF linear_continuous_on[OF sw_bl]
+                continuous_on_compose2[OF gcont linear_continuous_on[OF sw_bl]]])
+    show "sw ` ball (sw p) \<rho>0 \<subseteq> ball p \<rho>0" using swmap by blast
+  qed auto
+qed
 
-text \<open>Hadamard's lemma (2nd order, C1 remainder coefficients), stated precisely (was a vacuous
-  \<open>True\<close> placeholder).  Given: \<open>f\<close> C1 with gradient \<open>gf\<close>; \<open>gf\<close> C1 with derivative the symmetric
-  Hessian \<open>(h11, h12; h12, h22)\<close>; the Hessian entries C1 (so \<open>f\<close> is effectively C3); and \<open>f\<close> flat to
-  first order at \<open>p\<close> (\<open>f p = 0\<close>, \<open>gf p = 0\<close>).  Then on a ball around \<open>p\<close>, \<open>f\<close> is the quadratic form
-  with C1 coefficient fields \<open>a, b, c\<close> equal at \<open>p\<close> to half the second partials.  Coefficients are the
-  parametric integrals \<open>a x = integral {0..1} (\<lambda>t. (1 - t) * h11 (p + t *R (x - p)))\<close> (1D Taylor
-  integral remainder + \<open>leibniz_rule\<close> for the C1 dependence).  Feeds \<open>saddle_form_two_arcs\<close> since
-  \<open>(b p)^2 - a p * c p = - det (Hess f p) / 4\<close>, so indefinite iff saddle.  PROOF DEFERRED (sorry).\<close>
+subsection \<open>MAIN (c-form): same as @{thm saddle_form_two_arcs} with nondegeneracy on \<open>c\<close>\<close>
 
-lemma hadamard2:
-  fixes f :: "real^2 \<Rightarrow> real" and gf :: "real^2 \<Rightarrow> real^2"
-    and h11 h12 h22 :: "real^2 \<Rightarrow> real"
-    and gh11 gh12 gh22 :: "real^2 \<Rightarrow> real^2" and p :: "real^2"
+text \<open>Coordinate-swapped variant of @{thm saddle_form_two_arcs}: the nondegeneracy hypothesis is on
+  the \<open>c\<close> coefficient (\<open>c p \<noteq> 0\<close>) rather than on \<open>a\<close>.  Proved by applying @{thm saddle_form_two_arcs}
+  to the swapped data \<open>f \<circ> sw\<close>, \<open>a' = c \<circ> sw\<close>, \<open>b' = b \<circ> sw\<close>, \<open>c' = a \<circ> sw\<close> at \<open>sw p\<close> (the quadratic
+  form is invariant under simultaneously swapping the two coordinates and the roles of \<open>a\<close>, \<open>c\<close>),
+  then transporting the resulting arcs back through the isometry @{const sw}.\<close>
+
+theorem saddle_form_two_arcs_cform:
+  fixes f a b c :: "real^2 \<Rightarrow> real" and ga gb gc :: "real^2 \<Rightarrow> real^2" and p :: "real^2"
   assumes \<rho>0: "\<rho>0 > 0"
-    and fC1: "C1field f gf (ball p \<rho>0)"
-    and h11C1: "C1field h11 gh11 (ball p \<rho>0)"
-    and h12C1: "C1field h12 gh12 (ball p \<rho>0)"
-    and h22C1: "C1field h22 gh22 (ball p \<rho>0)"
-    and hess1: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow>
-        ((\<lambda>y. gf y $ 1) has_derivative (\<lambda>h. h11 x * h$1 + h12 x * h$2)) (at x)"
-    and hess2: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow>
-        ((\<lambda>y. gf y $ 2) has_derivative (\<lambda>h. h12 x * h$1 + h22 x * h$2)) (at x)"
-    and flat0: "f p = 0" and flat1: "gf p = 0"
-  obtains a b c :: "real^2 \<Rightarrow> real" and ga gb gc :: "real^2 \<Rightarrow> real^2" and \<rho> :: real
-    where "0 < \<rho>" "\<rho> \<le> \<rho>0"
-      "C1field a ga (ball p \<rho>)" "C1field b gb (ball p \<rho>)" "C1field c gc (ball p \<rho>)"
-      "a p = h11 p / 2" "b p = h12 p / 2" "c p = h22 p / 2"
-      "\<And>x. x \<in> ball p \<rho> \<Longrightarrow>
-          f x = a x * ((x-p)$1)\<^sup>2 + 2 * b x * ((x-p)$1) * ((x-p)$2) + c x * ((x-p)$2)\<^sup>2"
-  sorry
+    and aC1: "C1field a ga (ball p \<rho>0)" and bC1: "C1field b gb (ball p \<rho>0)"
+    and cC1: "C1field c gc (ball p \<rho>0)"
+    and c0: "c p \<noteq> 0" and indef: "(b p)\<^sup>2 - a p * c p > 0"
+    and form: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow>
+        f x = a x * ((x-p)$1)\<^sup>2 + 2 * b x * ((x-p)$1) * ((x-p)$2) + c x * ((x-p)$2)\<^sup>2"
+  obtains \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real where
+      "0 < r" "a1 \<le> b1" "a2 \<le> b2"
+      "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
+      "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
+      "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+proof -
+  define f' :: "real^2 \<Rightarrow> real" where "f' = (\<lambda>x. f (sw x))"
+  define a' :: "real^2 \<Rightarrow> real" where "a' = (\<lambda>x. c (sw x))"
+  define b' :: "real^2 \<Rightarrow> real" where "b' = (\<lambda>x. b (sw x))"
+  define c' :: "real^2 \<Rightarrow> real" where "c' = (\<lambda>x. a (sw x))"
+  define ga' :: "real^2 \<Rightarrow> real^2" where "ga' = (\<lambda>x. sw (gc (sw x)))"
+  define gb' :: "real^2 \<Rightarrow> real^2" where "gb' = (\<lambda>x. sw (gb (sw x)))"
+  define gc' :: "real^2 \<Rightarrow> real^2" where "gc' = (\<lambda>x. sw (ga (sw x)))"
+  define p' :: "real^2" where "p' = sw p"
+
+  \<comment> \<open>Swapped C1 fields, via @{thm C1field_sw}.\<close>
+  have a'C1: "C1field a' ga' (ball p' \<rho>0)"
+    unfolding a'_def ga'_def p'_def by (rule C1field_sw[OF cC1])
+  have b'C1: "C1field b' gb' (ball p' \<rho>0)"
+    unfolding b'_def gb'_def p'_def by (rule C1field_sw[OF bC1])
+  have c'C1: "C1field c' gc' (ball p' \<rho>0)"
+    unfolding c'_def gc'_def p'_def by (rule C1field_sw[OF aC1])
+
+  \<comment> \<open>Swapped nondegeneracy and discriminant.\<close>
+  have a'0: "a' p' \<noteq> 0" using c0 unfolding a'_def p'_def by simp
+  have indef': "(b' p')\<^sup>2 - a' p' * c' p' > 0"
+    using indef unfolding a'_def b'_def c'_def p'_def by (simp add: mult.commute)
+
+  \<comment> \<open>Swapped quadratic form.  For \<open>x \<in> ball p' \<rho>0\<close> we have \<open>sw x \<in> ball p \<rho>0\<close>, and the swap
+      exchanges the two coordinate differences: \<open>(sw x - p)$1 = (x - p')$2\<close>, \<open>(sw x - p)$2 = (x - p')$1\<close>.\<close>
+  have swmap: "sw x \<in> ball p \<rho>0" if "x \<in> ball p' \<rho>0" for x :: "real^2"
+  proof -
+    have "sw x \<in> sw ` ball p' \<rho>0" using that by simp
+    also have "sw ` ball p' \<rho>0 = ball (sw p') \<rho>0" by (rule sw_ball)
+    also have "sw p' = p" by (simp add: p'_def)
+    finally show ?thesis .
+  qed
+  have form': "f' x = a' x * ((x-p')$1)\<^sup>2 + 2 * b' x * ((x-p')$1) * ((x-p')$2)
+                    + c' x * ((x-p')$2)\<^sup>2"
+    if x: "x \<in> ball p' \<rho>0" for x :: "real^2"
+  proof -
+    have swx: "sw x \<in> ball p \<rho>0" by (rule swmap[OF x])
+    \<comment> \<open>The swap exchanges the two coordinate differences.\<close>
+    have d1: "(sw x - p)$1 = (x - p')$2"
+      by (simp add: p'_def vector_minus_component)
+    have d2: "(sw x - p)$2 = (x - p')$1"
+      by (simp add: p'_def vector_minus_component)
+    have "f' x = f (sw x)" unfolding f'_def ..
+    also have "\<dots> = a (sw x) * ((sw x - p)$1)\<^sup>2
+                    + 2 * b (sw x) * ((sw x - p)$1) * ((sw x - p)$2)
+                    + c (sw x) * ((sw x - p)$2)\<^sup>2"
+      using form[OF swx] .
+    also have "\<dots> = c' x * ((x-p')$2)\<^sup>2
+                    + 2 * b' x * ((x-p')$2) * ((x-p')$1)
+                    + a' x * ((x-p')$1)\<^sup>2"
+      unfolding a'_def b'_def c'_def by (simp only: d1 d2)
+    also have "\<dots> = a' x * ((x-p')$1)\<^sup>2 + 2 * b' x * ((x-p')$1) * ((x-p')$2)
+                    + c' x * ((x-p')$2)\<^sup>2"
+      by (simp add: algebra_simps)
+    finally show ?thesis .
+  qed
+
+  \<comment> \<open>Apply the proven theorem to the swapped data, then transport the arcs back through \<open>sw\<close>.\<close>
+  show ?thesis
+  proof (rule saddle_form_two_arcs[OF \<rho>0 a'C1 b'C1 c'C1 a'0 indef' form'])
+    fix \<gamma>1' \<gamma>2' :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real
+    assume rpos: "0 < r" and a1b1: "a1 \<le> b1" and a2b2: "a2 \<le> b2"
+      and g1C1: "\<gamma>1' C1_differentiable_on {a1..b1}"
+      and g2C1: "\<gamma>2' C1_differentiable_on {a2..b2}"
+      and pg1: "p' \<in> \<gamma>1' ` {a1..b1}"
+      and pg2: "p' \<in> \<gamma>2' ` {a2..b2}"
+      and cov: "{x. f' x = 0} \<inter> ball p' r \<subseteq> \<gamma>1' ` {a1..b1} \<union> \<gamma>2' ` {a2..b2}"
+    define \<gamma>1 :: "real \<Rightarrow> real^2" where "\<gamma>1 = sw \<circ> \<gamma>1'"
+    define \<gamma>2 :: "real \<Rightarrow> real^2" where "\<gamma>2 = sw \<circ> \<gamma>2'"
+    have g1: "\<gamma>1 C1_differentiable_on {a1..b1}" unfolding \<gamma>1_def by (rule C1_sw_comp[OF g1C1])
+    have g2: "\<gamma>2 C1_differentiable_on {a2..b2}" unfolding \<gamma>2_def by (rule C1_sw_comp[OF g2C1])
+    have pin1: "p \<in> \<gamma>1 ` {a1..b1}"
+    proof -
+      from pg1 obtain t where t: "t \<in> {a1..b1}" and "p' = \<gamma>1' t" by blast
+      hence "p = \<gamma>1 t" unfolding \<gamma>1_def p'_def by (simp add: comp_def) (metis sw_sw)
+      thus ?thesis using t by blast
+    qed
+    have pin2: "p \<in> \<gamma>2 ` {a2..b2}"
+    proof -
+      from pg2 obtain t where t: "t \<in> {a2..b2}" and "p' = \<gamma>2' t" by blast
+      hence "p = \<gamma>2 t" unfolding \<gamma>2_def p'_def by (simp add: comp_def) (metis sw_sw)
+      thus ?thesis using t by blast
+    qed
+    have cover: "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+    proof
+      fix x :: "real^2" assume "x \<in> {x. f x = 0} \<inter> ball p r"
+      hence fx0: "f x = 0" and xr: "x \<in> ball p r" by auto
+      have f'sw: "f' (sw x) = 0" using fx0 unfolding f'_def by simp
+      have swxb: "sw x \<in> ball p' r"
+        using xr by (simp add: p'_def dist_commute)
+      have "sw x \<in> {x. f' x = 0} \<inter> ball p' r" using f'sw swxb by simp
+      hence "sw x \<in> \<gamma>1' ` {a1..b1} \<union> \<gamma>2' ` {a2..b2}" using cov by blast
+      thus "x \<in> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+      proof
+        assume "sw x \<in> \<gamma>1' ` {a1..b1}"
+        then obtain t where t: "t \<in> {a1..b1}" and "sw x = \<gamma>1' t" by blast
+        hence "x = \<gamma>1 t" unfolding \<gamma>1_def by (simp add: comp_def) (metis sw_sw)
+        thus ?thesis using t by blast
+      next
+        assume "sw x \<in> \<gamma>2' ` {a2..b2}"
+        then obtain t where t: "t \<in> {a2..b2}" and "sw x = \<gamma>2' t" by blast
+        hence "x = \<gamma>2 t" unfolding \<gamma>2_def by (simp add: comp_def) (metis sw_sw)
+        thus ?thesis using t by blast
+      qed
+    qed
+    show ?thesis
+      by (rule that[OF rpos a1b1 a2b2 g1 g2 pin1 pin2 cover])
+  qed
+qed
+
+theorem saddle_form_two_arcs_purecross:
+  fixes f a b c :: "real^2 \<Rightarrow> real" and ga gb gc :: "real^2 \<Rightarrow> real^2" and p :: "real^2"
+  assumes \<rho>0: "\<rho>0 > 0"
+    and aC1: "C1field a ga (ball p \<rho>0)" and bC1: "C1field b gb (ball p \<rho>0)" and cC1: "C1field c gc (ball p \<rho>0)"
+    and a0: "a p = 0" and c0: "c p = 0" and b0: "b p \<noteq> 0"
+    and form: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> f x = a x * ((x-p)$1)\<^sup>2 + 2 * b x * ((x-p)$1) * ((x-p)$2) + c x * ((x-p)$2)\<^sup>2"
+  obtains \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real where
+      "0 < r" "a1 \<le> b1" "a2 \<le> b2" "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
+      "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
+      "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+proof -
+  \<comment> \<open>component derivatives and continuity from the C1field hypotheses\<close>
+  have da: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> (a has_derivative (\<lambda>h. inner (ga x) h)) (at x)"
+    and db: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> (b has_derivative (\<lambda>h. inner (gb x) h)) (at x)"
+    and dc: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> (c has_derivative (\<lambda>h. inner (gc x) h)) (at x)"
+    using aC1 bC1 cC1 unfolding C1field_def by blast+
+  have cga0: "continuous_on (ball p \<rho>0) ga" and cgb0: "continuous_on (ball p \<rho>0) gb"
+    and cgc0: "continuous_on (ball p \<rho>0) gc"
+    using aC1 bC1 cC1 unfolding C1field_def by blast+
+  have ca0: "continuous_on (ball p \<rho>0) a"
+    by (rule continuous_on_eq_continuous_at[THEN iffD2, OF open_ball, rule_format])
+       (use da in \<open>blast intro: has_derivative_continuous\<close>)
+  have cb0: "continuous_on (ball p \<rho>0) b"
+    by (rule continuous_on_eq_continuous_at[THEN iffD2, OF open_ball, rule_format])
+       (use db in \<open>blast intro: has_derivative_continuous\<close>)
+  have cc0: "continuous_on (ball p \<rho>0) c"
+    by (rule continuous_on_eq_continuous_at[THEN iffD2, OF open_ball, rule_format])
+       (use dc in \<open>blast intro: has_derivative_continuous\<close>)
+
+  define D :: "real^2 \<Rightarrow> real" where "D = (\<lambda>y. (b y)^2 - a y * c y)"
+  define gD :: "real^2 \<Rightarrow> real^2"
+    where "gD = (\<lambda>y. 2 *\<^sub>R (b y *\<^sub>R gb y) - (c y *\<^sub>R ga y + a y *\<^sub>R gc y))"
+  have Dp: "D p > 0" using a0 c0 b0 unfolding D_def by simp
+
+  \<comment> \<open>sign casework: get sg with sg*sg=1 and w p \<noteq> 0\<close>
+  define sg :: real where "sg = (if b p > 0 then 1 else -1)"
+  have sg1: "sg * sg = 1" unfolding sg_def by simp
+  have sqrtDp: "sqrt (D p) = \<bar>b p\<bar>"
+  proof -
+    have "D p = (b p)^2" using a0 c0 unfolding D_def by simp
+    thus ?thesis by (simp add: real_sqrt_abs)
+  qed
+  have wp_ne: "- b p - sg * sqrt (D p) \<noteq> 0"
+  proof (cases "b p > 0")
+    case True
+    then have "sg = 1" by (simp add: sg_def)
+    moreover have "sqrt (D p) = b p" using sqrtDp True by simp
+    ultimately show ?thesis using True by simp
+  next
+    case False
+    then have "b p < 0" using b0 by simp
+    then have "sg = -1" by (simp add: sg_def)
+    moreover have "sqrt (D p) = - b p" using sqrtDp \<open>b p < 0\<close> by simp
+    ultimately show ?thesis using \<open>b p < 0\<close> by simp
+  qed
+
+  \<comment> \<open>define w and its gradient field\<close>
+  define w :: "real^2 \<Rightarrow> real" where "w = (\<lambda>y. - b y - sg *\<^sub>R sqrt (D y))"
+  have wp_ne': "w p \<noteq> 0" using wp_ne unfolding w_def by simp
+
+  \<comment> \<open>STEP 1: pick the radius so that D>0 and w\<noteq>0 throughout\<close>
+  have cD0: "continuous_on (ball p \<rho>0) D"
+    unfolding D_def using ca0 cb0 cc0 by (intro continuous_intros)
+  have cw0: "continuous_on (ball p \<rho>0) w"
+    unfolding w_def using cb0 cD0
+    by (intro continuous_intros continuous_on_real_sqrt) auto
+  define U where "U = (ball p \<rho>0 \<inter> D -` {0<..}) \<inter> (ball p \<rho>0 \<inter> w -` (-{0::real}))"
+  have opU: "open U"
+    unfolding U_def
+    by (intro open_Int continuous_open_preimage[OF cD0 open_ball]
+              continuous_open_preimage[OF cw0 open_ball]) auto
+  have pU: "p \<in> U" unfolding U_def using \<rho>0 wp_ne' Dp by simp
+  obtain \<rho>1 where \<rho>1: "\<rho>1 > 0" "ball p \<rho>1 \<subseteq> U"
+    using opU pU open_contains_ball by metis
+  define \<rho> where "\<rho> = min \<rho>1 \<rho>0"
+  have rpos: "0 < \<rho>" using \<rho>1 \<rho>0 unfolding \<rho>_def by simp
+  have rle: "\<rho> \<le> \<rho>0" unfolding \<rho>_def by simp
+  have ballsub: "ball p \<rho> \<subseteq> ball p \<rho>0" unfolding \<rho>_def by (simp add: subset_ball)
+  have Dpos: "\<And>x. x \<in> ball p \<rho> \<Longrightarrow> D x > 0"
+    and wnz: "\<And>x. x \<in> ball p \<rho> \<Longrightarrow> w x \<noteq> 0"
+  proof -
+    fix x :: "real^2" assume "x \<in> ball p \<rho>"
+    then have "x \<in> ball p \<rho>1" unfolding \<rho>_def by auto
+    then have "x \<in> U" using \<rho>1 by auto
+    thus "D x > 0" "w x \<noteq> 0" unfolding U_def by auto
+  qed
+
+  \<comment> \<open>continuity of all pieces on the small ball\<close>
+  have ca: "continuous_on (ball p \<rho>) a" using ca0 ballsub by (rule continuous_on_subset)
+  have cb: "continuous_on (ball p \<rho>) b" using cb0 ballsub by (rule continuous_on_subset)
+  have cc: "continuous_on (ball p \<rho>) c" using cc0 ballsub by (rule continuous_on_subset)
+  have cga: "continuous_on (ball p \<rho>) ga" using cga0 ballsub by (rule continuous_on_subset)
+  have cgb: "continuous_on (ball p \<rho>) gb" using cgb0 ballsub by (rule continuous_on_subset)
+  have cgc: "continuous_on (ball p \<rho>) gc" using cgc0 ballsub by (rule continuous_on_subset)
+  have cD: "continuous_on (ball p \<rho>) D"
+    unfolding D_def using ca cb cc by (intro continuous_intros)
+  have cw: "continuous_on (ball p \<rho>) w" using cw0 ballsub by (rule continuous_on_subset)
+  have csqrtD: "continuous_on (ball p \<rho>) (\<lambda>y. sqrt (D y))"
+    using cD by (rule continuous_on_real_sqrt)
+  have sqrtnz: "\<And>x. x \<in> ball p \<rho> \<Longrightarrow> sqrt (D x) \<noteq> 0"
+  proof -
+    fix x :: "real^2" assume "x \<in> ball p \<rho>"
+    then have "D x > 0" by (rule Dpos)
+    thus "sqrt (D x) \<noteq> 0" by simp
+  qed
+  have cgD: "continuous_on (ball p \<rho>) gD"
+    unfolding gD_def using ca cb cc cga cgb cgc by (intro continuous_intros)
+  have cinv: "continuous_on (ball p \<rho>) (\<lambda>y. inverse (sqrt (D y)) / 2)"
+    using csqrtD sqrtnz cD by (intro continuous_intros) auto
+
+  \<comment> \<open>derivative of sqrt(D), valid on the small ball (mirrors factor_indef_C1)\<close>
+  have dsqrt: "\<And>x. x \<in> ball p \<rho> \<Longrightarrow>
+      ((\<lambda>y. sqrt (D y)) has_derivative (\<lambda>h. inner ((inverse (sqrt (D x)) / 2) *\<^sub>R gD x) h)) (at x)"
+  proof -
+    fix x :: "real^2" assume xin: "x \<in> ball p \<rho>"
+    then have xin0: "x \<in> ball p \<rho>0" using ballsub by blast
+    have dD: "(D has_derivative (\<lambda>h. inner (gD x) h)) (at x)"
+      unfolding D_def gD_def
+      apply (rule has_derivative_eq_rhs)
+       apply (rule derivative_intros da[OF xin0] db[OF xin0] dc[OF xin0])+
+      apply (rule ext)
+      apply (simp add: inner_diff_left inner_add_left inner_scaleR_left power2_eq_square algebra_simps)
+      done
+    show "((\<lambda>y. sqrt (D y)) has_derivative (\<lambda>h. inner ((inverse (sqrt (D x)) / 2) *\<^sub>R gD x) h)) (at x)"
+      apply (rule has_derivative_eq_rhs)
+       apply (rule has_derivative_real_sqrt[OF Dpos[OF xin] dD])
+      apply (rule ext)
+      apply (simp add: inner_scaleR_left)
+      done
+  qed
+
+  \<comment> \<open>gradient field of w = -b - sg*sqrt(D)\<close>
+  define gw :: "real^2 \<Rightarrow> real^2"
+    where "gw = (\<lambda>y. - gb y - sg *\<^sub>R ((inverse (sqrt (D y)) / 2) *\<^sub>R gD y))"
+  have dw: "\<And>x. x \<in> ball p \<rho> \<Longrightarrow> (w has_derivative (\<lambda>h. inner (gw x) h)) (at x)"
+  proof -
+    fix x :: "real^2" assume xin: "x \<in> ball p \<rho>"
+    then have xin0: "x \<in> ball p \<rho>0" using ballsub by blast
+    show "(w has_derivative (\<lambda>h. inner (gw x) h)) (at x)"
+      unfolding w_def gw_def
+      apply (rule has_derivative_eq_rhs)
+       apply (rule has_derivative_diff has_derivative_minus db[OF xin0]
+                   has_derivative_scaleR_right dsqrt[OF xin])+
+      apply (rule ext)
+      apply (simp add: inner_diff_left inner_minus_left inner_scaleR_left)
+      done
+  qed
+  have cgw: "continuous_on (ball p \<rho>) gw"
+    unfolding gw_def using cgb cinv cgD
+    by (intro continuous_on_diff continuous_on_minus continuous_on_scaleR continuous_on_const)
+
+  \<comment> \<open>r1 = c / w and its gradient (mirror grp in factor_indef_C1: num=c, den=w)\<close>
+  define r1 :: "real^2 \<Rightarrow> real" where "r1 = (\<lambda>y. c y / w y)"
+  define gr1 :: "real^2 \<Rightarrow> real^2"
+    where "gr1 = (\<lambda>y. (w y / (w y * w y)) *\<^sub>R gc y - (c y / (w y * w y)) *\<^sub>R gw y)"
+  have r1C1: "C1field r1 gr1 (ball p \<rho>)"
+    unfolding C1field_def
+  proof (intro conjI ballI)
+    fix x :: "real^2" assume xin: "x \<in> ball p \<rho>"
+    have dq: "(r1 has_derivative
+        (\<lambda>h. (inner (gc x) h * w x - c x * inner (gw x) h) / (w x * w x))) (at x)"
+      unfolding r1_def by (rule has_derivative_divide'[OF dc[OF ballsub[THEN subsetD, OF xin]] dw[OF xin] wnz[OF xin]])
+    have match: "(\<lambda>h. (inner (gc x) h * w x - c x * inner (gw x) h) / (w x * w x))
+               = (\<lambda>h. inner (gr1 x) h)"
+      unfolding gr1_def
+      by (rule ext) (simp add: inner_diff_left inner_scaleR_left field_simps)
+    show "(r1 has_derivative (\<lambda>h. inner (gr1 x) h)) (at x)" using dq unfolding match .
+  next
+    have cden: "continuous_on (ball p \<rho>) (\<lambda>y. w y / (w y * w y))"
+      using cw wnz by (intro continuous_intros) auto
+    have cnum: "continuous_on (ball p \<rho>) (\<lambda>y. c y / (w y * w y))"
+      using cc cw wnz by (intro continuous_intros) auto
+    show "continuous_on (ball p \<rho>) gr1"
+      unfolding gr1_def using cden cgc cnum cgw
+      by (intro continuous_on_diff continuous_on_scaleR)
+  qed
+  have r1p: "r1 p = 0"
+    unfolding r1_def using c0 wp_ne' by simp
+
+  \<comment> \<open>FACTOR 1: l1 = (x-p)$1 - r1 x * (x-p)$2  (mirrors lp in saddle_form_two_arcs)\<close>
+  define l1 :: "real^2 \<Rightarrow> real" where "l1 = (\<lambda>x. (x-p)$1 - r1 x * ((x-p)$2))"
+  define gl1 :: "real^2 \<Rightarrow> real^2"
+    where "gl1 = (\<lambda>x. axis 1 1 - ((x-p)$2) *\<^sub>R gr1 x - r1 x *\<^sub>R axis 2 1)"
+  have l1C1: "C1field l1 gl1 (ball p \<rho>)"
+    unfolding C1field_def
+  proof (intro conjI ballI)
+    fix x :: "real^2" assume xin: "x \<in> ball p \<rho>"
+    have dr1: "(r1 has_derivative (\<lambda>h. inner (gr1 x) h)) (at x)"
+      using r1C1 xin unfolding C1field_def by blast
+    have "(l1 has_derivative
+        (\<lambda>h. h$1 - (inner (gr1 x) h * ((x-p)$2) + r1 x * (h$2)))) (at x)"
+      unfolding l1_def
+      apply (rule has_derivative_eq_rhs)
+       apply (rule derivative_eq_intros dr1
+                bounded_linear.has_derivative[OF bounded_linear_vec_nth])+
+          apply (auto intro!: derivative_eq_intros dr1
+                bounded_linear.has_derivative[OF bounded_linear_vec_nth])
+      done
+    moreover have "(\<lambda>h::real^2. h$1 - (inner (gr1 x) h * ((x-p)$2) + r1 x * (h$2)))
+                 = (\<lambda>h. inner (gl1 x) h)"
+      unfolding gl1_def
+      by (rule ext)
+         (simp add: inner_diff_left inner_scaleR_left inner_axis' algebra_simps)
+    ultimately show "(l1 has_derivative (\<lambda>h. inner (gl1 x) h)) (at x)" by simp
+  next
+    have cr1: "continuous_on (ball p \<rho>) r1"
+      by (rule continuous_on_eq_continuous_at[THEN iffD2, OF open_ball, rule_format])
+         (use r1C1[unfolded C1field_def] in \<open>blast intro: has_derivative_continuous\<close>)
+    have cgr1: "continuous_on (ball p \<rho>) gr1"
+      using r1C1 unfolding C1field_def by blast
+    show "continuous_on (ball p \<rho>) gl1"
+      unfolding gl1_def using cr1 cgr1 by (intro continuous_intros) auto
+  qed
+  have l1p: "l1 p = 0" unfolding l1_def by simp
+  have gl1p1: "(gl1 p) $ 1 = 1"
+    unfolding gl1_def by (simp add: vector_component_simps axis_def)
+  have gl1p: "gl1 p \<noteq> 0"
+  proof
+    assume "gl1 p = 0"
+    then have "(gl1 p) $ 1 = 0" by simp
+    with gl1p1 show False by simp
+  qed
+
+  \<comment> \<open>FACTOR 2: l2 = a x * (x-p)$1 + (a x * r1 x + 2 * b x) * (x-p)$2\<close>
+  define m :: "real^2 \<Rightarrow> real" where "m = (\<lambda>x. a x * r1 x + 2 * b x)"
+  define gm :: "real^2 \<Rightarrow> real^2"
+    where "gm = (\<lambda>x. r1 x *\<^sub>R ga x + a x *\<^sub>R gr1 x + 2 *\<^sub>R gb x)"
+  define l2 :: "real^2 \<Rightarrow> real" where "l2 = (\<lambda>x. a x * ((x-p)$1) + m x * ((x-p)$2))"
+  define gl2 :: "real^2 \<Rightarrow> real^2"
+    where "gl2 = (\<lambda>x. ((x-p)$1) *\<^sub>R ga x + a x *\<^sub>R axis 1 1
+                      + ((x-p)$2) *\<^sub>R gm x + m x *\<^sub>R axis 2 1)"
+  have dm: "\<And>x. x \<in> ball p \<rho> \<Longrightarrow> (m has_derivative (\<lambda>h. inner (gm x) h)) (at x)"
+  proof -
+    fix x :: "real^2" assume xin: "x \<in> ball p \<rho>"
+    then have xin0: "x \<in> ball p \<rho>0" using ballsub by blast
+    have dr1: "(r1 has_derivative (\<lambda>h. inner (gr1 x) h)) (at x)"
+      using r1C1 xin unfolding C1field_def by blast
+    show "(m has_derivative (\<lambda>h. inner (gm x) h)) (at x)"
+      unfolding m_def gm_def
+      apply (rule has_derivative_eq_rhs)
+       apply (rule has_derivative_add has_derivative_mult da[OF xin0] dr1
+                   has_derivative_scaleR_right db[OF xin0] has_derivative_const)+
+      apply (rule ext)
+      apply (simp add: inner_add_left inner_scaleR_left algebra_simps)
+      done
+  qed
+  have cm: "continuous_on (ball p \<rho>) m"
+    by (rule continuous_on_eq_continuous_at[THEN iffD2, OF open_ball, rule_format])
+       (use dm in \<open>blast intro: has_derivative_continuous\<close>)
+  have cgm: "continuous_on (ball p \<rho>) gm"
+  proof -
+    have cr1: "continuous_on (ball p \<rho>) r1"
+      by (rule continuous_on_eq_continuous_at[THEN iffD2, OF open_ball, rule_format])
+         (use r1C1[unfolded C1field_def] in \<open>blast intro: has_derivative_continuous\<close>)
+    have cgr1: "continuous_on (ball p \<rho>) gr1" using r1C1 unfolding C1field_def by blast
+    show ?thesis
+      unfolding gm_def using cr1 cga ca cgr1 cgb
+      by (intro continuous_on_add continuous_on_scaleR continuous_on_const)
+  qed
+  have l2C1: "C1field l2 gl2 (ball p \<rho>)"
+    unfolding C1field_def
+  proof (intro conjI ballI)
+    fix x :: "real^2" assume xin: "x \<in> ball p \<rho>"
+    then have xin0: "x \<in> ball p \<rho>0" using ballsub by blast
+    have "(l2 has_derivative
+        (\<lambda>h. (inner (ga x) h * ((x-p)$1) + a x * (h$1))
+           + (inner (gm x) h * ((x-p)$2) + m x * (h$2)))) (at x)"
+      unfolding l2_def
+      apply (rule has_derivative_eq_rhs)
+       apply (rule derivative_eq_intros da[OF xin0] dm[OF xin]
+                bounded_linear.has_derivative[OF bounded_linear_vec_nth])+
+            apply (auto intro!: derivative_eq_intros da[OF xin0] dm[OF xin]
+                bounded_linear.has_derivative[OF bounded_linear_vec_nth])
+      done
+    moreover have "(\<lambda>h::real^2. (inner (ga x) h * ((x-p)$1) + a x * (h$1))
+           + (inner (gm x) h * ((x-p)$2) + m x * (h$2)))
+                 = (\<lambda>h. inner (gl2 x) h)"
+      unfolding gl2_def
+      by (rule ext)
+         (simp add: inner_add_left inner_scaleR_left inner_axis' algebra_simps)
+    ultimately show "(l2 has_derivative (\<lambda>h. inner (gl2 x) h)) (at x)" by simp
+  next
+    show "continuous_on (ball p \<rho>) gl2"
+      unfolding gl2_def using ca cga cm cgm
+      by (intro continuous_intros) auto
+  qed
+  have l2p: "l2 p = 0" unfolding l2_def by simp
+  have gl2p2: "(gl2 p) $ 2 = 2 * b p"
+  proof -
+    have "m p = 2 * b p" unfolding m_def using a0 by simp
+    thus ?thesis
+      unfolding gl2_def by (simp add: vector_component_simps axis_def)
+  qed
+  have gl2p: "gl2 p \<noteq> 0"
+  proof
+    assume "gl2 p = 0"
+    then have "(gl2 p) $ 2 = 0" by simp
+    with gl2p2 b0 show False by simp
+  qed
+
+  \<comment> \<open>the product factorization a Y1^2 + 2 b Y1 Y2 + c Y2^2 = (Y1 - r1 Y2)(a Y1 + (a r1 + 2 b) Y2)\<close>
+  have factor: "\<And>x Y1 Y2. x \<in> ball p \<rho> \<Longrightarrow>
+      a x * Y1\<^sup>2 + 2 * b x * Y1 * Y2 + c x * Y2\<^sup>2
+        = (Y1 - r1 x * Y2) * (a x * Y1 + (a x * r1 x + 2 * b x) * Y2)"
+  proof -
+    fix x :: "real^2" and Y1 Y2 :: real assume xin: "x \<in> ball p \<rho>"
+    define s where "s = sqrt (D x)"
+    have ssx: "s * s = (b x)*(b x) - a x * c x"
+      using Dpos[OF xin] unfolding s_def D_def
+      by (simp add: power2_eq_square[symmetric])
+    have wxnz: "w x \<noteq> 0" by (rule wnz[OF xin])
+    have wxval: "w x = - b x - sg * s" unfolding w_def s_def by simp
+    \<comment> \<open>r1 x = c x / w x is a root of a*l^2 + 2b*l + c\<close>
+    have root: "a x * (r1 x)^2 + 2 * b x * (r1 x) + c x = 0"
+    proof -
+      have key: "a x * c x + 2 * b x * w x + w x * w x = 0"
+        unfolding wxval using ssx sg1 by (simp add: algebra_simps power2_eq_square)
+      have "a x * (c x / w x)^2 + 2 * b x * (c x / w x) + c x
+          = (a x * c x * c x + 2 * b x * c x * w x + c x * (w x * w x)) / (w x * w x)"
+        using wxnz by (simp add: power2_eq_square field_simps)
+      also have "\<dots> = (c x * (a x * c x + 2 * b x * w x + w x * w x)) / (w x * w x)"
+        by (simp add: algebra_simps)
+      also have "\<dots> = 0" using key by simp
+      finally show ?thesis unfolding r1_def .
+    qed
+    have "(Y1 - r1 x * Y2) * (a x * Y1 + (a x * r1 x + 2 * b x) * Y2)
+        = a x * Y1^2 + 2 * b x * Y1 * Y2 - (a x * (r1 x)^2 + 2 * b x * (r1 x)) * Y2^2"
+      by (simp add: power2_eq_square algebra_simps)
+    also have "\<dots> = a x * Y1^2 + 2 * b x * Y1 * Y2 + c x * Y2^2"
+    proof -
+      have "a x * (r1 x)^2 + 2 * b x * (r1 x) = - c x" using root by algebra
+      hence "(a x * (r1 x)^2 + 2 * b x * (r1 x)) * Y2^2 = (- c x) * Y2^2" by simp
+      thus ?thesis by simp
+    qed
+    finally show "a x * Y1\<^sup>2 + 2 * b x * Y1 * Y2 + c x * Y2\<^sup>2
+        = (Y1 - r1 x * Y2) * (a x * Y1 + (a x * r1 x + 2 * b x) * Y2)" by simp
+  qed
+
+  \<comment> \<open>f x = l1 x * l2 x on ball p \<rho>\<close>
+  have feq: "\<And>x. x \<in> ball p \<rho> \<Longrightarrow> f x = l1 x * l2 x"
+  proof -
+    fix x :: "real^2" assume xin: "x \<in> ball p \<rho>"
+    then have xin0: "x \<in> ball p \<rho>0" using rle by (auto simp: subset_ball)
+    have "f x = a x * ((x-p)$1)\<^sup>2 + 2 * b x * ((x-p)$1) * ((x-p)$2) + c x * ((x-p)$2)\<^sup>2"
+      using form[OF xin0] .
+    also have "\<dots> = ((x-p)$1 - r1 x * ((x-p)$2))
+                    * (a x * ((x-p)$1) + (a x * r1 x + 2 * b x) * ((x-p)$2))"
+      using factor[OF xin] .
+    also have "\<dots> = l1 x * l2 x"
+      unfolding l1_def l2_def m_def by (simp add: algebra_simps)
+    finally show "f x = l1 x * l2 x" .
+  qed
+
+  \<comment> \<open>assembly: apply level_zero_C1_arc to each factor (mirrors saddle_form_two_arcs)\<close>
+  show ?thesis
+  proof (rule level_zero_C1_arc[OF rpos l1C1 l1p gl1p])
+    fix \<gamma>1 :: "real \<Rightarrow> real^2" and a1 b1 \<rho>1' :: real
+    assume a1b1: "a1 \<le> b1" and rho1'pos: "0 < \<rho>1'"
+      and gam1C1: "\<gamma>1 C1_differentiable_on {a1..b1}"
+      and pgam1: "p \<in> \<gamma>1 ` {a1..b1}"
+      and cover1: "{x. l1 x = 0} \<inter> ball p \<rho>1' \<subseteq> \<gamma>1 ` {a1..b1}"
+    show ?thesis
+    proof (rule level_zero_C1_arc[OF rpos l2C1 l2p gl2p])
+      fix \<gamma>2 :: "real \<Rightarrow> real^2" and a2 b2 \<rho>2' :: real
+      assume a2b2: "a2 \<le> b2" and rho2'pos: "0 < \<rho>2'"
+        and gam2C1: "\<gamma>2 C1_differentiable_on {a2..b2}"
+        and pgam2: "p \<in> \<gamma>2 ` {a2..b2}"
+        and cover2: "{x. l2 x = 0} \<inter> ball p \<rho>2' \<subseteq> \<gamma>2 ` {a2..b2}"
+      define r where "r = min \<rho> (min \<rho>1' \<rho>2')"
+      have rpos': "0 < r"
+        unfolding r_def using rpos rho1'pos rho2'pos by simp
+      have cover: "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+      proof
+        fix x :: "real^2" assume "x \<in> {x. f x = 0} \<inter> ball p r"
+        then have fx0: "f x = 0" and xr: "x \<in> ball p r" by auto
+        have x1: "x \<in> ball p \<rho>" using xr unfolding r_def by (auto simp: subset_ball)
+        have x1': "x \<in> ball p \<rho>1'" using xr unfolding r_def by (auto simp: subset_ball)
+        have x2': "x \<in> ball p \<rho>2'" using xr unfolding r_def by (auto simp: subset_ball)
+        have "l1 x * l2 x = 0" using feq[OF x1] fx0 by simp
+        then have "l1 x = 0 \<or> l2 x = 0" by simp
+        thus "x \<in> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+        proof
+          assume "l1 x = 0"
+          then have "x \<in> {x. l1 x = 0} \<inter> ball p \<rho>1'" using x1' by simp
+          then have "x \<in> \<gamma>1 ` {a1..b1}" using cover1 by blast
+          thus ?thesis by blast
+        next
+          assume "l2 x = 0"
+          then have "x \<in> {x. l2 x = 0} \<inter> ball p \<rho>2'" using x2' by simp
+          then have "x \<in> \<gamma>2 ` {a2..b2}" using cover2 by blast
+          thus ?thesis by blast
+        qed
+      qed
+      show ?thesis
+        by (rule that[OF rpos' a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover])
+    qed
+  qed
+qed
 
 end
