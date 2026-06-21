@@ -265,4 +265,203 @@ proof -
   show ?thesis using finP eqP c1P by blast
 qed
 
+text \<open>DELIVERABLE 1: superlevel companion of @{thm C1_arc_clip_halfplane}.\<close>
+lemma C1_arc_clip_halfplane_ge:
+  fixes \<gamma> :: "real \<Rightarrow> real^2" and a b c :: real and i :: "2"
+  assumes c1: "\<gamma> C1_differentiable_on {a..b}"
+      and fin: "finite {s \<in> {a..b}. (\<gamma> s)$i = c}"
+  shows "\<exists>P::(real\<times>real) set. finite P \<and>
+           {s \<in> {a..b}. (\<gamma> s)$i \<ge> c} = (\<Union>(lo,hi)\<in>P. {lo..hi}) \<and>
+           (\<forall>(lo,hi)\<in>P. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi})"
+proof -
+  have cg: "continuous_on {a..b} \<gamma>"
+    using C1_differentiable_imp_continuous_on[OF c1] .
+  have cont_i: "continuous_on {a..b} (\<lambda>s. (\<gamma> s)$i)"
+  proof -
+    have "continuous_on {a..b} ((\<lambda>x. x$i) \<circ> \<gamma>)"
+      by (rule continuous_on_compose[OF cg linear_continuous_on[OF bounded_linear_vec_nth]])
+    thus ?thesis by (simp add: o_def)
+  qed
+  have cont: "continuous_on {a..b} (\<lambda>s. - ((\<gamma> s)$i))"
+    using continuous_on_minus[OF cont_i] .
+  have fin': "finite {s \<in> {a..b}. - ((\<gamma> s)$i) = - c}"
+  proof -
+    have "{s \<in> {a..b}. - ((\<gamma> s)$i) = - c} = {s \<in> {a..b}. (\<gamma> s)$i = c}" by auto
+    thus ?thesis using fin by simp
+  qed
+  obtain P :: "(real\<times>real) set" where
+    finP: "finite P" and
+    eqP: "{s \<in> {a..b}. - ((\<gamma> s)$i) \<le> - c} = (\<Union>(lo,hi)\<in>P. {lo..hi})" and
+    boundsP: "\<forall>(lo,hi)\<in>P. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b"
+    using finite_sublevel_as_interval_union[OF cont fin'] by blast
+  have eqset: "{s \<in> {a..b}. (\<gamma> s)$i \<ge> c} = {s \<in> {a..b}. - ((\<gamma> s)$i) \<le> - c}" by auto
+  have eqP': "{s \<in> {a..b}. (\<gamma> s)$i \<ge> c} = (\<Union>(lo,hi)\<in>P. {lo..hi})"
+    using eqset eqP by simp
+  have c1P: "\<forall>(lo,hi)\<in>P. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+  proof (clarify)
+    fix lo hi assume "(lo,hi) \<in> P"
+    with boundsP have bd: "a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b" by blast
+    then have "{lo..hi} \<subseteq> {a..b}" by auto
+    then have "\<gamma> C1_differentiable_on {lo..hi}"
+      using C1_differentiable_on_subset[OF c1] by blast
+    with bd show "a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}" by simp
+  qed
+  show ?thesis using finP eqP' c1P by blast
+qed
+
+text \<open>HELPER: intersection of two finite interval-unions (cells in @{term "{a..b}"}, nondegenerate,
+  carrying C1) is again a finite interval-union with the same properties.\<close>
+lemma inter_interval_union:
+  fixes a b :: real and \<gamma> :: "real \<Rightarrow> real^2"
+  assumes finP: "finite P" and finQ: "finite Q"
+      and bP: "\<forall>(lo,hi)\<in>P. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+      and bQ: "\<forall>(lo,hi)\<in>Q. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+  shows "\<exists>R::(real\<times>real) set. finite R \<and>
+           (\<Union>(lo,hi)\<in>P. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>Q. {lo..hi}) = (\<Union>(lo,hi)\<in>R. {lo..hi}) \<and>
+           (\<forall>(lo,hi)\<in>R. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi})"
+proof -
+  define R0 where "R0 = (\<lambda>((lo,hi),(lo',hi')). (max lo lo', min hi hi')) ` (P \<times> Q)"
+  define R where "R = {(lo,hi)\<in>R0. lo \<le> hi}"
+  have finR0: "finite R0" unfolding R0_def using finP finQ by simp
+  have Rsub: "R \<subseteq> R0" unfolding R_def by auto
+  have finR: "finite R" using finR0 Rsub by (rule finite_subset[rotated])
+  have raw: "(\<Union>(lo,hi)\<in>P. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>Q. {lo..hi}) = (\<Union>(lo,hi)\<in>R0. {lo..hi})"
+  proof
+    show "(\<Union>(lo,hi)\<in>P. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>Q. {lo..hi}) \<subseteq> (\<Union>(lo,hi)\<in>R0. {lo..hi})"
+    proof (clarify)
+      fix t lo hi lo' hi'
+      assume "(lo,hi) \<in> P" "t \<in> {lo..hi}" "(lo',hi') \<in> Q" "t \<in> {lo'..hi'}"
+      then have "t \<in> {max lo lo' .. min hi hi'}" by simp
+      moreover have "(max lo lo', min hi hi') \<in> R0"
+        unfolding R0_def using \<open>(lo,hi)\<in>P\<close> \<open>(lo',hi')\<in>Q\<close> by force
+      ultimately show "t \<in> (\<Union>(lo,hi)\<in>R0. {lo..hi})" by blast
+    qed
+  next
+    show "(\<Union>(lo,hi)\<in>R0. {lo..hi}) \<subseteq> (\<Union>(lo,hi)\<in>P. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>Q. {lo..hi})"
+    proof (clarify)
+      fix t lo hi assume "(lo,hi) \<in> R0" "t \<in> {lo..hi}"
+      then obtain p q where pq: "p \<in> P" "q \<in> Q" and
+        eq: "(lo,hi) = (case (p,q) of ((lo,hi),(lo',hi')) \<Rightarrow> (max lo lo', min hi hi'))"
+        unfolding R0_def by auto
+      obtain pl ph where p: "p = (pl,ph)" by (cases p)
+      obtain ql qh where q: "q = (ql,qh)" by (cases q)
+      from eq p q have loeq: "lo = max pl ql" and hieq: "hi = min ph qh" by auto
+      from \<open>t \<in> {lo..hi}\<close> loeq hieq have "t \<in> {pl..ph}" "t \<in> {ql..qh}" by auto
+      moreover have "(pl,ph) \<in> P" using pq p by simp
+      moreover have "(ql,qh) \<in> Q" using pq q by simp
+      ultimately show "t \<in> (\<Union>(lo,hi)\<in>P. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>Q. {lo..hi})" by blast
+    qed
+  qed
+  have drop: "(\<Union>(lo,hi)\<in>R0. {lo..hi}) = (\<Union>(lo,hi)\<in>R. {lo..hi})"
+  proof
+    show "(\<Union>(lo,hi)\<in>R0. {lo..hi}) \<subseteq> (\<Union>(lo,hi)\<in>R. {lo..hi})"
+    proof (clarify)
+      fix t lo hi assume "(lo,hi) \<in> R0" "t \<in> {lo..hi}"
+      then have "lo \<le> hi" by simp
+      with \<open>(lo,hi) \<in> R0\<close> have "(lo,hi) \<in> R" unfolding R_def by simp
+      thus "t \<in> (\<Union>(lo,hi)\<in>R. {lo..hi})" using \<open>t \<in> {lo..hi}\<close> by blast
+    qed
+  next
+    show "(\<Union>(lo,hi)\<in>R. {lo..hi}) \<subseteq> (\<Union>(lo,hi)\<in>R0. {lo..hi})"
+      unfolding R_def by blast
+  qed
+  have eqR: "(\<Union>(lo,hi)\<in>P. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>Q. {lo..hi}) = (\<Union>(lo,hi)\<in>R. {lo..hi})"
+    using raw drop by simp
+  have boundsR: "\<forall>(lo,hi)\<in>R. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+  proof (clarify)
+    fix lo hi assume "(lo,hi) \<in> R"
+    then have inR0: "(lo,hi) \<in> R0" and lohi: "lo \<le> hi" unfolding R_def by auto
+    from inR0 obtain p q where pq: "p \<in> P" "q \<in> Q" and
+      eq: "(lo,hi) = (case (p,q) of ((lo,hi),(lo',hi')) \<Rightarrow> (max lo lo', min hi hi'))"
+      unfolding R0_def by auto
+    obtain pl ph where p: "p = (pl,ph)" by (cases p)
+    obtain ql qh where q: "q = (ql,qh)" by (cases q)
+    from eq p q have loeq: "lo = max pl ql" and hieq: "hi = min ph qh" by auto
+    have Pp: "a \<le> pl \<and> pl \<le> ph \<and> ph \<le> b \<and> \<gamma> C1_differentiable_on {pl..ph}"
+      using bP pq p by blast
+    have Qq: "a \<le> ql \<and> ql \<le> qh \<and> qh \<le> b \<and> \<gamma> C1_differentiable_on {ql..qh}"
+      using bQ pq q by blast
+    have alo: "a \<le> lo" using loeq Pp Qq by (simp add: le_max_iff_disj)
+    have hib: "hi \<le> b" using hieq Pp Qq by (simp add: min_le_iff_disj)
+    have "{lo..hi} \<subseteq> {pl..ph}" using loeq hieq by simp
+    then have c1cell: "\<gamma> C1_differentiable_on {lo..hi}"
+      using C1_differentiable_on_subset Pp by blast
+    show "a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+      using alo lohi hib c1cell by simp
+  qed
+  show ?thesis using finR eqR boundsR by blast
+qed
+
+text \<open>DELIVERABLE 2: clipping a C1 plane arc by a closed box @{term "cbox u v"}.\<close>
+lemma arc_inter_cbox_finite_subarcs:
+  fixes \<gamma> :: "real \<Rightarrow> real^2" and a b :: real and u v :: "real^2"
+  assumes c1: "\<gamma> C1_differentiable_on {a..b}"
+      and f1l: "finite {s \<in> {a..b}. (\<gamma> s)$1 = u$1}" and f1h: "finite {s \<in> {a..b}. (\<gamma> s)$1 = v$1}"
+      and f2l: "finite {s \<in> {a..b}. (\<gamma> s)$2 = u$2}" and f2h: "finite {s \<in> {a..b}. (\<gamma> s)$2 = v$2}"
+  shows "\<exists>P::(real\<times>real) set. finite P \<and>
+           {s \<in> {a..b}. \<gamma> s \<in> cbox u v} = (\<Union>(lo,hi)\<in>P. {lo..hi}) \<and>
+           (\<forall>(lo,hi)\<in>P. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi})"
+proof -
+  \<comment> \<open>The box membership decomposes into the four coordinate half-plane conditions.\<close>
+  have memdec: "\<And>s. (\<gamma> s \<in> cbox u v) \<longleftrightarrow>
+      ((\<gamma> s)$1 \<ge> u$1 \<and> (\<gamma> s)$1 \<le> v$1 \<and> (\<gamma> s)$2 \<ge> u$2 \<and> (\<gamma> s)$2 \<le> v$2)"
+  proof -
+    fix s
+    have "(\<gamma> s \<in> cbox u v) \<longleftrightarrow> (\<forall>i. u$i \<le> (\<gamma> s)$i \<and> (\<gamma> s)$i \<le> v$i)"
+      by (rule mem_box_cart)
+    also have "\<dots> \<longleftrightarrow> ((\<gamma> s)$1 \<ge> u$1 \<and> (\<gamma> s)$1 \<le> v$1 \<and> (\<gamma> s)$2 \<ge> u$2 \<and> (\<gamma> s)$2 \<le> v$2)"
+      by (metis (full_types) exhaust_2)
+    finally show "(\<gamma> s \<in> cbox u v) \<longleftrightarrow>
+        ((\<gamma> s)$1 \<ge> u$1 \<and> (\<gamma> s)$1 \<le> v$1 \<and> (\<gamma> s)$2 \<ge> u$2 \<and> (\<gamma> s)$2 \<le> v$2)" .
+  qed
+  \<comment> \<open>The clipped parameter set is the intersection of the four half-plane factors.\<close>
+  have setdec: "{s \<in> {a..b}. \<gamma> s \<in> cbox u v} =
+      {s \<in> {a..b}. (\<gamma> s)$1 \<ge> u$1} \<inter> {s \<in> {a..b}. (\<gamma> s)$1 \<le> v$1} \<inter>
+      {s \<in> {a..b}. (\<gamma> s)$2 \<ge> u$2} \<inter> {s \<in> {a..b}. (\<gamma> s)$2 \<le> v$2}"
+    using memdec by blast
+  \<comment> \<open>Each factor is a finite interval-union carrying C1.\<close>
+  obtain A where finA: "finite A" and
+    eqA: "{s \<in> {a..b}. (\<gamma> s)$1 \<ge> u$1} = (\<Union>(lo,hi)\<in>A. {lo..hi})" and
+    bA: "\<forall>(lo,hi)\<in>A. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+    using C1_arc_clip_halfplane_ge[OF c1 f1l] by blast
+  obtain B where finB: "finite B" and
+    eqB: "{s \<in> {a..b}. (\<gamma> s)$1 \<le> v$1} = (\<Union>(lo,hi)\<in>B. {lo..hi})" and
+    bB: "\<forall>(lo,hi)\<in>B. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+    using C1_arc_clip_halfplane[OF c1 f1h] by blast
+  obtain C where finC: "finite C" and
+    eqC: "{s \<in> {a..b}. (\<gamma> s)$2 \<ge> u$2} = (\<Union>(lo,hi)\<in>C. {lo..hi})" and
+    bC: "\<forall>(lo,hi)\<in>C. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+    using C1_arc_clip_halfplane_ge[OF c1 f2l] by blast
+  obtain D where finD: "finite D" and
+    eqD: "{s \<in> {a..b}. (\<gamma> s)$2 \<le> v$2} = (\<Union>(lo,hi)\<in>D. {lo..hi})" and
+    bD: "\<forall>(lo,hi)\<in>D. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+    using C1_arc_clip_halfplane[OF c1 f2h] by blast
+  \<comment> \<open>Fold the four factors through the pairwise intersection helper.\<close>
+  obtain AB where finAB: "finite AB" and
+    eqAB: "(\<Union>(lo,hi)\<in>A. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>B. {lo..hi}) = (\<Union>(lo,hi)\<in>AB. {lo..hi})" and
+    bAB: "\<forall>(lo,hi)\<in>AB. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+    using inter_interval_union[OF finA finB bA bB] by blast
+  obtain ABC where finABC: "finite ABC" and
+    eqABC: "(\<Union>(lo,hi)\<in>AB. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>C. {lo..hi}) = (\<Union>(lo,hi)\<in>ABC. {lo..hi})" and
+    bABC: "\<forall>(lo,hi)\<in>ABC. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+    using inter_interval_union[OF finAB finC bAB bC] by blast
+  obtain P where finP: "finite P" and
+    eqP0: "(\<Union>(lo,hi)\<in>ABC. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>D. {lo..hi}) = (\<Union>(lo,hi)\<in>P. {lo..hi})" and
+    bP: "\<forall>(lo,hi)\<in>P. a \<le> lo \<and> lo \<le> hi \<and> hi \<le> b \<and> \<gamma> C1_differentiable_on {lo..hi}"
+    using inter_interval_union[OF finABC finD bABC bD] by blast
+  \<comment> \<open>Assemble: the clipped set equals the final interval-union.\<close>
+  have "{s \<in> {a..b}. \<gamma> s \<in> cbox u v} =
+        ((\<Union>(lo,hi)\<in>A. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>B. {lo..hi})) \<inter>
+        (\<Union>(lo,hi)\<in>C. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>D. {lo..hi})"
+    using setdec eqA eqB eqC eqD by (simp add: Int_assoc)
+  also have "\<dots> = (\<Union>(lo,hi)\<in>AB. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>C. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>D. {lo..hi})"
+    using eqAB by simp
+  also have "\<dots> = (\<Union>(lo,hi)\<in>ABC. {lo..hi}) \<inter> (\<Union>(lo,hi)\<in>D. {lo..hi})"
+    using eqABC by (simp add: Int_assoc)
+  also have "\<dots> = (\<Union>(lo,hi)\<in>P. {lo..hi})"
+    using eqP0 by simp
+  finally have eqfin: "{s \<in> {a..b}. \<gamma> s \<in> cbox u v} = (\<Union>(lo,hi)\<in>P. {lo..hi})" .
+  show ?thesis using finP eqfin bP by blast
+qed
+
 end
