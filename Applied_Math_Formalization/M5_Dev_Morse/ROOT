@@ -4,3 +4,5 @@ session Applied_Math_Morse in "." = "HOL-Analysis" +
     Morse_Saddle_2D
     Hadamard_2D
     Arc_Clip
+    Trig_SMOOTH3
+    Saddle_Cover
