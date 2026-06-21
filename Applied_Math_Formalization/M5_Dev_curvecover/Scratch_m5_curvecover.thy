@@ -3332,12 +3332,234 @@ proof -
             next
               case False
               note d1z = this
-              \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL: \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and> \<partial>\<^sub>1\<Theta> = 0\<close> (singular at the
-                  collinear-wavevector degeneracy).\<close>  \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> with \<open>R = 0\<close>
-                  AND \<open>\<nabla>\<Theta> = 0\<close>: a flat vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> plus a transverse saddle
-                  branch (finitely many isolated super-degenerate points).  Genuine residual;
-                  the two regular orientations and both flat-edge orientations are closed above.\<close>
-              show ?thesis sorry
+              \<comment> \<open>\<^bold>\<open>\<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and> \<partial>\<^sub>1\<Theta> = 0\<close> (singular at the collinear-wavevector
+                  degeneracy).\<close>  \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> with \<open>R = 0\<close> AND \<open>\<nabla>\<Theta> = 0\<close>: the flat
+                  vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> plus a transverse saddle branch.  \<open>det H < 0\<close> still
+                  holds (STEP-1 below, which never uses \<open>R \<noteq> 0\<close>), so the Morse cover applies.
+                  We clip both branches to the box \<^bold>\<open>exactly as B3\<close>
+                  (@{thm crossTheta_boundary_singular_cover}), EXCEPT each face's flat branch is
+                  killed by the relevant box-edge-line being NON-flat (not by \<open>R \<noteq> 0\<close>).  This
+                  closes the MAIN sub-case (all four box-edge lines non-flat); the codim-2
+                  flat-box-edge sub-cases are isolated as the single labelled residual below.\<close>
+              \<comment> \<open>STEP 1: flat + indef.  Copied verbatim from @{thm crossTheta_boundary_singular_cover};
+                  it does NOT use \<open>R \<noteq> 0\<close> (only \<open>sinne\<close> and \<open>AcBc\<close>), so it is sound here too.\<close>
+              have sinne: "sin (\<omega>'$1) \<noteq> 0" using pf winOm by blast
+              define Ac where "Ac = (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+              define Bc where "Bc = (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+              have d2zAc: "- crossA Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2) = 0"
+                using d2z unfolding Ac_def Bc_def by simp
+              have d1zAc: "(Bc * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2)
+                         - (Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2)
+                         + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (\<omega>'$1) = 0"
+                using d1z unfolding Ac_def Bc_def by simp
+              define P where "P = Bc * kz \<omega>s + ky \<omega>s"
+              define Q where "Q = Ac * kz \<omega>s + kx \<omega>s"
+              define R where "R = Ac * ky \<omega>s - Bc * kx \<omega>s"
+              have g1: "(Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$1 = 0"
+                using d1zAc by (simp add: Gabs_def vector_2 algebra_simps)
+              have g2: "(Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2 = 0"
+                using d2zAc by (simp add: Gabs_def vector_2 crossA_def crossB_def algebra_simps)
+              have flat: "Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>' = 0"
+                using g1 g2 by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 zero_index)
+              have pyth2: "cos (\<omega>'$2) * cos (\<omega>'$2) + sin (\<omega>'$2) * sin (\<omega>'$2) = 1"
+                by (simp add: field_simps sin_cos_squared_add)
+              have pyth1: "cos (\<omega>'$1) * cos (\<omega>'$1) + sin (\<omega>'$1) * sin (\<omega>'$1) = 1"
+                by (simp add: field_simps sin_cos_squared_add)
+              have th0: "(Bc - P * cos (\<omega>'$1)) * cos (\<omega>'$2) + (- Ac + Q * cos (\<omega>'$1)) * sin (\<omega>'$2)
+                       + R * sin (\<omega>'$1) = 0"
+                using z0 unfolding P_def Q_def R_def
+                by (subst (asm) crossTheta_separable)
+                   (simp add: crossA_def crossB_def crossG_def Ac_def Bc_def algebra_simps)
+              have d2': "- (Bc - P * cos (\<omega>'$1)) * sin (\<omega>'$2) + (- Ac + Q * cos (\<omega>'$1)) * cos (\<omega>'$2) = 0"
+                using d2zAc unfolding P_def Q_def by (simp add: crossA_def crossB_def algebra_simps)
+              have d1': "(P * sin (\<omega>'$1)) * cos (\<omega>'$2) + (- Q * sin (\<omega>'$1)) * sin (\<omega>'$2) + R * cos (\<omega>'$1) = 0"
+                using d1zAc unfolding P_def Q_def R_def by (simp add: algebra_simps)
+              have AcBc: "Ac \<noteq> 0 \<or> Bc \<noteq> 0"
+                using kdiff hsep unfolding Ac_def Bc_def by (auto simp: field_simps)
+              have discpos: "(- (P * sin (\<omega>'$1)) * sin (\<omega>'$2) + (- Q * sin (\<omega>'$1)) * cos (\<omega>'$2))^2
+                   - ((P * cos (\<omega>'$1)) * cos (\<omega>'$2) + (- Q * cos (\<omega>'$1)) * sin (\<omega>'$2) + (- R * sin (\<omega>'$1)))
+                     * (- (Bc - P * cos (\<omega>'$1)) * cos (\<omega>'$2) - (- Ac + Q * cos (\<omega>'$1)) * sin (\<omega>'$2)) > 0"
+                by (rule disc_pos[OF pyth2 pyth1 th0 d2' d1' sinne AcBc])
+              have indef: "((H1abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2)\<^sup>2
+                  - (H1abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$1 * (H2abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2 > 0"
+                using discpos by (simp add: H1abs_def H2abs_def vector_2 P_def Q_def R_def power2_eq_square algebra_simps)
+              \<comment> \<open>box data\<close>
+              define u :: "real^2" where "u = ctr - vector [\<delta>, pi]"
+              define v :: "real^2" where "v = ctr + vector [\<delta>, pi]"
+              have box: "OmegaPF ctr \<delta> = cbox u v" by (simp add: OmegaPF_def u_def v_def)
+              have u1: "u$1 = ctr$1 - \<delta>" and u2: "u$2 = ctr$2 - pi"
+                by (simp_all add: u_def vector_minus_component vector_2)
+              have v1: "v$1 = ctr$1 + \<delta>" and v2: "v$2 = ctr$2 + pi"
+                by (simp_all add: v_def vector_add_component vector_2)
+              have onepos: "(0::real) < 1" by simp
+              \<comment> \<open>Dispatch on whether all four box-edge LINES are non-flat.  (The line
+                  dichotomy @{thm crossTheta_vert_edge_finite_or_flat} /
+                  @{thm crossTheta_horiz_edge_finite_or_flat} is used implicitly: in the
+                  MAIN case each face's \<open>flat\<close> alternative is the negated hypothesis here.)\<close>
+              show ?thesis
+              proof (cases "\<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [u$1, uu]) = 0)
+                          \<and> \<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [v$1, uu]) = 0)
+                          \<and> \<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [uu, u$2]) = 0)
+                          \<and> \<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [uu, v$2]) = 0)")
+                case True
+                \<comment> \<open>\<^bold>\<open>MAIN sub-case: all four box-edge lines non-flat.\<close>  B3-variant clip; every
+                    \<open>finite-or-flat\<close> face takes the \<open>finite\<close> branch (the \<open>flat\<close> branch contradicts
+                    the corresponding non-flatness hypothesis).\<close>
+                from True have nVl: "\<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [u$1, uu]) = 0)"
+                  and nVr: "\<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [v$1, uu]) = 0)"
+                  and nHb: "\<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [uu, u$2]) = 0)"
+                  and nHt: "\<not> (\<forall>uu::real. crossTheta \<omega>0 \<omega>s (vector [uu, v$2]) = 0)" by blast+
+                show ?thesis
+                proof (rule crossTheta_singular_cover[OF onepos z0 flat[unfolded Ac_def Bc_def] indef[unfolded Ac_def Bc_def]])
+                  fix \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real
+                  assume r0: "0 < r" and ab1: "a1 \<le> b1" and ab2: "a2 \<le> b2"
+                    and c1d: "\<gamma>1 C1_differentiable_on {a1..b1}" and c2d: "\<gamma>2 C1_differentiable_on {a2..b2}"
+                    and pg1: "\<omega>' \<in> \<gamma>1 ` {a1..b1}" and pg2: "\<omega>' \<in> \<gamma>2 ` {a2..b2}"
+                    and sub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball \<omega>' 1" and sub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball \<omega>' 1"
+                    and cov: "{x. crossTheta \<omega>0 \<omega>s x = 0} \<inter> ball \<omega>' r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+                    and inj1: "inj_on \<gamma>1 {a1..b1}" and inj2: "inj_on \<gamma>2 {a2..b2}"
+                    and loc1: "\<gamma>1 ` {a1..b1} \<subseteq> {x. crossTheta \<omega>0 \<omega>s x = 0}"
+                    and loc2: "\<gamma>2 ` {a2..b2} \<subseteq> {x. crossTheta \<omega>0 \<omega>s x = 0}"
+                  have lpt1: "\<And>s. s \<in> {a1..b1} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<gamma>1 s) = 0" using loc1 by blast
+                  have lpt2: "\<And>s. s \<in> {a2..b2} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<gamma>2 s) = 0" using loc2 by blast
+                  have bd1k: "\<And>s k. s \<in> {a1..b1} \<Longrightarrow> \<bar>\<gamma>1 s $ k - \<omega>'$k\<bar> < 1"
+                  proof -
+                    fix s k assume s: "s \<in> {a1..b1}"
+                    have "\<gamma>1 s \<in> ball \<omega>' 1" using sub1 s by blast
+                    hence d: "dist (\<gamma>1 s) \<omega>' < 1" by (simp add: dist_commute)
+                    have "\<bar>(\<gamma>1 s) $ k - \<omega>'$k\<bar> \<le> dist (\<gamma>1 s) \<omega>'"
+                      using component_le_norm_cart[of "\<gamma>1 s - \<omega>'" k] by (simp add: dist_norm vector_minus_component)
+                    thus "\<bar>\<gamma>1 s $ k - \<omega>'$k\<bar> < 1" using d by simp
+                  qed
+                  have bd2k: "\<And>s k. s \<in> {a2..b2} \<Longrightarrow> \<bar>\<gamma>2 s $ k - \<omega>'$k\<bar> < 1"
+                  proof -
+                    fix s k assume s: "s \<in> {a2..b2}"
+                    have "\<gamma>2 s \<in> ball \<omega>' 1" using sub2 s by blast
+                    hence d: "dist (\<gamma>2 s) \<omega>' < 1" by (simp add: dist_commute)
+                    have "\<bar>(\<gamma>2 s) $ k - \<omega>'$k\<bar> \<le> dist (\<gamma>2 s) \<omega>'"
+                      using component_le_norm_cart[of "\<gamma>2 s - \<omega>'" k] by (simp add: dist_norm vector_minus_component)
+                    thus "\<bar>\<gamma>2 s $ k - \<omega>'$k\<bar> < 1" using d by simp
+                  qed
+                  have bdd1_2: "\<And>s. s \<in> {a1..b1} \<Longrightarrow> \<omega>'$2 - 1 \<le> \<gamma>1 s $ 2 \<and> \<gamma>1 s $ 2 \<le> \<omega>'$2 + 1"
+                    using bd1k[of _ 2] by (smt (verit))
+                  have bdd1_1: "\<And>s. s \<in> {a1..b1} \<Longrightarrow> \<omega>'$1 - 1 \<le> \<gamma>1 s $ 1 \<and> \<gamma>1 s $ 1 \<le> \<omega>'$1 + 1"
+                    using bd1k[of _ 1] by (smt (verit))
+                  have bdd2_2: "\<And>s. s \<in> {a2..b2} \<Longrightarrow> \<omega>'$2 - 1 \<le> \<gamma>2 s $ 2 \<and> \<gamma>2 s $ 2 \<le> \<omega>'$2 + 1"
+                    using bd2k[of _ 2] by (smt (verit))
+                  have bdd2_1: "\<And>s. s \<in> {a2..b2} \<Longrightarrow> \<omega>'$1 - 1 \<le> \<gamma>2 s $ 1 \<and> \<gamma>2 s $ 1 \<le> \<omega>'$1 + 1"
+                    using bd2k[of _ 1] by (smt (verit))
+                  \<comment> \<open>the four faces of \<open>\<gamma>1\<close> are finite (each non-flat box-edge line kills its face)\<close>
+                  have fv1l_1: "finite {s \<in> {a1..b1}. \<gamma>1 s $ 1 = u$1}"
+                    using crossTheta_arc_vert_face_finite_or_flat[OF inj1 lpt1 bdd1_2, of "u$1"] nVl by blast
+                  have fv1h_1: "finite {s \<in> {a1..b1}. \<gamma>1 s $ 1 = v$1}"
+                    using crossTheta_arc_vert_face_finite_or_flat[OF inj1 lpt1 bdd1_2, of "v$1"] nVr by blast
+                  have fh1l_1: "finite {s \<in> {a1..b1}. \<gamma>1 s $ 2 = u$2}"
+                    using crossTheta_arc_horiz_face_finite_or_flat[OF inj1 lpt1 bdd1_1, of "u$2"] nHb by blast
+                  have fh1h_1: "finite {s \<in> {a1..b1}. \<gamma>1 s $ 2 = v$2}"
+                    using crossTheta_arc_horiz_face_finite_or_flat[OF inj1 lpt1 bdd1_1, of "v$2"] nHt by blast
+                  \<comment> \<open>the four faces of \<open>\<gamma>2\<close> are finite\<close>
+                  have fv2l_2: "finite {s \<in> {a2..b2}. \<gamma>2 s $ 1 = u$1}"
+                    using crossTheta_arc_vert_face_finite_or_flat[OF inj2 lpt2 bdd2_2, of "u$1"] nVl by blast
+                  have fv2h_2: "finite {s \<in> {a2..b2}. \<gamma>2 s $ 1 = v$1}"
+                    using crossTheta_arc_vert_face_finite_or_flat[OF inj2 lpt2 bdd2_2, of "v$1"] nVr by blast
+                  have fh2l_2: "finite {s \<in> {a2..b2}. \<gamma>2 s $ 2 = u$2}"
+                    using crossTheta_arc_horiz_face_finite_or_flat[OF inj2 lpt2 bdd2_1, of "u$2"] nHb by blast
+                  have fh2h_2: "finite {s \<in> {a2..b2}. \<gamma>2 s $ 2 = v$2}"
+                    using crossTheta_arc_horiz_face_finite_or_flat[OF inj2 lpt2 bdd2_1, of "v$2"] nHt by blast
+                  \<comment> \<open>clip each branch to the box\<close>
+                  obtain P1 :: "(real\<times>real) set" where finP1: "finite P1"
+                      and P1eq: "{s \<in> {a1..b1}. \<gamma>1 s \<in> cbox u v} = (\<Union>(lo,hi)\<in>P1. {lo..hi})"
+                      and P1bd: "\<forall>(lo,hi)\<in>P1. a1 \<le> lo \<and> lo \<le> hi \<and> hi \<le> b1 \<and> \<gamma>1 C1_differentiable_on {lo..hi}"
+                    using arc_inter_cbox_finite_subarcs[OF c1d fv1l_1 fv1h_1 fh1l_1 fh1h_1] by blast
+                  obtain P2 :: "(real\<times>real) set" where finP2: "finite P2"
+                      and P2eq: "{s \<in> {a2..b2}. \<gamma>2 s \<in> cbox u v} = (\<Union>(lo,hi)\<in>P2. {lo..hi})"
+                      and P2bd: "\<forall>(lo,hi)\<in>P2. a2 \<le> lo \<and> lo \<le> hi \<and> hi \<le> b2 \<and> \<gamma>2 C1_differentiable_on {lo..hi}"
+                    using arc_inter_cbox_finite_subarcs[OF c2d fv2l_2 fv2h_2 fh2l_2 fh2h_2] by blast
+                  define \<A> where "\<A> = (\<lambda>(lo,hi). \<gamma>1 ` {lo..hi}) ` P1 \<union> (\<lambda>(lo,hi). \<gamma>2 ` {lo..hi}) ` P2"
+                  show thesis
+                  proof (rule that[of r \<A>])
+                    show "0 < r" by (rule r0)
+                    show "finite \<A>" unfolding \<A>_def using finP1 finP2 by simp
+                    show "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+                    proof
+                      fix \<gamma> assume "\<gamma> \<in> \<A>"
+                      then consider (A1) lo hi where "(lo,hi) \<in> P1" "\<gamma> = \<gamma>1 ` {lo..hi}"
+                        | (A2) lo hi where "(lo,hi) \<in> P2" "\<gamma> = \<gamma>2 ` {lo..hi}"
+                        unfolding \<A>_def by auto
+                      thus "analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+                      proof cases
+                        case (A1 lo hi)
+                        have b: "a1 \<le> lo" "lo \<le> hi" "hi \<le> b1" "\<gamma>1 C1_differentiable_on {lo..hi}"
+                          using P1bd A1(1) by auto
+                        have "analytic_arc (\<gamma>1 ` {lo..hi})" unfolding analytic_arc_def using b by blast
+                        moreover have "\<gamma>1 ` {lo..hi} \<subseteq> OmegaPF ctr \<delta>"
+                        proof -
+                          have "{lo..hi} \<subseteq> {s \<in> {a1..b1}. \<gamma>1 s \<in> cbox u v}"
+                            using A1(1) P1eq by (auto simp del: atLeastAtMost_iff)
+                          thus ?thesis unfolding box using b by auto
+                        qed
+                        ultimately show ?thesis using A1(2) by simp
+                      next
+                        case (A2 lo hi)
+                        have b: "a2 \<le> lo" "lo \<le> hi" "hi \<le> b2" "\<gamma>2 C1_differentiable_on {lo..hi}"
+                          using P2bd A2(1) by auto
+                        have "analytic_arc (\<gamma>2 ` {lo..hi})" unfolding analytic_arc_def using b by blast
+                        moreover have "\<gamma>2 ` {lo..hi} \<subseteq> OmegaPF ctr \<delta>"
+                        proof -
+                          have "{lo..hi} \<subseteq> {s \<in> {a2..b2}. \<gamma>2 s \<in> cbox u v}"
+                            using A2(1) P2eq by (auto simp del: atLeastAtMost_iff)
+                          thus ?thesis unfolding box using b by auto
+                        qed
+                        ultimately show ?thesis using A2(2) by simp
+                      qed
+                    qed
+                    show "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+                    proof
+                      fix x assume "x \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r"
+                      hence xbox: "x \<in> OmegaPF ctr \<delta>" and xcz: "crossTheta \<omega>0 \<omega>s x = 0" and xball: "x \<in> ball \<omega>' r"
+                        by auto
+                      have "x \<in> {x. crossTheta \<omega>0 \<omega>s x = 0} \<inter> ball \<omega>' r" using xcz xball by simp
+                      hence "x \<in> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}" using cov by blast
+                      thus "x \<in> \<Union>\<A>"
+                      proof
+                        assume "x \<in> \<gamma>1 ` {a1..b1}"
+                        then obtain s where s: "s \<in> {a1..b1}" and xeq: "x = \<gamma>1 s" by blast
+                        have "\<gamma>1 s \<in> cbox u v" using xbox xeq box by simp
+                        hence "s \<in> {s \<in> {a1..b1}. \<gamma>1 s \<in> cbox u v}" using s by simp
+                        then obtain lo hi where lohi: "(lo,hi) \<in> P1" and sin: "s \<in> {lo..hi}" using P1eq by blast
+                        have xin: "x \<in> \<gamma>1 ` {lo..hi}" using xeq sin by blast
+                        have "\<gamma>1 ` {lo..hi} \<in> (\<lambda>(lo,hi). \<gamma>1 ` {lo..hi}) ` P1" using lohi by (rule rev_image_eqI) simp
+                        hence "\<gamma>1 ` {lo..hi} \<in> \<A>" unfolding \<A>_def by simp
+                        thus "x \<in> \<Union>\<A>" using xin by blast
+                      next
+                        assume "x \<in> \<gamma>2 ` {a2..b2}"
+                        then obtain s where s: "s \<in> {a2..b2}" and xeq: "x = \<gamma>2 s" by blast
+                        have "\<gamma>2 s \<in> cbox u v" using xbox xeq box by simp
+                        hence "s \<in> {s \<in> {a2..b2}. \<gamma>2 s \<in> cbox u v}" using s by simp
+                        then obtain lo hi where lohi: "(lo,hi) \<in> P2" and sin: "s \<in> {lo..hi}" using P2eq by blast
+                        have xin: "x \<in> \<gamma>2 ` {lo..hi}" using xeq sin by blast
+                        have "\<gamma>2 ` {lo..hi} \<in> (\<lambda>(lo,hi). \<gamma>2 ` {lo..hi}) ` P2" using lohi by (rule rev_image_eqI) simp
+                        hence "\<gamma>2 ` {lo..hi} \<in> \<A>" unfolding \<A>_def by simp
+                        thus "x \<in> \<Union>\<A>" using xin by blast
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case False
+                \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL (the ONLY remaining \<open>sorry\<close>): \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and>
+                    \<partial>\<^sub>1\<Theta> = 0\<close> with at least one FLAT box-edge line.\<close>  A super-degenerate
+                    codim-2 sub-case: \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> at the collinear-wavevector
+                    degeneracy \<open>R = 0\<close>, at a saddle (\<open>\<nabla>\<Theta> = 0\<close>, \<open>det H < 0\<close>), AND some box
+                    edge of \<open>OmegaPF\<close> is itself a flat zero-line.  The abstract Morse branches
+                    \<open>\<gamma>\<^sub>1,\<gamma>\<^sub>2\<close> may then run along that flat box edge, giving an infinite face, so
+                    @{thm arc_inter_cbox_finite_subarcs} (all-four-faces-finite) does not
+                    clip them; covering this needs a per-branch on/off-flat-edge sub-arc
+                    decomposition not available from the abstract saddle cover.  All other
+                    cases (regular both orientations; \<open>R \<noteq> 0\<close>; \<open>R = 0\<close> with one nonzero
+                    partial; and \<open>R = 0\<close> singular with all box edges non-flat) are closed.\<close>
+                show ?thesis sorry
+              qed
             qed
           qed
         qed
