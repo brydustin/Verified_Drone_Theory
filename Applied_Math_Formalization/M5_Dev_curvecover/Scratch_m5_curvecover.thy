@@ -1,5 +1,8 @@
 theory Scratch_m5_curvecover
   imports "Applied_Math_Appendix.Nonemptiness_Robust2"
+          "Applied_Math_Morse.Trig_SMOOTH3"
+          "Applied_Math_Morse.Saddle_Cover"
+          "Applied_Math_Morse.Disc_Pos"
 begin
 
 text \<open>\<^bold>\<open>(M5) Core "3" --- the COLLINEAR LOCUS has a finite \<open>C\<^sup>1\<close>-arc cover.\<close>
@@ -1619,6 +1622,166 @@ qed
 
 
 
+text \<open>BRIDGE: crossTheta = the abstract Morse trig form, hence the interior singular
+  cover via hadamard2 + saddle_form_two_arcs (verified in session Applied_Math_Morse).\<close>
+
+lemma crossTheta_eq_Theta_abs:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  shows "crossTheta \<omega>0 \<omega>s = Theta_abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s)"
+proof (rule ext)
+  fix \<omega> :: "real^2"
+  show "crossTheta \<omega>0 \<omega>s \<omega> = Theta_abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>"
+    unfolding Theta_abs_def Ac_def Bc_def
+    by (subst crossTheta_separable) (simp add: crossA_def crossB_def crossG_def)
+qed
+
+lemma crossTheta_singular_cover:
+  fixes \<omega>0 \<omega>s \<omega>' :: "real^2" and \<rho>0 :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes \<rho>0: "\<rho>0 > 0"
+    and z0: "crossTheta \<omega>0 \<omega>s \<omega>' = 0"
+    and flat: "Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>' = 0"
+    and indef: "((H1abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2)\<^sup>2
+              - (H1abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$1
+                * (H2abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2 > 0"
+  obtains \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real where
+      "0 < r" "a1 \<le> b1" "a2 \<le> b2"
+      "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
+      "\<omega>' \<in> \<gamma>1 ` {a1..b1}" "\<omega>' \<in> \<gamma>2 ` {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> ball \<omega>' \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball \<omega>' \<rho>0"
+      "{x. crossTheta \<omega>0 \<omega>s x = 0} \<inter> ball \<omega>' r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+proof -
+  have ceq: "crossTheta \<omega>0 \<omega>s = Theta_abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s)"
+    unfolding Ac_def Bc_def by (rule crossTheta_eq_Theta_abs)
+  have sm: "SMOOTH3 (crossTheta \<omega>0 \<omega>s)
+              (Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s)) (H1abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s))
+              (H2abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s)) (K11abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s))
+              (K12abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s)) (K22abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s))
+              (ball \<omega>' \<rho>0)"
+    unfolding ceq by (rule Theta_abs_SMOOTH3)
+  show ?thesis
+    by (rule smooth3_saddle_cover[OF \<rho>0 sm z0 flat indef]) (rule that)
+qed
+
+lemma crossTheta_interior_singular_cover:
+  fixes ctr \<omega>0 \<omega>s \<omega>' :: "real^2" and \<delta> :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes d0: "0 < \<delta>"
+    and sinne: "sin (\<omega>'$1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and z0: "crossTheta \<omega>0 \<omega>s \<omega>' = 0"
+    and d2z: "- crossA Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2) = 0"
+    and d1z: "(Bc * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2)
+            - (Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2)
+            + (Ac * ky \<omega>s - Bc * kx \<omega>s) * cos (\<omega>'$1) = 0"
+    and w1lo: "ctr$1 - \<delta> < \<omega>'$1" and w1hi: "\<omega>'$1 < ctr$1 + \<delta>"
+    and w2lo: "ctr$2 - pi < \<omega>'$2" and w2hi: "\<omega>'$2 < ctr$2 + pi"
+  obtains r \<A> where "0 < r" "finite \<A>"
+      "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+      "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+proof -
+  define P where "P = Bc * kz \<omega>s + ky \<omega>s"
+  define Q where "Q = Ac * kz \<omega>s + kx \<omega>s"
+  define R where "R = Ac * ky \<omega>s - Bc * kx \<omega>s"
+  have g1: "(Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$1 = 0"
+    using d1z by (simp add: Gabs_def vector_2 algebra_simps)
+  have g2: "(Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2 = 0"
+    using d2z by (simp add: Gabs_def vector_2 crossA_def crossB_def algebra_simps)
+  have flat: "Gabs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>' = 0"
+    using g1 g2 by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 zero_index)
+  have pyth2: "cos (\<omega>'$2) * cos (\<omega>'$2) + sin (\<omega>'$2) * sin (\<omega>'$2) = 1"
+    by (simp add: field_simps sin_cos_squared_add)
+  have pyth1: "cos (\<omega>'$1) * cos (\<omega>'$1) + sin (\<omega>'$1) * sin (\<omega>'$1) = 1"
+    by (simp add: field_simps sin_cos_squared_add)
+  have th0: "(Bc - P * cos (\<omega>'$1)) * cos (\<omega>'$2) + (- Ac + Q * cos (\<omega>'$1)) * sin (\<omega>'$2)
+           + R * sin (\<omega>'$1) = 0"
+    using z0 unfolding P_def Q_def R_def
+    by (subst (asm) crossTheta_separable)
+       (simp add: crossA_def crossB_def crossG_def Ac_def Bc_def algebra_simps)
+  have d2': "- (Bc - P * cos (\<omega>'$1)) * sin (\<omega>'$2) + (- Ac + Q * cos (\<omega>'$1)) * cos (\<omega>'$2) = 0"
+    using d2z unfolding P_def Q_def by (simp add: crossA_def crossB_def algebra_simps)
+  have d1': "(P * sin (\<omega>'$1)) * cos (\<omega>'$2) + (- Q * sin (\<omega>'$1)) * sin (\<omega>'$2) + R * cos (\<omega>'$1) = 0"
+    using d1z unfolding P_def Q_def R_def by (simp add: algebra_simps)
+  have AcBc: "Ac \<noteq> 0 \<or> Bc \<noteq> 0"
+    using kdiff hsep unfolding Ac_def Bc_def by (auto simp: field_simps)
+  have discpos: "(- (P * sin (\<omega>'$1)) * sin (\<omega>'$2) + (- Q * sin (\<omega>'$1)) * cos (\<omega>'$2))^2
+       - ((P * cos (\<omega>'$1)) * cos (\<omega>'$2) + (- Q * cos (\<omega>'$1)) * sin (\<omega>'$2) + (- R * sin (\<omega>'$1)))
+         * (- (Bc - P * cos (\<omega>'$1)) * cos (\<omega>'$2) - (- Ac + Q * cos (\<omega>'$1)) * sin (\<omega>'$2)) > 0"
+    by (rule disc_pos[OF pyth2 pyth1 th0 d2' d1' sinne AcBc])
+  have indef: "((H1abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2)\<^sup>2
+      - (H1abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$1 * (H2abs Ac Bc (kx \<omega>s) (ky \<omega>s) (kz \<omega>s) \<omega>')$2 > 0"
+    using discpos by (simp add: H1abs_def H2abs_def vector_2 P_def Q_def R_def power2_eq_square algebra_simps)
+  \<comment> \<open>box-fitting input ball\<close>
+  define rb where "rb = Min {\<omega>'$1 - (ctr$1 - \<delta>), (ctr$1 + \<delta>) - \<omega>'$1, \<omega>'$2 - (ctr$2 - pi), (ctr$2 + pi) - \<omega>'$2}"
+  have rbpos: "0 < rb" using w1lo w1hi w2lo w2hi by (simp add: rb_def)
+  have ball_sub: "ball \<omega>' rb \<subseteq> OmegaPF ctr \<delta>"
+  proof
+    fix x :: "real^2" assume "x \<in> ball \<omega>' rb"
+    hence dx: "dist x \<omega>' < rb" by (simp add: dist_commute)
+    have c1: "\<bar>x$1 - \<omega>'$1\<bar> \<le> dist x \<omega>'"
+      using component_le_norm_cart[of "x - \<omega>'" 1] by (simp add: dist_norm vector_minus_component)
+    have c2: "\<bar>x$2 - \<omega>'$2\<bar> \<le> dist x \<omega>'"
+      using component_le_norm_cart[of "x - \<omega>'" 2] by (simp add: dist_norm vector_minus_component)
+    have b1: "\<bar>x$1 - \<omega>'$1\<bar> < \<omega>'$1 - (ctr$1 - \<delta>)" "\<bar>x$1 - \<omega>'$1\<bar> < (ctr$1 + \<delta>) - \<omega>'$1"
+      using c1 dx by (auto simp: rb_def)
+    have b2: "\<bar>x$2 - \<omega>'$2\<bar> < \<omega>'$2 - (ctr$2 - pi)" "\<bar>x$2 - \<omega>'$2\<bar> < (ctr$2 + pi) - \<omega>'$2"
+      using c2 dx by (auto simp: rb_def)
+    show "x \<in> OmegaPF ctr \<delta>"
+      unfolding OmegaPF_def mem_box_cart
+    proof (intro allI)
+      fix i :: 2
+      have lo: "(ctr - vector [\<delta>, pi]) $ i = ctr $ i - vector [\<delta>, pi] $ i" by (simp add: vector_minus_component)
+      have hi: "(ctr + vector [\<delta>, pi]) $ i = ctr $ i + vector [\<delta>, pi] $ i" by (simp add: vector_add_component)
+      show "(ctr - vector [\<delta>, pi]) $ i \<le> x $ i \<and> x $ i \<le> (ctr + vector [\<delta>, pi]) $ i"
+      proof (cases "i = 1")
+        case True thus ?thesis using lo hi b1 by (simp add: vector_2) (smt (verit))
+      next
+        case False hence "i = 2" using exhaust_2[of i] by blast
+        thus ?thesis using lo hi b2 by (simp add: vector_2) (smt (verit))
+      qed
+    qed
+  qed
+  show ?thesis
+  proof (rule crossTheta_singular_cover[OF rbpos z0 flat[unfolded Ac_def Bc_def] indef[unfolded Ac_def Bc_def]])
+    fix \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real
+    assume r0: "0 < r" and ab1: "a1 \<le> b1" and ab2: "a2 \<le> b2"
+      and c1d: "\<gamma>1 C1_differentiable_on {a1..b1}" and c2d: "\<gamma>2 C1_differentiable_on {a2..b2}"
+      and pg1: "\<omega>' \<in> \<gamma>1 ` {a1..b1}" and pg2: "\<omega>' \<in> \<gamma>2 ` {a2..b2}"
+      and sub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball \<omega>' rb" and sub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball \<omega>' rb"
+      and cov: "{x. crossTheta \<omega>0 \<omega>s x = 0} \<inter> ball \<omega>' r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+    show ?thesis
+    proof (rule that[of r "{\<gamma>1 ` {a1..b1}, \<gamma>2 ` {a2..b2}}"])
+      show "0 < r" by (rule r0)
+      show "finite {\<gamma>1 ` {a1..b1}, \<gamma>2 ` {a2..b2}}" by simp
+      show "\<forall>\<gamma>\<in>{\<gamma>1 ` {a1..b1}, \<gamma>2 ` {a2..b2}}. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+      proof
+        fix \<gamma> assume "\<gamma> \<in> {\<gamma>1 ` {a1..b1}, \<gamma>2 ` {a2..b2}}"
+        then consider "\<gamma> = \<gamma>1 ` {a1..b1}" | "\<gamma> = \<gamma>2 ` {a2..b2}" by blast
+        thus "analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+        proof cases
+          case 1
+          have "analytic_arc (\<gamma>1 ` {a1..b1})" unfolding analytic_arc_def using ab1 c1d by blast
+          moreover have "\<gamma>1 ` {a1..b1} \<subseteq> OmegaPF ctr \<delta>" using sub1 ball_sub by blast
+          ultimately show ?thesis using 1 by simp
+        next
+          case 2
+          have "analytic_arc (\<gamma>2 ` {a2..b2})" unfolding analytic_arc_def using ab2 c2d by blast
+          moreover have "\<gamma>2 ` {a2..b2} \<subseteq> OmegaPF ctr \<delta>" using sub2 ball_sub by blast
+          ultimately show ?thesis using 2 by simp
+        qed
+      qed
+      show "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>{\<gamma>1 ` {a1..b1}, \<gamma>2 ` {a2..b2}}"
+        using cov by auto
+    qed
+  qed
+qed
+
+
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
 text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
@@ -1701,6 +1864,7 @@ proof -
     qed
   next
     case False
+    note notC1 = this
     show ?thesis
     proof (cases "?d1 \<noteq> 0 \<and> ctr$1 - \<delta> < \<omega>'$1 \<and> \<omega>'$1 < ctr$1 + \<delta>")
       case True
@@ -1731,6 +1895,7 @@ proof -
       qed
     next
       case False
+      note notC2 = this
       \<comment> \<open>RESIDUAL (precisely scoped; parallel-agent-verified analysis). Both regular
           orientations are now PROVEN at any locus point with one favourable interior
           coordinate: \<open>\<partial>\<^sub>2\<Theta>\<noteq>0\<close> with \<open>\<omega>\<^sub>2\<close> interior (\<open>\<phi>\<close>-graph + box-clipped cover) and
@@ -1743,7 +1908,29 @@ proof -
               would close them IF isolated, but they are not).
           (b) \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> in the awkward orientation (the only nonzero partial is the
               wrong one for that edge) or a box corner.\<close>
-      show ?thesis sorry
+      show ?thesis
+      proof (cases "ctr$1 - \<delta> < \<omega>'$1 \<and> \<omega>'$1 < ctr$1 + \<delta> \<and> ctr$2 - pi < \<omega>'$2 \<and> \<omega>'$2 < ctr$2 + pi")
+        case True
+        hence i1l: "ctr$1 - \<delta> < \<omega>'$1" and i1h: "\<omega>'$1 < ctr$1 + \<delta>"
+          and i2l: "ctr$2 - pi < \<omega>'$2" and i2h: "\<omega>'$2 < ctr$2 + pi" by auto
+        have d2z: "?d2 = 0" using notC1 i2l i2h by auto
+        have d1z: "?d1 = 0" using notC2 i1l i1h by auto
+        have sinne: "sin (\<omega>'$1) \<noteq> 0" using pf winOm by blast
+        show ?thesis
+        proof (rule crossTheta_interior_singular_cover[OF d0 sinne hsep kdiff z0 d2z d1z i1l i1h i2l i2h])
+          fix r \<A>
+          assume "0 < r" "finite \<A>"
+            "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+            "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+          thus thesis by (rule that)
+        qed
+      next
+        case False
+        \<comment> \<open>BOUNDARY residual: \<omega>' on \<partial>(OmegaPF) in the awkward orientation / corner.
+            Elementary value-clip via Arc_Clip (C1_arc_clip_halfplane) + edge-finiteness
+            (finite_locus_vert_edge / finite_locus_horiz_edge).\<close>
+        show ?thesis sorry
+      qed
     qed
   qed
 qed
