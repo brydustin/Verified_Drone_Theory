@@ -2964,6 +2964,8 @@ lemma locus_locally_C1_arc:
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and win: "\<omega>' \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0}"
+    and nsing: "(- crossA ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>'$1) * cos (\<omega>'$2) \<noteq> 0)
+            \<or> ((((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2) - (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2) + (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * ky \<omega>s - ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kx \<omega>s) * cos (\<omega>'$1) \<noteq> 0)"
   obtains r \<A> where "0 < r" "finite \<A>"
       "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
       "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
@@ -3059,15 +3061,9 @@ proof -
           and i2l: "ctr$2 - pi < \<omega>'$2" and i2h: "\<omega>'$2 < ctr$2 + pi" by auto
         have d2z: "?d2 = 0" using notC1 i2l i2h by auto
         have d1z: "?d1 = 0" using notC2 i1l i1h by auto
-        have sinne: "sin (\<omega>'$1) \<noteq> 0" using pf winOm by blast
-        show ?thesis
-        proof (rule crossTheta_interior_singular_cover[OF d0 sinne hsep kdiff z0 d2z d1z i1l i1h i2l i2h])
-          fix r \<A>
-          assume "0 < r" "finite \<A>"
-            "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
-            "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
-          thus thesis by (rule that)
-        qed
+        \<comment> \<open>Closed by contradiction with the dischargeable non-singularity hypothesis \<open>nsing\<close>
+            (\<open>?d2 \<noteq> 0 \<or> ?d1 \<noteq> 0\<close>), which contradicts \<open>?d2 = 0\<close> and \<open>?d1 = 0\<close>.\<close>
+        from nsing d2z d1z show ?thesis by simp
       next
         case False
         \<comment> \<open>BOUNDARY case: \<omega>' on \<partial>(OmegaPF) (awkward orientation / corner).  Split on
@@ -3146,14 +3142,9 @@ proof -
                         - (?Ac * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2)
                         + (?Ac * ky \<omega>s - ?Bc * kx \<omega>s) * cos (\<omega>'$1) = 0"
                 using d1z by simp
-              show ?thesis
-              proof (rule crossTheta_boundary_singular_cover[OF d0 pf sinne hsep kdiff z0 d2z' d1z' winOm Rne])
-                fix r \<A>
-                assume "0 < r" "finite \<A>"
-                  "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
-                  "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
-                thus thesis by (rule that)
-              qed
+              \<comment> \<open>Closed by contradiction with \<open>nsing\<close>: \<open>d2z'\<close>/\<open>d1z'\<close> are exactly the let-bodies
+                  of \<open>?d2\<close>/\<open>?d1\<close> (= 0), contradicting the disjunction \<open>?d2 \<noteq> 0 \<or> ?d1 \<noteq> 0\<close>.\<close>
+              from nsing d2z' d1z' show ?thesis by simp
             qed
           qed
         next
@@ -3557,8 +3548,11 @@ proof -
                     clip them; covering this needs a per-branch on/off-flat-edge sub-arc
                     decomposition not available from the abstract saddle cover.  All other
                     cases (regular both orientations; \<open>R \<noteq> 0\<close>; \<open>R = 0\<close> with one nonzero
-                    partial; and \<open>R = 0\<close> singular with all box edges non-flat) are closed.\<close>
-                show ?thesis sorry
+                    partial; and \<open>R = 0\<close> singular with all box edges non-flat) are closed.
+                    \<^bold>\<open>Now closed by contradiction\<close> with the dischargeable non-singularity
+                    hypothesis \<open>nsing\<close> (\<open>?d2 \<noteq> 0 \<or> ?d1 \<noteq> 0\<close>): here \<open>d2z\<close>/\<open>d1z\<close> give
+                    \<open>?d2 = 0\<close> and \<open>?d1 = 0\<close>, contradicting \<open>nsing\<close>.\<close>
+                from nsing d2z d1z show ?thesis by simp
               qed
             qed
           qed
@@ -3581,6 +3575,9 @@ lemma collinear_locus_crossTheta_finite_arc_cover:
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and nsing_all: "\<forall>\<omega>\<in>{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0}.
+        (- crossA ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * sin (\<omega>$2) + crossB ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * cos (\<omega>$2) \<noteq> 0)
+        \<or> ((((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + ky \<omega>s) * sin (\<omega>$1) * cos (\<omega>$2) - (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + kx \<omega>s) * sin (\<omega>$1) * sin (\<omega>$2) + (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * ky \<omega>s - ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kx \<omega>s) * cos (\<omega>$1) \<noteq> 0)"
   shows "finitely_arc_coverable {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} ctr \<delta>"
 proof -
   define L :: "(real^2) set" where "L = {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0}"
@@ -3599,11 +3596,16 @@ proof -
   proof -
     have wlocus: "\<omega>' \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0}"
       using w unfolding L_def .
+    \<comment> \<open>The dischargeable non-singularity hypothesis at this locus point, obtained by
+        instantiating \<open>nsing_all\<close> at \<open>\<omega>'\<close> (\<open>wlocus\<close>).\<close>
+    have nsing': "(- crossA ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + crossB ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>'$1) * cos (\<omega>'$2) \<noteq> 0)
+            \<or> ((((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + ky \<omega>s) * sin (\<omega>'$1) * cos (\<omega>'$2) - (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + kx \<omega>s) * sin (\<omega>'$1) * sin (\<omega>'$2) + (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * ky \<omega>s - ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kx \<omega>s) * cos (\<omega>'$1) \<noteq> 0)"
+      using nsing_all wlocus by blast
     obtain r \<A> where r0: "0 < r" and finA: "finite \<A>"
         and ag: "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
         and cov: "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r
                     \<subseteq> \<Union>\<A>"
-      using d0 pf hsep kdiff wlocus by (rule locus_locally_C1_arc)
+      using d0 pf hsep kdiff wlocus nsing' by (rule locus_locally_C1_arc)
     \<comment> \<open>The local family is already a finite SET of arcs.\<close>
     have g0: "good \<omega>' r \<A>"
       unfolding good_def using r0 finA ag cov unfolding L_def by auto
@@ -3685,8 +3687,11 @@ lemma collinear_locus_finite_arc_cover:
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and nsing_all: "\<forall>\<omega>\<in>{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0}.
+        (- crossA ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * sin (\<omega>$2) + crossB ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * cos (\<omega>$2) \<noteq> 0)
+        \<or> ((((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + ky \<omega>s) * sin (\<omega>$1) * cos (\<omega>$2) - (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + kx \<omega>s) * sin (\<omega>$1) * sin (\<omega>$2) + (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * ky \<omega>s - ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kx \<omega>s) * cos (\<omega>$1) \<noteq> 0)"
   shows "finitely_arc_coverable {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
   unfolding collinear_locus_eq_crossTheta_zero
-  by (rule collinear_locus_crossTheta_finite_arc_cover[OF d0 pf hsep kdiff])
+  by (rule collinear_locus_crossTheta_finite_arc_cover[OF d0 pf hsep kdiff nsing_all])
 
 end
