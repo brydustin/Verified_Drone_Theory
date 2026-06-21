@@ -289,6 +289,7 @@ lemma level_zero_C1_arc_2:
   obtains \<gamma> :: "real \<Rightarrow> real^2" and a b \<rho> :: real where "a \<le> b" "0 < \<rho>"
       "\<gamma> C1_differentiable_on {a..b}" "p \<in> \<gamma> ` {a..b}"
       "{x. lf x = 0} \<inter> ball p \<rho> \<subseteq> \<gamma> ` {a..b}"
+      "\<gamma> ` {a..b} \<subseteq> ball p \<rho>0"
 proof -
   have lder: "(lf has_derivative (\<lambda>h. inner (glf x) h)) (at x)" if "x \<in> ball p \<rho>0" for x :: "real^2"
     using lC1 that unfolding C1field_def by blast
@@ -611,6 +612,7 @@ proof -
       hence "x$1 \<in> {a..b}" unfolding a_def b_def atLeastAtMost_iff by (smt (verit))
       with eqphi show "x \<in> \<phi> ` {a..b}" by blast
     qed
+    show "\<phi> ` {a..b} \<subseteq> ball p \<rho>0" using phi_ball ballin by blast
   qed
 qed
 
@@ -688,6 +690,7 @@ lemma level_zero_C1_arc_1:
   obtains \<gamma> :: "real \<Rightarrow> real^2" and a b \<rho> :: real where "a \<le> b" "0 < \<rho>"
       "\<gamma> C1_differentiable_on {a..b}" "p \<in> \<gamma> ` {a..b}"
       "{x. lf x = 0} \<inter> ball p \<rho> \<subseteq> \<gamma> ` {a..b}"
+      "\<gamma> ` {a..b} \<subseteq> ball p \<rho>0"
 proof -
   define lf' :: "real^2 \<Rightarrow> real" where "lf' = (\<lambda>x. lf (sw x))"
   define glf' :: "real^2 \<Rightarrow> real^2" where "glf' = (\<lambda>x. sw (glf (sw x)))"
@@ -730,6 +733,7 @@ proof -
     and c1: "\<gamma>' C1_differentiable_on {a..b}"
     and pin: "p' \<in> \<gamma>' ` {a..b}"
     and cov: "{x. lf' x = 0} \<inter> ball p' \<rho> \<subseteq> \<gamma>' ` {a..b}"
+    and imgsub: "\<gamma>' ` {a..b} \<subseteq> ball p' \<rho>0"
     by (rule level_zero_C1_arc_2[OF \<rho>0 lC1' lp' reg'])
   define \<gamma> :: "real \<Rightarrow> real^2" where "\<gamma> = sw \<circ> \<gamma>'"
   show ?thesis
@@ -755,6 +759,14 @@ proof -
       hence "x = \<gamma> t" unfolding \<gamma>_def by (simp add: comp_def) (metis sw_sw)
       thus "x \<in> \<gamma> ` {a..b}" using t by blast
     qed
+    show "\<gamma> ` {a..b} \<subseteq> ball p \<rho>0"
+    proof -
+      have "\<gamma> ` {a..b} = sw ` (\<gamma>' ` {a..b})" unfolding \<gamma>_def by (simp add: image_comp)
+      also have "\<dots> \<subseteq> sw ` (ball p' \<rho>0)" using imgsub by (rule image_mono)
+      also have "sw ` (ball p' \<rho>0) = ball (sw p') \<rho>0" by (rule sw_ball)
+      also have "sw p' = p" by (simp add: p'_def)
+      finally show ?thesis .
+    qed
   qed
 qed
 
@@ -767,6 +779,7 @@ lemma level_zero_C1_arc:
   obtains \<gamma> :: "real \<Rightarrow> real^2" and a b \<rho> :: real where "a \<le> b" "0 < \<rho>"
       "\<gamma> C1_differentiable_on {a..b}" "p \<in> \<gamma> ` {a..b}"
       "{x. lf x = 0} \<inter> ball p \<rho> \<subseteq> \<gamma> ` {a..b}"
+      "\<gamma> ` {a..b} \<subseteq> ball p \<rho>0"
 proof -
   have "glf p $ 1 \<noteq> 0 \<or> glf p $ 2 \<noteq> 0"
     using reg
@@ -803,6 +816,7 @@ theorem saddle_form_two_arcs:
       "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
 proof -
   \<comment> \<open>STEP 1: \<open>a \<noteq> 0\<close> on a small ball around \<open>p\<close>.\<close>
   have da: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> (a has_derivative (\<lambda>h. inner (ga x) h)) (at x)"
@@ -957,6 +971,7 @@ proof -
       and gam1C1: "\<gamma>1 C1_differentiable_on {a1..b1}"
       and pgam1: "p \<in> \<gamma>1 ` {a1..b1}"
       and cover1: "{x. lp x = 0} \<inter> ball p \<rho>1' \<subseteq> \<gamma>1 ` {a1..b1}"
+      and imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>1"
     show ?thesis
     proof (rule level_zero_C1_arc[OF rpos1 lmC1 lmp glmp])
       fix \<gamma>2 :: "real \<Rightarrow> real^2" and a2 b2 \<rho>2' :: real
@@ -964,6 +979,7 @@ proof -
         and gam2C1: "\<gamma>2 C1_differentiable_on {a2..b2}"
         and pgam2: "p \<in> \<gamma>2 ` {a2..b2}"
         and cover2: "{x. lm x = 0} \<inter> ball p \<rho>2' \<subseteq> \<gamma>2 ` {a2..b2}"
+        and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>1"
       define r where "r = min \<rho>a (min \<rho>1 (min \<rho>1' \<rho>2'))"
       have rpos: "0 < r"
         unfolding r_def using \<rho>apos rpos1 rho1'pos rho2'pos by simp
@@ -992,8 +1008,11 @@ proof -
           thus ?thesis by blast
         qed
       qed
+      have ballsub1: "ball p \<rho>1 \<subseteq> ball p \<rho>0" using rle1 by (rule subset_ball)
+      have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub1 by (rule order_trans)
+      have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub1 by (rule order_trans)
       show ?thesis
-        by (rule that[OF rpos a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover])
+        by (rule that[OF rpos a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover img1 img2])
     qed
   qed
   qed
@@ -1061,6 +1080,7 @@ theorem saddle_form_two_arcs_cform:
       "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
 proof -
   define f' :: "real^2 \<Rightarrow> real" where "f' = (\<lambda>x. f (sw x))"
   define a' :: "real^2 \<Rightarrow> real" where "a' = (\<lambda>x. c (sw x))"
@@ -1128,6 +1148,8 @@ proof -
       and pg1: "p' \<in> \<gamma>1' ` {a1..b1}"
       and pg2: "p' \<in> \<gamma>2' ` {a2..b2}"
       and cov: "{x. f' x = 0} \<inter> ball p' r \<subseteq> \<gamma>1' ` {a1..b1} \<union> \<gamma>2' ` {a2..b2}"
+      and imgsub1: "\<gamma>1' ` {a1..b1} \<subseteq> ball p' \<rho>0"
+      and imgsub2: "\<gamma>2' ` {a2..b2} \<subseteq> ball p' \<rho>0"
     define \<gamma>1 :: "real \<Rightarrow> real^2" where "\<gamma>1 = sw \<circ> \<gamma>1'"
     define \<gamma>2 :: "real \<Rightarrow> real^2" where "\<gamma>2 = sw \<circ> \<gamma>2'"
     have g1: "\<gamma>1 C1_differentiable_on {a1..b1}" unfolding \<gamma>1_def by (rule C1_sw_comp[OF g1C1])
@@ -1166,8 +1188,24 @@ proof -
         thus ?thesis using t by blast
       qed
     qed
+    have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0"
+    proof -
+      have "\<gamma>1 ` {a1..b1} = sw ` (\<gamma>1' ` {a1..b1})" unfolding \<gamma>1_def by (simp add: image_comp)
+      also have "\<dots> \<subseteq> sw ` (ball p' \<rho>0)" using imgsub1 by (rule image_mono)
+      also have "sw ` (ball p' \<rho>0) = ball (sw p') \<rho>0" by (rule sw_ball)
+      also have "sw p' = p" by (simp add: p'_def)
+      finally show ?thesis .
+    qed
+    have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
+    proof -
+      have "\<gamma>2 ` {a2..b2} = sw ` (\<gamma>2' ` {a2..b2})" unfolding \<gamma>2_def by (simp add: image_comp)
+      also have "\<dots> \<subseteq> sw ` (ball p' \<rho>0)" using imgsub2 by (rule image_mono)
+      also have "sw ` (ball p' \<rho>0) = ball (sw p') \<rho>0" by (rule sw_ball)
+      also have "sw p' = p" by (simp add: p'_def)
+      finally show ?thesis .
+    qed
     show ?thesis
-      by (rule that[OF rpos a1b1 a2b2 g1 g2 pin1 pin2 cover])
+      by (rule that[OF rpos a1b1 a2b2 g1 g2 pin1 pin2 cover img1 img2])
   qed
 qed
 
@@ -1181,6 +1219,7 @@ theorem saddle_form_two_arcs_purecross:
       "0 < r" "a1 \<le> b1" "a2 \<le> b2" "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
 proof -
   \<comment> \<open>component derivatives and continuity from the C1field hypotheses\<close>
   have da: "\<And>x. x \<in> ball p \<rho>0 \<Longrightarrow> (a has_derivative (\<lambda>h. inner (ga x) h)) (at x)"
@@ -1532,6 +1571,7 @@ proof -
       and gam1C1: "\<gamma>1 C1_differentiable_on {a1..b1}"
       and pgam1: "p \<in> \<gamma>1 ` {a1..b1}"
       and cover1: "{x. l1 x = 0} \<inter> ball p \<rho>1' \<subseteq> \<gamma>1 ` {a1..b1}"
+      and imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>"
     show ?thesis
     proof (rule level_zero_C1_arc[OF rpos l2C1 l2p gl2p])
       fix \<gamma>2 :: "real \<Rightarrow> real^2" and a2 b2 \<rho>2' :: real
@@ -1539,6 +1579,7 @@ proof -
         and gam2C1: "\<gamma>2 C1_differentiable_on {a2..b2}"
         and pgam2: "p \<in> \<gamma>2 ` {a2..b2}"
         and cover2: "{x. l2 x = 0} \<inter> ball p \<rho>2' \<subseteq> \<gamma>2 ` {a2..b2}"
+        and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
       define r where "r = min \<rho> (min \<rho>1' \<rho>2')"
       have rpos': "0 < r"
         unfolding r_def using rpos rho1'pos rho2'pos by simp
@@ -1564,8 +1605,10 @@ proof -
           thus ?thesis by blast
         qed
       qed
+      have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
+      have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
       show ?thesis
-        by (rule that[OF rpos' a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover])
+        by (rule that[OF rpos' a1b1 a2b2 gam1C1 gam2C1 pgam1 pgam2 cover img1 img2])
     qed
   qed
 qed

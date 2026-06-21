@@ -13,6 +13,7 @@ theorem smooth3_saddle_cover:
       "0 < r" "a1 \<le> b1" "a2 \<le> b2" "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
       "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
       "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
+      "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0"
 proof -
   \<comment> \<open>STEP 1: flatness as a derivative.  From SMOOTH3, f has the gradient derivative at p; flat = G p = 0
       turns it into the zero functional.\<close>
@@ -68,11 +69,15 @@ proof -
       show thesis
       proof (rule saddle_form_two_arcs[OF \<rho>pos aC1 bC1 cC1 True disc form])
         fix \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real
-        assume "0 < r" "a1 \<le> b1" "a2 \<le> b2"
+        assume A: "0 < r" "a1 \<le> b1" "a2 \<le> b2"
           "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
           "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
           "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
-        thus thesis by (rule that)
+        assume imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>" and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
+        have ballsub: "ball p \<rho> \<subseteq> ball p \<rho>0" using \<rho>le by (rule subset_ball)
+        have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
+        have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
+        from A img1 img2 show thesis by (rule that)
       qed
     next
       case False
@@ -83,11 +88,15 @@ proof -
         show thesis
         proof (rule saddle_form_two_arcs_cform[OF \<rho>pos aC1 bC1 cC1 True disc form])
           fix \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real
-          assume "0 < r" "a1 \<le> b1" "a2 \<le> b2"
+          assume A: "0 < r" "a1 \<le> b1" "a2 \<le> b2"
             "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
             "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
             "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
-          thus thesis by (rule that)
+          assume imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>" and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
+          have ballsub: "ball p \<rho> \<subseteq> ball p \<rho>0" using \<rho>le by (rule subset_ball)
+          have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
+          have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
+          from A img1 img2 show thesis by (rule that)
         qed
       next
         case False
@@ -100,11 +109,15 @@ proof -
         show thesis
         proof (rule saddle_form_two_arcs_purecross[OF \<rho>pos aC1 bC1 cC1 apz cpz bpz form])
           fix \<gamma>1 \<gamma>2 :: "real \<Rightarrow> real^2" and a1 b1 a2 b2 r :: real
-          assume "0 < r" "a1 \<le> b1" "a2 \<le> b2"
+          assume A: "0 < r" "a1 \<le> b1" "a2 \<le> b2"
             "\<gamma>1 C1_differentiable_on {a1..b1}" "\<gamma>2 C1_differentiable_on {a2..b2}"
             "p \<in> \<gamma>1 ` {a1..b1}" "p \<in> \<gamma>2 ` {a2..b2}"
             "{x. f x = 0} \<inter> ball p r \<subseteq> \<gamma>1 ` {a1..b1} \<union> \<gamma>2 ` {a2..b2}"
-          thus thesis by (rule that)
+          assume imgsub1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>" and imgsub2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>"
+          have ballsub: "ball p \<rho> \<subseteq> ball p \<rho>0" using \<rho>le by (rule subset_ball)
+          have img1: "\<gamma>1 ` {a1..b1} \<subseteq> ball p \<rho>0" using imgsub1 ballsub by (rule order_trans)
+          have img2: "\<gamma>2 ` {a2..b2} \<subseteq> ball p \<rho>0" using imgsub2 ballsub by (rule order_trans)
+          from A img1 img2 show thesis by (rule that)
         qed
       qed
     qed
