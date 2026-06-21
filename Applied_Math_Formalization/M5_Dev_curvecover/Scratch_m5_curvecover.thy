@@ -2138,6 +2138,304 @@ proof -
 qed
 
 
+text \<open>Face-level finite-or-flat: a locus arc meets a box face finitely UNLESS the whole
+  edge line is flat.  Lifts the line dichotomy through inj + image-into-finite-edge-set.\<close>
+
+lemma crossTheta_arc_horiz_face_finite_or_flat:
+  fixes \<omega>0 \<omega>s :: "real^2" and \<gamma> :: "real \<Rightarrow> real^2" and a b c lo1 hi1 :: real
+  assumes inj: "inj_on \<gamma> {a..b}"
+    and loc: "\<And>s. s \<in> {a..b} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<gamma> s) = 0"
+    and bdd: "\<And>s. s \<in> {a..b} \<Longrightarrow> lo1 \<le> \<gamma> s $ 1 \<and> \<gamma> s $ 1 \<le> hi1"
+  shows "finite {s \<in> {a..b}. \<gamma> s $ 2 = c} \<or> (\<forall>u::real. crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0)"
+proof (cases "\<forall>u::real. crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0")
+  case True thus ?thesis by blast
+next
+  case False
+  have dich: "finite {u::real. lo1 \<le> u \<and> u \<le> hi1 \<and> crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0}
+            \<or> (\<forall>u::real. crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0)"
+    by (rule crossTheta_horiz_edge_finite_or_flat)
+  define V where "V = {u::real. lo1 \<le> u \<and> u \<le> hi1 \<and> crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0}"
+  have finV: "finite V" unfolding V_def using dich False by blast
+  have img: "\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 2 = c} \<subseteq> (\<lambda>u. vector [u, c]) ` V"
+  proof
+    fix x assume "x \<in> \<gamma> ` {s \<in> {a..b}. \<gamma> s $ 2 = c}"
+    then obtain s where s: "s \<in> {a..b}" and g2: "\<gamma> s $ 2 = c" and xeq: "x = \<gamma> s" by blast
+    have veq: "vector [\<gamma> s $ 1, c] = \<gamma> s"
+      using g2 by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2)
+    have "\<gamma> s $ 1 \<in> V" unfolding V_def using bdd[OF s] loc[OF s] veq by simp
+    thus "x \<in> (\<lambda>u. vector [u, c]) ` V" using xeq veq by force
+  qed
+  have "finite (\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 2 = c})"
+    using img finV by (meson finite_imageI finite_subset)
+  moreover have "inj_on \<gamma> {s \<in> {a..b}. \<gamma> s $ 2 = c}" using inj by (rule inj_on_subset) auto
+  ultimately have "finite {s \<in> {a..b}. \<gamma> s $ 2 = c}" by (rule finite_imageD)
+  thus ?thesis by blast
+qed
+
+lemma crossTheta_arc_vert_face_finite_or_flat:
+  fixes \<omega>0 \<omega>s :: "real^2" and \<gamma> :: "real \<Rightarrow> real^2" and a b c lo2 hi2 :: real
+  assumes inj: "inj_on \<gamma> {a..b}"
+    and loc: "\<And>s. s \<in> {a..b} \<Longrightarrow> crossTheta \<omega>0 \<omega>s (\<gamma> s) = 0"
+    and bdd: "\<And>s. s \<in> {a..b} \<Longrightarrow> lo2 \<le> \<gamma> s $ 2 \<and> \<gamma> s $ 2 \<le> hi2"
+  shows "finite {s \<in> {a..b}. \<gamma> s $ 1 = c} \<or> (\<forall>u::real. crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0)"
+proof (cases "\<forall>u::real. crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0")
+  case True thus ?thesis by blast
+next
+  case False
+  have dich: "finite {u::real. lo2 \<le> u \<and> u \<le> hi2 \<and> crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0}
+            \<or> (\<forall>u::real. crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0)"
+    by (rule crossTheta_vert_edge_finite_or_flat)
+  define V where "V = {u::real. lo2 \<le> u \<and> u \<le> hi2 \<and> crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0}"
+  have finV: "finite V" unfolding V_def using dich False by blast
+  have img: "\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 1 = c} \<subseteq> (\<lambda>u. vector [c, u]) ` V"
+  proof
+    fix x assume "x \<in> \<gamma> ` {s \<in> {a..b}. \<gamma> s $ 1 = c}"
+    then obtain s where s: "s \<in> {a..b}" and g1: "\<gamma> s $ 1 = c" and xeq: "x = \<gamma> s" by blast
+    have veq: "vector [c, \<gamma> s $ 2] = \<gamma> s"
+      using g1 by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2)
+    have "\<gamma> s $ 2 \<in> V" unfolding V_def using bdd[OF s] loc[OF s] veq by simp
+    thus "x \<in> (\<lambda>u. vector [c, u]) ` V" using xeq veq by force
+  qed
+  have "finite (\<gamma> ` {s \<in> {a..b}. \<gamma> s $ 1 = c})"
+    using img finV by (meson finite_imageI finite_subset)
+  moreover have "inj_on \<gamma> {s \<in> {a..b}. \<gamma> s $ 1 = c}" using inj by (rule inj_on_subset) auto
+  ultimately have "finite {s \<in> {a..b}. \<gamma> s $ 1 = c}" by (rule finite_imageD)
+  thus ?thesis by blast
+qed
+
+text \<open>FLAT-edge cover (regular point on a flat box edge).  If the box edge line
+  \<open>\<omega>\<^sub>2 = c\<close> lies entirely in the locus (flat) and we have the local graph \<open>\<phi>\<close> through
+  \<open>\<omega>'\<close> (so \<open>cov0\<close> confines the local locus to \<open>\<phi>\<close>), then \<open>\<phi>\<close> runs along the flat edge
+  (cov0 applied to edge points: \<open>(s,c)\<in>locus\<inter>ball \<subseteq> \<phi>`\<close>, and \<open>\<phi>$1=s\<close> forces \<open>\<phi> s = (s,c)\<close>),
+  so the local locus is contained in the straight edge segment \<open>E\<close>, a single \<open>C\<^sup>1\<close> arc in
+  the box.  No derivative / nondegeneracy needed.\<close>
+
+lemma crossTheta_boundary_cover_flat_horiz:
+  fixes ctr \<omega>0 \<omega>s \<omega>' :: "real^2" and \<delta> a0 b0 r0 c :: real and \<phi> :: "real \<Rightarrow> real^2"
+  assumes win: "\<omega>' \<in> OmegaPF ctr \<delta>"
+    and w2c: "\<omega>'$2 = c"
+    and d0: "0 < \<delta>"
+    and r0pos: "0 < r0"
+    and a0w: "a0 \<le> \<omega>'$1" and wb0: "\<omega>'$1 \<le> b0"
+    and phi1: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<phi> s $ 1 = s"
+    and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<phi> ` {a0..b0}"
+    and flatedge: "\<And>u. crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0"
+  obtains r \<A> where "0 < r" "finite \<A>"
+      "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+      "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+proof -
+  define E where "E = (\<lambda>u::real. vector [u, c] :: real^2) ` {ctr$1 - \<delta>..ctr$1 + \<delta>}"
+  \<comment> \<open>\<phi> coincides with the flat edge wherever its parameter is within r0 of \<omega>'$1\<close>
+  have phi_flat: "\<phi> s = vector [s, c]" if s: "s \<in> {a0..b0}" and near: "\<bar>s - \<omega>'$1\<bar> < r0" for s :: real
+  proof -
+    have "dist (vector [s, c] :: real^2) \<omega>' < r0"
+    proof -
+      have "(vector [s, c] :: real^2) - \<omega>' = vector [s - \<omega>'$1, 0]"
+        using w2c by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2 vector_minus_component)
+      hence "norm ((vector [s, c]::real^2) - \<omega>') = \<bar>s - \<omega>'$1\<bar>"
+        by (simp add: norm_eq_sqrt_inner inner_vec_def sum_2 vector_2 real_sqrt_abs)
+      thus ?thesis using near by (simp add: dist_norm)
+    qed
+    hence "(vector [s, c]::real^2) \<in> {\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0"
+      using flatedge by (simp add: dist_commute)
+    then obtain t where t: "t \<in> {a0..b0}" and eq: "(vector [s, c]::real^2) = \<phi> t" using cov0 by blast
+    have "t = s" using phi1[OF t] eq by (metis vector_2)
+    thus ?thesis using eq by simp
+  qed
+  have arcE: "analytic_arc E"
+  proof -
+    have eqv: "(\<lambda>u::real. vector [u, c] :: real^2) = (\<lambda>u. u *\<^sub>R vector [1,0] + vector [0,c])"
+      by (rule ext)
+         (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2 vector_add_component vector_scaleR_component)
+    have c1: "(\<lambda>u::real. vector [u, c] :: real^2) C1_differentiable_on {ctr$1 - \<delta>..ctr$1 + \<delta>}"
+      unfolding eqv C1_differentiable_on_def
+      by (intro exI[where x="\<lambda>_. vector [1,0]"] conjI ballI)
+         (auto intro!: derivative_eq_intros continuous_on_const simp: has_vector_derivative_def)
+    show ?thesis unfolding E_def analytic_arc_def
+      using c1 d0
+      by (intro exI[where x="ctr$1 - \<delta>"] exI[where x="ctr$1 + \<delta>"]
+                exI[where x="\<lambda>u::real. vector [u, c] :: real^2"]) auto
+  qed
+  show ?thesis
+  proof (rule that[of r0 "{E}"])
+    show "0 < r0" by (rule r0pos)
+    show "finite {E}" by simp
+    have Esub: "E \<subseteq> OmegaPF ctr \<delta>"
+    proof
+      fix x assume "x \<in> E"
+      then obtain u where u: "u \<in> {ctr$1 - \<delta>..ctr$1 + \<delta>}" and xeq: "x = vector [u, c]"
+        unfolding E_def by blast
+      have cb: "ctr$2 - pi \<le> c \<and> c \<le> ctr$2 + pi"
+        using win w2c unfolding OmegaPF_def mem_box_cart
+        by (auto simp: vector_minus_component vector_add_component vector_2 dest!: spec[where x=2])
+      show "x \<in> OmegaPF ctr \<delta>"
+        unfolding OmegaPF_def mem_box_cart
+      proof (intro allI)
+        fix i :: 2
+        have lo: "(ctr - vector [\<delta>, pi]) $ i = ctr $ i - vector [\<delta>, pi] $ i" by (simp add: vector_minus_component)
+        have hi: "(ctr + vector [\<delta>, pi]) $ i = ctr $ i + vector [\<delta>, pi] $ i" by (simp add: vector_add_component)
+        show "(ctr - vector [\<delta>, pi]) $ i \<le> x $ i \<and> x $ i \<le> (ctr + vector [\<delta>, pi]) $ i"
+          using exhaust_2[of i] u cb xeq by (auto simp: lo hi vector_2)
+      qed
+    qed
+    show "\<forall>\<gamma>\<in>{E}. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>" using arcE Esub by simp
+    show "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<Union>{E}"
+    proof
+      fix x assume "x \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0"
+      hence xbox: "x \<in> OmegaPF ctr \<delta>" and xcz: "crossTheta \<omega>0 \<omega>s x = 0" and xball: "x \<in> ball \<omega>' r0"
+        by auto
+      then obtain s where s: "s \<in> {a0..b0}" and xeq: "x = \<phi> s"
+        using cov0 xcz xball by blast
+      have s_eq: "s = x$1" using phi1[OF s] xeq by simp
+      have "\<bar>x$1 - \<omega>'$1\<bar> \<le> dist x \<omega>'"
+        using component_le_norm_cart[of "x - \<omega>'" 1] by (simp add: dist_norm vector_minus_component)
+      hence near: "\<bar>s - \<omega>'$1\<bar> < r0" using xball s_eq by (simp add: dist_commute)
+      have "x = vector [s, c]" using xeq phi_flat[OF s near] by simp
+      hence "x = vector [x$1, c]" using s_eq by simp
+      moreover have "x$1 \<in> {ctr$1 - \<delta>..ctr$1 + \<delta>}"
+        using xbox unfolding OmegaPF_def mem_box_cart
+        by (auto simp: vector_minus_component vector_add_component vector_2 dest!: spec[where x=1])
+      ultimately have "x \<in> E" unfolding E_def by blast
+      thus "x \<in> \<Union>{E}" by simp
+    qed
+  qed
+qed
+
+lemma crossTheta_boundary_cover_flat_vert:
+  fixes ctr \<omega>0 \<omega>s \<omega>' :: "real^2" and \<delta> a0 b0 r0 c :: real and \<psi> :: "real \<Rightarrow> real^2"
+  assumes win: "\<omega>' \<in> OmegaPF ctr \<delta>"
+    and w1c: "\<omega>'$1 = c"
+    and r0pos: "0 < r0"
+    and a0w: "a0 \<le> \<omega>'$2" and wb0: "\<omega>'$2 \<le> b0"
+    and psi2: "\<And>s. s \<in> {a0..b0} \<Longrightarrow> \<psi> s $ 2 = s"
+    and cov0: "{\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<psi> ` {a0..b0}"
+    and flatedge: "\<And>u. crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0"
+  obtains r \<A> where "0 < r" "finite \<A>"
+      "\<forall>\<gamma>\<in>\<A>. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>"
+      "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
+proof -
+  define E where "E = (\<lambda>v::real. vector [c, v] :: real^2) ` {ctr$2 - pi..ctr$2 + pi}"
+  have psi_flat: "\<psi> s = vector [c, s]" if s: "s \<in> {a0..b0}" and near: "\<bar>s - \<omega>'$2\<bar> < r0" for s :: real
+  proof -
+    have "dist (vector [c, s] :: real^2) \<omega>' < r0"
+    proof -
+      have "(vector [c, s] :: real^2) - \<omega>' = vector [0, s - \<omega>'$2]"
+        using w1c by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2 vector_minus_component)
+      hence "norm ((vector [c, s]::real^2) - \<omega>') = \<bar>s - \<omega>'$2\<bar>"
+        by (simp add: norm_eq_sqrt_inner inner_vec_def sum_2 vector_2 real_sqrt_abs)
+      thus ?thesis using near by (simp add: dist_norm)
+    qed
+    hence "(vector [c, s]::real^2) \<in> {\<omega>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0"
+      using flatedge by (simp add: dist_commute)
+    then obtain t where t: "t \<in> {a0..b0}" and eq: "(vector [c, s]::real^2) = \<psi> t" using cov0 by blast
+    have "t = s" using psi2[OF t] eq by (metis vector_2)
+    thus ?thesis using eq by simp
+  qed
+  have arcE: "analytic_arc E"
+  proof -
+    have eqv: "(\<lambda>v::real. vector [c, v] :: real^2) = (\<lambda>v. v *\<^sub>R vector [0,1] + vector [c,0])"
+      by (rule ext)
+         (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2 vector_add_component vector_scaleR_component)
+    have c1: "(\<lambda>v::real. vector [c, v] :: real^2) C1_differentiable_on {ctr$2 - pi..ctr$2 + pi}"
+      unfolding eqv C1_differentiable_on_def
+      by (intro exI[where x="\<lambda>_. vector [0,1]"] conjI ballI)
+         (auto intro!: derivative_eq_intros continuous_on_const simp: has_vector_derivative_def)
+    show ?thesis unfolding E_def analytic_arc_def
+      using c1 pi_gt_zero
+      by (intro exI[where x="ctr$2 - pi"] exI[where x="ctr$2 + pi"]
+                exI[where x="\<lambda>v::real. vector [c, v] :: real^2"]) auto
+  qed
+  show ?thesis
+  proof (rule that[of r0 "{E}"])
+    show "0 < r0" by (rule r0pos)
+    show "finite {E}" by simp
+    have Esub: "E \<subseteq> OmegaPF ctr \<delta>"
+    proof
+      fix x assume "x \<in> E"
+      then obtain v where v: "v \<in> {ctr$2 - pi..ctr$2 + pi}" and xeq: "x = vector [c, v]"
+        unfolding E_def by blast
+      have cb: "ctr$1 - \<delta> \<le> c \<and> c \<le> ctr$1 + \<delta>"
+        using win w1c unfolding OmegaPF_def mem_box_cart
+        by (auto simp: vector_minus_component vector_add_component vector_2 dest!: spec[where x=1])
+      show "x \<in> OmegaPF ctr \<delta>"
+        unfolding OmegaPF_def mem_box_cart
+      proof (intro allI)
+        fix i :: 2
+        have lo: "(ctr - vector [\<delta>, pi]) $ i = ctr $ i - vector [\<delta>, pi] $ i" by (simp add: vector_minus_component)
+        have hi: "(ctr + vector [\<delta>, pi]) $ i = ctr $ i + vector [\<delta>, pi] $ i" by (simp add: vector_add_component)
+        show "(ctr - vector [\<delta>, pi]) $ i \<le> x $ i \<and> x $ i \<le> (ctr + vector [\<delta>, pi]) $ i"
+          using exhaust_2[of i] v cb xeq by (auto simp: lo hi vector_2)
+      qed
+    qed
+    show "\<forall>\<gamma>\<in>{E}. analytic_arc \<gamma> \<and> \<gamma> \<subseteq> OmegaPF ctr \<delta>" using arcE Esub by simp
+    show "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0 \<subseteq> \<Union>{E}"
+    proof
+      fix x assume "x \<in> {\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r0"
+      hence xbox: "x \<in> OmegaPF ctr \<delta>" and xcz: "crossTheta \<omega>0 \<omega>s x = 0" and xball: "x \<in> ball \<omega>' r0"
+        by auto
+      then obtain s where s: "s \<in> {a0..b0}" and xeq: "x = \<psi> s" using cov0 by blast
+      have s_eq: "s = x$2" using psi2[OF s] xeq by simp
+      have "\<bar>x$2 - \<omega>'$2\<bar> \<le> dist x \<omega>'"
+        using component_le_norm_cart[of "x - \<omega>'" 2] by (simp add: dist_norm vector_minus_component)
+      hence near: "\<bar>s - \<omega>'$2\<bar> < r0" using xball s_eq by (simp add: dist_commute)
+      have "x = vector [c, s]" using xeq psi_flat[OF s near] by simp
+      hence "x = vector [c, x$2]" using s_eq by simp
+      moreover have "x$2 \<in> {ctr$2 - pi..ctr$2 + pi}"
+        using xbox unfolding OmegaPF_def mem_box_cart
+        by (auto simp: vector_minus_component vector_add_component vector_2 dest!: spec[where x=2])
+      ultimately have "x \<in> E" unfolding E_def by blast
+      thus "x \<in> \<Union>{E}" by simp
+    qed
+  qed
+qed
+
+text \<open>Every flat box edge forces R = Ac*ky_s - Bc*kx_s = 0.  Contrapositive (used in the
+  wiring): R \<noteq> 0 \<Longrightarrow> no box edge is flat \<Longrightarrow> every face is finite \<Longrightarrow> the clip always works.\<close>
+
+lemma crossTheta_horiz_flat_imp_R0:
+  fixes \<omega>0 \<omega>s :: "real^2" and c :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes flat: "\<And>u. crossTheta \<omega>0 \<omega>s (vector [u, c]) = 0"
+  shows "Ac * ky \<omega>s - Bc * kx \<omega>s = 0"
+proof -
+  have sep: "crossTheta \<omega>0 \<omega>s (vector [u, c])
+           = (- (Bc * kz \<omega>s + ky \<omega>s) * cos c + (Ac * kz \<omega>s + kx \<omega>s) * sin c) * cos u
+           + (Ac * ky \<omega>s - Bc * kx \<omega>s) * sin u
+           + (Bc * cos c - Ac * sin c)" for u :: real
+    unfolding Ac_def Bc_def
+    by (subst crossTheta_separable) (simp add: vector_2 crossA_def crossB_def crossG_def algebra_simps)
+  have e1: "Ac * ky \<omega>s - Bc * kx \<omega>s + (Bc * cos c - Ac * sin c) = 0"
+    using flat[of "pi/2"] sep[of "pi/2"] by (simp add: sin_pi_half cos_pi_half)
+  have e2: "- (Ac * ky \<omega>s - Bc * kx \<omega>s) + (Bc * cos c - Ac * sin c) = 0"
+    using flat[of "- pi/2"] sep[of "- pi/2"] by (simp add: sin_pi_half cos_pi_half)
+  from e1 e2 show ?thesis by linarith
+qed
+
+lemma crossTheta_vert_flat_imp_R0:
+  fixes \<omega>0 \<omega>s :: "real^2" and c :: real
+  defines "Ac \<equiv> (kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+      and "Bc \<equiv> (ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)"
+  assumes flat: "\<And>u. crossTheta \<omega>0 \<omega>s (vector [c, u]) = 0"
+    and sinc: "sin c \<noteq> 0"
+  shows "Ac * ky \<omega>s - Bc * kx \<omega>s = 0"
+proof -
+  have sep: "crossTheta \<omega>0 \<omega>s (vector [c, u])
+           = crossA Bc \<omega>s c * cos u + crossB Ac \<omega>s c * sin u + crossG Ac Bc \<omega>s c" for u :: real
+    unfolding Ac_def Bc_def by (subst crossTheta_separable) (simp add: vector_2)
+  have e1: "crossA Bc \<omega>s c + crossG Ac Bc \<omega>s c = 0"
+    using flat[of 0] sep[of 0] by simp
+  have e2: "- crossA Bc \<omega>s c + crossG Ac Bc \<omega>s c = 0"
+    using flat[of pi] sep[of pi] by simp
+  have "crossG Ac Bc \<omega>s c = 0" using e1 e2 by linarith
+  hence "(Ac * ky \<omega>s - Bc * kx \<omega>s) * sin c = 0" by (simp add: crossG_def)
+  thus ?thesis using sinc by simp
+qed
+
+
+
+
+
 
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
