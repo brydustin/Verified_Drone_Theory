@@ -1,5 +1,5 @@
 theory Scratch_m5_D2
-  imports "Applied_Math_Appendix.Nonemptiness_Robust2"
+  imports "Applied_Math_Appendix.Nonemptiness_Robust2" "Applied_Math_M5_D5.Scratch_m5_D5"
 begin
 
 text \<open>(M5) stub D2 --- the beam-center stratum \<open>cvec_dip \<omega>0 \<omega>s \<omega> = 0\<close>.
@@ -306,10 +306,57 @@ lemma m5_D2_slice_nowhere_dense:
           \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
-  \<comment> \<open>GENUINE remaining math: the det-Hessian covariance polynomial at a beam center
-      (\<open>gdip''(\<pi>/2) \<noteq> 0\<close>) cuts out a positive-codimension (nowhere-dense) \<open>x\<close>-set.
-      NOT a Robust3 freebie.\<close>
-  sorry
+  \<comment> \<open>Ported from the proven D5 covariance core.  \<open>cos \<omega>\<^sub>1 = 0\<close>: the slice is a subset of the
+      nowhere-dense det-Hessian zero set (\<open>gdip''(\<pi>/2) \<noteq> 0\<close>).  \<open>cos \<omega>\<^sub>1 \<noteq> 0\<close>: the slice is
+      empty by criticality (@{thm beamcenter_critical_cos_zero}).\<close>
+proof (cases "cos (\<omega> $ 1) = 0")
+  case True
+  have nd: "nowhere_dense {x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+  proof -
+    have seq: "{x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
+             = {x \<in> (UNIV::((real^2)^'n) set). det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+      by simp
+    show ?thesis
+      unfolding seq
+    proof (rule lines_entire_slice_nowhere_dense)
+      show "continuous_on UNIV (\<lambda>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+        by (rule continuous_det_HessU_beamcenter[OF cz])
+      show "\<And>a v. \<exists>F. F holomorphic_on UNIV
+              \<and> (\<forall>t::real. F (complex_of_real t)
+                          = complex_of_real (det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (a + t *\<^sub>R v) \<omega>)))"
+        using rline_entire_det_HessU_beamcenter[OF cz] unfolding rline_entire_def by blast
+      show "\<exists>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+        by (rule det_HessU_beamcenter_witness[OF c6 pfw cz True])
+    qed
+  qed
+  have sub: "{x :: (real^2)^'n.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}
+        \<subseteq> {x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+    by blast
+  show ?thesis by (rule nowhere_dense_subset[OF sub nd])
+next
+  case False
+  have empty: "{x :: (real^2)^'n.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0} = {}"
+  proof (rule equals0I)
+    fix x :: "(real^2)^'n"
+    assume "x \<in> {x :: (real^2)^'n.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+    hence g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
+    have "cos (\<omega> $ 1) = 0" by (rule beamcenter_critical_cos_zero[OF c6 pfw cz g0])
+    with False show False by simp
+  qed
+  show ?thesis unfolding empty by simp
+qed
 
 
 section \<open>Assembly: \<open>m5_D2_beamcenter\<close> from finite \<open>K\<close> + nowhere-dense slices\<close>

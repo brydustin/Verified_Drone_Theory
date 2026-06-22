@@ -1,4 +1,6 @@
 session Applied_Math_M5_D2 in "." = Applied_Math_Appendix +
   options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_M5_D5
   theories
     Scratch_m5_D2
