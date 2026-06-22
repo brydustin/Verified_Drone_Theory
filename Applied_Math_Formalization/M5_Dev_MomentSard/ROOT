@@ -2,3 +2,4 @@ session Applied_Math_MomentSard in "." = Applied_Math_Appendix +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   theories
     Scratch_momentsard
+    Scratch_mstargc1
