@@ -51,7 +51,7 @@ lemma has_derivative_d_A_moment_x:
                             ((-(c \<bullet> (k $ n))) *\<^sub>R (\<i> * cis (-(c \<bullet> (x $ n)))))))
          (at x within V)"
   unfolding d_A_moment_x_def
-  by (rule has_derivative_sum) (rule has_derivative_d_phase_x)
+  by (rule has_derivative_sum, rule has_derivative_d_phase_x)
 
 text \<open>The weighted moments carry a polynomial weight in x, so their second x-derivatives
   are proven as differentiability (existence) via differentiableI + derivative_intros over
@@ -64,18 +64,91 @@ lemma differentiable_d_M1_moment_x:
   fixes c :: planar and x h :: "planar^'n" and V :: "(planar^'n) set"
   shows "(\<lambda>y::planar^'n. d_M1_moment_x y c h) differentiable (at x within V)"
   unfolding d_M1_moment_x_def
-  by (rule differentiableI, rule has_derivative_sum, rule has_derivative_add,
-      rule has_derivative_mult[OF has_derivative_const has_derivative_phase_x],
-      rule has_derivative_mult[OF has_derivative_of_real_lift[OF has_derivative_nth_k_x]
-                                  has_derivative_d_phase_x])
+  by (rule differentiableI[
+        OF has_derivative_sum[
+          OF has_derivative_add[
+            OF has_derivative_mult[
+                 OF has_derivative_const has_derivative_phase_x]
+               has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_nth_k_x]
+                    has_derivative_d_phase_x]]]])
 
 lemma differentiable_d_M2_moment_x:
   fixes c :: planar and x h :: "planar^'n" and V :: "(planar^'n) set"
   shows "(\<lambda>y::planar^'n. d_M2_moment_x y c h) differentiable (at x within V)"
   unfolding d_M2_moment_x_def
-  by (rule differentiableI, rule has_derivative_sum, rule has_derivative_add,
-      rule has_derivative_mult[OF has_derivative_const has_derivative_phase_x],
-      rule has_derivative_mult[OF has_derivative_of_real_lift[OF has_derivative_nth_k_x]
-                                  has_derivative_d_phase_x])
+  by (rule differentiableI[
+        OF has_derivative_sum[
+          OF has_derivative_add[
+            OF has_derivative_mult[
+                 OF has_derivative_const has_derivative_phase_x]
+               has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_nth_k_x]
+                    has_derivative_d_phase_x]]]])
+
+text \<open>M11, M22 (quadratic weight) and M12 (mixed weight w_M12 = p1*p2): same shape,
+  proven uniformly by peeling of_real (has_derivative_of_real_lift) and letting
+  derivative_intros + the projection/phase/d_phase bricks build the derivative.\<close>
+
+lemma differentiable_d_M11_moment_x:
+  fixes c :: planar and x h :: "planar^'n" and V :: "(planar^'n) set"
+  shows "(\<lambda>y::planar^'n. d_M11_moment_x y c h) differentiable (at x within V)"
+  unfolding d_M11_moment_x_def
+  by (rule differentiableI[
+        OF has_derivative_sum[
+          OF has_derivative_add[
+            OF has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_mult[
+                           OF has_derivative_mult[
+                                OF has_derivative_const has_derivative_nth_k_x]
+                              has_derivative_const]]
+                    has_derivative_phase_x]
+               has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_nth_k_sq_x]
+                    has_derivative_d_phase_x]]]])
+
+lemma differentiable_d_M22_moment_x:
+  fixes c :: planar and x h :: "planar^'n" and V :: "(planar^'n) set"
+  shows "(\<lambda>y::planar^'n. d_M22_moment_x y c h) differentiable (at x within V)"
+  unfolding d_M22_moment_x_def
+  by (rule differentiableI[
+        OF has_derivative_sum[
+          OF has_derivative_add[
+            OF has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_mult[
+                           OF has_derivative_mult[
+                                OF has_derivative_const has_derivative_nth_k_x]
+                              has_derivative_const]]
+                    has_derivative_phase_x]
+               has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_nth_k_sq_x]
+                    has_derivative_d_phase_x]]]])
+
+lemma differentiable_d_M12_moment_x:
+  fixes c :: planar and x h :: "planar^'n" and V :: "(planar^'n) set"
+  shows "(\<lambda>y::planar^'n. d_M12_moment_x y c h) differentiable (at x within V)"
+  unfolding d_M12_moment_x_def w_M12_def dw_M12_def
+  by (rule differentiableI[
+        OF has_derivative_sum[
+          OF has_derivative_add[
+            OF has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_add[
+                           OF has_derivative_mult[
+                                OF has_derivative_const has_derivative_nth_k_x]
+                              has_derivative_mult[
+                                OF has_derivative_nth_k_x has_derivative_const]]]
+                    has_derivative_phase_x]
+               has_derivative_mult[
+                 OF has_derivative_of_real_lift[
+                      OF has_derivative_mult[
+                           OF has_derivative_nth_k_x has_derivative_nth_k_x]]
+                    has_derivative_d_phase_x]]]])
 
 end
