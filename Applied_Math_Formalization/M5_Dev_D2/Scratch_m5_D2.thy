@@ -180,11 +180,109 @@ text \<open>\<^bold>\<open>The beam-center witness-angle set is finite.\<close> 
 lemma m5_D2_beamcenter_K_finite:
   fixes ctr \<omega>0 \<omega>s :: "real^2" and \<delta> :: real
   shows "finite {\<omega> \<in> OmegaPF ctr \<delta>. cos (\<omega> $ 1) = 0 \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
-  \<comment> \<open>GENUINE remaining math: discreteness/finiteness of the joint
-      \<open>cos(\<omega>\<^sub>1)=0 \<and> cvec=0\<close> witness locus inside the compact box (reference-angle
-      reduction via @{thm sin_cos_eq_iff} + @{thm finite_affine_int_zeros}).
-      NOT a Robust3 freebie.\<close>
-  sorry
+  \<comment> \<open>GENUINE remaining math (now discharged): at \<open>cos(\<omega>\<^sub>1)=0\<close> (so \<open>kz \<omega>=0\<close>,
+      \<open>sin(\<omega>\<^sub>1)=\<plusminus>1\<close>) the two scalar equations \<open>cvec\<^sub>1=cvec\<^sub>2=0\<close> read
+      \<open>sin(\<omega>\<^sub>1)\<cdot>cos(\<omega>\<^sub>2)=P\<close>, \<open>sin(\<omega>\<^sub>1)\<cdot>sin(\<omega>\<^sub>2)=Q\<close> with constants
+      \<open>P=kx \<omega>s+Ac\<cdot>kz \<omega>s\<close>, \<open>Q=ky \<omega>s+Bc\<cdot>kz \<omega>s\<close> (\<open>Ac,Bc\<close> the usual ratios).
+      Eliminating \<open>sin(\<omega>\<^sub>1)\<close> gives the phase relation \<open>Q\<cdot>cos(\<omega>\<^sub>2)-P\<cdot>sin(\<omega>\<^sub>2)=0\<close>;
+      if \<open>P=Q=0\<close> the locus is empty (forces \<open>cos\<^sup>2+sin\<^sup>2=0\<close>), else the phase
+      relation has finitely many \<open>\<omega>\<^sub>2\<close> in the box (@{thm finite_phase_zeros_interval});
+      \<open>cos(\<omega>\<^sub>1)=0\<close> pins \<open>\<omega>\<^sub>1\<close> to a finite set (@{thm finite_cos_zeros_interval}).\<close>
+proof -
+  define Ac :: real where "Ac = (kx \<omega>0 - kx \<omega>s) / (kz \<omega>s - kz \<omega>0)"
+  define Bc :: real where "Bc = (ky \<omega>0 - ky \<omega>s) / (kz \<omega>s - kz \<omega>0)"
+  define P :: real where "P = kx \<omega>s + Ac * kz \<omega>s"
+  define Q :: real where "Q = ky \<omega>s + Bc * kz \<omega>s"
+  define K :: "(real^2) set" where
+    "K = {\<omega> \<in> OmegaPF ctr \<delta>. cos (\<omega> $ 1) = 0 \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
+  \<comment> \<open>The two scalar beam-center equations at \<open>cos(\<omega>\<^sub>1)=0\<close>.\<close>
+  have eqs: "sin (\<omega> $ 1) * cos (\<omega> $ 2) = P \<and> sin (\<omega> $ 1) * sin (\<omega> $ 2) = Q"
+    if cz: "cos (\<omega> $ 1) = 0" and c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0" for \<omega> :: "real^2"
+  proof -
+    have kzw: "kz \<omega> = 0" using cz by (simp add: kz_def)
+    have c1: "cvec_dip \<omega>0 \<omega>s \<omega> $ 1 = 0" and c2: "cvec_dip \<omega>0 \<omega>s \<omega> $ 2 = 0"
+      using c0 by simp_all
+    have e1: "(kx \<omega> - kx \<omega>s) + Ac * (kz \<omega> - kz \<omega>s) = 0"
+      using c1 unfolding cvec_dip_def Ac_def by (simp add: axis_def)
+    have e2: "(ky \<omega> - ky \<omega>s) + Bc * (kz \<omega> - kz \<omega>s) = 0"
+      using c2 unfolding cvec_dip_def Bc_def by (simp add: axis_def)
+    have p1: "sin (\<omega> $ 1) * cos (\<omega> $ 2) = P"
+      using e1 kzw unfolding P_def kx_def by (simp add: algebra_simps)
+    have p2: "sin (\<omega> $ 1) * sin (\<omega> $ 2) = Q"
+      using e2 kzw unfolding Q_def ky_def by (simp add: algebra_simps)
+    show ?thesis using p1 p2 by blast
+  qed
+  \<comment> \<open>The \<open>\<omega>\<^sub>1\<close> coordinate ranges over the finite cos-zero set inside the box.\<close>
+  define S1 :: "real set" where
+    "S1 = {t::real. ctr $ 1 - \<delta> \<le> t \<and> t \<le> ctr $ 1 + \<delta> \<and> cos t = 0}"
+  have finS1: "finite S1" unfolding S1_def by (rule finite_cos_zeros_interval)
+  show ?thesis
+  proof (cases "P = 0 \<and> Q = 0")
+    case True
+    \<comment> \<open>\<open>P=Q=0\<close>: any witness forces \<open>cos(\<omega>\<^sub>2)=sin(\<omega>\<^sub>2)=0\<close>, impossible; \<open>K\<close> is empty.\<close>
+    have "K = {}"
+    proof (rule ccontr)
+      assume "K \<noteq> {}"
+      then obtain \<omega> :: "real^2" where wK: "\<omega> \<in> K" by blast
+      have cz: "cos (\<omega> $ 1) = 0" using wK by (simp add: K_def)
+      have c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0" using wK by (simp add: K_def)
+      have s1: "sin (\<omega> $ 1) \<noteq> 0"
+      proof -
+        have "sin (\<omega> $ 1) ^ 2 = 1"
+          using sin_cos_squared_add[of "\<omega> $ 1"] cz by simp
+        thus ?thesis by (auto simp: power2_eq_square)
+      qed
+      have "sin (\<omega> $ 1) * cos (\<omega> $ 2) = 0" "sin (\<omega> $ 1) * sin (\<omega> $ 2) = 0"
+        using eqs[OF cz c0] True by simp_all
+      hence "cos (\<omega> $ 2) = 0" "sin (\<omega> $ 2) = 0" using s1 by simp_all
+      thus False using sin_cos_squared_add[of "\<omega> $ 2"] by simp
+    qed
+    thus ?thesis by (simp flip: K_def)
+  next
+    case False
+    hence ABnz: "Q \<noteq> 0 \<or> - P \<noteq> 0" by auto
+    \<comment> \<open>\<open>\<omega>\<^sub>2\<close> ranges over the finite zero set of the phase form \<open>Q\<cdot>cos - P\<cdot>sin\<close>.\<close>
+    define S2 :: "real set" where
+      "S2 = {u::real. ctr $ 2 - pi \<le> u \<and> u \<le> ctr $ 2 + pi
+              \<and> Q * cos u + (- P) * sin u = 0}"
+    have finS2: "finite S2" unfolding S2_def by (rule finite_phase_zeros_interval[OF ABnz])
+    have Ksub: "K \<subseteq> (\<lambda>(t, u). vector [t, u] :: real^2) ` (S1 \<times> S2)"
+    proof
+      fix \<omega> :: "real^2" assume wK: "\<omega> \<in> K"
+      have wD: "\<omega> \<in> OmegaPF ctr \<delta>" using wK by (simp add: K_def)
+      have cz: "cos (\<omega> $ 1) = 0" using wK by (simp add: K_def)
+      have c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0" using wK by (simp add: K_def)
+      have bnds: "ctr $ 1 - \<delta> \<le> \<omega> $ 1 \<and> \<omega> $ 1 \<le> ctr $ 1 + \<delta>
+                \<and> ctr $ 2 - pi \<le> \<omega> $ 2 \<and> \<omega> $ 2 \<le> ctr $ 2 + pi"
+        by (rule OmegaPF_component_bounds[OF wD])
+      have p1: "sin (\<omega> $ 1) * cos (\<omega> $ 2) = P"
+        and p2: "sin (\<omega> $ 1) * sin (\<omega> $ 2) = Q"
+        using eqs[OF cz c0] by simp_all
+      \<comment> \<open>Eliminate \<open>sin(\<omega>\<^sub>1)\<close>: \<open>Q\<cdot>cos(\<omega>\<^sub>2) - P\<cdot>sin(\<omega>\<^sub>2) = sin(\<omega>\<^sub>1)\<cdot>(Q\<cdot>cos\<cdot>... )\<close>.\<close>
+      have pz: "Q * cos (\<omega> $ 2) + (- P) * sin (\<omega> $ 2) = 0"
+      proof -
+        have "Q * cos (\<omega> $ 2) + (- P) * sin (\<omega> $ 2)
+            = (sin (\<omega> $ 1) * sin (\<omega> $ 2)) * cos (\<omega> $ 2)
+            - (sin (\<omega> $ 1) * cos (\<omega> $ 2)) * sin (\<omega> $ 2)"
+          by (simp add: p1[symmetric] p2[symmetric])
+        also have "\<dots> = 0" by (simp add: algebra_simps)
+        finally show ?thesis .
+      qed
+      have mem: "(\<omega> $ 1, \<omega> $ 2) \<in> S1 \<times> S2"
+        using bnds cz pz by (auto simp: S1_def S2_def)
+      show "\<omega> \<in> (\<lambda>(t, u). vector [t, u] :: real^2) ` (S1 \<times> S2)"
+      proof (rule image_eqI[where x = "(\<omega> $ 1, \<omega> $ 2)"])
+        show "\<omega> = (\<lambda>(t, u). vector [t, u] :: real^2) (\<omega> $ 1, \<omega> $ 2)"
+          by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2)
+        show "(\<omega> $ 1, \<omega> $ 2) \<in> S1 \<times> S2" by (rule mem)
+      qed
+    qed
+    have "finite K"
+      by (rule finite_subset[OF Ksub
+            finite_imageI[OF finite_cartesian_product[OF finS1 finS2]]])
+    thus ?thesis by (simp flip: K_def)
+  qed
+qed
 
 
 section \<open>The per-beam-center-angle slice is nowhere dense (scoped genuine-math sorry)\<close>
