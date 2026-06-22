@@ -78,3 +78,13 @@ session Applied_Math_HigherDiff in "HigherDiff" = "HOL-Analysis" +
     Higher_Differentiability
     Higher_Differentiability_Multi
     Ck1_C1_Bridge
+
+(* M5 consolidation: Nonemptiness_Robust3 (the M5/F0 capstone, formerly in no
+   session) baked as a leaf on the prebuilt Applied_Math_Appendix heap, so the
+   D1/D2/D5/D34 graft + the F0 chain are checked in CI.  quick_and_dirty allows
+   the two terminal D34 chart-branch sorries to remain while everything else is
+   verified for real. *)
+session Applied_Math_Appendix_Full in "Appendix/Robust3" = Applied_Math_Appendix +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Nonemptiness_Robust3
