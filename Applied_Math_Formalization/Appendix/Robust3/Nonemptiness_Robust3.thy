@@ -2432,6 +2432,196 @@ text \<open>The Branch-P residual: the complementary (non phase-collinear) part.
   gradU rows degenerate exactly at the residual witnesses), so a dedicated
   stratification is required.  Carried as a single scoped \<open>sorry\<close>.\<close>
 
+
+(* ===== D4 Stage-B reduction: D4charts chart-route (BadXGW RETAINS gradU=0 -> sound) =====
+   phase_collinear already defined above (~L2358); Sard NOT needed -- negligible_singular_image_2n
+   + meager_negligible_closed_cover resolve from the Applied_Math_Nonemptiness heap. The single
+   new sorry is branchP_indep_charts_Nn, the canonical D4 IFT chart core. ===== *)
+
+definition BadXGW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
+  "BadXGW \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
+        gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+      \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+      \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+
+
+subsection \<open>The rank-drop dichotomy predicate \<open>\<gamma> \<parallel> c\<close> (copied verbatim)\<close>
+
+definition gamma_par_c :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> bool" where
+  "gamma_par_c \<omega>0 \<omega>s \<omega> \<longleftrightarrow> phase_collinear \<omega>0 \<omega>s \<omega>"
+
+lemma not_gamma_par_c_iff:
+  "\<not> gamma_par_c \<omega>0 \<omega>s \<omega> \<longleftrightarrow>
+     (\<forall>t. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<noteq> t *\<^sub>R cvec_dip \<omega>0 \<omega>s \<omega>)
+   \<and> (\<forall>t. cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> t *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))"
+  unfolding gamma_par_c_def phase_collinear_def by blast
+
+
+subsection \<open>Structural set algebra for \<open>BadXGW\<close> (sorry-free, copied verbatim)\<close>
+
+lemma BadXGW_mono:
+  fixes \<Gamma> \<Delta> :: "(real^2) set"
+  assumes "\<Gamma> \<subseteq> \<Delta>"
+  shows "BadXGW \<omega>0 \<omega>s \<Gamma> \<subseteq> (BadXGW \<omega>0 \<omega>s \<Delta> :: ((real^2)^'n) set)"
+  using assms unfolding BadXGW_def by blast
+
+lemma BadXGW_UN:
+  fixes arc :: "'i \<Rightarrow> (real^2) set"
+  shows "BadXGW \<omega>0 \<omega>s (\<Union>i\<in>I. arc i)
+          = (\<Union>i\<in>I. (BadXGW \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
+  unfolding BadXGW_def by blast
+
+lemma BadXGW_point:
+  fixes \<omega> :: "real^2"
+  shows "BadXGW \<omega>0 \<omega>s {\<omega>}
+          = {x :: (real^2)^'n.
+                gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+              \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+              \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+  unfolding BadXGW_def by blast
+
+
+subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>sorry\<close>)\<close>
+
+text \<open>\<^bold>\<open>The genuine geometric-measure content, isolated as one precisely-scoped
+  statement.\<close>  Over the linear-independence (\<open>\<gamma> \<not>\<parallel> c\<close>) region \<open>\<Gamma> \<subseteq> OmegaPF ctr \<delta>\<close>,
+  the retained-constraint bad \<open>x\<close>-fibre \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> admits a chart bundle in
+  the EXACT shape consumed by @{thm negligible_proj_charts_Nn} (the @{thm
+  charts_core_Nn} output): a COUNTABLE family of charts
+  \<open>charts i :: (real^2)^'n \<Rightarrow> ((real^2)^'n \<times> (real^2))\<close> with critical sets \<open>Crit i\<close>
+  and blinfun derivatives \<open>D i\<close> such that
+  \<^enum> the bad fibre is covered by the \<open>x\<close>-projections \<open>(fst \<circ> charts i) ` Crit i\<close>;
+  \<^enum> on each \<open>Crit i\<close> the projection \<open>fst \<circ> charts i\<close> has derivative \<open>D i x\<close>;
+  \<^enum> that derivative is NON-surjective on \<open>(real^2)^'n\<close> (the codimension \<open>\<ge> 1\<close>
+    rank-drop from RETAINED \<open>gradU = 0\<close> + the moment rank-drop), and
+  \<^enum> each \<open>x\<close>-projection piece \<open>(fst \<circ> charts i) ` Crit i\<close> is CLOSED.
+
+  This is the implicit-function-theorem chart of the retained-constraint locus.  See
+  the file header for the engine analysis showing why neither @{thm charts_core_Nn}
+  (G = \<open>gradU\<close>: its \<open>\<omega>\<close>-partial rank drop is \<open>det (HessU) = 0\<close>, not the moment
+  \<open>x\<close>-Jacobian rank drop) nor @{thm parametric_transversality_negligible_complex}
+  (its rank drop is the \<open>\<omega>\<close>-partial of a complex map, with the variable roles
+  transposed relative to the \<open>x\<close>-partial @{const DM_paper_x}) yields an inclusion of
+  \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> into the engine bad set.  The codimension source is the
+  conjunction \<open>gradU = 0\<close> \<open>\<and>\<close> the moment rank drop; realising the chart of that
+  combined locus is the genuine multi-week IFT content and does NOT follow from
+  @{text nd} alone.  NOT a splice freebie.\<close>
+
+lemma branchP_indep_charts_Nn:
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+    and \<Gamma> :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and Gsub: "\<Gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and Gindep: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
+    and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
+              nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+            \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+  \<comment> \<open>GENUINE geometric-measure core: the IFT chart of the retained-constraint bad
+      \<open>(x,\<omega>)\<close> locus in the @{thm charts_core_Nn} output shape.  The single irreducible
+      \<open>sorry\<close> of this file; it does NOT follow from @{text nd} alone (see header).
+      NOT a splice freebie.\<close>
+  sorry
+
+
+subsection \<open>The verbatim target: the closed negligible cover (sorry-free from the bundle)\<close>
+
+text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
+  From the chart bundle @{thm branchP_indep_charts_Nn} the pieces
+  \<open>K i = (fst \<circ> charts i) ` (Crit i)\<close> are CLOSED (chart output) and NEGLIGIBLE
+  (@{thm negligible_singular_image_2n}: the projection has non-surjective derivative
+  on \<open>Crit i\<close>), and they cover the bad fibre.  This turns the IFT-chart content into
+  the countable closed negligible cover the reduction layer consumes.  The target
+  statement is copied VERBATIM from the D4 core file.\<close>
+
+lemma branchP_indep_negligible_closed_cover:
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+    and \<Gamma> :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and Gsub: "\<Gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and Gindep: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
+    and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
+              nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+  shows "\<exists>K :: nat \<Rightarrow> ((real^2)^'n) set.
+            (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)
+          \<and> (\<forall>n. closed (K n))
+          \<and> (\<forall>n. negligible (K n))"
+proof -
+  obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+     and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+     and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+    where cover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+                    \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
+      and rank: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      and clo: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+    using branchP_indep_charts_Nn[OF openV Vne c6 d0 pf Gsub Gindep nd]
+    by (smt (verit, best))
+  define K :: "nat \<Rightarrow> ((real^2)^'n) set"
+    where "K i = (fst \<circ> charts i) ` (Crit i)" for i
+  have Kcover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
+    using cover unfolding K_def by simp
+  have Kclosed: "closed (K n)" for n
+    using clo unfolding K_def by blast
+  have Knegligible: "negligible (K n)" for n
+    unfolding K_def
+    by (rule negligible_singular_image_2n
+          [where f = "fst \<circ> charts n" and S = "Crit n"
+             and f' = "\<lambda>x. blinfun_apply (D n x)"])
+       (use der rank in blast)+
+  show ?thesis
+    using Kcover Kclosed Knegligible by blast
+qed
+
+
+subsection \<open>The downstream sorry-free layers (copied verbatim from D4Core)\<close>
+
+text \<open>The two sorry-free layers consumed downstream (copied verbatim from the D4
+  core file) confirm the cut is at the right place: the closed negligible cover
+  yields meagerness without further geometric-measure work.\<close>
+
+lemma branchP_indep_of_negligible_closed_cover:
+  fixes V :: "((real^2)^'n) set" and \<Gamma> :: "(real^2) set"
+    and K :: "nat \<Rightarrow> ((real^2)^'n) set"
+  assumes cover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
+    and clo: "\<And>n. closed (K n)"
+    and neg: "\<And>n. negligible (K n)"
+  shows "meager (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)"
+  by (rule meager_negligible_closed_cover[OF cover clo neg])
+
+lemma branchP_indep_core:
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+    and \<Gamma> :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and Gsub: "\<Gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and Gindep: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
+    and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
+              nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+  shows "meager (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)"
+proof -
+  obtain K :: "nat \<Rightarrow> ((real^2)^'n) set"
+    where cover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
+      and clo: "\<forall>n. closed (K n)"
+      and neg: "\<forall>n. negligible (K n)"
+    using branchP_indep_negligible_closed_cover[OF openV Vne c6 d0 pf Gsub Gindep nd]
+    by blast
+  show ?thesis
+    by (rule branchP_indep_of_negligible_closed_cover[OF cover]) (use clo neg in blast)+
+qed
+
 lemma m5_D34_D4_branchP:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
@@ -2444,7 +2634,24 @@ lemma m5_D34_D4_branchP:
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> \<not> phase_collinear \<omega>0 \<omega>s \<omega>}"
-  sorry
+  \<comment> \<open>Stage-B D4 reduction: the residual = \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> over the
+      \<open>\<gamma>\<not>\<parallel>c\<close> region \<open>\<Gamma>\<close>, closed by the grafted D4 chart-route \<open>branchP_indep_core\<close>
+      (which bottoms out at the canonical IFT core \<open>branchP_indep_charts_Nn\<close>).\<close>
+proof -
+  let ?Gam = "{\<omega>\<in>OmegaPF ctr \<delta>. \<not> phase_collinear \<omega>0 \<omega>s \<omega>}"
+  have eq: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> phase_collinear \<omega>0 \<omega>s \<omega>}
+          = (V \<inter> BadXGW \<omega>0 \<omega>s ?Gam :: ((real^2)^'n) set)"
+    unfolding BadXGW_def by blast
+  have Gsub: "?Gam \<subseteq> OmegaPF ctr \<delta>" by blast
+  have Gindep: "\<forall>\<omega>\<in>?Gam. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>" by (auto simp: gamma_par_c_def)
+  show ?thesis unfolding eq
+    by (rule branchP_indep_core[OF openV Vne c6 d0 pf Gsub Gindep nd])
+qed
 
 
 subsection \<open>Assembly: \<open>m5_D34_residual\<close> from the reduction + D3 + D4\<close>
