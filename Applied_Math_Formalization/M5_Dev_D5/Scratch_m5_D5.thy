@@ -235,7 +235,8 @@ proof -
   have d1: "(D1f has_real_derivative V) (at \<theta>)"
     unfolding V_def by (rule D1f_has_deriv[OF um0 up0])
   have openS: "open {x::real. sin x \<noteq> 0}"
-    by (rule open_Collect_neq) (auto intro!: continuous_intros)
+    using continuous_on_id continuous_on_sin
+    by (subst open_Collect_neq, auto, simp add: continuous_at_imp_continuous_on)
   have memS: "\<theta> \<in> {x::real. sin x \<noteq> 0}" using s0 by simp
   have agree: "D1f x = frechet_derivative gdip (at x) 1" if "x \<in> {x. sin x \<noteq> 0}" for x
     using that by (simp add: gdip_deriv_field_eq_D1f)
@@ -376,7 +377,7 @@ proof -
           = of_real (Re (M_paper x 0 $ 1))
             * ((- \<i>) * complex_of_real ((axis j 1)$1) * of_real (Re (M_paper x 0 $ 2))
              + (- \<i>) * complex_of_real ((axis j 1)$2) * of_real (Re (M_paper x 0 $ 3)))"
-        by (subst Ar, subst M2r, subst M3r) (simp add: Complex.complex_cnj_complex_of_real)
+        by (subst Ar, subst M2r, subst M3r) (simp only: Complex.complex_cnj_complex_of_real)
       also have "\<dots> = complex_of_real (Re (M_paper x 0 $ 1)
                        * ((axis j 1)$1 * Re (M_paper x 0 $ 2)
                         + (axis j 1)$2 * Re (M_paper x 0 $ 3))) * (- \<i>)"
