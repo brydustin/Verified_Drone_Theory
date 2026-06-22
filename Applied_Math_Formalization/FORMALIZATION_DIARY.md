@@ -3256,3 +3256,32 @@ NET: locus_locally_C1_arc now PROVES both regular orientations over the FULL box
 boundary). Single residual sorry = (a) interior transverse-crossing singular pts [needs the
 two-branch Morse/rotated-coords chart HOL-Analysis lacks -- the IRREDUCIBLE kernel] + (b) box
 boundary in the awkward orientation / corners. Strictly smaller than "all locus points".
+
+### M5 CONSOLIDATION EXECUTED: meager_rank_deficient_stratum assembled; F0 build-checked (2026-06-22)
+Executed the long-planned M5 splice (M5_CONSOLIDATION_PLAN.md). Replaced the lone bare
+on-path `sorry` in `meager_rank_deficient_stratum` with the proven four-stratum `meager_Un`
+of D1∪D2∪D5∪D34, grafting verbatim (via sed) from the proven M5_Dev_* sessions: D5
+(m5_D5_steersing + gdip-helpers + beam-center Hessian), D2 (m5_D2_beamcenter), D34
+(m5_D34_residual + phase_collinear), skeleton (m5_D1_regular + the 4-stratum assembly), and
+`fixed_c_nonsurj_nowhere_dense` discharged in-place via the resident mstarg machinery
+(surj_iff_mstarg + nowhere_dense_mstarg_zeros). Commit 81b65e1, pushed.
+
+LEAN approach (NOT the full plan): no curvecover/Morse/Sard grafted. Three seams resolved:
+- ω0/ωs are FREE vars at M5 (only local `define`s exist) => D5's m5_D5_steersing genuinely
+  needs hsep (kz ωs≠kz ω0) + kdiff => threaded into the M5 signature + m5_D5_steersing +
+  the call site, matching the existing M6 convention (Phi_bad_meager_dip already assumes
+  and passes them; now M5 too).
+- The D5 L486 kdiff-via-freebie was VESTIGIAL: the goal is pure frechet_derivative_at[OF cF].
+  `by simp` FAILS there (user caught it in jEdit); `by metis` works; the chained `also` (L1381)
+  needs `by (simp only: mult.assoc mult.commute)`.
+- Robust3 moved Appendix/ -> Appendix/Robust3/ (Isabelle forbids two sessions sharing
+  `in "Appendix"`); new leaf session Applied_Math_Appendix_Full on the prebuilt Appendix heap.
+
+VERIFIED both ways: jEdit interactive prover (user) + batch BUILD_EXIT=0 + Finished
+Applied_Math_Appendix_Full (4:36). F0_dip_nonempty is CI-build-checked for the FIRST time.
+End-state: exactly 2 on-path sorries -- m5_D34_D3_collinear, m5_D34_D4_branchP (the D3/D4 IFT
+chart-branch cores). 1->2 is decomposition, not regression (the single sorry stood for all of
+M5; the two are its irreducible analytic cores; D1/D2/D5/D34 + the C¹ arc-cover all proven).
+Stage B (optional next): graft curvecover+D3charts+D4charts to reduce the 2 bundles to the
+canonical excess_arc_charts_Nn / branchP_indep_charts_Nn. See [[m5-consolidation-ready]],
+[[m5-d2d5-machinery-map]], [[never-claim-unverified-builds]].

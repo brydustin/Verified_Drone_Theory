@@ -4,7 +4,12 @@ All line numbers from R1–R4 are confirmed against the live files. The plan fol
 
 # M5 Consolidation Plan — Graft Proven Scaffolding into `Nonemptiness_Robust3.thy`
 
-> **STATUS: PLAN ONLY — nothing executed. Review before running.**
+> **STATUS: ✅ EXECUTED (Stage A) — commit 81b65e1, 2026-06-22.** M5 assembled from
+> D1∪D2∪D5∪D34; `F0_dip_nonempty` build-checked (new leaf `Applied_Math_Appendix_Full`;
+> Robust3 moved to `Appendix/Robust3/`). **Lean graft: D5+D2+D34+skeleton+fixed_c only —
+> NO curvecover/Morse/Sard.** Two sorries remain: `m5_D34_D3_collinear`, `m5_D34_D4_branchP`.
+> Stage B (graft curvecover/charts → canonical IFT cores) NOT done. See the diary entry of
+> the same date + the `m5-consolidation-ready` memory for the seam fixes (hsep/kdiff, L1377 metis).
 
 ---
 
