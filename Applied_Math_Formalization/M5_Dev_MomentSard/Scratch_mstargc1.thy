@@ -46,7 +46,7 @@ proof -
     by (simp add: adjoint_works[OF lB])
   also have "\<dots> = (\<Sum>e\<in>Basis. inner (adjoint B (axis j (1::real))) e * inner (adjoint B (axis i (1::real))) e)"
     by (rule euclidean_inner)
-  also have "\<dots> = (\<Sum>e\<in>Basis. vec_nth (B e) j * vec_nth (B e) i)" by (simp add: key)
+  also have "\<dots> = (\<Sum>e\<in>Basis. vec_nth (B e) j * vec_nth (B e) i)" by (simp only: key)
   finally show ?thesis by (simp only: B_def o_def)
 qed
 
@@ -77,7 +77,7 @@ proof -
                      (at (f x $ k) within (\<lambda>y. f y $ k) ` V)"
       using bounded_linear_inner_left[of u] by (rule bounded_linear.has_derivative, simp)
     have "((\<lambda>y. (f y $ k) \<bullet> u) has_derivative (\<lambda>h. (D k h) \<bullet> u)) (at x within V)"
-      using has_derivative_in_compose[OF D inner_d] by (simp add: o_def)
+      using has_derivative_in_compose[OF D inner_d] by (simp only: o_def)
     thus "((\<lambda>y. f y \<bullet> b) has_derivative (\<lambda>h. (\<chi> j. D j h) \<bullet> b)) (at x within V)"
       by (simp add: b inner_axis)
   qed
@@ -164,8 +164,7 @@ lemma differentiable_mstarg_x:
   fixes c :: planar and x :: "planar^'n" and V :: "(planar^'n) set"
   shows "(\<lambda>y::planar^'n. mstarg c y) differentiable (at x within V)"
   unfolding mstarg_def det_def
-  by (rule differentiable_sum, simp, rule ballI, rule differentiable_mult,
-      rule differentiable_const, rule differentiable_prod', simp,
-      rule differentiable_matrix_G_entry)
+  by (intro differentiable_sum ballI differentiable_mult differentiable_const
+            differentiable_prod' differentiable_matrix_G_entry, simp_all)
 
 end
