@@ -47,7 +47,7 @@ proof -
   also have "\<dots> = (\<Sum>e\<in>Basis. inner (adjoint B (axis j (1::real))) e * inner (adjoint B (axis i (1::real))) e)"
     by (rule euclidean_inner)
   also have "\<dots> = (\<Sum>e\<in>Basis. vec_nth (B e) j * vec_nth (B e) i)" by (simp add: key)
-  finally show ?thesis by (simp add: B_def o_def)
+  finally show ?thesis by (simp only: B_def o_def)
 qed
 
 text \<open>Scaffolding sanity: the moment x-derivative bricks are visible through the import.\<close>
@@ -94,34 +94,78 @@ proof (rule differentiable_vec_componentwise)
   proof cases
     case 1
     hence eq: "(\<lambda>y::planar^'n. DM_paper_x y c e $ k) = (\<lambda>y. d_A_moment_x y c e)"
-      by (simp add: DM_paper_x_components DA_paper_x_def d_A_moment_x_def)
+      by (simp only: DM_paper_x_components DA_paper_x_def d_A_moment_x_def)
     show ?thesis unfolding eq by (rule differentiableI[OF has_derivative_d_A_moment_x])
   next
     case 2
     hence eq: "(\<lambda>y::planar^'n. DM_paper_x y c e $ k) = (\<lambda>y. d_M1_moment_x y c e)"
-      by (simp add: DM_paper_x_components DM1_paper_x_def d_M1_moment_x_def)
+      by (simp only: DM_paper_x_components DM1_paper_x_def d_M1_moment_x_def)
     show ?thesis unfolding eq by (rule differentiable_d_M1_moment_x)
   next
     case 3
     hence eq: "(\<lambda>y::planar^'n. DM_paper_x y c e $ k) = (\<lambda>y. d_M2_moment_x y c e)"
-      by (simp add: DM_paper_x_components DM2_paper_x_def d_M2_moment_x_def)
+      by (simp only: DM_paper_x_components DM2_paper_x_def d_M2_moment_x_def)
     show ?thesis unfolding eq by (rule differentiable_d_M2_moment_x)
   next
     case 4
     hence eq: "(\<lambda>y::planar^'n. DM_paper_x y c e $ k) = (\<lambda>y. d_M11_moment_x y c e)"
-      by (simp add: DM_paper_x_components DM11_paper_x_def d_M11_moment_x_def)
+      by (simp only: DM_paper_x_components DM11_paper_x_def d_M11_moment_x_def)
     show ?thesis unfolding eq by (rule differentiable_d_M11_moment_x)
   next
     case 5
     hence eq: "(\<lambda>y::planar^'n. DM_paper_x y c e $ k) = (\<lambda>y. d_M12_moment_x y c e)"
-      by (simp add: DM_paper_x_components DM12_paper_x_def d_M12_moment_x_def)
+      by (simp only: DM_paper_x_components DM12_paper_x_def d_M12_moment_x_def)
     show ?thesis unfolding eq by (rule differentiable_d_M12_moment_x)
   next
     case 6
     hence eq: "(\<lambda>y::planar^'n. DM_paper_x y c e $ k) = (\<lambda>y. d_M22_moment_x y c e)"
-      by (simp add: DM_paper_x_components DM22_paper_x_def d_M22_moment_x_def)
+      by (simp only: DM_paper_x_components DM22_paper_x_def d_M22_moment_x_def)
     show ?thesis unfolding eq by (rule differentiable_d_M22_moment_x)
   qed
 qed
+
+text \<open>\<^bold>\<open>A2-A4: mstarg differentiable in x (the FX side of the joint field).\<close>  Mirror the
+  cont_transC_DM_entry / cont_matrix_G_entry / cont_mstarg chain of Scratch_gram, with
+  \<open>differentiable\<close> in place of \<open>continuous_on\<close>, fed by A1.\<close>
+
+lemma differentiable_transC_DM_entry:
+  fixes c :: planar and x e :: "planar^'n" and V :: "(planar^'n) set"
+  shows "(\<lambda>y::planar^'n. vec_nth (transC (DM_paper_x y c e)) k) differentiable (at x within V)"
+proof -
+  have "(\<lambda>y. transC (DM_paper_x y c e)) differentiable (at x within V)"
+    using differentiable_DM_paper_x_vec
+          bounded_linear_imp_differentiable bounded_linear_transC differentiable_compose by blast
+  thus ?thesis
+    using bounded_linear_vec_nth bounded_linear_imp_differentiable differentiable_compose by blast
+qed
+
+lemma differentiable_matrix_G_entry:
+  fixes c :: planar and x :: "planar^'n" and V :: "(planar^'n) set"
+  shows "(\<lambda>y::planar^'n. vec_nth (vec_nth
+            (matrix ((transC \<circ> DM_paper_x y c) \<circ> adjoint (transC \<circ> DM_paper_x y c))) i) j)
+         differentiable (at x within V)"
+proof -
+  have "(\<lambda>y::planar^'n. \<Sum>e\<in>Basis.
+            vec_nth (transC (DM_paper_x y c e)) j * vec_nth (transC (DM_paper_x y c e)) i)
+         differentiable (at x within V)"
+    by (intro differentiable_sum differentiable_mult differentiable_transC_DM_entry, simp,
+           simp add: differentiable_transC_DM_entry)
+  thus ?thesis by (simp only: matrix_gram_entry)
+qed
+
+lemma differentiable_prod':
+  fixes f :: "'i \<Rightarrow> ('a::real_normed_vector) \<Rightarrow> ('b::real_normed_field)"
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> (\<lambda>y. f i y) differentiable (at x within V)"
+  shows "(\<lambda>y. \<Prod>i\<in>I. f i y) differentiable (at x within V)"
+  using assms
+  by (induction I rule: finite_induct, auto intro!: differentiable_mult differentiable_const)
+
+lemma differentiable_mstarg_x:
+  fixes c :: planar and x :: "planar^'n" and V :: "(planar^'n) set"
+  shows "(\<lambda>y::planar^'n. mstarg c y) differentiable (at x within V)"
+  unfolding mstarg_def det_def
+  by (rule differentiable_sum, simp, rule ballI, rule differentiable_mult,
+      rule differentiable_const, rule differentiable_prod', simp,
+      rule differentiable_matrix_G_entry)
 
 end
