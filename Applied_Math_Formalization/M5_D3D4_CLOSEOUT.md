@@ -84,8 +84,11 @@ submersion (vacuous `regular_value_on_Gjoint_off_Sigma`, real content hidden in 
 
 `gradU_joint_surj_of_detHess` — det HessU ≠ 0 ⟹ the joint gradU derivative is C¹ + surjective
 (SOUND via the ω-Hessian, NOT mstarg). Source: `M5_Dev_MomentSard/Scratch_bridge_check.thy`.
-Verification: **PENDING** (eval_at running). Feeds the IFT-applicability of both D3-B and D4's
-det-HessU≠0 parts.
+Verification: **VERIFIED** via eval_at — `theorem` established sorry-free on the
+Applied_Math_Appendix heap (2026-06-23). Feeds the IFT-applicability of both D3-B and D4's
+det-HessU≠0 parts. The three library/heap lemmas it composes (`gradU_dip_joint_C1`,
+`not_surj_omega_deriv_iff_detHess_dip`, `exists_surj_deriv_iff_partial`) all exist and check —
+confirming the agents' sound reduction rests on real machinery.
 
 ## 6. Phase-A asset (proven & committed 2026-06-22)
 
