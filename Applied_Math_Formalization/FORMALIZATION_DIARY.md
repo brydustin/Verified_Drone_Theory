@@ -3329,3 +3329,38 @@ NOTE: mstarg/transC layering -- transC lives in Moment_Jacobian (in bridge scope
 DEFINED in Robust3 L560; when Robust3 later imports the bridge, MOVE the mstarg definition into
 the bridge (name clash otherwise). Then layer 3 = the IFT chart engine + the transversality
 witness (the genuine core), and the det-HessU=0 stratum.
+
+### D34 ANALYTIC BRIDGE LAYER 2: moments + mstarg jointly real-analytic (2026-07-06, cont.)
+"Prove the joint (c,x)-analyticity of the moments and mstarg." Done, spliced into
+D34_Analytic_Bridge.thy, dev in M5_Dev_AnalyticMoments (stub after consolidation).
+
+GENERIC CLOSURE KIT (candidates to upstream into Real_Analytic/_Complex): real_analytic_on_
+inner (joint f.g via the euclidean_inner Basis expansion), _uminus, _Re/_Im (inner_component
+at 1/i + inner_complex_def), _Complex (componentwise over Basis_complex_def), _cmult (complex
+product via Re/Im split + complex_eq_iff), _of_real (bounded_linear_of_real), _cis
+(cis = Complex(cos,sin)), _scaleR_complex (scaleR_conv_of_real), _det (det_def: finite
+permutation sum of entry products), and matrix_gram_entry: for linear A,
+matrix (A o adjoint A) $i$j = SUM_{b in Basis} (A b $i)(A b $j) -- adjoint_works twice +
+euclidean_inner; this is what makes mstarg a polynomial in analytic entry fields, over an
+ABSTRACT Basis (no 24-fold basis enumeration!).
+
+DIPOLE LAYER: phase/d_phase joint (cis of bilinear form), the six moments, the six
+D*_paper_x Jacobian components, transC entry fields (exhaust_12 + transC_def + DM_paper_x_def),
+linear_DM_paper_x (structured, no metis), mstarg (defined in the bridge, verbatim Robust3),
+real_analytic_on_mstarg (JOINT on UNIV), + corollaries real_analytic_on_mstarg_x (fixed c)
+and real_analytic_on_mstarg_cvec ((x,omega) |-> mstarg (cvec_dip w0 ws omega) x -- the layer-3
+h-precursor).
+
+GOTCHAS (merged D34 heap): (1) `$` is PARSE-AMBIGUOUS (HMA's $h/$v survive typing) -- lemma
+STATEMENTS must spell vec_nth (prints as $; defs/proof-level rewriting unaffected). (2)
+finite_UNIV resolves to Cardinality's Phantom constant -- use the plain type-class fact
+`finite`. (3) TWO DM_paper_x constants: unqualified = Nonemptiness_Paper.DM_paper_x
+(components DA/DM1/DM2/DM11/DM12/DM22_paper_x; THIS is what mstarg/Robust3 use), shadowing
+Moment_Map.DM_paper_x (components d_*_moment_x; kept analytic too, both proven). (4) metis
+hangs in the merged heap -- all proofs are rule/intro chains.
+
+NEXT (layer 3): the analytic IFT chart engine -- U_cart/gradU joint (x,omega)-analyticity,
+then at gradU=0 & det HessU != 0 apply real_analytic_implicit_function to get the analytic
+critical graph omega*(x); local bad set = {x. h x = 0} with h = mstarg_cvec o graph, closed +
+nowhere dense by real_analytic_nowhere_dense_zeros UNLESS h == 0 on a component (the
+transversality witness -- the genuine core), plus the det HessU = 0 stratum.
