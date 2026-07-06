@@ -3402,3 +3402,24 @@ theorem); (4c) the DEGENERATE stratum det HessU = 0; (5) the Robust3 splice: cov
 sorries by countably many dichotomy charts + the degenerate/collinear strata, rewire
 Robust3 to import the bridge (move its mstarg def), weaken the D4 cover lemma to
 closed+nowhere-dense pieces (downstream only uses meager via meager_negligible_closed_cover).
+
+### D34 ANALYTIC BRIDGE LAYER 4a: critical-graph LOCAL UNIQUENESS (2026-07-06, cont.)
+"Show 4a." Done -- spliced into D34_Analytic_Bridge.thy (dev: M5_Dev_AnalyticUnique, stubbed).
+
+real_analytic_implicit_function_unique: the analytic IFT additionally exposing the
+local-inverse neighbourhood N of (x0,y0) on which the solution graph is the ONLY zero
+locus: obtains U N g with open U/N, (x0,y0) in N <= W, the graph solves F=0 with
+(x, g x) in N on U, AND forall x in U, y: (x,y) in N --> F(x,y)=0 --> y = g x.
+PROOF = the real_analytic_implicit_function assembly mirrored VERBATIM (programmatic
+extraction of the proof body!) + two new paragraphs: solutionN ((x,gx) = Psi(x,0) in U')
+and unique (Phi(x,y) = (x,0) = Phi(x,gx); homeomorphism_apply1 injectivity => y = g x).
+Green modulo ONE merged-heap gotcha: the token `inv` is claimed by algebra structure
+syntax (m_inv) in this heap -- "Illegal reference to implicit structure" -- spell
+`inv_into UNIV` (the abbreviation's expansion; surj_f_inv_f / inv_f_f still apply).
+
+dip_critical_graph_dichotomy_unique: the COMPLETE chart engine. At gradU(x0,wb)=0 &
+det HessU != 0: connected chart B, uniqueness nbhd N of (x0,wb), real-analytic graph g,
+gradU x (g x) = 0 & (x,gx) in N on B, every critical (x,w) in N over B lies ON the graph
+(w = g x), and the mstarg-along-graph dichotomy. This is everything the D34 covering
+argument needs from a single chart. Remaining: 4b transversality witness, 4c degenerate
+stratum, 5 Robust3 splice (see previous entry's audit).

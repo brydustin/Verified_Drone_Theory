@@ -949,4 +949,338 @@ proof -
   qed
 qed
 
+
+section \<open>Layer 4a: the analytic implicit function theorem WITH a uniqueness neighbourhood\<close>
+
+text \<open>@{thm real_analytic_implicit_function} produces the solution graph but does not
+  expose the neighbourhood on which the graph is the ONLY zero locus --- which the D34
+  covering argument needs (bad points near a chart must lie ON the graph).  This variant
+  mirrors the assembly proof verbatim and additionally returns the local-inverse
+  neighbourhood \<open>N\<close> (the domain of the homeomorphism \<open>\<Phi>(x,y) = (x, F(x,y))\<close>): every
+  zero of \<open>F\<close> in \<open>N\<close> over a base point of \<open>U\<close> lies on the graph, by injectivity of
+  \<open>\<Phi>\<close> on \<open>N\<close>.  Upstream candidate for \<open>Real_Analytic_IFT\<close>.\<close>
+
+theorem real_analytic_implicit_function_unique:
+  fixes F :: "('a::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'b"
+  assumes ana: "real_analytic_on F W"
+    and Wopen: "open W"
+    and pW: "(x0, y0) \<in> W"
+    and F0: "F (x0, y0) = 0"
+    and reg: "\<exists>L. ((\<lambda>y. F (x0, y)) has_derivative L) (at y0) \<and> bij L"
+  obtains U N g where
+      "open U" and "x0 \<in> U" and "open N" and "(x0, y0) \<in> N" and "N \<subseteq> W"
+      and "g x0 = y0"
+      and "real_analytic_on g U"
+      and "\<forall>x\<in>U. (x, g x) \<in> N \<and> F (x, g x) = 0"
+      and "\<forall>x\<in>U. \<forall>y. (x, y) \<in> N \<longrightarrow> F (x, y) = 0 \<longrightarrow> y = g x"
+proof -
+  let ?Phi = "\<lambda>p::'a \<times> 'b. (fst p, F p)"
+  let ?p0 = "(x0, y0)"
+  obtain L where Lder: "((\<lambda>y. F (x0, y)) has_derivative L) (at y0)"
+    and bijL: "bij L"
+    using reg by blast
+
+  have Phi_ana: "real_analytic_on ?Phi W"
+    by (rule real_analytic_on_Pair[OF real_analytic_on_fst[OF Wopen] ana])
+
+  have C1_F: "Ck_at (Suc 0) F ?p0"
+    using real_analytic_imp_Cinfinity[OF ana] pW
+    unfolding Cinfinity_on_def Cinfinity_at_def
+    by blast
+  hence Fdiff: "F differentiable at ?p0"
+    by (simp only: Ck_at.simps(2))
+  then obtain A where Fder: "(F has_derivative A) (at ?p0)"
+    unfolding differentiable_def by blast
+
+  have slice_der: "((\<lambda>y. F (x0, y)) has_derivative (\<lambda>dy. A (0, dy))) (at y0)"
+  proof -
+    have pair_der: "((\<lambda>y. (x0, y)) has_derivative (\<lambda>dy. (0, dy))) (at y0)"
+    proof -
+      have cder: "((\<lambda>y::'b. x0) has_derivative (\<lambda>dy. 0)) (at y0)"
+        by (rule has_derivative_const)
+      have idder: "((\<lambda>y::'b. y) has_derivative (\<lambda>dy. dy)) (at y0)"
+        by (rule has_derivative_ident)
+      show ?thesis
+        using has_derivative_Pair[OF cder idder] by simp
+    qed
+    show ?thesis
+      using has_derivative_compose[OF pair_der Fder] by simp
+  qed
+  have L_eq: "L = (\<lambda>dy. A (0, dy))"
+    by (rule has_derivative_unique[OF Lder slice_der])
+
+  let ?B = "\<lambda>h::'a \<times> 'b. (fst h, A h)"
+  have Phi_der: "(?Phi has_derivative ?B) (at ?p0)"
+  proof -
+    have fst_der: "((fst :: ('a \<times> 'b) \<Rightarrow> 'a) has_derivative fst) (at ?p0)"
+      by (rule bounded_linear.has_derivative[OF bounded_linear_fst has_derivative_ident])
+    show ?thesis
+      using has_derivative_Pair[OF fst_der Fder] by simp
+  qed
+
+  have blA: "bounded_linear A"
+    using Fder by (rule has_derivative_bounded_linear)
+  interpret A: bounded_linear A by (rule blA)
+  have surjL: "surj L" and injL: "inj L"
+    using bijL by (auto simp: bij_def)
+
+  let ?C = "\<lambda>q::'a \<times> 'b. (fst q, (inv_into UNIV L) (snd q - A (fst q, 0)))"
+  have B_C: "?B (?C q) = q" for q
+  proof -
+    let ?w = "snd q - A (fst q, 0)"
+    have decomp: "(fst q, (inv_into UNIV L) ?w) = (fst q, 0) + (0, (inv_into UNIV L) ?w)"
+      by simp
+    have Aq: "A (fst q, (inv_into UNIV L) ?w) = A (fst q, 0) + A (0, (inv_into UNIV L) ?w)"
+      by (subst decomp) (rule A.add)
+    have A0_inv: "A (0, (inv_into UNIV L) ?w) = ?w"
+    proof -
+      have "A (0, (inv_into UNIV L) ?w) = L ((inv_into UNIV L) ?w)"
+        using L_eq by simp
+      also have "... = ?w"
+        using surjL by (rule surj_f_inv_f)
+      finally show ?thesis .
+    qed
+    have Aeq: "A (fst q, (inv_into UNIV L) ?w) = snd q"
+      using Aq A0_inv by simp
+    show ?thesis
+      using Aeq
+      by simp
+  qed
+  have C_B: "?C (?B h) = h" for h
+  proof -
+    have Ah: "A h = A (fst h, 0) + A (0, snd h)"
+    proof -
+      have decomp: "h = (fst h, 0) + (0, snd h)"
+        by simp
+      show ?thesis
+        by (subst decomp) (rule A.add)
+    qed
+    have "A h - A (fst h, 0) = L (snd h)"
+      using Ah L_eq by simp
+    thus ?thesis
+      using injL by (simp add: inv_f_f)
+  qed
+  have bijB: "bij ?B"
+  proof (rule bijI)
+    show "inj ?B"
+    proof (rule injI)
+      fix x y :: "'a \<times> 'b"
+      assume "?B x = ?B y"
+      hence H: "?C (?B x) = ?C (?B y)"
+        by simp
+      have Cx: "?C (?B x) = x"
+        by (rule C_B)
+      have Cy: "?C (?B y) = y"
+        by (rule C_B)
+      show "x = y"
+        using H Cx Cy by metis
+    qed
+    show "surj ?B"
+      unfolding surj_def
+    proof
+      fix y :: "'a \<times> 'b"
+      have "?B (?C y) = y"
+        by (rule B_C)
+      hence "y = ?B (?C y)"
+        by simp
+      show "\<exists>x. y = ?B x"
+        using \<open>y = ?B (?C y)\<close> by blast
+    qed
+  qed
+
+  obtain U' V Psi where U'_open: "open U'" and p0_U': "?p0 \<in> U'"
+    and U'_sub: "U' \<subseteq> W" and V_open: "open V"
+    and Phi_p0_V: "?Phi ?p0 \<in> V"
+    and homeo: "homeomorphism U' V ?Phi Psi"
+    and Psi_ana: "real_analytic_on Psi V"
+  proof (rule real_analytic_local_inverse[OF Phi_ana Wopen pW])
+    show "\<exists>L. (?Phi has_derivative L) (at ?p0) \<and> bij L"
+      using Phi_der bijB by blast
+  qed blast
+
+  define U where "U = {x. (x, 0::'b) \<in> V}"
+  define g where "g = (\<lambda>x. snd (Psi (x, 0::'b)))"
+
+  have U_open: "open U"
+  proof -
+    have cont_slice: "continuous_on UNIV (\<lambda>x::'a. (x, 0::'b))"
+      by (intro continuous_intros)
+    have "open (UNIV \<inter> (\<lambda>x::'a. (x, 0::'b)) -` V)"
+      by (rule continuous_open_preimage[OF cont_slice open_UNIV V_open])
+    thus ?thesis
+      by (simp add: U_def vimage_def)
+  qed
+  have x0_U: "x0 \<in> U"
+    using Phi_p0_V F0 by (simp add: U_def)
+  have g_x0: "g x0 = y0"
+    using homeomorphism_apply1[OF homeo p0_U'] F0
+    by (simp add: g_def)
+
+  have slice_ana: "real_analytic_on (\<lambda>x::'a. (x, 0::'b)) U"
+    by (rule real_analytic_on_Pair_const[OF U_open])
+  have slice_image: "(\<lambda>x::'a. (x, 0::'b)) ` U \<subseteq> V"
+    by (auto simp: U_def)
+  have Psi_slice_ana: "real_analytic_on (\<lambda>x::'a. Psi (x, 0::'b)) U"
+    using real_analytic_on_compose[OF slice_ana Psi_ana slice_image] by simp
+  have g_ana: "real_analytic_on g U"
+  proof -
+    have snd_ana: "real_analytic_on (snd :: ('a \<times> 'b) \<Rightarrow> 'b) UNIV"
+      by (rule real_analytic_on_snd) simp
+    have "real_analytic_on (\<lambda>x::'a. snd (Psi (x, 0::'b))) U"
+      by (rule real_analytic_on_compose[OF Psi_slice_ana snd_ana]) simp
+    thus ?thesis
+      by (simp add: g_def)
+  qed
+
+  have solution: "\<forall>x\<in>U. (x, g x) \<in> W \<and> F (x, g x) = 0"
+  proof
+    fix x assume xU: "x \<in> U"
+    have x0V: "(x, 0::'b) \<in> V"
+      using xU by (simp add: U_def)
+    have Psi_in: "Psi (x, 0::'b) \<in> U'"
+      using homeomorphism_image2[OF homeo] x0V by blast
+    have Phi_Psi: "?Phi (Psi (x, 0::'b)) = (x, 0::'b)"
+      by (rule homeomorphism_apply2[OF homeo x0V])
+    have fst_Psi: "fst (Psi (x, 0::'b)) = x"
+      using Phi_Psi by simp
+    have F_Psi: "F (Psi (x, 0::'b)) = 0"
+      using Phi_Psi by simp
+    have "(x, g x) = Psi (x, 0::'b)"
+      using fst_Psi by (simp add: g_def prod_eq_iff)
+    thus "(x, g x) \<in> W \<and> F (x, g x) = 0"
+      using Psi_in U'_sub F_Psi by auto
+  qed
+
+  have solutionN: "\<forall>x\<in>U. (x, g x) \<in> U' \<and> F (x, g x) = 0"
+  proof
+    fix x assume xU: "x \<in> U"
+    have x0V: "(x, 0::'b) \<in> V"
+      using xU by (simp add: U_def)
+    have Psi_in: "Psi (x, 0::'b) \<in> U'"
+      using homeomorphism_image2[OF homeo] x0V by blast
+    have Phi_Psi: "?Phi (Psi (x, 0::'b)) = (x, 0::'b)"
+      by (rule homeomorphism_apply2[OF homeo x0V])
+    have fst_Psi: "fst (Psi (x, 0::'b)) = x"
+      using Phi_Psi by simp
+    have F_Psi: "F (Psi (x, 0::'b)) = 0"
+      using Phi_Psi by simp
+    have "(x, g x) = Psi (x, 0::'b)"
+      using fst_Psi by (simp add: g_def prod_eq_iff)
+    thus "(x, g x) \<in> U' \<and> F (x, g x) = 0"
+      using Psi_in F_Psi by auto
+  qed
+
+  have unique: "\<forall>x\<in>U. \<forall>y. (x, y) \<in> U' \<longrightarrow> F (x, y) = 0 \<longrightarrow> y = g x"
+  proof (intro ballI allI impI)
+    fix x :: 'a and y :: 'b
+    assume xU: "x \<in> U" and xyU': "(x, y) \<in> U'" and Fxy: "F (x, y) = 0"
+    have x0V: "(x, 0::'b) \<in> V"
+      using xU by (simp add: U_def)
+    have Phi_Psi: "?Phi (Psi (x, 0::'b)) = (x, 0::'b)"
+      by (rule homeomorphism_apply2[OF homeo x0V])
+    have gx_eq: "(x, g x) = Psi (x, 0::'b)"
+      using Phi_Psi by (simp add: g_def prod_eq_iff)
+    have Phi_xy: "?Phi (x, y) = (x, 0::'b)"
+      using Fxy by simp
+    have "Psi (?Phi (x, y)) = (x, y)"
+      by (rule homeomorphism_apply1[OF homeo xyU'])
+    hence "Psi (x, 0::'b) = (x, y)"
+      using Phi_xy by simp
+    with gx_eq have "(x, g x) = (x, y)" by simp
+    thus "y = g x" by simp
+  qed
+
+  show ?thesis
+    by (rule that[OF U_open x0_U U'_open p0_U' U'_sub g_x0 g_ana solutionN unique])
+qed
+
+section \<open>The critical-graph dichotomy WITH local uniqueness\<close>
+
+text \<open>\<^bold>\<open>The complete layer-3/4a engine.\<close>  As @{thm dip_critical_graph_dichotomy}, but
+  additionally exposing the uniqueness neighbourhood \<open>N \<ni> (x0, \<omega>b)\<close>: every critical
+  point \<open>(x, \<omega>) \<in> N\<close> with \<open>x \<in> B\<close> lies ON the graph, \<open>\<omega> = g x\<close>.  This is what lets a
+  chart capture ALL bad points near it in the D34 covering argument.\<close>
+
+theorem dip_critical_graph_dichotomy_unique:
+  fixes x0 :: "(real^2)^'n::finite" and \<omega>b \<omega>0 \<omega>s :: "real^2"
+  assumes crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b = 0"
+    and nds: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b) \<noteq> 0"
+  obtains B N g where
+    "open B" and "connected B" and "x0 \<in> B"
+    and "open N" and "(x0, \<omega>b) \<in> N"
+    and "g x0 = \<omega>b" and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+    and "(\<forall>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0) \<or>
+         interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+proof -
+  define F where "F = (\<lambda>p::((real^2)^'n) \<times> (real^2).
+      gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))"
+  have Fana: "real_analytic_on F UNIV"
+    unfolding F_def by (rule real_analytic_on_gradU_dip)
+  have pW: "(x0, \<omega>b) \<in> (UNIV :: (((real^2)^'n) \<times> (real^2)) set)" by simp
+  have F0: "F (x0, \<omega>b) = 0" using crit by (simp add: F_def)
+  have reg: "\<exists>L. ((\<lambda>y. F (x0, y)) has_derivative L) (at \<omega>b) \<and> bij L"
+  proof (intro exI conjI)
+    have "(gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 has_derivative
+            (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b *v v)) (at \<omega>b)"
+      by (rule gradU_dip_has_derivative)
+    thus "((\<lambda>y. F (x0, y)) has_derivative
+            (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b *v v)) (at \<omega>b)"
+      by (simp add: F_def)
+    show "bij (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b *v v)"
+      using bij_matrix_vector_mult[OF nds] by (simp add: o_def)
+  qed
+  show ?thesis
+  proof (rule real_analytic_implicit_function_unique[OF Fana open_UNIV pW F0 reg])
+    fix U N g
+    assume Uo: "open U" and xU: "x0 \<in> U"
+      and Nopen: "open N" and pN: "(x0, \<omega>b) \<in> N" and NW: "N \<subseteq> UNIV"
+      and gx0: "g x0 = \<omega>b"
+      and gana: "real_analytic_on g U"
+      and sol: "\<forall>x\<in>U. (x, g x) \<in> N \<and> F (x, g x) = 0"
+      and uniq: "\<forall>x\<in>U. \<forall>y. (x, y) \<in> N \<longrightarrow> F (x, y) = 0 \<longrightarrow> y = g x"
+    obtain \<epsilon> where e0: "0 < \<epsilon>" and esub: "ball x0 \<epsilon> \<subseteq> U"
+      using openE[OF Uo xU] by blast
+    define B where "B = ball x0 \<epsilon>"
+    have Bo: "open B" by (simp add: B_def)
+    have Bc: "connected B" by (simp add: B_def)
+    have xB: "x0 \<in> B" by (simp add: B_def centre_in_ball e0)
+    have Bsub: "B \<subseteq> U" by (simp add: B_def esub)
+    have ganaB: "real_analytic_on g B"
+      by (rule real_analytic_on_open_subset[OF gana Bo Bsub])
+    have graphB: "(x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      if "x \<in> B" for x
+      using sol Bsub that by (auto simp: F_def)
+    have uniqB: "\<omega> = g x"
+      if "x \<in> B" and "(x, \<omega>) \<in> N" and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+      for x \<omega>
+      using uniq Bsub that by (auto simp: F_def)
+    have idB: "real_analytic_on (\<lambda>x::(real^2)^'n. x) B"
+      by (rule real_analytic_on_bounded_linear[OF Bo bounded_linear_ident])
+    have pairB: "real_analytic_on (\<lambda>x::(real^2)^'n. (x, g x)) B"
+      by (rule real_analytic_on_Pair[OF idB ganaB])
+    have "real_analytic_on (\<lambda>x::(real^2)^'n.
+            (\<lambda>q::((real^2)^'n) \<times> (real^2). mstarg (cvec_dip \<omega>0 \<omega>s (snd q)) (fst q))
+              (x, g x)) B"
+      by (rule real_analytic_on_compose[OF pairB real_analytic_on_mstarg_cvec subset_UNIV])
+    hence hana: "real_analytic_on (\<lambda>x. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x) B"
+      by simp
+    have dich: "(\<forall>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0) \<or>
+         interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+    proof (cases "\<forall>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0")
+      case True thus ?thesis by blast
+    next
+      case False
+      hence "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0" by blast
+      from real_analytic_nowhere_dense_zeros[OF hana Bc this]
+      show ?thesis by blast
+    qed
+    show thesis
+      by (rule that[OF Bo Bc xB Nopen pN gx0 ganaB graphB uniqB dich])
+  qed
+qed
+
 end
