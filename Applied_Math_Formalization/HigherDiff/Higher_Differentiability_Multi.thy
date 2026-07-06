@@ -22,7 +22,7 @@ text \<open>
 \<close>
 
 theory Higher_Differentiability_Multi
-  imports "HOL-Analysis.Analysis" 
+  imports "HOL-Analysis.Analysis"
           Higher_Differentiability          (* 1-d theory: k_times_differentiable_at, C_k_on, etc. *)
           Smooth_Manifolds.Smooth           (* AFP: higher_differentiable_on *)
 begin
@@ -43,13 +43,13 @@ text \<open>
     \<^enum> for every direction \<open>v\<close>, the map
       \<open>\<lambda>y. frechet_derivative f (at y) v\<close> is \<open>k\<close>-times differentiable at \<open>x\<close>.
 
-  Clause (c) replaces the 1-d clause 
+  Clause (c) replaces the 1-d clause
   ``the \<open>k\<close>-th derivative has a derivative at \<open>x\<close>''
   and avoids the type escalation that would arise from iterating the
   Fréchet derivative directly.
 \<close>
 
-primrec k_times_Fr_differentiable_at 
+primrec k_times_Fr_differentiable_at
   :: "nat \<Rightarrow> ('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector) \<Rightarrow> 'a \<Rightarrow> bool"
 where
   "k_times_Fr_differentiable_at 0 f x \<longleftrightarrow> True"
@@ -115,7 +115,7 @@ lemma k_times_Fr_differentiable_at_SucD:
   shows   "k_times_Fr_differentiable_at k f x"
     and   "f differentiable (at x)"
     and   "\<forall>v. k_times_Fr_differentiable_at k (\<lambda>y. frechet_derivative f (at y) v) x"
-  using assms k_times_Fr_differentiable_at_mono 
+  using assms k_times_Fr_differentiable_at_mono
   by auto
 
 text \<open>The derivative field inherits differentiability.\<close>
@@ -167,7 +167,7 @@ text \<open>
   @{const higher_differentiable_on} restricted to a neighbourhood.
 \<close>
 
-primrec Ck_at 
+primrec Ck_at
   :: "nat \<Rightarrow> ('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector) \<Rightarrow> 'a \<Rightarrow> bool"
 where
   "Ck_at 0 f x \<longleftrightarrow> continuous (at x) f"
@@ -183,11 +183,11 @@ subsection \<open>\<open>C\<^sup>k\<close> on an open set\<close>
 
 text \<open>
   We define \<open>Ck_on k f U\<close> to mean \<open>f\<close> is \<open>C\<^sup>k\<close> on the open set \<open>U\<close>.
-  This is the multi-dimensional generalisation of 
+  This is the multi-dimensional generalisation of
   @{const C_k_on} from \<open>Limits_Higher_Order_Derivatives\<close>.
 \<close>
 
-definition Ck_on 
+definition Ck_on
   :: "nat \<Rightarrow> ('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector) \<Rightarrow> 'a set \<Rightarrow> bool"
 where
   "Ck_on k f U \<longleftrightarrow> open U \<and> (\<forall>x\<in>U. Ck_at k f x)"
@@ -219,7 +219,7 @@ subsection \<open>Equivalence with AFP's \<open>higher_differentiable_on\<close>
 (* ================================================================== *)
 
 text \<open>
-  The AFP predicate @{const higher_differentiable_on} from 
+  The AFP predicate @{const higher_differentiable_on} from
   \<open>Smooth_Manifolds.Smooth\<close> is a \<open>C\<^sup>k\<close> notion (continuity baked into
   the base case).  We show it agrees with our \<open>Ck_on\<close>.
 \<close>
@@ -277,7 +277,7 @@ next
     have CkU: "Ck_on k f U"
       using Suc.IH[OF Suc.prems] Hk by blast
     have der_Ck_on: "\<forall>v. Ck_on k (\<lambda>y. frechet_derivative f (at y) v) U"
-      using Suc.IH[OF Suc.prems] der_higher by blast 
+      using Suc.IH[OF Suc.prems] der_higher by blast
     show "Ck_on (Suc k) f U"
       by (metis CkU Ck_at.simps(2) Ck_on_def der_Ck_on diff)
   qed
@@ -315,8 +315,8 @@ next
         plus a derivative condition at \<open>x\<close>.\<close>
   from Suc.prems(4) obtain \<epsilon> where \<epsilon>pos: "\<epsilon> > 0"
     and ball_f: "\<And>y. \<bar>y - x\<bar> < \<epsilon> \<Longrightarrow> k_times_differentiable_at k f y"
-    and der_f: "(Nth_derivative k f
-                   has_derivative (\<lambda>h. Nth_derivative (Suc k) f x * h)) (at x)"
+    and der_f: "((deriv ^^ k) f
+                   has_derivative (\<lambda>h. (deriv ^^ Suc k) f x * h)) (at x)"
     by auto
 
   text \<open>Shrink the ball so that it sits inside \<open>U\<close>, where \<open>f = g\<close>.\<close>
@@ -368,15 +368,15 @@ next
 
   text \<open>Transfer the derivative condition at \<open>x\<close> from \<open>f\<close> to \<open>g\<close>.\<close>
   have der_f': "((deriv ^^ k) f has_derivative (*) ((deriv ^^ Suc k) f x)) (at x)"
-    using der_f by (simp add: Nth_deriv_eq_compow_deriv)
+    using der_f by simp
   have der_g': "((deriv ^^ k) g has_derivative (*) ((deriv ^^ Suc k) f x)) (at x)"
     using has_derivative_transfer_on_open[OF openB xB _ der_f'] kth_eq by blast
   have kSuc_eq: "(deriv ^^ Suc k) g x = (deriv ^^ Suc k) f x"
     using der_g' by (simp add: deriv_eq)
 
-  have der_g: "(Nth_derivative k g
-                  has_derivative (\<lambda>h. Nth_derivative (Suc k) g x * h)) (at x)"
-    using der_g' kSuc_eq by (simp add: Nth_deriv_eq_compow_deriv)
+  have der_g: "((deriv ^^ k) g
+                  has_derivative (\<lambda>h. (deriv ^^ Suc k) g x * h)) (at x)"
+    using der_g' kSuc_eq by simp
 
   show "k_times_differentiable_at (Suc k) g x"
     using \<epsilon>pos rpos ball_g der_g by auto
@@ -434,16 +434,16 @@ next
       then have dk1:
         "k_times_differentiable_at (Suc j)
            (\<lambda>y. frechet_derivative f (at y) 1) x"
-        using Suc.IH Suc by blast 
+        using Suc.IH Suc by blast
 
       have eq_deriv: "\<And>y. y \<in> A \<Longrightarrow> frechet_derivative f (at y) 1 = deriv f y"
         using A(3) Suc frechet_derivative_one_eq_deriv k_times_Fr_differentiable_at.simps(2) by blast
-      
+
 
       have "k_times_differentiable_at (Suc j)
               (\<lambda>y. frechet_derivative f (at y) 1) x \<longleftrightarrow>
             k_times_differentiable_at (Suc j) (deriv f) x"
-        using A(1,2) eq_deriv eq_on_open_k_times_differentiable_at by presburger    
+        using A(1,2) eq_deriv eq_on_open_k_times_differentiable_at by presburger
       then show ?thesis
         using Suc dk1 by blast
     qed
@@ -453,28 +453,28 @@ next
       obtain \<epsilon> where \<epsilon>pos: "\<epsilon> > 0" and ballA: "ball x \<epsilon> \<subseteq> A"
         using A(1,2) open_contains_ball by blast
       have part1: "\<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at k f y"
-        using ballA neigh by (auto simp: dist_real_def abs_minus_commute, 
+        using ballA neigh by (auto simp: dist_real_def abs_minus_commute,
                                simp add: dist_norm subsetD)
-      have diffk: "Nth_derivative k f differentiable (at x)"
+      have diffk: "(deriv ^^ k) f differentiable (at x)"
       proof (cases k)
         case 0
         then show ?thesis using df by simp
       next
         case (Suc j)
         from dk Suc have d: "(deriv f) (Suc j)-times_differentiable_at x" by simp
-        have "(Nth_derivative j (deriv f)
-                 has_real_derivative Nth_derivative (Suc j) (deriv f) x) (at x)"
+        have "((deriv ^^ j) (deriv f)
+                 has_real_derivative (deriv ^^ Suc j) (deriv f) x) (at x)"
           using k_times_differentiable_at_le_deriv(2)[OF d lessI] .
-        then have "Nth_derivative j (deriv f) differentiable (at x)"
+        then have "(deriv ^^ j) (deriv f) differentiable (at x)"
           using real_differentiable_def by blast
         then show ?thesis
-          using Suc deriv_commutes_Nth_deriv by simp
+          using Suc kth_deriv_shift by metis
       qed
-      have part2: "(Nth_derivative k f
-                      has_derivative (\<lambda>h. Nth_derivative (Suc k) f x * h)) (at x)"
+      have part2: "((deriv ^^ k) f
+                      has_derivative (\<lambda>h. (deriv ^^ Suc k) f x * h)) (at x)"
       proof -
-        from diffk have "(Nth_derivative k f
-                 has_real_derivative deriv (Nth_derivative k f) x) (at x)"
+        from diffk have "((deriv ^^ k) f
+                 has_real_derivative deriv ((deriv ^^ k) f) x) (at x)"
           using DERIV_deriv_iff_real_differentiable by blast
         then show ?thesis
           by (simp add: has_field_derivative_def)
@@ -522,11 +522,11 @@ next
 
         have eq_deriv: "\<And>y. y \<in> A \<Longrightarrow> frechet_derivative f (at y) v = deriv f y * v"
           using Suc frechet_derivative_to_deriv neigh by auto
-        
+
         have "k_times_differentiable_at (Suc j)
                 (\<lambda>y. frechet_derivative f (at y) v) x \<longleftrightarrow>
               k_times_differentiable_at (Suc j) (\<lambda>y. deriv f y * v) x"
-          using A(1,2) eq_deriv eq_on_open_k_times_differentiable_at by presburger       
+          using A(1,2) eq_deriv eq_on_open_k_times_differentiable_at by presburger
         then have "k_times_differentiable_at (Suc j)
                      (\<lambda>y. frechet_derivative f (at y) v) x"
           using dk'' by blast
@@ -839,7 +839,7 @@ next
            (\<lambda>y. frechet_derivative (\<lambda>z. f z + g z) (at y) v) x \<longleftrightarrow>
          k_times_Fr_differentiable_at k
            (\<lambda>y. frechet_derivative f (at y) v + frechet_derivative g (at y) v) x"
-        by (smt (verit) C(1,2) eqD eq_on_open_k_times_Fr_differentiable_at)     
+        by (smt (verit) C(1,2) eqD eq_on_open_k_times_Fr_differentiable_at)
       then show ?thesis
         using ksum by blast
     qed
@@ -907,7 +907,7 @@ next
 
         have hder: "((\<lambda>z. c *\<^sub>R f z) has_derivative (\<lambda>h. c *\<^sub>R frechet_derivative f (at y) h)) (at y)"
           by (simp add: dfy frechet_derivative_worksI has_derivative_scaleR_right)
-         
+
         have "frechet_derivative (\<lambda>z. c *\<^sub>R f z) (at y) = (\<lambda>h. c *\<^sub>R frechet_derivative f (at y) h)"
           by (metis frechet_derivative_at hder)
         then show "frechet_derivative (\<lambda>z. c *\<^sub>R f z) (at y) v =  c *\<^sub>R frechet_derivative f (at y) v"
@@ -918,7 +918,7 @@ next
            (\<lambda>y. frechet_derivative (\<lambda>z. c *\<^sub>R f z) (at y) v) x \<longleftrightarrow>
          k_times_Fr_differentiable_at k
            (\<lambda>y. c *\<^sub>R frechet_derivative f (at y) v) x"
-        by (smt (verit) A(1,2) eqD eq_on_open_k_times_Fr_differentiable_at)      
+        by (smt (verit) A(1,2) eqD eq_on_open_k_times_Fr_differentiable_at)
       then show ?thesis
         using kscaled by blast
     qed
@@ -1215,7 +1215,7 @@ proof -
     also have "... = (\<Sum>i\<in>UNIV. (v $ i) * L (axis i 1))"
       by (simp add: bl linear_simps(5))
     also have "... = v \<bullet> ?g"
-      by (smt (verit, ccfv_SIG) Finite_Cartesian_Product.sum_cong_aux inner_axis 
+      by (smt (verit, ccfv_SIG) Finite_Cartesian_Product.sum_cong_aux inner_axis
           inner_commute inner_real_def inner_scaleR_right inner_sum_right real_inner_1_right)
     finally show "L v = v \<bullet> ?g".
   qed
@@ -1310,7 +1310,7 @@ proof (intro allI)
     have comp_fun:  "(\<lambda>y. \<nabla> f y \<bullet> axis i 1) = (\<lambda>y. \<nabla> f y $ i)"
       by (rule ext, simp add: cart_eq_inner_axis)
     have comp_deriv: "(\<lambda>v. ((*v) (\<nabla>\<^sup>2 f x)) v \<bullet> axis i 1) = (\<lambda>v. v \<bullet> ((\<nabla>\<^sup>2 f x) $ i))"
-      by (rule ext, simp add: inner_axis' inner_commute matrix_vector_mul_component) 
+      by (rule ext, simp add: inner_axis' inner_commute matrix_vector_mul_component)
     from Hcomp show ?thesis
       unfolding has_gradient_def by (simp add: comp_fun comp_deriv)
   qed
@@ -1378,10 +1378,10 @@ proof -
         by simp
 
       have eqA: "\<And>y. y \<in> A \<Longrightarrow> ?Fi y = ?Gi y"
-        by (metis (lifting) A(3) Ck_at.simps(2) Fr_diff_imp_gradient_exists Suc_eq_plus1 add_0 
+        by (metis (lifting) A(3) Ck_at.simps(2) Fr_diff_imp_gradient_exists Suc_eq_plus1 add_0
             frechet_derivative_at grad_fun_eq has_gradient_def inner_axis' inner_real_def lambda_one)
 
-    
+
       have ev_eq: "eventually (\<lambda>y. ?Fi y = ?Gi y) (nhds x)"
       proof -
         have "\<exists>S. open S \<and> x \<in> S \<and> (\<forall>y\<in>S. ?Fi y = ?Gi y)"
@@ -1392,7 +1392,7 @@ proof -
 
       have Gi_diff: "?Gi differentiable (at x)"
         by (metis (no_types, lifting) A(1,2) Fi_diff differentiable_eqI eqA)
-     
+
 
       from Fr_diff_imp_gradient_exists[OF Gi_diff]
       obtain gi where gi: "GRAD ?Gi x :> gi"
@@ -1405,13 +1405,13 @@ proof -
         using gradGi unfolding has_gradient_def by simp
 
       have "((\<lambda>y. \<nabla> f y \<bullet> b) has_derivative (\<lambda>v. ((*v) ?H) v \<bullet> b)) (at x)"
-        by (metis (no_types, lifting) ext cart_eq_inner_axis dGi i 
+        by (metis (no_types, lifting) ext cart_eq_inner_axis dGi i
             inner_commute matrix_vector_mul_component)
       then show "((\<lambda>y. \<nabla> f y \<bullet> b) has_derivative (\<lambda>v. ((*v) ?H) v \<bullet> b)) (at x)".
     qed
 
     then show "(\<nabla> f has_derivative (*v) ?H) (at x)"
-      using has_derivative_componentwise_within by blast    
+      using has_derivative_componentwise_within by blast
   qed
   show ?thesis
     using H_wit hess_fun_eq by fastforce
@@ -1494,14 +1494,14 @@ proof -
 
       have ev_FG: "eventually (\<lambda>z. ?Fi z = ?Gi z) (nhds y)"
         using FG_eq_on_U eventually_nhds openU yU by blast
-      
+
 
       have Gi_diff_y: "?Gi differentiable (at y)"
         by (metis (no_types, lifting) FG_eq_on_U Fi_diff_y differentiable_eqI openU yU)
-     
+
 
       then have fd_Fi_Gi: "frechet_derivative ?Fi (at y) = frechet_derivative ?Gi (at y)"
-        by (smt (verit, best) FG_eq_on_U frechet_derivative_transform_within_open openU yU)     
+        by (smt (verit, best) FG_eq_on_U frechet_derivative_transform_within_open openU yU)
 
       from Fr_diff_imp_gradient_exists[OF Gi_diff_y]
       obtain gi where gi: "GRAD ?Gi y :> gi"
@@ -1527,9 +1527,9 @@ proof -
         using fd_Fi_Gi fd_Gi_axis hess_eq by simp
     qed
     have ev_eq: "eventually (\<lambda>y. ?K y = ?Hc y) (nhds x)"
-      using eq_on_U eventually_nhds openU xU by blast   
+      using eq_on_U eventually_nhds openU xU by blast
     show "continuous (at x) ?Hc"
-      using K_cont ev_eq isCont_cong by fastforce 
+      using K_cont ev_eq isCont_cong by fastforce
   qed
 
   show ?thesis
@@ -1700,7 +1700,7 @@ proof -
 
   have D2_at: "((\<lambda>p. \<Phi> (fst p) (snd p)) has_derivative
         (\<lambda>(tx,ty). blinfun_apply (gx y x) tx + gy ty))  (at (x,y))"
-    by (metis (lifting) D2 Sigma_cong at_within_open mem_Sigma_iff openX openY open_Times xX yY)    
+    by (metis (lifting) D2 Sigma_cong at_within_open mem_Sigma_iff openX openY open_Times xX yY)
   show ?thesis
     by (rule has_derivative_unique[OF D1_at D2_at])
 qed
@@ -1743,8 +1743,8 @@ proof -
     also have "\<dots> = r / 2" by (simp add: \<delta>_def)
     also have "\<dots> < r" using r_pos by linarith
     finally show "x + s *\<^sub>R ?ei + t *\<^sub>R ?ej \<in> U"
-      by (metis (no_types, lifting) add.assoc basic_trans_rules(31) 
-          dist_0_norm dist_add_cancel group_cancel.rule0 mem_ball rU)      
+      by (metis (no_types, lifting) add.assoc basic_trans_rules(31)
+          dist_0_norm dist_add_cancel group_cancel.rule0 mem_ball rU)
   qed
 
   (* ---------- 2.  Names for partial derivatives ---------- *)
@@ -1779,7 +1779,7 @@ proof -
       using H by (subst (asm) has_derivative_componentwise_within[where S = UNIV],
                   auto simp: Basis_vec_def)
     thus ?thesis
-      unfolding has_gradient_def 
+      unfolding has_gradient_def
       by (simp add: inner_axis' inner_commute matrix_vector_mul_component)
   qed
 
@@ -1833,7 +1833,7 @@ proof -
       by (rule ext, simp add: inner_axis' mult.commute)
     thus ?thesis
       using chain unfolding Qt_def has_field_derivative_def
-      by (metis (no_types, lifting) ext mult.commute) 
+      by (metis (no_types, lifting) ext mult.commute)
   qed
 
   (* Similarly for \<partial>/\<partial>s [\<Phi>(s,t)] and \<partial>/\<partial>t [\<Phi>(s,t)] *)
@@ -1853,7 +1853,7 @@ proof -
       by (rule ext, simp add: inner_axis' mult.commute)
     thus ?thesis
       using chain unfolding Ps_def has_field_derivative_def
-      by (metis (full_types, lifting) ext mult.commute) 
+      by (metis (full_types, lifting) ext mult.commute)
   qed
 
   have Phi_has_deriv_t: "((\<lambda>t'. f (x + s *\<^sub>R ?ei + t' *\<^sub>R ?ej)) has_real_derivative Qt s t) (at t)"
@@ -1872,12 +1872,12 @@ proof -
       by (rule ext, simp add: inner_axis' mult.commute)
     thus ?thesis
       using chain unfolding Qt_def has_field_derivative_def
-      by (metis (full_types, lifting) ext mult.commute) 
+      by (metis (full_types, lifting) ext mult.commute)
   qed
 
 
   (* ---------- 6.  Continuity of the relevant Hessian entries ---------- *)
-  
+
 
   (* For the \<epsilon>-\<delta> argument we only need: *)
   have Hij_cont_at_0:
@@ -1902,7 +1902,7 @@ proof -
     qed
     show ?thesis
     proof (intro allI impI)
-      fix \<epsilon> :: real 
+      fix \<epsilon> :: real
       assume eps: "\<epsilon> > 0"
 
       (* Step 1: unfold isCont to tendsto, then to eventually_at *)
@@ -2075,7 +2075,7 @@ proof -
       if "\<bar>s\<bar> < \<delta>" for s
     proof -
       have "((\<lambda>s'. f (x + s' *\<^sub>R ?ei + k *\<^sub>R ?ej)) has_real_derivative Ps s k) (at s)"
-        using Phi_has_deriv_s[of s k] that k_bd k_pos by linarith 
+        using Phi_has_deriv_s[of s k] that k_bd k_pos by linarith
       moreover have "((\<lambda>s'. f (x + s' *\<^sub>R ?ei + 0 *\<^sub>R ?ej)) has_real_derivative Ps s 0) (at s)"
         using Phi_has_deriv_s[of s 0] that \<delta>_pos by auto
       ultimately show ?thesis
@@ -2099,7 +2099,7 @@ proof -
       thus "(g has_real_derivative (Ps x k - Ps x 0)) (at x)"
         by (rule g_deriv)
     qed
-    
+
     have g_diff: "\<exists>\<xi>. 0 < \<xi> \<and> \<xi> < h \<and> \<Delta> h k = h * (Ps \<xi> k - Ps \<xi> 0)"
     proof -
       obtain \<xi> where \<xi>:
@@ -2123,9 +2123,9 @@ proof -
       if "\<bar>t\<bar> < \<delta>" for t
       using Ps_has_deriv_t[of \<xi> t] \<xi>_lt h_bd that
       unfolding p_def
-      using \<xi>_pos by argo 
+      using \<xi>_pos by argo
 
-    
+
     (* MVT application to p on [0,k] *)
     have p_deriv_on_seg: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> k \<Longrightarrow>
        (p has_real_derivative (\<nabla>\<^sup>2 f (x + \<xi> *\<^sub>R ?ei + t *\<^sub>R ?ej)) $ i $ j) (at t)"
@@ -2187,7 +2187,7 @@ proof -
     proof -
       have "((\<lambda>t'. f (x + h *\<^sub>R ?ei + t' *\<^sub>R ?ej)) has_real_derivative Qt h t) (at t)"
         using Phi_has_deriv_t[of h t] h_bd that
-        using h_pos by linarith 
+        using h_pos by linarith
       moreover have "((\<lambda>t'. f (x + 0 *\<^sub>R ?ei + t' *\<^sub>R ?ej)) has_real_derivative Qt 0 t) (at t)"
         using Phi_has_deriv_t[of 0 t] \<delta>_pos that by auto
       ultimately show ?thesis
@@ -2333,7 +2333,7 @@ proof -
 
     (* Triangle inequality gives contradiction *)
     hence "\<bar>(\<nabla>\<^sup>2 f x) $ i $ j - (\<nabla>\<^sup>2 f x) $ j $ i\<bar> < 2 * \<epsilon>"
-      using close_ij close_ji by linarith    
+      using close_ij close_ji by linarith
     hence "\<bar>(\<nabla>\<^sup>2 f x) $ i $ j - (\<nabla>\<^sup>2 f x) $ j $ i\<bar>
             < 2 * \<bar>(\<nabla>\<^sup>2 f x) $ i $ j - (\<nabla>\<^sup>2 f x) $ j $ i\<bar> / 3"
       by (simp add: \<epsilon>_def)
@@ -2645,7 +2645,7 @@ proof -
   have "\<And>v. (Hf' + Hg') *v v = Hf' *v v + Hg' *v v"
     by (simp add: matrix_vector_mult_def vec_eq_iff sum.distrib distrib_right)
   thus ?thesis
-    unfolding has_hessian_def using dtrans by presburger 
+    unfolding has_hessian_def using dtrans by presburger
 qed
 
 lemma HESS_scaleR:
@@ -2666,7 +2666,7 @@ proof -
     by (simp add: matrix_vector_mult_def vec_eq_iff scaleR_sum_right,
         simp add: sum_distrib_left vector_space_over_itself.scale_scale)
   thus ?thesis
-    unfolding has_hessian_def using dtrans by presburger 
+    unfolding has_hessian_def using dtrans by presburger
 qed
 
 
@@ -2773,11 +2773,11 @@ lemma hessian_sub_on_C2:
 proof -
   have "\<nabla>\<^sup>2 (\<lambda>y. f y + (-1) * g y) x = \<nabla>\<^sup>2 f x + (-1) *\<^sub>R \<nabla>\<^sup>2 g x"
   proof (subst hessian_add_on_C2)
-    show "Ck_on 2 f U" 
+    show "Ck_on 2 f U"
       by (rule Cf)
-    show "Ck_on 2 (\<lambda>y. (-1) * g y) U" 
-      using Ck_on_scaleR[OF Cg] by (metis ext real_scaleR_def) 
-    show "x \<in> U" 
+    show "Ck_on 2 (\<lambda>y. (-1) * g y) U"
+      using Ck_on_scaleR[OF Cg] by (metis ext real_scaleR_def)
+    show "x \<in> U"
       by (rule xU)
     show "\<nabla>\<^sup>2 f x + \<nabla>\<^sup>2 (\<lambda>y. - 1 * g y) x = \<nabla>\<^sup>2 f x + - 1 *\<^sub>R \<nabla>\<^sup>2 g x"
       by (metis Cg hessian_scaleR_on_C2 xU)
@@ -2812,7 +2812,7 @@ next
     case False
     then show ?thesis
       using Ck_on_sum[OF insert.hyps(1) False C2_I]
-      by presburger 
+      by presburger
   qed
   have IH: "\<nabla>\<^sup>2 (\<lambda>y. \<Sum>j\<in>I. F j y) x = (\<Sum>j\<in>I. \<nabla>\<^sup>2 (F j) x)"
     using insert.IH C2_I by blast
@@ -2863,7 +2863,7 @@ proof -
   qed
   have "\<exists>A. open A \<and> x \<in> A \<and> (\<forall>y\<in>A. frechet_derivative f (at y) v = v \<bullet> \<nabla> f y)"
     using openU xU eqU by blast
-  then have ev_eq: "eventually (\<lambda>y. frechet_derivative f (at y) v = v \<bullet> \<nabla> f y) (nhds x)"        
+  then have ev_eq: "eventually (\<lambda>y. frechet_derivative f (at y) v = v \<bullet> \<nabla> f y) (nhds x)"
     by (simp add: eventually_nhds)
   have Dgrad: "(\<nabla> f has_derivative (*v) (\<nabla>\<^sup>2 f x)) (at x)"
     using H unfolding has_hessian_def by simp
@@ -2926,7 +2926,7 @@ lemma outer_prod_mult_vec:
   "(a \<otimes> b) *v v = (b \<bullet> v) *\<^sub>R a"
   by (simp add: matrix_vector_mul_component outer_prod_row vec_eq_iff)
 
- 
+
 (* ================================================================== *)
 subsection \<open>Gradient product rule\<close>
 (* ================================================================== *)
@@ -3138,13 +3138,13 @@ lemma jacobian_component:
   shows "jacobian F x $ r $ i = frechet_derivative (\<lambda>y. F y $ r) (at x) (axis i 1)"
 proof -
   have FD: "(F has_derivative frechet_derivative F (at x)) (at x)"
-    using assms frechet_derivative_works by blast 
+    using assms frechet_derivative_works by blast
 
   have coord_D:  "((\<lambda>y. F y $ r) has_derivative (\<lambda>h. frechet_derivative F (at x) h $ r)) (at x)"
   proof -
     have Hcomp: "((\<lambda>y. F y \<bullet> axis r 1) has_derivative
           (\<lambda>h. frechet_derivative F (at x) h \<bullet> axis r 1)) (at x within UNIV)"
-      using FD by (subst (asm) has_derivative_componentwise_within[where S = UNIV], 
+      using FD by (subst (asm) has_derivative_componentwise_within[where S = UNIV],
                    auto simp: Basis_vec_def)
     have comp_fun: "(\<lambda>y. F y \<bullet> axis r 1) = (\<lambda>y. F y $ r)"
       by (rule ext, simp add: cart_eq_inner_axis)
@@ -3276,7 +3276,7 @@ proof -
       fix x
       assume xU: "x \<in> U"
       have FD: "(F has_derivative frechet_derivative F (at x)) (at x)"
-        using diffF xU frechet_derivative_worksI by blast 
+        using diffF xU frechet_derivative_worksI by blast
       have Hcomp:"((\<lambda>y. F y \<bullet> axis r 1) has_derivative
             (\<lambda>h. frechet_derivative F (at x) h \<bullet> axis r 1)) (at x within UNIV)"
         using FD
@@ -3322,7 +3322,7 @@ proof -
         using oU eqU by (subst higher_differentiable_on_cong, simp_all)
     qed
     then show ?case
-      using diff_comp higher_differentiable_on.simps(2) by blast 
+      using diff_comp higher_differentiable_on.simps(2) by blast
   qed
   with oU show ?thesis
     by (simp add: Ck_on_iff_higher_differentiable_on)
@@ -3469,7 +3469,7 @@ proof (rule vec_eq_iff[THEN iffD2], intro allI)
       have Fr_diff: "(\<lambda>z. F z $ r) differentiable (at y)"
       proof -
         have FD: "(F has_derivative frechet_derivative F (at y)) (at y)"
-          using Fy_diff frechet_derivative_worksI by blast 
+          using Fy_diff frechet_derivative_worksI by blast
 
         have Hcomp:"((\<lambda>z. F z \<bullet> axis r 1) has_derivative
                      (\<lambda>h. frechet_derivative F (at y) h \<bullet> axis r 1)) (at y within UNIV)"
@@ -3511,8 +3511,8 @@ proof (rule vec_eq_iff[THEN iffD2], intro allI)
       qed
       then have "jacobian F y $ r $ i = \<nabla> (\<lambda>z. F z $ r) y $ i"
         using jacobian_component[OF Fy_diff]
-        by (metis (mono_tags, lifting) Fr_diff Fr_diff_imp_gradient_exists cart_eq_inner_axis 
-            frechet_derivative_at grad_fun_eq has_gradient_def inner_commute) 
+        by (metis (mono_tags, lifting) Fr_diff Fr_diff_imp_gradient_exists cart_eq_inner_axis
+            frechet_derivative_at grad_fun_eq has_gradient_def inner_commute)
       qed
       thus "\<nabla> (\<lambda>z. g (F z)) y $ i = (\<Sum>r\<in>UNIV. \<nabla> (\<lambda>z. F z $ r) y $ i * \<nabla> g (F y) $ r)"
         using calculation by presburger
@@ -3606,7 +3606,7 @@ proof (rule vec_eq_iff[THEN iffD2], intro allI)
     have grad_jac: "\<nabla> (\<lambda>z. F z $ r) x $ i = jacobian F x $ r $ i" for r
     proof -
       have Fr_diff: "(\<lambda>z. F z $ r) differentiable (at x)"
-        using F_diff[OF xU] by (metis CF_r Ck_at.simps(2) Ck_on_def Suc_1 xU)     
+        using F_diff[OF xU] by (metis CF_r Ck_at.simps(2) Ck_on_def Suc_1 xU)
       have GFr: "GRAD (\<lambda>z. F z $ r) x :> \<nabla> (\<lambda>z. F z $ r) x"
         using Fr_diff_imp_gradient_exists[OF Fr_diff]
         by (blast intro: grad_fun_satisfies_GRAD)
@@ -3660,14 +3660,14 @@ proof -
   then have f1: "higher_differentiable_on U ((*v) A) 2"
     using bounded_linear.higher_differentiable_on by blast
   have "higher_differentiable_on U (\<lambda>y. A *v y + b) 2"
-      using oU f1 by (subst higher_differentiable_on_add, auto, 
-                      simp add: higher_differentiable_on_const)      
+      using oU f1 by (subst higher_differentiable_on_add, auto,
+                      simp add: higher_differentiable_on_const)
   then have CF: "Ck_on 2 F U"
-    unfolding F_def using oU by (simp add: Ck_on_iff_higher_differentiable_on)  
+    unfolding F_def using oU by (simp add: Ck_on_iff_higher_differentiable_on)
   have F_diff: "\<And>y. F differentiable (at y)"
     unfolding F_def by (simp add: bounded_linear_imp_differentiable)
   have jac_eq: "jacobian F y = A" for y
-    unfolding jacobian_def F_def by (metis bl bounded_linear_imp_has_derivative 
+    unfolding jacobian_def F_def by (metis bl bounded_linear_imp_has_derivative
               frechet_derivative_at has_derivative_add_const matrix_of_matrix_vector_mul)
   have comp_hess_zero: "\<nabla>\<^sup>2 (\<lambda>y. F y $ r) x = 0" for r
   proof -

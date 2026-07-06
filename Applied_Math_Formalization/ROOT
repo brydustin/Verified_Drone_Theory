@@ -77,6 +77,7 @@ session Applied_Math_HigherDiff in "HigherDiff" = "HOL-Analysis" +
     Auxiliary_Facts
     Higher_Differentiability
     Higher_Differentiability_Multi
+    Taylor_Peano
     Ck1_C1_Bridge
 
 (* M5 consolidation: Nonemptiness_Robust3 (the M5/F0 capstone, formerly in no
@@ -88,3 +89,48 @@ session Applied_Math_Appendix_Full in "Appendix/Robust3" = Applied_Math_Appendix
   options [document = false, quick_and_dirty = true, timeout = 3600]
   theories
     Nonemptiness_Robust3
+
+(* Standalone real-analytic (C^omega) function theory + analytic IFT.  Foundational
+   and reusable: parented only on the (Malta-synced) higher-derivative/Taylor stack,
+   independent of the dipole/Robust development.  The dipole-specific bridge that
+   applies the analytic IFT to discharge the D34 leaves lives in its own theory. *)
+session Applied_Math_Analytic in "Analytic" = Applied_Math_HigherDiff +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Smooth_Manifolds
+  theories
+    Real_Analytic
+    Real_Analytic_Bump
+
+(* The formal-series local inverse of a real-analytic map (majorant method): the purely
+   real analytic core of the multivariate analytic inverse/implicit function theorem.
+   Leaf on the Applied_Math_Analytic heap. *)
+session Applied_Math_Analytic_Inverse in "Analytic/Inverse" = Applied_Math_Analytic +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Real_Analytic_Inverse
+
+(* Complexification bridge: the several-variable Cauchy-Riemann criterion, holomorphic => real
+   C^infinity, and real-analytic <=> local holomorphic extension (A1/A2/A3).  These are the
+   verified foundation for the analytic IFT and the multivariate nowhere-dense workhorse.  It
+   needs HOL-Complex_Analysis, so it sits in its own session on top of Applied_Math_Analytic. *)
+session Applied_Math_Analytic_Complex in "Analytic/Complex" = Applied_Math_Analytic_Inverse +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    "HOL-Complex_Analysis"
+  theories
+    Real_Analytic_Complex
+    Real_Analytic_IFT
+
+(* The D34 analytic-bridge platform: ONE heap containing BOTH the robust nonemptiness
+   development (through Nonemptiness_Robust2) AND the real-analytic stack (through the
+   analytic IFT + the nowhere-dense-zeros workhorse).  Parented on the Appendix heap;
+   the analytic-side theories are loaded from the Applied_Math_Analytic_Complex sources
+   and baked in, so the dipole-specific D34 bridge can be edited interactively against
+   this heap (and Robust3 can later import it to discharge the two chart-branch cores). *)
+session Applied_Math_D34_Analytic in "Appendix/AnalyticBridge" = Applied_Math_Appendix +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_Analytic_Complex
+  theories
+    D34_Analytic_Bridge

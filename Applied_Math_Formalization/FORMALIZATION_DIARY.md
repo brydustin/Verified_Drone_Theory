@@ -3285,3 +3285,47 @@ M5; the two are its irreducible analytic cores; D1/D2/D5/D34 + the C¹ arc-cover
 Stage B (optional next): graft curvecover+D3charts+D4charts to reduce the 2 bundles to the
 canonical excess_arc_charts_Nn / branchP_indep_charts_Nn. See [[m5-consolidation-ready]],
 [[m5-d2d5-machinery-map]], [[never-claim-unverified-builds]].
+
+### D34 ANALYTIC ROUTE OPENED: elementary C^omega layer + merged bridge heap (2026-07-06)
+"Heap image set up for the nonemptiness proof with the Real/Complex analytic developments
+baked in (inverse + implicit function theorems). Consider what is left for a sorry-free
+nonemptiness proof, assume no more than absolutely necessary; continue proving the next step."
+
+STATE AUDIT first: HOL itself was rebuilt 2026-07-03, silently staling EVERY Applied_Math heap.
+Rebuilt both chains (Nonemptiness->Appendix_Base->Appendix and HigherDiff->Analytic->Inverse->
+Complex) -- all green in 6 min. Confirmed via grep + build: Robust3 still has EXACTLY the two
+live sorries (m5_D34_D3_collinear L2424, branchP_indep_charts_Nn L2534); the analytic stack
+(real_analytic_on, complexification A1/A2/A3, analytic IFT real_analytic_implicit_function,
+majorant local inverse, multivariate real_analytic_nowhere_dense_zeros) is COMPLETE and sorry-free.
+
+KEY REDUCTION INSIGHT (checked, not assumed): the D4 cover lemma's negligibility is consumed
+ONLY through meager_negligible_closed_cover (Robust3 L2602) -- i.e. downstream uses MEAGER, not
+measure. So the analytic route needs NO new negligible-zeros theorem: closed + nowhere-dense
+pieces suffice, and real_analytic_nowhere_dense_zeros is already proven. The analytic plan:
+ (1) all dipole fields are real-analytic [mechanical closure];
+ (2) at gradU=0 & det HessU != 0, the ANALYTIC IFT gives an analytic critical graph w*(x);
+     the local bad set is {x. h x = 0}, h x = mstarg (cvec_dip w0 ws (w* x)) x analytic;
+ (3) {h=0} closed-in-chart + nowhere dense UNLESS h == 0 on a component -- the transversality
+     witness is the ONLY genuine new math (plus the det HessU = 0 stratum, also analytic).
+
+PROVEN + LANDED this session (all BUILD_EXIT=0):
+- Elementary C^omega layer spliced into Real_Analytic_Complex.thy: has_holo_extension_at_sin/
+  cos/rsinc, real_analytic_on_sin/cos/rsinc + _comp forms. Route: complexification bridge
+  real_analytic_at_1d_iff_holo_extension + real_analytic_on_1d_iff, holomorphic witnesses via
+  holomorphic_intros; the entire sinc kernel via removable_singularity + DERIV_sin at 0 (the
+  has_field_derivative_iff difference-quotient trick gives sin z / z --> 1 for free).
+  GOTCHA: `intro exI[of _ 1] conjI` on (EX r>0. EX g. ...) re-applies exI[of _ 1] to the INNER
+  EX g (instantiating g to the constant-1 function!) -> drop conjI, use (intro exI[of _ 1]) simp
+  with the EX g fact chained. Dev scratch M5_Dev_AnalyticElem (stub after consolidation).
+- NEW SESSION Applied_Math_D34_Analytic (Appendix/AnalyticBridge/D34_Analytic_Bridge.thy):
+  ONE heap = Appendix (through Robust2) + the full analytic stack, the interactive platform for
+  the D34 discharge. Layer 1 (omega-side fields) PROVEN: real_analytic_on_gsinc (gsinc = rsinc),
+  _vec_nth, _kx/_ky/_kz, _gdip, _gain_dip, _cvec_dip [omega0/omegas free, constant denominators
+  -- no divide closure needed, no new assumptions].
+NEXT: layer 2 = joint (c,x)-analyticity of the moment fields: phase c y n = cis(-(c . y$n)) is
+componentwise (cos,sin) of a bilinear form -> real_analytic_on_componentwise; moments/DM_paper_x
+entries = finite phase-polynomial sums; mstarg = det(matrix(Gram)) = polynomial in entries.
+NOTE: mstarg/transC layering -- transC lives in Moment_Jacobian (in bridge scope), mstarg is
+DEFINED in Robust3 L560; when Robust3 later imports the bridge, MOVE the mstarg definition into
+the bridge (name clash otherwise). Then layer 3 = the IFT chart engine + the transversality
+witness (the genuine core), and the det-HessU=0 stratum.

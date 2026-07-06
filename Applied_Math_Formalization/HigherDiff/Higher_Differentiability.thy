@@ -6,21 +6,17 @@ begin
 
 subsection \<open> Definitions \<close>
 
-text \<open> First, notice that the AFP definition of @{term Nth_derivative} coincides with 
-that of the HOL-Analysis library. \<close>
+text \<open> First, notice that the standard-library iterated derivative
+@{term "(deriv ^^ n) f"} commutes with a single differentiation step. \<close>
 
-lemma Nth_deriv_eq_compow_deriv: 
-  "Nth_derivative n f = (deriv ^^ n) f"
-  by (induct n; simp_all)
+lemma kth_deriv_shift:
+  "(deriv ^^ Suc n) g = (deriv ^^ n) (deriv g)"
+  by (simp add: funpow_swap1)
 
-corollary deriv_commutes_Nth_deriv: 
-  "Nth_derivative (Suc n) g = Nth_derivative n (deriv g)"
-  by (simp add: Nth_deriv_eq_compow_deriv funpow_swap1)
-
-text \<open> Next, observe that the Frechet derivative in the HOL-Analysis library typically 
+text \<open> Next, observe that the Frechet derivative in the HOL-Analysis library typically
 generalises the other derivative definitions via a binary operator. \<close>
 
-definition has_binop_deriv_at :: "('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector \<Rightarrow> 'b) 
+definition has_binop_deriv_at :: "('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector \<Rightarrow> 'b)
   \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> bool"
   where "has_binop_deriv_at binop f f' x = (f has_derivative (\<lambda>y. binop y (f' x))) (at x)"
 
@@ -40,16 +36,16 @@ lemma binop_deriv_at_eq_deriv: "binop_deriv_at (\<lambda>a b. b * a) f x = deriv
   unfolding binop_deriv_at_def deriv_def has_field_derivative_def
   by simp
 
-text \<open> Thus, in the nth-differentiable case at a point, we also generalise all those 
-definitions using an auxiliary binary operator. We leave as future work obtaining a 
+text \<open> Thus, in the nth-differentiable case at a point, we also generalise all those
+definitions using an auxiliary binary operator. We leave as future work obtaining a
 generalisation using any other filter. \<close>
 
-primrec th_differentiable_at :: "('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector \<Rightarrow> 'b) 
+primrec th_differentiable_at :: "('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector \<Rightarrow> 'b)
   \<Rightarrow> nat \<Rightarrow> ('a \<Rightarrow> 'b) \<Rightarrow> 'a \<Rightarrow> bool"
   where "th_differentiable_at bop 0 f a  \<longleftrightarrow>  True"
-  | "th_differentiable_at bop (Suc k) f a \<longleftrightarrow> 
-      (\<exists>A. open A \<and> a \<in> A \<and> (\<forall>x\<in>A. th_differentiable_at bop k f x))       
-      \<and> has_binop_deriv_at bop ((binop_deriv_at bop ^^ k) f) ((binop_deriv_at bop ^^ (Suc k)) f) a" 
+  | "th_differentiable_at bop (Suc k) f a \<longleftrightarrow>
+      (\<exists>A. open A \<and> a \<in> A \<and> (\<forall>x\<in>A. th_differentiable_at bop k f x))
+      \<and> has_binop_deriv_at bop ((binop_deriv_at bop ^^ k) f) ((binop_deriv_at bop ^^ (Suc k)) f) a"
 
 text \<open>Yet, we will focus on the real version of this definition: \<close>
 
@@ -57,12 +53,12 @@ abbreviation times_real_differentiable_at :: "(real \<Rightarrow> real) \<Righta
   ("(_ _-times'_real'_differentiable'_at _)" [100,100,100] 100)
   where "f k-times_real_differentiable_at a \<equiv> th_differentiable_at (\<lambda>a b. b * a) k f a"
 
-primrec k_times_differentiable_at :: "nat \<Rightarrow> (real \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> bool" 
+primrec k_times_differentiable_at :: "nat \<Rightarrow> (real \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> bool"
   where "k_times_differentiable_at 0 f a  \<longleftrightarrow>  True"
   | "k_times_differentiable_at (Suc k) f a \<longleftrightarrow>
-      (\<exists>\<epsilon>>0. (\<forall>x. \<bar>x - a\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at k f x))       
-    \<and> 
-      (Nth_derivative k f has_derivative (\<lambda>h. Nth_derivative (Suc k) f a * h)) (at a)" 
+      (\<exists>\<epsilon>>0. (\<forall>x. \<bar>x - a\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at k f x))
+    \<and>
+      ((deriv ^^ k) f has_derivative (\<lambda>h. (deriv ^^ Suc k) f a * h)) (at a)"
 
 lemma times_real_differentiable_at_equiv:
   "f n-times_real_differentiable_at a \<longleftrightarrow> k_times_differentiable_at n f a"
@@ -71,23 +67,23 @@ proof (induct n arbitrary: a)
   let "?deriv n f " = "(binop_deriv_at (\<lambda>a b. b * a) ^^ n) f"
   have "(\<exists>A. open A \<and> a \<in> A \<and> (\<forall>x\<in>A. th_differentiable_at (\<lambda>a b. b * a) n f x))
     \<longleftrightarrow> (\<exists>\<epsilon>>0. \<forall>x. \<bar>x - a\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at n f x)"
-    using Suc 
+    using Suc
     by simp
-      (metis (no_types, lifting) open_real Elementary_Metric_Spaces.open_ball 
+      (metis (no_types, lifting) open_real Elementary_Metric_Spaces.open_ball
         abs_minus_commute centre_in_ball dist_real_def mem_ball)
   moreover have "(?deriv n f has_derivative (*) (?deriv (Suc n) f a)) (at a)
     \<longleftrightarrow> ((deriv ^^ n) f has_derivative (*) (deriv ((deriv ^^ n) f) a)) (at a)"
     using Suc
     by (simp add: binop_deriv_at_eq_deriv)
   ultimately show ?case
-    by (simp_all add: has_binop_deriv_at_def Nth_deriv_eq_compow_deriv)
+    by (simp_all add: has_binop_deriv_at_def)
 qed simp
 
 lemma times_real_differentiable_at_simps:
   shows "f 0-times_real_differentiable_at a \<longleftrightarrow> True"
-    and "f (Suc k)-times_real_differentiable_at a 
-    \<longleftrightarrow> (\<exists>\<epsilon>>0.  (\<forall>x. \<bar>x - a\<bar> < \<epsilon> \<longrightarrow> f k-times_real_differentiable_at x))       
-      \<and> (Nth_derivative k f has_derivative (\<lambda>h. Nth_derivative (Suc k) f a * h)) (at a)"
+    and "f (Suc k)-times_real_differentiable_at a
+    \<longleftrightarrow> (\<exists>\<epsilon>>0.  (\<forall>x. \<bar>x - a\<bar> < \<epsilon> \<longrightarrow> f k-times_real_differentiable_at x))
+      \<and> ((deriv ^^ k) f has_derivative (\<lambda>h. (deriv ^^ Suc k) f a * h)) (at a)"
   unfolding times_real_differentiable_at_equiv
   by simp_all
 
@@ -113,17 +109,17 @@ text \<open>Now, we provide properties about our definition. \<close>
 lemma k_times_differentiable_at_SucD:
   assumes "f (Suc k)-times_differentiable_at a"
   shows "f k-times_differentiable_at a"
-    and "(Nth_derivative k f has_derivative (\<lambda>h. Nth_derivative (Suc k) f a * h)) (at a)"
+    and "((deriv ^^ k) f has_derivative (\<lambda>h. (deriv ^^ Suc k) f a * h)) (at a)"
     and "((deriv ^^k) f has_derivative (\<lambda>h. (deriv ^^(Suc k)) f a * h)) (at a)"
   using assms
-  by (auto simp: Nth_deriv_eq_compow_deriv)
+  by auto
 
 lemma k_times_differentiable_at_mono:
-  assumes "m \<le> k" 
+  assumes "m \<le> k"
     and "f k-times_differentiable_at a"
   shows "f m-times_differentiable_at a"
   using assms
-  by (induct k; auto simp: le_Suc_eq dest: k_times_differentiable_at_SucD)
+  by (induct k; auto simp: le_Suc_eq dest:)
 
 lemma one_time_differentiable_at_iff:
   "f 1-times_differentiable_at a \<longleftrightarrow> (\<exists>f'. (f has_field_derivative f') (at a))"
@@ -132,34 +128,34 @@ lemma one_time_differentiable_at_iff:
 lemma k_times_differentiable_at_le_deriv:
   assumes "f k-times_differentiable_at a"
     and "m < k"
-  shows "(Nth_derivative m f has_derivative (\<lambda>h. Nth_derivative (Suc m) f a * h)) (at a)"
-    and "(Nth_derivative m f has_real_derivative Nth_derivative (Suc m) f a) (at a)"
+  shows "((deriv ^^ m) f has_derivative (\<lambda>h. (deriv ^^ Suc m) f a * h)) (at a)"
+    and "((deriv ^^ m) f has_real_derivative (deriv ^^ Suc m) f a) (at a)"
   unfolding has_field_derivative_def
-  using k_times_differentiable_at_mono k_times_differentiable_at_SucD Suc_le_eq assms 
+  using k_times_differentiable_at_mono k_times_differentiable_at_SucD Suc_le_eq assms
   by presburger+
 
 corollary k_times_differentiable_at_Suc_le_deriv:
   assumes "f (Suc k)-times_differentiable_at a"
     and "m \<le> k"
-  shows "(Nth_derivative m f has_derivative (\<lambda>h. Nth_derivative (Suc m) f a * h)) (at a)"
-    and "(Nth_derivative m f has_real_derivative Nth_derivative (Suc m) f a) (at a)"
+  shows "((deriv ^^ m) f has_derivative (\<lambda>h. (deriv ^^ Suc m) f a * h)) (at a)"
+    and "((deriv ^^ m) f has_real_derivative (deriv ^^ Suc m) f a) (at a)"
   unfolding has_field_derivative_def
-  using assms k_times_differentiable_at_le_deriv(1) le_imp_less_Suc 
+  using assms k_times_differentiable_at_le_deriv(1) le_imp_less_Suc
   by presburger+
 
-corollary k_times_differentiable_ball_has_derivative_chain:  
+corollary k_times_differentiable_ball_has_derivative_chain:
   assumes diff_ball: "\<forall>z. \<bar>z - x0\<bar> < \<epsilon> \<longrightarrow> f n-times_differentiable_at z"
-  shows   "\<forall>i<n. \<forall>z. \<bar>z - x0\<bar> < \<epsilon> 
+  shows   "\<forall>i<n. \<forall>z. \<bar>z - x0\<bar> < \<epsilon>
     \<longrightarrow> ((deriv ^^ i) f has_derivative (\<lambda>h. (deriv ^^ Suc i) f z * h)) (at z)"
-  by (metis assms Nth_deriv_eq_compow_deriv k_times_differentiable_at_le_deriv(1))
+  by (metis assms k_times_differentiable_at_le_deriv(1))
 
-lemma k_times_differentiable_at_SucE:  
+lemma k_times_differentiable_at_SucE:
   assumes KD: "f (Suc k)-times_differentiable_at a"
   obtains \<epsilon> where "\<epsilon> > 0"
     and "\<And>x. \<bar>x - a\<bar> < \<epsilon> \<Longrightarrow> f k-times_differentiable_at x"
-    and "(Nth_derivative k f
-           has_field_derivative Nth_derivative (Suc k) f a) (at a)"
-  using assms has_field_derivative_def 
+    and "((deriv ^^ k) f
+           has_field_derivative (deriv ^^ Suc k) f a) (at a)"
+  using assms has_field_derivative_def
     k_times_differentiable_at.simps(2) by blast
 
 lemma k_times_differentiable_at_derivative:
@@ -172,8 +168,8 @@ proof (induction k arbitrary: f a)
       \<epsilon>_pos: "\<epsilon> > 0" and
       near:  "\<forall>x. \<bar>x - a\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at (Suc p) f x" and
       deriv_cond:
-        "(Nth_derivative (Suc p) f
-            has_derivative (\<lambda>h. Nth_derivative (Suc (Suc p)) f a * h)) (at a)"
+        "((deriv ^^ Suc p) f
+            has_derivative (\<lambda>h. (deriv ^^ Suc (Suc p)) f a * h)) (at a)"
     using Suc.prems
     unfolding k_times_differentiable_at.simps by blast
 
@@ -184,18 +180,18 @@ proof (induction k arbitrary: f a)
     from near[rule_format, OF hx]
       have "k_times_differentiable_at (Suc p) f x".
     hence "k_times_differentiable_at p (deriv f) x"
-      by (rule Suc.IH)          
+      by (rule Suc.IH)
     thus "k_times_differentiable_at p (deriv f) x".
   qed
 
   have deriv_cond':
-    "(Nth_derivative p (deriv f)
-        has_derivative (\<lambda>h. Nth_derivative (Suc p) (deriv f) a * h)) (at a)"
-    using deriv_cond deriv_commutes_Nth_deriv by auto
-                       
+    "((deriv ^^ p) (deriv f)
+        has_derivative (\<lambda>h. (deriv ^^ Suc p) (deriv f) a * h)) (at a)"
+    using deriv_cond kth_deriv_shift by metis
+
   show ?case
-    using \<epsilon>_pos deriv_cond' near_deriv 
-      k_times_differentiable_at.simps(2) by blast 
+    using \<epsilon>_pos deriv_cond' near_deriv
+      k_times_differentiable_at.simps(2) by blast
 qed simp
 
 
@@ -207,10 +203,10 @@ lemma k_times_differentiable_at_imp_isCont:
   using k_times_differentiable_at_le_deriv[OF assms, where m=0]
   by (simp add: DERIV_isCont has_field_derivative_def)
 
-lemma k_times_differentiable_at_imp_isCont_Nth:
+lemma k_times_differentiable_at_imp_isCont_kth_deriv:
   assumes KD: "f (Suc k)-times_differentiable_at a"
-      and JL: "j \<le> k"         
-  shows   "continuous (at a) (Nth_derivative j f)"
+      and JL: "j \<le> k"
+  shows   "continuous (at a) ((deriv ^^ j) f)"
   using assms
   by (meson has_derivative_continuous le_imp_less_Suc k_times_differentiable_at_le_deriv)
 
@@ -229,7 +225,7 @@ where
   "f k-times_differentiable_on S \<equiv> k_times_differentiable_on k f S"
 
 lemma k_times_differentiable_onD:
-  "f k-times_differentiable_on S \<Longrightarrow> x \<in> S 
+  "f k-times_differentiable_on S \<Longrightarrow> x \<in> S
   \<Longrightarrow> f k-times_differentiable_at x"
   by (simp add: k_times_differentiable_on_def)
 
@@ -249,10 +245,10 @@ lemma times_differentiable_on_Suc:
   "f (Suc k)-times_differentiable_on S
   \<Longrightarrow> f k-times_differentiable_on S"
   unfolding k_times_differentiable_on_def
-  using k_times_differentiable_at_SucD(1) 
+  using k_times_differentiable_at_SucD(1)
   by blast
 
-lemma times_differentiable_on_subset: 
+lemma times_differentiable_on_subset:
   "X \<subseteq> Y \<Longrightarrow> f k-times_differentiable_on Y
   \<Longrightarrow> f k-times_differentiable_on X"
   by (auto simp: k_times_differentiable_on_def)
@@ -271,7 +267,7 @@ proof (induct k arbitrary: S)
       using Suc
       by (clarsimp simp: k_times_differentiable_on_def)
         (metis at_within_open deriv_transfer(1) has_derivative_transform)
-    moreover have "\<forall>x\<in>S. \<forall>m<Suc k. ((deriv ^^ m) g 
+    moreover have "\<forall>x\<in>S. \<forall>m<Suc k. ((deriv ^^ m) g
       has_derivative (*) ((deriv ^^ Suc m) f x)) (at x)"
       using Suc.prems True calculation k_times_differentiable_on_def
       by (simp add: has_derivative_transfer_on_open)
@@ -287,7 +283,7 @@ proof (induct k arbitrary: S)
               unfolded k_times_differentiable_on_def, rule_format]
       have obs: "\<And>x. x \<in> S \<Longrightarrow> (deriv ^^ k) g x = (deriv ^^ k) f x"
         using \<open>k = Suc n\<close>
-        by (simp, intro deriv_eq IH1[simplified]; 
+        by (simp, intro deriv_eq IH1[simplified];
             clarsimp simp del: k_times_differentiable_at.simps)
           (metis Suc.prems(2) k_times_differentiable_on_def times_differentiable_on_Suc)
       have at_within_S: "at x within S = at x" if "x \<in> S" for x
@@ -302,19 +298,19 @@ proof (induct k arbitrary: S)
         proof(cases "m = k")
           case True
           note transfer = has_derivative_transfer_on_open[OF \<open>open S\<close>, where f = "(deriv ^^ m) f"]
-          show ?thesis 
+          show ?thesis
             using \<open>z \<in> S\<close> True less_Suc_eq obs
-            by - ((rule transfer; clarsimp simp del: funpow.simps), 
+            by - ((rule transfer; clarsimp simp del: funpow.simps),
                 metis Suc.prems(2) k_times_differentiable_at_SucD(3) k_times_differentiable_onD)
         next
           case False
-          note f_k_diff = k_times_differentiable_at_SucD[OF 
+          note f_k_diff = k_times_differentiable_at_SucD[OF
               Suc.prems(2)[unfolded k_times_differentiable_on_def, rule_format]]
           have "m < k"
             using False \<open>m < Suc k\<close> less_Suc_eq by blast
           thus ?thesis
             using \<open>z \<in> S\<close>
-            by - (rule IH1, auto intro!: f_k_diff)
+            using IH1 f_k_diff(1) by blast
         qed
       qed
       show "g (Suc k)-times_differentiable_on S"
@@ -328,13 +324,13 @@ proof (induct k arbitrary: S)
         hence fact1: "\<exists>\<epsilon>>0. \<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> g k-times_differentiable_at y"
           using Suc(1)[OF open_ball] Suc(3)[THEN times_differentiable_on_Suc]
           times_differentiable_on_subset[OF \<open>ball x \<epsilon> \<subseteq> S\<close>]
-          by (metis abs_minus_commute dist_real_def 
+          by (metis abs_minus_commute dist_real_def
               k_times_differentiable_on_def mem_ball)
         moreover have "((deriv ^^ k) g has_derivative (*) ((deriv ^^ Suc k) f x)) (at x)"
           using first \<open>x \<in> S\<close> by blast
         ultimately show "g (Suc k)-times_differentiable_at x"
           using fact1
-          by (clarsimp simp: k_times_differentiable_on_def Nth_deriv_eq_compow_deriv,
+          by (clarsimp simp: k_times_differentiable_on_def,
               simp add: DERIV_imp_deriv has_field_derivative_def)
       qed
     qed
@@ -343,37 +339,38 @@ qed (simp add: k_times_differentiable_on_def)
 
 lemma k_times_differentiable_on_imp_continuous_on:
   assumes  "f (Suc k)-times_differentiable_on S"
-      and  "j \<le> k"  
-  shows   "continuous_on S (Nth_derivative j f)"
-  using assms by (meson continuous_at_imp_continuous_on 
-      k_times_differentiable_at_imp_isCont_Nth k_times_differentiable_on_def)
+      and  "j \<le> k"
+  shows   "continuous_on S ((deriv ^^ j) f)"
+  using assms by (meson continuous_at_imp_continuous_on
+      k_times_differentiable_at_imp_isCont_kth_deriv k_times_differentiable_on_def)
 
 subsection \<open>Linearity of Higher Differentiability\<close>
 
-lemma Nth_derivative_commute_and_shift:
+lemma kth_deriv_commute_and_shift:
   assumes "k \<le> m"
       and "f m-times_differentiable_at a"
   shows
-    "(Nth_derivative k (Nth_derivative (m - k) f) = Nth_derivative (m - k) (Nth_derivative k f)) \<and>
-     (Nth_derivative k (Nth_derivative (m - k) f) = Nth_derivative m f) \<and>
-     (Nth_derivative k f) (m - k)-times_differentiable_at  a" 
-  using assms by(induct k arbitrary: m, simp, metis Nth_derivative.simps(2)
-  Suc_diff_Suc Suc_leD Suc_le_lessD deriv_commutes_Nth_deriv k_times_differentiable_at_derivative)
+    "((deriv ^^ k) ((deriv ^^ (m - k)) f) = (deriv ^^ (m - k)) ((deriv ^^ k) f)) \<and>
+     ((deriv ^^ k) ((deriv ^^ (m - k)) f) = (deriv ^^ m) f) \<and>
+     ((deriv ^^ k) f) (m - k)-times_differentiable_at  a"
+  using assms
+  by(induct k arbitrary: m, simp, metis (no_types, lifting) Suc_diff_Suc Suc_leD Suc_le_eq
+            k_times_differentiable_at_derivative kth_deriv_Suc kth_deriv_shift)
 
-corollary Nth_derivative_commute_and_shift_dualE:
+corollary kth_deriv_commute_and_shift_dualE:
   assumes "k \<le> m"
       and "f m-times_differentiable_at a"
-  shows "(Nth_derivative (m - k) f) k-times_differentiable_at a"
-  by (metis Nth_derivative_commute_and_shift assms diff_diff_cancel diff_le_self)
+  shows "((deriv ^^ (m - k)) f) k-times_differentiable_at a"
+  by (metis kth_deriv_commute_and_shift assms diff_diff_cancel diff_le_self)
 
-corollary Nth_derivative_commute_and_shiftE:
+corollary kth_deriv_commute_and_shiftE:
   assumes "k \<le> m"
       and "f m-times_differentiable_at  a"
-  shows "(Nth_derivative k f) (m - k)-times_differentiable_at a"
-  using Nth_derivative_commute_and_shift assms by simp
+  shows "((deriv ^^ k) f) (m - k)-times_differentiable_at a"
+  using kth_deriv_commute_and_shift assms by simp
 
 lemma k_times_differentiable_at_const:
-  "Nth_derivative (Suc m) (\<lambda>_. c) x = 0 \<and> k_times_differentiable_at (Suc m) (\<lambda>_. c) x"
+  "(deriv ^^ Suc m) (\<lambda>_. c) x = 0 \<and> k_times_differentiable_at (Suc m) (\<lambda>_. c) x"
 proof (induct m arbitrary: x)
   case 0
   show ?case
@@ -382,34 +379,41 @@ proof (induct m arbitrary: x)
       by (metis has_derivative_const has_real_derivative one_time_differentiable_at_iff)
     then show ?thesis
       by simp
-  qed   
+  qed
 next
   fix m :: nat
   fix x :: real
-  assume IH: "(\<And>x. Nth_derivative (Suc m) (\<lambda>_. c) x = 0 \<and> k_times_differentiable_at (Suc m) (\<lambda>_. c) x)"
+  assume IH: "(\<And>x. (deriv ^^ Suc m) (\<lambda>_. c) x = 0 \<and> k_times_differentiable_at (Suc m) (\<lambda>_. c) x)"
 
-  then have deriv_zero: "Nth_derivative (Suc (Suc m)) (\<lambda>_. c) x = 0"
-    using deriv_commutes_Nth_deriv by auto
+  have prev_zero: "(deriv ^^ Suc m) (\<lambda>_. c) = (\<lambda>_. 0)"
+  proof
+    fix y :: real
+    show "(deriv ^^ Suc m) (\<lambda>_. c) y = (\<lambda>_. 0) y"
+      using IH[of y] by simp
+  qed
+
+  then have deriv_zero: "(deriv ^^ Suc (Suc m)) (\<lambda>_. c) x = 0"
+    by simp
 
   moreover have diff_suc:
     "k_times_differentiable_at (Suc (Suc m)) (\<lambda>_. c) x"
   proof -
     have clause1:
-      "\<exists>\<epsilon>>0. \<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at (Suc m) (\<lambda>_. c) y"     
+      "\<exists>\<epsilon>>0. \<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at (Suc m) (\<lambda>_. c) y"
       using IH by (intro exI[of _ 1], fastforce)
 
     have clause2:
-      "(Nth_derivative (Suc m) (\<lambda>_. c)
+      "((deriv ^^ Suc m) (\<lambda>_. c)
           has_derivative
-           (\<lambda>h. Nth_derivative (Suc (Suc m)) (\<lambda>_. c) x * h)) (at x)"
+           (\<lambda>h. (deriv ^^ Suc (Suc m)) (\<lambda>_. c) x * h)) (at x)"
     proof -
-      have "\<exists>r. (\<lambda>r. Nth_derivative (Suc (Suc m)) (\<lambda>r. c) x) 
-          = (*) (Nth_derivative (Suc (Suc m)) (\<lambda>r. c) x) 
-        \<and> (\<lambda>ra. r) = Nth_derivative (Suc m) (\<lambda>r. c)"
+      have "\<exists>r. (\<lambda>r. (deriv ^^ Suc (Suc m)) (\<lambda>r. c) x)
+          = (*) ((deriv ^^ Suc (Suc m)) (\<lambda>r. c) x)
+        \<and> (\<lambda>ra. r) = (deriv ^^ Suc m) (\<lambda>r. c)"
       proof -
-        have "\<exists>r. (\<forall>ra. r = Nth_derivative (Suc m) (\<lambda>r. c) ra) 
-          \<and> (\<forall>r. Nth_derivative (Suc (Suc m)) (\<lambda>r. c) x 
-            = Nth_derivative (Suc (Suc m)) (\<lambda>r. c) x * r)"
+        have "\<exists>r. (\<forall>ra. r = (deriv ^^ Suc m) (\<lambda>r. c) ra)
+          \<and> (\<forall>r. (deriv ^^ Suc (Suc m)) (\<lambda>r. c) x
+            = (deriv ^^ Suc (Suc m)) (\<lambda>r. c) x * r)"
           using IH deriv_zero by fastforce
         then show ?thesis
           by blast
@@ -421,46 +425,54 @@ next
       unfolding k_times_differentiable_at.simps
       using clause1 clause2 by auto
   qed
-  ultimately show "Nth_derivative (Suc (Suc m)) (\<lambda>_. c) x = 0 
+  ultimately show "(deriv ^^ Suc (Suc m)) (\<lambda>_. c) x = 0
     \<and> k_times_differentiable_at (Suc (Suc m)) (\<lambda>_. c) x"
     unfolding k_times_differentiable_at.simps by simp
 qed
 
-corollary Nth_derivative_const_eq:
+corollary kth_deriv_const_eq:
+  fixes x :: real
   assumes "k > 0"
-  shows   "Nth_derivative k (\<lambda>_. c) x = 0"
-  by (metis Suc_le_D Suc_le_eq assms k_times_differentiable_at_const)
+  shows   "(deriv ^^ k) (\<lambda>_. c) x = 0"
+proof (cases k)
+  case 0
+  then show ?thesis
+    using assms by simp
+next
+  case (Suc m)
+  then show ?thesis
+    using k_times_differentiable_at_const by force
+qed
 
-corollary Nth_derivative_const_cases:
-  "Nth_derivative k (\<lambda>t::real. c) x = (if k = 0 then c else 0)"
-  using Nth_derivative_const_eq
-  by force 
+corollary kth_deriv_const_cases:
+  "(deriv ^^ k) (\<lambda>t::real. c) x = (if k = 0 then c else 0)"
+  using kth_deriv_const_eq by auto
 
 corollary k_times_differentiable_at_constE:
   "k_times_differentiable_at m (\<lambda>_. c) x"
-  using k_times_differentiable_at_SucD k_times_differentiable_at_const 
+  using k_times_differentiable_at_SucD k_times_differentiable_at_const
   by blast
 
 lemma k_times_differentiable_at_id:
-  "Nth_derivative (Suc m) (\<lambda>t. t) x = (if m = 0 then 1 else 0) \<and>
+  "(deriv ^^ Suc m) (\<lambda>t. t) x = (if m = 0 then 1 else 0) \<and>
      k_times_differentiable_at (Suc m) (\<lambda>t. t) x"
 proof (induct m arbitrary: x)
-  show "\<And>x. Nth_derivative (Suc 0) (\<lambda>t. t) x = (if 0 = 0 then 1 else 0) 
+  show "\<And>x. (deriv ^^ Suc 0) (\<lambda>t. t) x = (if 0 = 0 then 1 else 0)
     \<and> k_times_differentiable_at (Suc 0) (\<lambda>t. t) x"
-    by (metis One_nat_def deriv_ident first_derivative_alt_def 
+    by (metis One_nat_def deriv_ident first_derivative_alt_def
         has_derivative_ident has_real_derivative one_time_differentiable_at_iff)
 next
   fix m :: nat
   fix x :: real
 
-  assume IH: "(\<And>x. Nth_derivative (Suc m) (\<lambda>t. t) x = (if m = 0 then 1 else 0) 
+  assume IH: "(\<And>x. (deriv ^^ Suc m) (\<lambda>t. t) x = (if m = 0 then 1 else 0)
     \<and> k_times_differentiable_at (Suc m) (\<lambda>t. t) x)"
 
-  have Dm1: "Nth_derivative (Suc (Suc m)) (\<lambda>t. t) x = 0"
-  proof - 
-    have "Nth_derivative (Suc (Suc m)) (\<lambda>t. t) x  = (Nth_derivative (Suc m) (deriv (\<lambda>t. t))) x"
-      using deriv_commutes_Nth_deriv by auto
-    also have "... = (Nth_derivative (Suc m) (\<lambda>_.1)) x"
+  have Dm1: "(deriv ^^ Suc (Suc m)) (\<lambda>t. t) x = 0"
+  proof -
+    have "(deriv ^^ Suc (Suc m)) (\<lambda>t. t) x  = ((deriv ^^ Suc m) (deriv (\<lambda>t. t))) x"
+      using kth_deriv_shift by metis
+    also have "... = ((deriv ^^ Suc m) (\<lambda>_.1)) x"
       by simp
     also have "... = 0"
       using k_times_differentiable_at_const by auto
@@ -469,44 +481,48 @@ next
 
   have clause1:
     "\<exists>\<epsilon>>0. \<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at (Suc m) (\<lambda>t. t) y"
-    by (intro exI[of _ 1] conjI, simp_all, 
-        metis Nth_derivative.simps(2) IH k_times_differentiable_at.simps(2))
+    by (intro exI[of _ 1] conjI, simp_all,
+        metis kth_deriv_simps(2) IH k_times_differentiable_at.simps(2))
 
   have clause2:
-    "(Nth_derivative (Suc m) (\<lambda>t. t)
-        has_derivative (\<lambda>h. Nth_derivative (Suc (Suc m)) (\<lambda>t. t) x * h)) (at x)"
-    using IH[of x] Dm1 by (cases m, simp_all, metis IH Nth_derivative.simps(2) 
-        UNIV_I has_derivative_transform            k_times_differentiable_at.simps(2) 
+    "((deriv ^^ Suc m) (\<lambda>t. t)
+        has_derivative (\<lambda>h. (deriv ^^ Suc (Suc m)) (\<lambda>t. t) x * h)) (at x)"
+    using IH[of x] Dm1 by (cases m, simp_all, metis IH kth_deriv_simps(2)
+        UNIV_I has_derivative_transform k_times_differentiable_at.simps(2)
         k_times_differentiable_at_const lambda_zero)
 
-  show "Nth_derivative (Suc (Suc m)) (\<lambda>t. t) x = (if Suc m = 0 then 1 else 0) 
+  show "(deriv ^^ Suc (Suc m)) (\<lambda>t. t) x = (if Suc m = 0 then 1 else 0)
     \<and> k_times_differentiable_at (Suc (Suc m)) (\<lambda>t. t) x"
     using Dm1 clause1 clause2 by auto
 qed
 
 
-corollary Nth_derivative_id_eq':
-  "Nth_derivative (Suc m) (\<lambda>t. t) x = (if m = 0 then 1 else 0)"
-  using k_times_differentiable_at_id by simp
+corollary kth_deriv_id_eq':
+  fixes x :: real
+  shows
+  "(deriv ^^ Suc m) (\<lambda>t. t) x = (if m = 0 then 1 else 0)"
+  using k_times_differentiable_at_id
+  by (simp add: funpow_swap1 kth_deriv_const_eq)
 
-lemma Nth_derivative_id_cases:
-  "Nth_derivative k (\<lambda>t::real. t) x =
+lemma kth_deriv_id_cases:
+  "(deriv ^^ k) (\<lambda>t::real. t) x =
      (if k = 0 then x else if k = 1 then 1 else 0)"
-  by (metis Nth_derivative.simps(1) Nth_derivative_id_eq' One_nat_def not0_implies_Suc)
+  by (metis kth_deriv_simps(1) kth_deriv_id_eq' One_nat_def not0_implies_Suc)
 
-corollary Nth_derivative_id_ge2_at:
+corollary kth_deriv_id_ge2_at:
   assumes "k \<ge> 2"
-  shows   "Nth_derivative k (\<lambda>t::real. t) x = 0"
-  using Nth_derivative_id_cases assms by fastforce
+  shows   "(deriv ^^ k) (\<lambda>t::real. t) x = 0"
+  using kth_deriv_id_cases assms by fastforce
 
-corollary Nth_derivative_id_1_eq:
-  "Nth_derivative (Suc 0) (\<lambda>t. t) x = (1 :: real)"
-  using Nth_derivative_id_eq' by simp
+corollary kth_deriv_id_1_eq:
+  "(deriv ^^ Suc 0) (\<lambda>t. t) x = (1 :: real)"
+  using kth_deriv_id_eq' by simp
 
-corollary Nth_derivative_id_eq:
+corollary kth_deriv_id_eq:
   assumes "m > 0"
-  shows "Nth_derivative (Suc m) (\<lambda>t. t) x = (0 :: real)"
-  using Nth_derivative_id_eq' assms by simp
+  shows "(deriv ^^ Suc m) (\<lambda>t. t) x = (0 :: real)"
+  using kth_deriv_id_eq' assms
+  by (metis less_not_refl)
 
 corollary k_times_differentiable_at_idE:
   "(\<lambda>t. t) k-times_differentiable_at x"
@@ -527,8 +543,8 @@ corollary k_times_differentiable_at_idE:
 
 lemma kth_deriv_cmult:
   assumes "f k-times_differentiable_at x"
-  shows   "(\<lambda>z. c * f z) k-times_differentiable_at  x \<and> 
-          Nth_derivative k (\<lambda>z. c * f z) x = c * Nth_derivative k f x"
+  shows   "(\<lambda>z. c * f z) k-times_differentiable_at  x \<and>
+          (deriv ^^ k) (\<lambda>z. c * f z) x = c * (deriv ^^ k) f x"
   using assms
 proof (induct k arbitrary: x)
   case 0
@@ -536,47 +552,47 @@ proof (induct k arbitrary: x)
 next
   fix k :: nat
   fix x :: real
-  assume IH: "(\<And>x. k_times_differentiable_at k f x 
-    \<Longrightarrow> k_times_differentiable_at k (\<lambda>z. c * f z) x 
-      \<and> Nth_derivative k (\<lambda>z. c * f z) x = c * Nth_derivative k f x)"
-  show "k_times_differentiable_at (Suc k) f x 
-    \<Longrightarrow> k_times_differentiable_at (Suc k) (\<lambda>z. c * f z) x 
-      \<and> Nth_derivative (Suc k) (\<lambda>z. c * f z) x = c * Nth_derivative (Suc k) f x"
+  assume IH: "(\<And>x. k_times_differentiable_at k f x
+    \<Longrightarrow> k_times_differentiable_at k (\<lambda>z. c * f z) x
+      \<and> (deriv ^^ k) (\<lambda>z. c * f z) x = c * (deriv ^^ k) f x)"
+  show "k_times_differentiable_at (Suc k) f x
+    \<Longrightarrow> k_times_differentiable_at (Suc k) (\<lambda>z. c * f z) x
+      \<and> (deriv ^^ Suc k) (\<lambda>z. c * f z) x = c * (deriv ^^ Suc k) f x"
   proof -
     assume k1: "k_times_differentiable_at (Suc k) f x"
     then obtain \<epsilon> where \<epsilon>_pos: "\<epsilon> > 0"
                  and neigh: "\<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at k f y"
-                 and deriv_f: "(Nth_derivative k f
-                                 has_field_derivative Nth_derivative (Suc k) f x) (at x)"
+                 and deriv_f: "((deriv ^^ k) f
+                                 has_field_derivative (deriv ^^ Suc k) f x) (at x)"
       using k_times_differentiable_at_SucE by blast
 
     have mult_rule:
-      "((\<lambda>y. c * Nth_derivative k f y)
-              has_field_derivative (c * Nth_derivative (Suc k) f x)) (at x)"
+      "((\<lambda>y. c * (deriv ^^ k) f y)
+              has_field_derivative (c * (deriv ^^ Suc k) f x)) (at x)"
           using DERIV_chain' DERIV_cmult_Id deriv_f by blast
 
-    then have deriv_trans:"(Nth_derivative k (\<lambda>y. c * f y) has_derivative 
-            (\<lambda>h. (c * Nth_derivative (Suc k) f x) * h)) (at x)"
+    then have deriv_trans:"((deriv ^^ k) (\<lambda>y. c * f y) has_derivative
+            (\<lambda>h. (c * (deriv ^^ Suc k) f x) * h)) (at x)"
       unfolding has_field_derivative_def
-      by(subst has_derivative_transfer_on_ball[where \<epsilon>=\<epsilon> and f="(\<lambda>y. c * Nth_derivative k f y)"],
+      by(subst has_derivative_transfer_on_ball[where \<epsilon>=\<epsilon> and f="(\<lambda>y. c * (deriv ^^ k) f y)"],
          auto simp: \<epsilon>_pos IH dist_real_def neigh)
-    then have "(Nth_derivative k (\<lambda>y. c * f y)
-           has_field_derivative  (c * Nth_derivative (Suc k) f x)) (at x)"
-      using has_field_derivative_def by blast    
-    then have g2: "Nth_derivative (Suc k) (\<lambda>z. c * f z) x = c * Nth_derivative (Suc k) f x"
+    then have "((deriv ^^ k) (\<lambda>y. c * f y)
+           has_field_derivative  (c * (deriv ^^ Suc k) f x)) (at x)"
+      using has_field_derivative_def by blast
+    then have g2: "(deriv ^^ Suc k) (\<lambda>z. c * f z) x = c * (deriv ^^ Suc k) f x"
       by (simp add: DERIV_imp_deriv)
 
     have "k_times_differentiable_at (Suc k) (\<lambda>z. c * f z) x"
-      using IH \<epsilon>_pos deriv_trans g2 neigh by auto    
+      using IH \<epsilon>_pos deriv_trans g2 neigh by auto
     then show ?thesis
       using g2 by blast
   qed
 qed
 
-corollary Nth_derivative_cmult_eq:
+corollary kth_deriv_cmult_eq:
   assumes "f k-times_differentiable_at x"
-      and "Nth_derivative k f = f'"
-  shows   "Nth_derivative k (\<lambda>y. c * f y) x = c * f' x"
+      and "(deriv ^^ k) f = f'"
+  shows   "(deriv ^^ k) (\<lambda>y. c * f y) x = c * f' x"
   by (simp add: assms kth_deriv_cmult)
 
 corollary kth_deriv_cmultE:
@@ -586,25 +602,25 @@ corollary kth_deriv_cmultE:
 
 corollary kth_derivative_uminus:
   assumes "f k-times_differentiable_at x"
-  shows   "Nth_derivative k (\<lambda>t. - f t) x = - Nth_derivative k f x"
-proof- 
-  have "k_times_differentiable_at k (\<lambda>z. (-1) * f z) x \<and> 
-          Nth_derivative k (\<lambda>z. (-1) * f z) x = (-1) * Nth_derivative k f x"
+  shows   "(deriv ^^ k) (\<lambda>t. - f t) x = - (deriv ^^ k) f x"
+proof-
+  have "k_times_differentiable_at k (\<lambda>z. (-1) * f z) x \<and>
+          (deriv ^^ k) (\<lambda>z. (-1) * f z) x = (-1) * (deriv ^^ k) f x"
     using assms by(rule kth_deriv_cmult)
   then show ?thesis
     by auto
 qed
 
-corollary Nth_derivative_uminus_eq:
+corollary kth_deriv_uminus_eq:
   assumes "f k-times_differentiable_at x"
-      and "Nth_derivative k f = f'"
-  shows   "Nth_derivative k (\<lambda>t. - f t) x = - f' x"
+      and "(deriv ^^ k) f = f'"
+  shows   "(deriv ^^ k) (\<lambda>t. - f t) x = - f' x"
   by (simp add: assms kth_derivative_uminus)
 
 corollary kth_derivative_uminusE:
   assumes "f k-times_differentiable_at x"
   shows   "(\<lambda>t. - f t) k-times_differentiable_at x"
-proof - 
+proof -
   have "k_times_differentiable_at k (\<lambda>t. -1 * f t) x"
     using assms by(subst kth_deriv_cmult, simp_all)
   then show ?thesis
@@ -620,13 +636,13 @@ qed
         \[ (f+g)^{(k)}(x) = f^{(k)}(x) + g^{(k)}(x), \]
         while preserving $k$‑times differentiability at the point~$x$.
     \end{itemize}\<close>
-    
+
 lemma kth_deriv_add:
   assumes "f k-times_differentiable_at x"
       and "g k-times_differentiable_at x"
   shows   "(\<lambda>y. f y + g y) k-times_differentiable_at x \<and>
-             Nth_derivative k (\<lambda>y. f y + g y) x =
-             Nth_derivative k f x + Nth_derivative k g x"
+             (deriv ^^ k) (\<lambda>y. f y + g y) x =
+             (deriv ^^ k) f x + (deriv ^^ k) g x"
   using assms
 proof (induct k arbitrary: x)
   case 0
@@ -634,111 +650,111 @@ proof (induct k arbitrary: x)
 next
   fix k :: nat
   fix x :: real
-  assume IH: "(\<And>x. k_times_differentiable_at k f x 
-    \<Longrightarrow> k_times_differentiable_at k g x 
-    \<Longrightarrow> k_times_differentiable_at k (\<lambda>y. f y + g y) x 
-      \<and> Nth_derivative k (\<lambda>y. f y + g y) x = Nth_derivative k f x + Nth_derivative k g x)"
-  show "k_times_differentiable_at (Suc k) f x 
-    \<Longrightarrow> k_times_differentiable_at (Suc k) g x 
-    \<Longrightarrow> k_times_differentiable_at (Suc k) (\<lambda>y. f y + g y) x 
-      \<and> Nth_derivative (Suc k) (\<lambda>y. f y + g y) x 
-        = Nth_derivative (Suc k) f x + Nth_derivative (Suc k) g x"
+  assume IH: "(\<And>x. k_times_differentiable_at k f x
+    \<Longrightarrow> k_times_differentiable_at k g x
+    \<Longrightarrow> k_times_differentiable_at k (\<lambda>y. f y + g y) x
+      \<and> (deriv ^^ k) (\<lambda>y. f y + g y) x = (deriv ^^ k) f x + (deriv ^^ k) g x)"
+  show "k_times_differentiable_at (Suc k) f x
+    \<Longrightarrow> k_times_differentiable_at (Suc k) g x
+    \<Longrightarrow> k_times_differentiable_at (Suc k) (\<lambda>y. f y + g y) x
+      \<and> (deriv ^^ Suc k) (\<lambda>y. f y + g y) x
+        = (deriv ^^ Suc k) f x + (deriv ^^ Suc k) g x"
   proof -
     assume f_ksuc_diff: "k_times_differentiable_at (Suc k) f x"
     then obtain \<epsilon>f where \<epsilon>f: "\<epsilon>f > 0"
               and neigh_f:  "\<forall> y. \<bar>y - x\<bar> < \<epsilon>f \<longrightarrow> k_times_differentiable_at k f y"
               and diff_f:
-                "(Nth_derivative k f
-                   has_field_derivative Nth_derivative (Suc k) f x) (at x)"
+                "((deriv ^^ k) f
+                   has_field_derivative (deriv ^^ Suc k) f x) (at x)"
       using k_times_differentiable_at_SucE by blast
-    assume g_ksuc_diff: "k_times_differentiable_at (Suc k) g x"      
+    assume g_ksuc_diff: "k_times_differentiable_at (Suc k) g x"
     then obtain \<epsilon>g where \<epsilon>g: "\<epsilon>g > 0"
                 and neigh_g:  "\<forall> y. \<bar>y - x\<bar> < \<epsilon>g \<longrightarrow> k_times_differentiable_at k g y"
                 and diff_g:
-                  "(Nth_derivative k g
-                     has_field_derivative Nth_derivative (Suc k) g x) (at x)"
+                  "((deriv ^^ k) g
+                     has_field_derivative (deriv ^^ Suc k) g x) (at x)"
         using k_times_differentiable_at_SucE by blast
 
     define \<epsilon> where "\<epsilon> = min \<epsilon>f \<epsilon>g"
     have \<epsilon>_pos: "\<epsilon> > 0" by (simp add: \<epsilon>_def \<epsilon>f \<epsilon>g)
-  
+
     have neigh_sum:
       "\<And>y. \<bar>y - x\<bar> < \<epsilon> \<Longrightarrow> k_times_differentiable_at k (\<lambda>z. f z + g z) y"
       by (simp add: IH \<epsilon>_def neigh_f neigh_g)
-  
+
     have deriv_k_sum:
       "\<And>y. \<bar>y - x\<bar> < \<epsilon> \<Longrightarrow>
-          Nth_derivative k (\<lambda>z. f z + g z) y =
-          Nth_derivative k f y + Nth_derivative k g y"
-      using IH neigh_f neigh_g \<epsilon>_def 
+          (deriv ^^ k) (\<lambda>z. f z + g z) y =
+          (deriv ^^ k) f y + (deriv ^^ k) g y"
+      using IH neigh_f neigh_g \<epsilon>_def
       by (auto simp: less_le_trans)
-  
+
     have add_rule:
-      "((\<lambda>y. Nth_derivative k f y + Nth_derivative k g y)
+      "((\<lambda>y. (deriv ^^ k) f y + (deriv ^^ k) g y)
           has_field_derivative
-           (Nth_derivative (Suc k) f x + Nth_derivative (Suc k) g x)) (at x)"
-      using diff_f diff_g DERIV_add by blast 
-  
+           ((deriv ^^ Suc k) f x + (deriv ^^ Suc k) g x)) (at x)"
+      using diff_f diff_g DERIV_add by blast
+
     then have diff_sum:
-    "(Nth_derivative k (\<lambda>y. f y + g y)
+    "((deriv ^^ k) (\<lambda>y. f y + g y)
         has_derivative
-          (\<lambda>h. (Nth_derivative (Suc k) f x +
-                Nth_derivative (Suc k) g x) * h)) (at x)"
-      by (subst has_derivative_transfer_on_ball[where \<epsilon>=\<epsilon> 
-            and f="(\<lambda>y. Nth_derivative k f y + Nth_derivative k g y)"],
+          (\<lambda>h. ((deriv ^^ Suc k) f x +
+                (deriv ^^ Suc k) g x) * h)) (at x)"
+      by (subst has_derivative_transfer_on_ball[where \<epsilon>=\<epsilon>
+            and f="(\<lambda>y. (deriv ^^ k) f y + (deriv ^^ k) g y)"],
           auto simp: \<epsilon>_pos deriv_k_sum dist_real_def has_field_derivative_def)
 
     have val_sum:
-      "Nth_derivative (Suc k) (\<lambda>y. f y + g y) x =
-         Nth_derivative (Suc k) f x + Nth_derivative (Suc k) g x"
+      "(deriv ^^ Suc k) (\<lambda>y. f y + g y) x =
+         (deriv ^^ Suc k) f x + (deriv ^^ Suc k) g x"
       using diff_sum has_derivative_imp by force
 
     have sum_Suc:
       "k_times_differentiable_at (Suc k) (\<lambda>y. f y + g y) x"
       unfolding k_times_differentiable_at.simps
-      using \<epsilon>_pos diff_sum neigh_sum val_sum by auto                             
+      using \<epsilon>_pos diff_sum neigh_sum val_sum by auto
     with val_sum show ?thesis
       by simp
   qed
 qed
 
-corollary Nth_derivative_add_eq:
+corollary kth_deriv_add_eq:
   assumes "f k-times_differentiable_at x"
       and "g k-times_differentiable_at x"
-  assumes "Nth_derivative k f = f'"
-  assumes "Nth_derivative k g = g'"   
-  shows   "Nth_derivative k (\<lambda>y. f y + g y) x  =  f'(x) + g'(x)"
+  assumes "(deriv ^^ k) f = f'"
+  assumes "(deriv ^^ k) g = g'"
+  shows   "(deriv ^^ k) (\<lambda>y. f y + g y) x  =  f'(x) + g'(x)"
   by (simp add: assms kth_deriv_add)
 
 corollary kth_deriv_addE:
   assumes "f k-times_differentiable_at x"
       and "g k-times_differentiable_at x"
     shows "(\<lambda>y. f y + g y) k-times_differentiable_at x"
-  using assms 
+  using assms
   by (subst kth_deriv_add, simp_all)
 
 lemma kth_deriv_sub:
   assumes "f k-times_differentiable_at x"
       and "g k-times_differentiable_at x"
-  shows   "Nth_derivative k (\<lambda>y. f y - g y) x =
-           Nth_derivative k f x - Nth_derivative k g x"
+  shows   "(deriv ^^ k) (\<lambda>y. f y - g y) x =
+           (deriv ^^ k) f x - (deriv ^^ k) g x"
 proof -
-  have "Nth_derivative k (\<lambda>y. f y - g y) x =
-        Nth_derivative k (\<lambda>y. f y + (-1) * g y) x"
+  have "(deriv ^^ k) (\<lambda>y. f y - g y) x =
+        (deriv ^^ k) (\<lambda>y. f y + (-1) * g y) x"
     by simp
-  also have "... = Nth_derivative k f x  + Nth_derivative k (\<lambda>y. (-1) * g y) x"
-    using assms kth_deriv_add kth_deriv_cmult by presburger  
-  also have "... = Nth_derivative k f x  - Nth_derivative k g x"
+  also have "... = (deriv ^^ k) f x  + (deriv ^^ k) (\<lambda>y. (-1) * g y) x"
+    using assms kth_deriv_add kth_deriv_cmult by presburger
+  also have "... = (deriv ^^ k) f x  - (deriv ^^ k) g x"
     by (metis add_uminus_conv_diff assms(2) kth_deriv_cmult mult_minus1)
   finally show ?thesis.
 qed
 
-corollary Nth_derivative_sub_eq:
+corollary kth_deriv_sub_eq:
   assumes "f k-times_differentiable_at x"
       and "g k-times_differentiable_at x"
-      and "Nth_derivative k f = f'"
-      and "Nth_derivative k g = g'"
-  shows   "Nth_derivative k (\<lambda>t. f t - g t) x = f' x - g' x"
+      and "(deriv ^^ k) f = f'"
+      and "(deriv ^^ k) g = g'"
+  shows   "(deriv ^^ k) (\<lambda>t. f t - g t) x = f' x - g' x"
   by (simp add: assms kth_deriv_sub)
 
 corollary kth_deriv_subE:
@@ -761,8 +777,8 @@ lemma kth_deriv_mult:
   assumes fCk: "f k-times_differentiable_at x"
       and gCk: "g k-times_differentiable_at x"
   shows   "(\<lambda>y. f y * g y) k-times_differentiable_at x \<and>
-           Nth_derivative k (\<lambda>y. f y * g y) x =
-           (\<Sum>j\<le>k. of_nat (k choose j) * Nth_derivative j f x * Nth_derivative (k - j) g x)"
+           (deriv ^^ k) (\<lambda>y. f y * g y) x =
+           (\<Sum>j\<le>k. of_nat (k choose j) * (deriv ^^ j) f x * (deriv ^^ (k - j)) g x)"
   using assms
 proof (induct k arbitrary: x)
   case 0
@@ -772,119 +788,119 @@ next
   fix x :: real
 
   let ?\<beta>  = "\<lambda>y. (\<Sum>j\<le>k. of_nat (k choose j) *
-                        Nth_derivative j f y *
-                        Nth_derivative (k - j) g y)"
+                        (deriv ^^ j) f y *
+                        (deriv ^^ (k - j)) g y)"
 
   assume IH: "(\<And>x. k_times_differentiable_at k f x \<Longrightarrow>
                 k_times_differentiable_at k g x \<Longrightarrow>
-                k_times_differentiable_at k (\<lambda>y. f y * g y) x \<and> 
-  Nth_derivative k (\<lambda>y. f y * g y) x = 
-  (\<Sum>j\<le>k. real (k choose j) * Nth_derivative j f x * Nth_derivative (k - j) g x))"
-  
-  show "k_times_differentiable_at (Suc k) f x 
-    \<Longrightarrow> k_times_differentiable_at (Suc k) g x 
-    \<Longrightarrow> k_times_differentiable_at (Suc k) (\<lambda>y. f y * g y) x 
-      \<and> Nth_derivative (Suc k) (\<lambda>y. f y * g y) x 
-    = (\<Sum>j\<le>Suc k. real (Suc k choose j) * Nth_derivative j f x * Nth_derivative (Suc k - j) g x)"
-  proof - 
+                k_times_differentiable_at k (\<lambda>y. f y * g y) x \<and>
+  (deriv ^^ k) (\<lambda>y. f y * g y) x =
+  (\<Sum>j\<le>k. real (k choose j) * (deriv ^^ j) f x * (deriv ^^ (k - j)) g x))"
+
+  show "k_times_differentiable_at (Suc k) f x
+    \<Longrightarrow> k_times_differentiable_at (Suc k) g x
+    \<Longrightarrow> k_times_differentiable_at (Suc k) (\<lambda>y. f y * g y) x
+      \<and> (deriv ^^ Suc k) (\<lambda>y. f y * g y) x
+    = (\<Sum>j\<le>Suc k. real (Suc k choose j) * (deriv ^^ j) f x * (deriv ^^ (Suc k - j)) g x)"
+  proof -
     assume f_ksuc_diff: "k_times_differentiable_at (Suc k) f x"
     assume g_ksuc_diff: "k_times_differentiable_at (Suc k) g x"
 
     obtain \<epsilon>f where \<epsilon>f: "\<epsilon>f > 0"
         and neigh_f:  "\<And>y. \<bar>y - x\<bar> < \<epsilon>f \<Longrightarrow> k_times_differentiable_at k f y"
-        and diff_f:   "(Nth_derivative k f has_field_derivative Nth_derivative (Suc k) f x) (at x)"
+        and diff_f:   "((deriv ^^ k) f has_field_derivative (deriv ^^ Suc k) f x) (at x)"
       using f_ksuc_diff k_times_differentiable_at_SucE by blast
-  
+
     obtain \<epsilon>g where \<epsilon>g: "\<epsilon>g > 0"
       and neigh_g:  "\<And>y. \<bar>y - x\<bar> < \<epsilon>g \<Longrightarrow> k_times_differentiable_at k g y"
-        and diff_g:   "(Nth_derivative k g has_field_derivative Nth_derivative (Suc k) g x) (at x)"
+        and diff_g:   "((deriv ^^ k) g has_field_derivative (deriv ^^ Suc k) g x) (at x)"
       using g_ksuc_diff k_times_differentiable_at_SucE by blast
 
     define \<epsilon> where "\<epsilon> = min \<epsilon>f \<epsilon>g"
     have \<epsilon>_pos: "\<epsilon> > 0" by (simp add: \<epsilon>_def \<epsilon>f \<epsilon>g)
-  
+
     have neigh_prod:
       "\<And>y. \<bar>y - x\<bar> < \<epsilon> \<Longrightarrow> k_times_differentiable_at k (\<lambda>z. f z * g z) y"
       by (simp add: IH \<epsilon>_def neigh_f neigh_g)
 
     have deriv_k_prod:
       "\<And>y. \<bar>y - x\<bar> < \<epsilon> \<Longrightarrow>
-        Nth_derivative k (\<lambda>z. f z * g z) y =
-          (\<Sum>j\<le>k. of_nat (k choose j) * Nth_derivative j f y * Nth_derivative (k - j) g y)"
+        (deriv ^^ k) (\<lambda>z. f z * g z) y =
+          (\<Sum>j\<le>k. of_nat (k choose j) * (deriv ^^ j) f y * (deriv ^^ (k - j)) g y)"
       by (simp add: IH \<epsilon>_def neigh_f neigh_g)
 
     have beta_deriv:
       "((\<lambda>y. ?\<beta> y) has_field_derivative
          (\<Sum>j\<le>k. of_nat (k choose j) *
-                 (Nth_derivative j f x * Nth_derivative (Suc (k - j)) g x +
-                  Nth_derivative (Suc j) f x * Nth_derivative (k - j) g x))) (at x)"
-    proof -       
+                 ((deriv ^^ j) f x * (deriv ^^ Suc (k - j)) g x +
+                  (deriv ^^ Suc j) f x * (deriv ^^ (k - j)) g x))) (at x)"
+    proof -
       have f1: "((\<lambda>x. of_nat (k choose j) *
-                 (Nth_derivative j f x * Nth_derivative (k - j) g x))
+                 ((deriv ^^ j) f x * (deriv ^^ (k - j)) g x))
              has_field_derivative
                of_nat (k choose j) *
-                 (Nth_derivative j f x * Nth_derivative (Suc (k - j)) g x +
-                  Nth_derivative (Suc j) f x * Nth_derivative (k - j) g x)) (at x)"
+                 ((deriv ^^ j) f x * (deriv ^^ Suc (k - j)) g x +
+                  (deriv ^^ Suc j) f x * (deriv ^^ (k - j)) g x)) (at x)"
          if "j \<le> k" for j
       proof -
         have "k_times_differentiable_at (Suc (k - j)) g x \<and> k_times_differentiable_at (Suc j) f x"
-          by (metis (no_types) f_ksuc_diff g_ksuc_diff k_times_differentiable_at_mono 
+          by (metis (no_types) f_ksuc_diff g_ksuc_diff k_times_differentiable_at_mono
               le_add_same_cancel2 not_less_eq_eq that zero_le
               ordered_cancel_comm_monoid_diff_class.add_diff_inverse)
-        then have "((\<lambda>r. Nth_derivative j f r * Nth_derivative (k - j) g r) has_real_derivative 
-          Nth_derivative j f x * Nth_derivative (Suc (k - j)) g x 
-          + Nth_derivative (Suc j) f x * Nth_derivative (k - j) g x) (at x)"
+        then have "((\<lambda>r. (deriv ^^ j) f r * (deriv ^^ (k - j)) g r) has_real_derivative
+          (deriv ^^ j) f x * (deriv ^^ Suc (k - j)) g x
+          + (deriv ^^ Suc j) f x * (deriv ^^ (k - j)) g x) (at x)"
           using DERIV_mult' k_times_differentiable_at_SucE by blast
         then show ?thesis
           using DERIV_chain' DERIV_cmult_Id by blast
-      qed       
+      qed
       then have f2:
       "j \<le> k \<Longrightarrow>
        ((\<lambda>x. of_nat (k choose j) *
-              Nth_derivative j f x * Nth_derivative (k - j) g x)
+              (deriv ^^ j) f x * (deriv ^^ (k - j)) g x)
           has_derivative
             (\<lambda>h. (of_nat (k choose j) *
-                  (Nth_derivative j f x * Nth_derivative (Suc (k - j)) g x +
-                   Nth_derivative (Suc j) f x * Nth_derivative (k - j) g x)) * h))
+                  ((deriv ^^ j) f x * (deriv ^^ Suc (k - j)) g x +
+                   (deriv ^^ Suc j) f x * (deriv ^^ (k - j)) g x)) * h))
           (at x)"
       for j
       unfolding has_field_derivative_def
-      by (meson UNIV_I ab_semigroup_mult_class.mult_ac(1) has_derivative_transform) 
+      by (meson UNIV_I ab_semigroup_mult_class.mult_ac(1) has_derivative_transform)
 
       then have beta_deriv:
       "((\<lambda>y. ?\<beta> y) has_derivative
           (\<lambda>h. \<Sum>j\<le>k. (of_nat (k choose j) *
-                     (Nth_derivative j f x * Nth_derivative (Suc (k - j)) g x +
-                      Nth_derivative (Suc j) f x * Nth_derivative (k - j) g x)) * h))
+                     ((deriv ^^ j) f x * (deriv ^^ Suc (k - j)) g x +
+                      (deriv ^^ Suc j) f x * (deriv ^^ (k - j)) g x)) * h))
          (at x)"
         by(rule has_derivative_sum, simp)
       then show ?thesis
-        by (metis (no_types, lifting) DERIV_imp_deriv has_derivative_imp 
+        by (metis (no_types, lifting) DERIV_imp_deriv has_derivative_imp
             has_real_derivative mult_cancel_left2 sum.cong)
     qed
 
     then have diff_prod:
-    "(Nth_derivative k (\<lambda>y. f y * g y)
+    "((deriv ^^ k) (\<lambda>y. f y * g y)
         has_derivative
           (\<lambda>h. (\<Sum>j\<le>k. of_nat (k choose j) *
-                   (Nth_derivative j f x * Nth_derivative (Suc (k - j)) g x +
-                    Nth_derivative (Suc j) f x * Nth_derivative (k - j) g x)) * h))
+                   ((deriv ^^ j) f x * (deriv ^^ Suc (k - j)) g x +
+                    (deriv ^^ Suc j) f x * (deriv ^^ (k - j)) g x)) * h))
       (at x)"
-      by(subst has_derivative_transfer_on_ball[where \<epsilon> = \<epsilon> and f = "(\<lambda>y. ?\<beta> y)"],      
+      by(subst has_derivative_transfer_on_ball[where \<epsilon> = \<epsilon> and f = "(\<lambda>y. ?\<beta> y)"],
          auto simp: \<epsilon>_pos deriv_k_prod dist_real_def has_field_derivative_def)
 
     have comb_id:
       "(\<Sum>j\<le>k. of_nat (k choose j) *
-                (Nth_derivative j f x * Nth_derivative (Suc (k - j)) g x +
-                 Nth_derivative (Suc j) f x * Nth_derivative (k - j) g x))
+                ((deriv ^^ j) f x * (deriv ^^ Suc (k - j)) g x +
+                 (deriv ^^ Suc j) f x * (deriv ^^ (k - j)) g x))
        = (\<Sum>j\<le>Suc k. of_nat (Suc k choose j) *
-                      Nth_derivative j f x * Nth_derivative (Suc k - j) g x)"
-      by(rule binomial_convolution_sum)    
+                      (deriv ^^ j) f x * (deriv ^^ (Suc k - j)) g x)"
+      by(rule binomial_convolution_sum)
     then have
-      "Nth_derivative (Suc k) (\<lambda>y. f y * g y) x =
+      "(deriv ^^ Suc k) (\<lambda>y. f y * g y) x =
          (\<Sum>j\<le>Suc k. of_nat (Suc k choose j) *
-                      Nth_derivative j f x * Nth_derivative (Suc k - j) g x)"
-      using diff_prod has_derivative_imp by force        
+                      (deriv ^^ j) f x * (deriv ^^ (Suc k - j)) g x)"
+      using diff_prod has_derivative_imp by force
     then show ?thesis
       using \<epsilon>_pos comb_id diff_prod neigh_prod  by auto
   qed
@@ -894,9 +910,9 @@ corollary Leibniz_prod_eq:
   fixes F G :: "nat \<Rightarrow> real \<Rightarrow> real"
   assumes fCk: "f k-times_differentiable_at x"
       and gCk: "g k-times_differentiable_at x"
-      and Ffam: "\<And>j. j \<le> k \<Longrightarrow> Nth_derivative j f = F j"
-      and Gfam: "\<And>j. j \<le> k \<Longrightarrow> Nth_derivative j g = G j"
-  shows "Nth_derivative k (\<lambda>y. f y * g y) x
+      and Ffam: "\<And>j. j \<le> k \<Longrightarrow> (deriv ^^ j) f = F j"
+      and Gfam: "\<And>j. j \<le> k \<Longrightarrow> (deriv ^^ j) g = G j"
+  shows "(deriv ^^ k) (\<lambda>y. f y * g y) x
          = (\<Sum> j\<le>k. of_nat (k choose j) * F j x * G (k - j) x)"
   by (subst kth_deriv_mult[OF fCk gCk], rule sum.cong[OF refl], simp_all add: Ffam Gfam)
 
@@ -911,8 +927,8 @@ lemma kth_deriv_sum_upto:
   fixes F :: "nat \<Rightarrow> real \<Rightarrow> real"
   assumes diff: "\<And>i. i \<le> n \<Longrightarrow> (F i) k-times_differentiable_at x"
   shows   "(\<lambda>y. \<Sum>i\<le>n. F i y) k-times_differentiable_at x \<and>
-               Nth_derivative k (\<lambda>y. \<Sum>i\<le>n. F i y) x =
-             (\<Sum>i\<le>n. Nth_derivative k (F i) x)"
+               (deriv ^^ k) (\<lambda>y. \<Sum>i\<le>n. F i y) x =
+             (\<Sum>i\<le>n. (deriv ^^ k) (F i) x)"
   using assms
 proof (induct n arbitrary: x)
   case 0
@@ -921,52 +937,52 @@ proof (induct n arbitrary: x)
 next
   fix n :: nat
   fix x :: real
-  assume IH: "(\<And>x. (\<And>i. i \<le> n \<Longrightarrow> k_times_differentiable_at k (F i) x) 
-    \<Longrightarrow> k_times_differentiable_at k (\<lambda>y. \<Sum>i\<le>n. F i y) x 
-    \<and> Nth_derivative k (\<lambda>y. \<Sum>i\<le>n. F i y) x = (\<Sum>i\<le>n. Nth_derivative k (F i) x))"
-  show "(\<And>j. j \<le> Suc n \<Longrightarrow> k_times_differentiable_at k (F j) x) 
-    \<Longrightarrow> k_times_differentiable_at k (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x 
-    \<and> Nth_derivative k (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x = (\<Sum>i\<le>Suc n. Nth_derivative k (F i) x)"
+  assume IH: "(\<And>x. (\<And>i. i \<le> n \<Longrightarrow> k_times_differentiable_at k (F i) x)
+    \<Longrightarrow> k_times_differentiable_at k (\<lambda>y. \<Sum>i\<le>n. F i y) x
+    \<and> (deriv ^^ k) (\<lambda>y. \<Sum>i\<le>n. F i y) x = (\<Sum>i\<le>n. (deriv ^^ k) (F i) x))"
+  show "(\<And>j. j \<le> Suc n \<Longrightarrow> k_times_differentiable_at k (F j) x)
+    \<Longrightarrow> k_times_differentiable_at k (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x
+    \<and> (deriv ^^ k) (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x = (\<Sum>i\<le>Suc n. (deriv ^^ k) (F i) x)"
   proof -
     assume when_differentiable: "(\<And>j. j \<le> Suc n \<Longrightarrow> k_times_differentiable_at k (F j) x)"
     show "k_times_differentiable_at k (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x \<and>
-          Nth_derivative k (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x =
-            (\<Sum>i\<le>Suc n. Nth_derivative k (F i) x)"
+          (deriv ^^ k) (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x =
+            (\<Sum>i\<le>Suc n. (deriv ^^ k) (F i) x)"
     proof -
       have IH_inst:
         "k_times_differentiable_at k (\<lambda>y. \<Sum>i\<le>n. F i y) x \<and>
-         Nth_derivative k (\<lambda>y. \<Sum>i\<le>n. F i y) x =
-           (\<Sum>i\<le>n. Nth_derivative k (F i) x)"
+         (deriv ^^ k) (\<lambda>y. \<Sum>i\<le>n. F i y) x =
+           (\<Sum>i\<le>n. (deriv ^^ k) (F i) x)"
         using IH[of x] when_differentiable
         by (simp add: le_Suc_eq)
 
       have add_rule:
         "k_times_differentiable_at k
             (\<lambda>y. (\<Sum>i\<le>n. F i y) + F (Suc n) y) x \<and>
-         Nth_derivative k
+         (deriv ^^ k)
             (\<lambda>y. (\<Sum>i\<le>n. F i y) + F (Suc n) y) x =
-            Nth_derivative k (\<lambda>y. \<Sum>i\<le>n. F i y) x +
-            Nth_derivative k (F (Suc n)) x"
-        using kth_deriv_add[OF conjunct1[OF IH_inst] when_differentiable[of "Suc n"]] 
+            (deriv ^^ k) (\<lambda>y. \<Sum>i\<le>n. F i y) x +
+            (deriv ^^ k) (F (Suc n)) x"
+        using kth_deriv_add[OF conjunct1[OF IH_inst] when_differentiable[of "Suc n"]]
         by blast
 
       show "k_times_differentiable_at k (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x \<and>
-         Nth_derivative k (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x =
-           (\<Sum>i\<le>Suc n. Nth_derivative k (F i) x)"
-        by (simp add: add_rule conjunct2[OF IH_inst])       
+         (deriv ^^ k) (\<lambda>y. \<Sum>i\<le>Suc n. F i y) x =
+           (\<Sum>i\<le>Suc n. (deriv ^^ k) (F i) x)"
+        by (simp add: add_rule conjunct2[OF IH_inst])
     qed
   qed
 qed
 
-corollary Nth_derivative_sum_upto_eq:
+corollary kth_deriv_sum_upto_eq:
   fixes F H :: "nat \<Rightarrow> real \<Rightarrow> real"
   fixes k n :: nat and x :: real
   assumes diff: "\<And>i. i \<le> n \<Longrightarrow> (F i) k-times_differentiable_at x"
-      and fam:  "\<And>i. i \<le> n \<Longrightarrow> Nth_derivative k (F i) = H i"
-  shows "Nth_derivative k (\<lambda>y. \<Sum> i\<le>n. F i y) x
+      and fam:  "\<And>i. i \<le> n \<Longrightarrow> (deriv ^^ k) (F i) = H i"
+  shows "(deriv ^^ k) (\<lambda>y. \<Sum> i\<le>n. F i y) x
          = (\<Sum> i\<le>n. H i x)"
   using fam by(subst kth_deriv_sum_upto[OF diff], simp, force)
-       
+
 lemma kth_deriv_sum_uptoE:
   fixes F :: "nat \<Rightarrow> real \<Rightarrow> real"
   assumes diff: "\<And>i. i \<le> n \<Longrightarrow> (F i) k-times_differentiable_at x"
@@ -978,20 +994,20 @@ lemma k_times_differentiable_at_pow_funE:
    (\<lambda>t. (f t)^n) m-times_differentiable_at x"
   by (induct n, simp add: k_times_differentiable_at_constE, simp add: kth_deriv_multE)
 
-corollary Nth_derivative_pow_fun_eq:
+corollary kth_deriv_pow_fun_eq:
   fixes F :: "nat \<Rightarrow> real \<Rightarrow> real"
   assumes fCk: "f m-times_differentiable_at x"
-      and fam: "\<And>j. j \<le> m \<Longrightarrow> Nth_derivative j f = F j"
+      and fam: "\<And>j. j \<le> m \<Longrightarrow> (deriv ^^ j) f = F j"
   shows
-    "Nth_derivative m (\<lambda>t. (f t)^(Suc r)) x
+    "(deriv ^^ m) (\<lambda>t. (f t)^(Suc r)) x
      = (\<Sum> j\<le>m. of_nat (m choose j) * F j x
-              * Nth_derivative (m - j) (\<lambda>t. (f t)^r) x)"
+              * (deriv ^^ (m - j)) (\<lambda>t. (f t)^r) x)"
   by (simp add: kth_deriv_mult[OF fCk k_times_differentiable_at_pow_funE[OF fCk]] fam)
 
 
 named_theorems kdiff "Theorems about the existence of higher derivatives."
-declare Nth_derivative_commute_and_shift_dualE[kdiff]
-declare Nth_derivative_commute_and_shiftE[kdiff]
+declare kth_deriv_commute_and_shift_dualE[kdiff]
+declare kth_deriv_commute_and_shiftE[kdiff]
 declare k_times_differentiable_at_constE[kdiff]
 declare k_times_differentiable_at_idE[kdiff]
 declare kth_deriv_cmultE[kdiff]
@@ -1005,20 +1021,20 @@ declare k_times_differentiable_at_pow_funE[kdiff]
 named_theorems kderivs "Theorems about higher derivative equalities"
 declare first_derivative_alt_def[kderivs]
 declare second_derivative_alt_def[kderivs]
-declare Nth_derivative_const_eq[kderivs]
-declare Nth_derivative_const_cases[kderivs]
-declare Nth_derivative_id_eq'[kderivs]
-declare Nth_derivative_id_cases[kderivs]
-declare Nth_derivative_id_ge2_at[kderivs]
-declare Nth_derivative_id_1_eq[kderivs]
-declare Nth_derivative_id_eq[kderivs]
-declare Nth_derivative_cmult_eq[kderivs]
-declare Nth_derivative_uminus_eq[kderivs]
-declare Nth_derivative_add_eq[kderivs]
-declare Nth_derivative_sub_eq[kderivs]
+declare kth_deriv_const_eq[kderivs]
+declare kth_deriv_const_cases[kderivs]
+declare kth_deriv_id_eq'[kderivs]
+declare kth_deriv_id_cases[kderivs]
+declare kth_deriv_id_ge2_at[kderivs]
+declare kth_deriv_id_1_eq[kderivs]
+declare kth_deriv_id_eq[kderivs]
+declare kth_deriv_cmult_eq[kderivs]
+declare kth_deriv_uminus_eq[kderivs]
+declare kth_deriv_add_eq[kderivs]
+declare kth_deriv_sub_eq[kderivs]
 declare Leibniz_prod_eq[kderivs]
-declare Nth_derivative_sum_upto_eq[kderivs]
-declare Nth_derivative_pow_fun_eq[kderivs]
+declare kth_deriv_sum_upto_eq[kderivs]
+declare kth_deriv_pow_fun_eq[kderivs]
 
 subsection \<open>Derivative Formulas for Shifted Monomials\<close>
 
@@ -1039,7 +1055,8 @@ proof -
 qed
 
 lemma nth_derivative_diff_pow:
-  "\<And>x. Nth_derivative n (\<lambda>y. (y - a) ^ k) x =
+  fixes a :: real
+  shows "\<And>x. (deriv ^^ n) (\<lambda>y. (y - a) ^ k) x =
         (if n \<le> k then fact k / fact (k - n) * (x - a) ^ (k - n) else 0)"
 proof (induct n)
   case 0
@@ -1047,29 +1064,30 @@ proof (induct n)
     by simp
 next
   fix n x
-  assume IH: "(\<And>x. Nth_derivative n (\<lambda>y. (y - a) ^ k) x 
-    = (if n \<le> k then fact k / fact (k - n) * (x - a) ^ (k - n) else 0))"  
-  show "Nth_derivative (Suc n) (\<lambda>y. (y - a) ^ k) x 
+  assume IH: "(\<And>x. (deriv ^^ n) (\<lambda>y. (y - a) ^ k) x
+    = (if n \<le> k then fact k / fact (k - n) * (x - a) ^ (k - n) else 0))"
+  show "(deriv ^^ Suc n) (\<lambda>y. (y - a) ^ k) x
     = (if Suc n \<le> k then fact k / fact (k - Suc n) * (x - a) ^ (k - Suc n) else 0)"
   proof(cases "n \<le> k")
     assume n_leq_k: "n \<le> k"
-    have "Nth_derivative (Suc n) (\<lambda>y. (y - a) ^ k) x 
+    have "(deriv ^^ Suc n) (\<lambda>y. (y - a) ^ k) x
       = deriv (\<lambda>w. (fact k / fact (k - n)) *((\<lambda>u. (u - a) ^ (k - n)) w)) x"
-      using IH Nth_derivative.simps(2) n_leq_k by presburger
+      using IH kth_deriv_simps(2) n_leq_k
+      by (simp add: deriv_cong_ev)
     also have "... = (fact k / fact (k - n)) * deriv (\<lambda>w. (\<lambda> u. (u - a) ^ (k - n) ) w) x"
-      by (subst deriv_cmult, simp_all, 
+      by (subst deriv_cmult, simp_all,
           simp add: Derivative.field_differentiable_diff field_differentiable_power)
     also have "... = (fact k / fact (k - n)) * real (k - n) * (x - a) ^ (k - n - 1)"
       by(subst deriv_pow, simp_all, simp add: Derivative.field_differentiable_diff)
     also have "... = (if Suc n \<le> k then fact k / fact (k - Suc n) * (x - a) ^ (k - Suc n) else 0)"
-      by (smt (verit, best) diff_Suc_eq_diff_pred diff_commute diff_is_0_eq fact_num_eq_if 
-          mult_eq_0_iff nonzero_mult_divide_mult_cancel_right2 not_less_eq_eq of_nat_eq_0_iff 
+      by (smt (verit, best) diff_Suc_eq_diff_pred diff_commute diff_is_0_eq fact_num_eq_if
+          mult_eq_0_iff nonzero_mult_divide_mult_cancel_right2 not_less_eq_eq of_nat_eq_0_iff
           times_divide_eq_left)
     finally show ?thesis.
   next
     assume k_lt_n: "\<not> n \<le> k"
-    have "Nth_derivative (Suc n) (\<lambda>y. (y - a) ^ k) x 
-      = deriv (\<lambda>w. Nth_derivative n (\<lambda>y. (y - a) ^ k) w) x"
+    have "(deriv ^^ Suc n) (\<lambda>y. (y - a) ^ k) x
+      = deriv (\<lambda>w. (deriv ^^ n) (\<lambda>y. (y - a) ^ k) w) x"
       by simp
     also have "... = 0"
       by (simp add: IH k_lt_n)
@@ -1084,13 +1102,14 @@ lemma k_times_differentiable_at_pow[kdiff]:
   by(rule k_times_differentiable_at_pow_funE, rule kth_deriv_subE;
      (simp add: k_times_differentiable_at_constE k_times_differentiable_at_idE)+)
 
-corollary Nth_derivative_monomial[kderivs]:
+corollary kth_deriv_monomial[kderivs]:
+  fixes x :: real
   assumes kn: "k \<le> n"
-  shows   "Nth_derivative k (\<lambda>t. t^n) x
+  shows   "(deriv ^^ k) (\<lambda>t. t^n) x
            = (of_nat (fact n) / of_nat (fact (n - k))) * x^(n - k)"
 proof -
-  have "Nth_derivative k (\<lambda>t::real. t^n) x
-        = Nth_derivative k (\<lambda>t. (t - 0)^n) x"
+  have "(deriv ^^ k) (\<lambda>t::real. t^n) x
+        = (deriv ^^ k) (\<lambda>t. (t - 0)^n) x"
     by simp
   also have "... =
         (if k \<le> n
@@ -1103,11 +1122,11 @@ proof -
   finally show ?thesis.
 qed
 
-corollary Nth_derivative_monomial_zero [kderivs]:
+corollary kth_deriv_monomial_zero [kderivs]:
   assumes kn: "k > n"
-  shows   "Nth_derivative k (\<lambda>t::real. t^n) x = 0"
+  shows   "(deriv ^^ k) (\<lambda>t::real. t^n) x = 0"
 proof -
-  have "Nth_derivative k (\<lambda>t. t^n) x = Nth_derivative k (\<lambda>t. (t - 0)^n) x"
+  have "(deriv ^^ k) (\<lambda>t. t^n) x = (deriv ^^ k) (\<lambda>t. (t - 0)^n) x"
     by simp
   also have "... =
         (if k \<le> n
@@ -1122,17 +1141,17 @@ lemma cmult_pow_simp [kderivs]:
   "(\<lambda>t::real. (c * t) ^ n) = (\<lambda>t. (c ^ n) * t ^ n)"
   by (simp add: power_mult_distrib)
 
-corollary Nth_derivative_cmult_pow [kderivs]:
-  "Nth_derivative k (\<lambda>t::real. (c * t) ^ n) x
-   = (c ^ n) * Nth_derivative k (\<lambda>t. t ^ n) x"
-  by(simp add: kdiff kderivs) 
+corollary kth_deriv_cmult_pow [kderivs]:
+  "(deriv ^^ k) (\<lambda>t::real. (c * t) ^ n) x
+   = (c ^ n) * (deriv ^^ k) (\<lambda>t. t ^ n) x"
+  by(simp add: kdiff kderivs)
 
 lemma add_same_factor [algebra_simps]:
   "(\<lambda>t::real. t + r * t) = (\<lambda>t. (1 + r) * t)"
   by (simp add: ring_class.ring_distribs(2))
 
-lemma Nth_derivative_affine_cases [kderivs]:
-  "Nth_derivative k (\<lambda>t::real. a*t + b) x =
+lemma kth_deriv_affine_cases [kderivs]:
+  "(deriv ^^ k) (\<lambda>t::real. a*t + b) x =
      (if k = 0 then a*x + b else if k = 1 then a else 0)"
   by  (simp_all add: kdiff kderivs)
 
@@ -1146,17 +1165,17 @@ lemma sum_upto_three [simp]:
   shows "(\<Sum> i\<le>3. A i) = A 0 + A 1 + A 2 + A 3"
   by (smt (z3) Suc_eq_plus1 numeral_Bit0 numeral_Bit1 sum.atMost_Suc sum_upto_two)
 
-lemma Nth_derivative_prod_high_order_zero[kderivs]:
-  assumes fvan: "\<And>j. j \<ge> a \<Longrightarrow> Nth_derivative j f x = 0"
-      and gvan: "\<And>m. m \<ge> b \<Longrightarrow> Nth_derivative m g x = 0"
+lemma kth_deriv_prod_high_order_zero[kderivs]:
+  assumes fvan: "\<And>j. j \<ge> a \<Longrightarrow> (deriv ^^ j) f x = 0"
+      and gvan: "\<And>m. m \<ge> b \<Longrightarrow> (deriv ^^ m) g x = 0"
       and kdeg: "k \<ge> a + b - 1"
       and fdiff: "f k-times_differentiable_at x"
       and gdiff: "g k-times_differentiable_at x"
-  shows "Nth_derivative k (\<lambda>t. f t * g t) x = 0"
+  shows "(deriv ^^ k) (\<lambda>t. f t * g t) x = 0"
 proof -
   have Leib:
-    "Nth_derivative k (\<lambda>t. f t * g t) x
-     = (\<Sum> j\<le>k. of_nat (k choose j) * Nth_derivative j f x * Nth_derivative (k - j) g x)"
+    "(deriv ^^ k) (\<lambda>t. f t * g t) x
+     = (\<Sum> j\<le>k. of_nat (k choose j) * (deriv ^^ j) f x * (deriv ^^ (k - j)) g x)"
     by (simp add: Leibniz_prod_eq kdiff fdiff gdiff)
   have "\<dots> = 0"
   proof (rule sum.neutral, intro ballI)
@@ -1164,65 +1183,68 @@ proof -
     have jle: "j \<le> k" using jl by simp
     have "j \<ge> a \<or> k - j \<ge> b"
       using kdeg jle by arith
-    then show "of_nat (k choose j) * Nth_derivative j f x * Nth_derivative (k - j) g x = 0"
+    then show "of_nat (k choose j) * (deriv ^^ j) f x * (deriv ^^ (k - j)) g x = 0"
       using fvan gvan by auto
   qed
   with Leib show ?thesis by simp
 qed
 
-corollary Nth_derivative_power2_ge3[kderivs]:
+corollary kth_deriv_power2_ge3[kderivs]:
+  fixes x :: real
   assumes "k \<ge> 3"
-  shows   "Nth_derivative k power2 x = 0"
+  shows   "(deriv ^^ k) power2 x = 0"
   using assms
-  by (simp add: Nth_derivative_monomial_zero)  
+  by (simp add: kth_deriv_monomial_zero)
 
-corollary Nth_derivative_power2_0[kderivs]:
-  "Nth_derivative 0 power2 x = x^2"
+corollary kth_deriv_power2_0[kderivs]:
+  "(deriv ^^ 0) power2 x = x^2"
   by simp
 
-corollary Nth_derivative_power2_1[kderivs]:
-  "Nth_derivative 1 power2 x = 2 * x"
+corollary kth_deriv_power2_1[kderivs]:
+  "(deriv ^^ 1) power2 x = 2 * x"
   by(simp add: kderivs, simp add: fun_eq_iff power2_eq_square)
 
-corollary Nth_derivative_power2_2[kderivs]:
-  "Nth_derivative 2 power2 x = 2"
+corollary kth_deriv_power2_2[kderivs]:
+  fixes x :: real
+  shows "(deriv ^^ 2) power2 x = 2"
 proof -
-  have f1: "\<forall>r. Nth_derivative 1 power2 r = 2 * r"
-    using Nth_derivative_power2_1 by blast
+  have f1: "\<forall>r. (deriv ^^ 1) power2 r = 2 * r"
+    using kth_deriv_power2_1 by blast
   have "deriv ((*) 2) x = 2 \<and> Suc 1 = 2"
     by simp
-  then have "\<exists>n. Suc n = 2 \<and> deriv (Nth_derivative n power2) x = 2"
+  then have "\<exists>n. Suc n = 2 \<and> deriv ((deriv ^^ n) power2) x = 2"
   proof -
     have f1: "1 = Suc 0"
       using One_nat_def by satx
-    then have f2: "\<forall>r. Nth_derivative (Suc 0) power2 r = 2 * r"
-      using Nth_derivative_power2_1 by presburger
-    have "\<forall>r ra. Nth_derivative (Suc 0) ((*) ra) r = ra"
+    then have f2: "\<forall>r. (deriv ^^ Suc 0) power2 r = 2 * r"
+      using kth_deriv_power2_1 by metis
+    have "\<forall>r ra. (deriv ^^ Suc 0) ((*) ra) r = ra"
       by fastforce
-    then have "Nth_derivative (Suc 0) (Nth_derivative (Suc 0) power2) x = 2"
-      using f2 by presburger
+    then have "(deriv ^^ Suc 0) ((deriv ^^ Suc 0) power2) x = 2"
+      using f2 by (metis (lifting) ext)
     then show ?thesis
       using f1 by (metis (full_types) \<open>deriv ((*) 2) x = 2 \<and> Suc 1 = 2\<close> first_derivative_alt_def)
-  qed   
+  qed
   then show ?thesis
-    by (metis (no_types) Nth_derivative.simps(2))
+    by (metis (no_types) kth_deriv_simps(2))
 qed
 
-corollary Nth_derivative_power2_cases[kderivs]:
-  "Nth_derivative k power2 x =
-     (if k = 0 then x^2 else if k = 1 then 2*x else if k = 2 then 2 else 0)"
-  using Nth_derivative_monomial_zero Nth_derivative_power2_1 Nth_derivative_power2_2 by force
+corollary kth_deriv_power2_cases[kderivs]:
+  fixes x :: real
+  shows "(deriv ^^ k) power2 x =
+         (if k = 0 then x^2 else if k = 1 then 2*x else if k = 2 then 2 else 0)"
+  using kth_deriv_monomial_zero kth_deriv_power2_1 kth_deriv_power2_2 by auto
 
-lemma Nth_derivative_power_high_order_zero:
+lemma kth_deriv_power_high_order_zero:
   fixes f :: "real \<Rightarrow> real" and x :: real
   fixes M p n :: nat
   assumes diff: "\<And>q. q \<le> p \<Longrightarrow> f q-times_differentiable_at x"
-      and van : "\<And>m. m \<ge> M \<Longrightarrow> Nth_derivative m f x = 0"
-  shows "\<And>r. r \<le> p \<Longrightarrow> r > n * (M - 1) \<Longrightarrow> Nth_derivative r (\<lambda>t. (f t) ^ n) x = 0"
+      and van : "\<And>m. m \<ge> M \<Longrightarrow> (deriv ^^ m) f x = 0"
+  shows "\<And>r. r \<le> p \<Longrightarrow> r > n * (M - 1) \<Longrightarrow> (deriv ^^ r) (\<lambda>t. (f t) ^ n) x = 0"
 proof (induction n)
   case 0
   then show ?case
-    using Nth_derivative_monomial_zero by fastforce
+    using kth_deriv_monomial_zero by fastforce
 next
   case (Suc n)
   fix r assume rle: "r \<le> p" and rgt: "r > Suc n * (M - 1)"
@@ -1232,20 +1254,20 @@ next
 
 
   have Leib:
-    "Nth_derivative r (\<lambda>t. (f t) ^ Suc n) x
+    "(deriv ^^ r) (\<lambda>t. (f t) ^ Suc n) x
        = (\<Sum> j\<le>r. of_nat (r choose j)
-                 * Nth_derivative j f x
-                 * Nth_derivative (r - j) (\<lambda>t. (f t) ^ n) x)"
+                 * (deriv ^^ j) f x
+                 * (deriv ^^ (r - j)) (\<lambda>t. (f t) ^ n) x)"
     by (simp add: Leibniz_prod_eq kdiff fC fnC)
 
   have each_zero:
     "\<And>j. j \<le> r \<Longrightarrow>
-      of_nat (r choose j) * Nth_derivative j f x
-        * Nth_derivative (r - j) (\<lambda>t. (f t) ^ n) x = 0"
+      of_nat (r choose j) * (deriv ^^ j) f x
+        * (deriv ^^ (r - j)) (\<lambda>t. (f t) ^ n) x = 0"
   proof -
     fix j assume jl: "j \<le> r"
-    show "of_nat (r choose j) * Nth_derivative j f x
-            * Nth_derivative (r - j) (\<lambda>t. (f t) ^ n) x = 0"
+    show "of_nat (r choose j) * (deriv ^^ j) f x
+            * (deriv ^^ (r - j)) (\<lambda>t. (f t) ^ n) x = 0"
     proof (cases "j \<ge> M")
       case True
       then show ?thesis by (simp add: van)
@@ -1256,18 +1278,18 @@ next
         using jlt rgt by fastforce
 
       have rj_le: "r - j \<le> p" using rle jl by simp
-      have "Nth_derivative (r - j) (\<lambda>t. (f t) ^ n) x = 0"
+      have "(deriv ^^ (r - j)) (\<lambda>t. (f t) ^ n) x = 0"
         using Suc.IH rj_le rj_gt diff van by blast
       thus ?thesis by simp
     qed
   qed
 
   have "(\<Sum> j\<le>r. of_nat (r choose j)
-                 * Nth_derivative j f x
-                 * Nth_derivative (r - j) (\<lambda>t. (f t) ^ n) x) = 0"
+                 * (deriv ^^ j) f x
+                 * (deriv ^^ (r - j)) (\<lambda>t. (f t) ^ n) x) = 0"
     by (rule sum.neutral) (auto simp: each_zero)
-  with Leib 
-  show "Nth_derivative r (\<lambda>t. (f t) ^ Suc n) x = 0"
+  with Leib
+  show "(deriv ^^ r) (\<lambda>t. (f t) ^ Suc n) x = 0"
     by presburger
 qed
 
@@ -1276,9 +1298,9 @@ lemma demo_all_kderivs:
   defines "P \<equiv> (\<lambda>t::real. (3 * t - 5) * (t ^ 2))"
   defines "Q \<equiv> (\<lambda>t::real. - (2 * t) + 7)"
   defines "H \<equiv> (\<lambda>t::real. P t + (\<Sum> i\<le>0. F i t) - Q t + (t ^ 4 - 3 * (t ^ 4)))"
-  shows   "Nth_derivative 5 H x = 0"
+  shows   "(deriv ^^ 5) H x = 0"
   unfolding H_def P_def Q_def F_def
-  by (simp add: kdiff kderivs, 
+  by (simp add: kdiff kderivs,
       smt (verit, best) One_nat_def Suc_1 add.commute add.left_commute add_diff_cancel_right'
       mult_eq_0_iff numeral_Bit1 one_plus_numeral plus_1_eq_Suc sum.neutral zero_neq_numeral)
 
@@ -1288,7 +1310,7 @@ lemma demo_all_kderivs_big:
   defines "S2 \<equiv> (\<lambda>t::real. (-2) * t^4 + (3 * t - 5) * (t ^ 2))"
   defines "R  \<equiv> (\<lambda>t::real. t^5 - 10 * t^3 + 9 * t)"
   defines "H2 \<equiv> (\<lambda>t::real. S1 t * S2 t + (\<Sum> i\<le>3. F i t) + (R t)^2)"
-  shows   "Nth_derivative 11 H2 x = 0"
+  shows   "(deriv ^^ 11) H2 x = 0"
 proof -
   (* discharge finite-sum side conditions once *)
   have diffF2: "\<And>i. i \<le> 2 \<Longrightarrow> (F i) 11-times_differentiable_at x"
@@ -1297,27 +1319,27 @@ proof -
     unfolding F_def by (auto intro!: kdiff)
 
   have Sstep2:
-    "Nth_derivative 11 (\<lambda>t. \<Sum> i\<le>2. F i t) x = (\<Sum> i\<le>2. Nth_derivative 11 (F i) x)"
-    by (subst Nth_derivative_sum_upto_eq[OF diffF2]) simp_all
+    "(deriv ^^ 11) (\<lambda>t. \<Sum> i\<le>2. F i t) x = (\<Sum> i\<le>2. (deriv ^^ 11) (F i) x)"
+    by (subst kth_deriv_sum_upto_eq[OF diffF2]) simp_all
   have Sstep3:
-    "Nth_derivative 11 (\<lambda>t. \<Sum> i\<le>3. F i t) x = (\<Sum> i\<le>3. Nth_derivative 11 (F i) x)"
-    by (rule Nth_derivative_sum_upto_eq[OF diffF3]) simp_all
+    "(deriv ^^ 11) (\<lambda>t. \<Sum> i\<le>3. F i t) x = (\<Sum> i\<le>3. (deriv ^^ 11) (F i) x)"
+    by (rule kth_deriv_sum_upto_eq[OF diffF3]) simp_all
 
-  have Sstep4: "Nth_derivative 11 (\<lambda>t. (t ^ 5 - 10 * t ^ 3 + 9 * t)\<^sup>2) x =   0"
-    by(subst Nth_derivative_power_high_order_zero[where p = 11 and M = 6], simp_all,
+  have Sstep4: "(deriv ^^ 11) (\<lambda>t. (t ^ 5 - 10 * t ^ 3 + 9 * t)\<^sup>2) x =   0"
+    by(subst kth_deriv_power_high_order_zero[where p = 11 and M = 6], simp_all,
         (simp add: kdiff kderivs)+)
     (* S1 and S2 as plain polynomials *)
   have S1_poly: "(\<lambda>t::real. S1 t) = (\<lambda>t. 9 * t^2 - 6)"
     unfolding S1_def F_def by (simp add:  algebra_simps)
   have S2_poly: "(\<lambda>t::real. S2 t) = (\<lambda>t. -2 * t^4 + 3 * t^3 - 5 * t^2)"
-    unfolding S2_def  
-    by (simp add: algebra_simps, simp add: mult.commute mult.left_commute 
+    unfolding S2_def
+    by (simp add: algebra_simps, simp add: mult.commute mult.left_commute
         power2_eq_square power3_eq_cube)
 
 (* High-order vanishing for S1 and S2 *)
-  have S1_vanish: "\<And>j. j \<ge> 3 \<Longrightarrow> Nth_derivative j (\<lambda>t. S1 t) x = 0"
+  have S1_vanish: "\<And>j. j \<ge> 3 \<Longrightarrow> (deriv ^^ j) (\<lambda>t. S1 t) x = 0"
     by (simp add: S1_poly kdiff kderivs)
-  have S2_vanish: "\<And>m. m \<ge> 5 \<Longrightarrow> Nth_derivative m (\<lambda>t. S2 t) x = 0"
+  have S2_vanish: "\<And>m. m \<ge> 5 \<Longrightarrow> (deriv ^^ m) (\<lambda>t. S2 t) x = 0"
     by (simp add: S2_poly kdiff kderivs)
 
   (* Differentiability side-conditions for Leibniz *)
@@ -1327,13 +1349,13 @@ proof -
     by (simp add: S2_poly kdiff)
 
   (* D^11(S1 * S2)(x) = 0 by wiping each Leibniz summand *)
-  have prod0: "Nth_derivative 11 (\<lambda>t. S1 t * S2 t) x = 0"
+  have prod0: "(deriv ^^ 11) (\<lambda>t. S1 t * S2 t) x = 0"
   proof -
     have Leib:
-      "Nth_derivative 11 (\<lambda>t. S1 t * S2 t) x
+      "(deriv ^^ 11) (\<lambda>t. S1 t * S2 t) x
        = (\<Sum> j\<le>11. of_nat (11 choose j)
-                  * Nth_derivative j (\<lambda>t. S1 t) x
-                  * Nth_derivative (11 - j) (\<lambda>t. S2 t) x)"
+                  * (deriv ^^ j) (\<lambda>t. S1 t) x
+                  * (deriv ^^ (11 - j)) (\<lambda>t. S2 t) x)"
       by (simp add: Leibniz_prod_eq kdiff S1_diff S2_diff)
     also have "... = 0"
     proof (rule sum.neutral, intro ballI)
@@ -1341,53 +1363,53 @@ proof -
       assume "j \<in> {..11}"
       then have "j \<ge> 3 \<or> 11 - j \<ge> 5" by arith
       thus "of_nat (11 choose j)
-              * Nth_derivative j (\<lambda>t. S1 t) x
-              * Nth_derivative (11 - j) (\<lambda>t. S2 t) x = 0"
+              * (deriv ^^ j) (\<lambda>t. S1 t) x
+              * (deriv ^^ (11 - j)) (\<lambda>t. S2 t) x = 0"
         by (cases "j \<ge> 3") (simp add: S1_vanish, simp add: S2_vanish)
     qed
     finally show ?thesis.
   qed
 
   (* D^11 of the finite sum and the square tail *)
-  have sum0: "Nth_derivative 11 (\<lambda>t. \<Sum> i\<le>3. F i t) x = 0"
+  have sum0: "(deriv ^^ 11) (\<lambda>t. \<Sum> i\<le>3. F i t) x = 0"
     using Sstep3 by (simp add: F_def kdiff kderivs)
 
-  have sq0: "Nth_derivative 11 (\<lambda>t. (R t)^2) x = 0"
+  have sq0: "(deriv ^^ 11) (\<lambda>t. (R t)^2) x = 0"
     unfolding R_def using Sstep4 by blast
 
 
   have d1: "(\<lambda>y. F 0 y + F (Suc 0) y + F 2 y + F 3 y) 11-times_differentiable_at x"
-    by (metis (full_types) One_nat_def Suc_1 diffF3 eval_nat_numeral(3) 
+    by (metis (full_types) One_nat_def Suc_1 diffF3 eval_nat_numeral(3)
         kth_deriv_addE le_Suc_eq le_zero_eq)
   then have d2: "(\<lambda>y. F 0 y + F (Suc 0) y + F 2 y + F 3 y + (R y)\<^sup>2) 11-times_differentiable_at x"
     unfolding R_def by(subst kth_deriv_addE, simp_all, simp add: kdiff)
 
   have split1:
-    "Nth_derivative 11 H2 x
-       = Nth_derivative 11 (\<lambda>t. S1 t * S2 t) x
-         + Nth_derivative 11 (\<lambda>t. (\<Sum> i\<le>3. F i t) + (R t)^2) x"
+    "(deriv ^^ 11) H2 x
+       = (deriv ^^ 11) (\<lambda>t. S1 t * S2 t) x
+         + (deriv ^^ 11) (\<lambda>t. (\<Sum> i\<le>3. F i t) + (R t)^2) x"
   proof -
-    have "Nth_derivative 11 H2 x
-            = Nth_derivative 11 (\<lambda>t. S1 t * S2 t + (\<Sum> i\<le>3. F i t) + (R t)^2) x"
+    have "(deriv ^^ 11) H2 x
+            = (deriv ^^ 11) (\<lambda>t. S1 t * S2 t + (\<Sum> i\<le>3. F i t) + (R t)^2) x"
       by (simp add: H2_def)
-    also have "... = Nth_derivative 11 (\<lambda>t. S1 t * S2 t + ((\<Sum> i\<le>3. F i t) + (R t)^2)) x"
+    also have "... = (deriv ^^ 11) (\<lambda>t. S1 t * S2 t + ((\<Sum> i\<le>3. F i t) + (R t)^2)) x"
       by (simp add: algebra_simps)
     also have "... =
-          Nth_derivative 11 (\<lambda>t. S1 t * S2 t) x
-        + Nth_derivative 11 (\<lambda>t. (\<Sum> i\<le>3. F i t) + (R t)^2) x"
-      using d2 by (subst Nth_derivative_add_eq, simp_all, simp add: S1_diff S2_diff kth_deriv_multE)      
+          (deriv ^^ 11) (\<lambda>t. S1 t * S2 t) x
+        + (deriv ^^ 11) (\<lambda>t. (\<Sum> i\<le>3. F i t) + (R t)^2) x"
+      using d2 by (subst kth_deriv_add_eq, simp_all, simp add: S1_diff S2_diff kth_deriv_multE)
     finally show ?thesis.
   qed
   from d1
   have split2:
-  "Nth_derivative 11 (\<lambda>t. (\<Sum> i\<le>3. F i t) + (R t)^2) x
-     = Nth_derivative 11 (\<lambda>t. \<Sum> i\<le>3. F i t) x
-       + Nth_derivative 11 (\<lambda>t. (R t)^2) x"
-    unfolding R_def by (subst Nth_derivative_add_eq, simp_all, simp add: kdiff)
+  "(deriv ^^ 11) (\<lambda>t. (\<Sum> i\<le>3. F i t) + (R t)^2) x
+     = (deriv ^^ 11) (\<lambda>t. \<Sum> i\<le>3. F i t) x
+       + (deriv ^^ 11) (\<lambda>t. (R t)^2) x"
+    unfolding R_def by (subst kth_deriv_add_eq, simp_all, simp add: kdiff)
   also have "... = 0"
-    using sq0 sum0 by linarith 
+    using sq0 sum0 by linarith
   finally show ?thesis
-    using prod0 split1 by linarith 
+    using prod0 split1 by linarith
 qed
 
 subsection \<open>Relationship between Differentiability at a Point and $C^k(U)$\<close>
@@ -1395,7 +1417,7 @@ subsection \<open>Relationship between Differentiability at a Point and $C^k(U)$
 lemma n_times_diff_imp_lower_deriv_diff:
   assumes "f n-times_differentiable_at x"
       and "k < n"
-  shows "(Nth_derivative k f) differentiable (at x)"
+  shows "((deriv ^^ k) f) differentiable (at x)"
   using assms
   using differentiable_def k_times_differentiable_at_le_deriv by blast
 
@@ -1405,7 +1427,7 @@ lemma SucSucn_times_diff_imp_Cn_on:
 proof -
   have "(\<exists>(\<epsilon> :: real) >0.  (\<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at (Suc n) f y))"
     using assms by auto
-  then obtain \<epsilon> where \<epsilon>_pos: "\<epsilon> > 0" 
+  then obtain \<epsilon> where \<epsilon>_pos: "\<epsilon> > 0"
     and n_diff_ball: "(\<forall>y. \<bar>y - x\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at (Suc n) f y)"
     by blast
   then have n_diff_on: "k_times_differentiable_on (Suc n) f {y. \<bar>y - x\<bar> < \<epsilon>}"
@@ -1415,30 +1437,30 @@ proof -
   have openU: "open U" by (simp add: U_def)
 
   have U_def2:"U = {y. \<bar>y - x\<bar> < \<epsilon>}"
-    by(auto, (simp add: U_def abs_diff_less_iff)+)     
+    by(auto, (simp add: U_def abs_diff_less_iff)+)
   have n_cont_U:
-    "continuous_on U (Nth_derivative n f)"
+    "continuous_on U ((deriv ^^ n) f)"
     using k_times_differentiable_on_imp_continuous_on
-      U_def2 n_diff_on 
+      U_def2 n_diff_on
     by force
-    
+
   have Cn_on_U:
     "C_k_on n f U"
   proof (cases n)
     case 0
     show ?thesis
-      using "0" C_k_on_def Nth_derivative.simps(1) 
-        n_cont_U openU by presburger
+      using "0" C_k_on_def kth_deriv_simps(1)
+        n_cont_U openU by metis
   next
     case (Suc m)
     have 1: "open U" by (simp add: openU)
     have 2: "\<forall>k < n.
-               (Nth_derivative k f) differentiable_on U
-             \<and> continuous_on U (Nth_derivative (Suc k) f)"
-      by (metis DERIV_deriv_iff_real_differentiable Nth_derivative.simps(2) 
+               ((deriv ^^ k) f) differentiable_on U
+             \<and> continuous_on U ((deriv ^^ Suc k) f)"
+      by (metis DERIV_deriv_iff_real_differentiable kth_deriv_simps(2)
           k_times_differentiable_at_Suc_le_deriv(2) Suc_leD Suc_leI U_def2
-          differentiable_on_eq_differentiable_at k_times_differentiable_on_def 
-          k_times_differentiable_on_imp_continuous_on n_diff_on openU)  
+          differentiable_on_eq_differentiable_at k_times_differentiable_on_def
+          k_times_differentiable_on_imp_continuous_on n_diff_on openU)
     from 1 2 Suc show ?thesis
       unfolding C_k_on_def by simp
   qed
@@ -1458,26 +1480,26 @@ next
   case (Suc k)
   from Suc.prems have
     open_ball: "open U" and
-    Ck: "\<forall>j<k. (Nth_derivative j f) differentiable_on U
-         \<and> continuous_on U (Nth_derivative (Suc j) f)"
+    Ck: "\<forall>j<k. ((deriv ^^ j) f) differentiable_on U
+         \<and> continuous_on U ((deriv ^^ Suc j) f)"
     unfolding C_k_on_def by simp_all
 
   have step:
-    "(Nth_derivative k f) differentiable_on U"
+    "((deriv ^^ k) f) differentiable_on U"
     using Ck [rule_format, of k]
-    using C_k_on_def Suc.prems by auto 
+    using C_k_on_def Suc.prems by auto
 
   have cont:
-    "continuous_on U (Nth_derivative (Suc k) f)"
+    "continuous_on U ((deriv ^^ Suc k) f)"
     using Ck[rule_format, of]
     using C_k_on_def Suc.prems by auto
 
   have "\<forall>j\<le>k.
-          (Nth_derivative j f) differentiable_on U
+          ((deriv ^^ j) f) differentiable_on U
         \<and> continuous_on U
-            (Nth_derivative (Suc j) f)"
+            ((deriv ^^ Suc j) f)"
     using Ck step cont
-    by (metis dual_order.order_iff_strict) 
+    by (metis dual_order.order_iff_strict)
 
   have
     "k_times_differentiable_on (Suc k) f U"
@@ -1485,14 +1507,14 @@ next
     fix y :: real
     assume y_in: "y \<in> U"
     show "k_times_differentiable_at (Suc k) f y"
-    proof - 
+    proof -
       have clause1: "(\<exists>\<epsilon>>0.  (\<forall>x. \<bar>x - y\<bar> < \<epsilon> \<longrightarrow> k_times_differentiable_at k f x)) "
       proof -
         from Ck open_ball have kdiff_on:
           "k_times_differentiable_on k f U"
           unfolding C_k_on_def
-          by (metis C_k_on_def Nth_derivative.simps(1) Suc.IH 
-              differentiable_imp_continuous_on local.step) 
+          by (metis C_k_on_def kth_deriv_simps(1) Suc.IH
+              differentiable_imp_continuous_on local.step)
         then have kdiff_at_U:
           "\<forall>z\<in>U. k_times_differentiable_at k f z"
           unfolding k_times_differentiable_on_def by simp
@@ -1501,14 +1523,14 @@ next
           "\<delta> > 0" and \<delta>_ball: "ball y \<delta> \<subseteq> U"
           by (meson open_contains_ball)
         then have sub: "\<forall>z. \<bar>z - y\<bar> < \<delta> \<longrightarrow> z \<in> U"
-          by (metis dist_commute dist_real_def mem_ball subset_eq)             
+          by (metis dist_commute dist_real_def mem_ball subset_eq)
         then show ?thesis
           using \<delta>_pos kdiff_at_U by blast
       qed
-      have clause2: 
-        "(Nth_derivative k f has_derivative (\<lambda>h. Nth_derivative (Suc k) f y * h)) (at y)"
+      have clause2:
+        "((deriv ^^ k) f has_derivative (\<lambda>h. (deriv ^^ Suc k) f y * h)) (at y)"
         using DERIV_deriv_iff_real_differentiable has_field_derivative_def
-          differentiable_on_eq_differentiable_at local.open_ball local.step y_in 
+          differentiable_on_eq_differentiable_at local.open_ball local.step y_in
         by fastforce
       thus ?thesis
         by (simp add: clause1)
@@ -1542,15 +1564,15 @@ next
     "k_times_differentiable_on k (\<lambda>x. c) U"
     by (simp add: k_times_differentiable_at_constE k_times_differentiable_onI)
   moreover have
-    "\<forall>j<k. (Nth_derivative j (\<lambda>x. c)) differentiable_on U
-           \<and> continuous_on U (Nth_derivative (Suc j) (\<lambda>x. c))"
+    "\<forall>j<k. ((deriv ^^ j) (\<lambda>x. c)) differentiable_on U
+           \<and> continuous_on U ((deriv ^^ Suc j) (\<lambda>x. c))"
   proof clarify
     fix j :: nat
     assume j_bound: "j < k"
-    with k_times_differentiable_at_const 
-    show "Nth_derivative j (\<lambda>x. c) differentiable_on U 
-      \<and> continuous_on U (Nth_derivative (Suc j) (\<lambda>x. c))"
-      by (meson differentiable_at_imp_differentiable_on 
+    with k_times_differentiable_at_const
+    show "(deriv ^^ j) (\<lambda>x. c) differentiable_on U
+      \<and> continuous_on U ((deriv ^^ Suc j) (\<lambda>x. c))"
+      by (meson differentiable_at_imp_differentiable_on
           differentiable_imp_continuous_on lessI n_times_diff_imp_lower_deriv_diff)
   qed
   ultimately show ?thesis
@@ -1571,23 +1593,23 @@ next
   have openU: "open U" by fact
   have derivs:
     "\<forall>j< Suc k.
-        (Nth_derivative j (\<lambda>x. x)) differentiable_on U \<and>
-        continuous_on U (Nth_derivative (Suc j) (\<lambda>x. x))"
+        ((deriv ^^ j) (\<lambda>x. x)) differentiable_on U \<and>
+        continuous_on U ((deriv ^^ Suc j) (\<lambda>x. x))"
   proof clarify
-    fix j 
+    fix j
     assume jlt: "j < Suc k"
-    have "(Nth_derivative j (\<lambda>x. x)) differentiable_on U"
+    have "((deriv ^^ j) (\<lambda>x. x)) differentiable_on U"
       by (cases j; metis k_times_differentiable_at_idE less_iff_Suc_add
-          differentiable_at_imp_differentiable_on 
+          differentiable_at_imp_differentiable_on
           n_times_diff_imp_lower_deriv_diff)
     moreover have
-      "continuous_on U (Nth_derivative (Suc j) (\<lambda>x. x))"
-      by (cases j; metis k_times_differentiable_at_idE k_times_differentiable_onI 
+      "continuous_on U ((deriv ^^ Suc j) (\<lambda>x. x))"
+      by (cases j; metis k_times_differentiable_at_idE k_times_differentiable_onI
           k_times_differentiable_on_imp_continuous_on less_or_eq_imp_le)
-        
+
     ultimately show
-      "(Nth_derivative j (\<lambda>x. x)) differentiable_on U \<and>
-       continuous_on U (Nth_derivative (Suc j) (\<lambda>x. x))"
+      "((deriv ^^ j) (\<lambda>x. x)) differentiable_on U \<and>
+       continuous_on U ((deriv ^^ Suc j) (\<lambda>x. x))"
       by simp
   qed
   with openU Suc show ?case
@@ -1597,9 +1619,9 @@ qed
 lemma C_k_scale:
   assumes     fCk   : "C_k_on n f U"
   shows   "C_k_on n (\<lambda>y. c * f y) U"
-proof -  
+proof -
   have openU: "open U"
-    using C_k_on_def fCk by presburger 
+    using C_k_on_def fCk by presburger
   show ?thesis
     using assms
   proof (cases n)
@@ -1622,50 +1644,50 @@ proof -
       "k_times_differentiable_on n (\<lambda>y. c * f y) U"
       using k_times_differentiable_on_def kth_deriv_cmultE by force
     from fCk have
-      f_D_C: "\<forall>k<n. (Nth_derivative k f) differentiable_on U
-                    \<and> continuous_on U (Nth_derivative (Suc k) f)"
+      f_D_C: "\<forall>k<n. ((deriv ^^ k) f) differentiable_on U
+                    \<and> continuous_on U ((deriv ^^ Suc k) f)"
       by (simp add: C_k_on_def n_nonzero)
     have Ck_less_n:
       "\<forall>k<n.
-         (Nth_derivative k (\<lambda>y. c * f y)) differentiable_on U \<and>
-         continuous_on U (Nth_derivative (Suc k) (\<lambda>y. c * f y))"
+         ((deriv ^^ k) (\<lambda>y. c * f y)) differentiable_on U \<and>
+         continuous_on U ((deriv ^^ Suc k) (\<lambda>y. c * f y))"
     proof clarify
       fix k assume k_lt_n: "k < n"
       from f_D_C[rule_format, OF k_lt_n] obtain
-          Df: "(Nth_derivative k f) differentiable_on U"
-        and Cf: "continuous_on U (Nth_derivative (Suc k) f)"
+          Df: "((deriv ^^ k) f) differentiable_on U"
+        and Cf: "continuous_on U ((deriv ^^ Suc k) f)"
         by blast
       have Dscale:
-        "(Nth_derivative k (\<lambda>y. c * f y)) differentiable_on U"
+        "((deriv ^^ k) (\<lambda>y. c * f y)) differentiable_on U"
         by (metis differentiable_at_imp_differentiable_on k_lt_n
             k_times_differentiable_on_def n_times_diff_imp_lower_deriv_diff scale_diff)
       have Cscale:
-        "continuous_on U (Nth_derivative (Suc k) (\<lambda>y. c * f y))"
+        "continuous_on U ((deriv ^^ Suc k) (\<lambda>y. c * f y))"
       proof -
         have eq_on:
           "\<forall>y\<in>U.
-             Nth_derivative (Suc k) (\<lambda>y. c * f y) y =
-             c * Nth_derivative (Suc k) f y"
+             (deriv ^^ Suc k) (\<lambda>y. c * f y) y =
+             c * (deriv ^^ Suc k) f y"
         proof(clarify)
           fix y :: real
           assume "y \<in> U"
-          then show "Nth_derivative (Suc k) (\<lambda>y. c * f y) y = c * Nth_derivative (Suc k) f y"
-            by(subst kth_deriv_cmult, 
-               meson Suc_leI f_diff k_lt_n k_times_differentiable_at_mono 
+          then show "(deriv ^^ Suc k) (\<lambda>y. c * f y) y = c * (deriv ^^ Suc k) f y"
+            by(subst kth_deriv_cmult,
+               meson Suc_leI f_diff k_lt_n k_times_differentiable_at_mono
                k_times_differentiable_onD, simp)
         qed
         have cont_rhs:
-          "continuous_on U (\<lambda>y. c * Nth_derivative (Suc k) f y)"
+          "continuous_on U (\<lambda>y. c * (deriv ^^ Suc k) f y)"
           using Cf  continuous_on_mult_left by blast
         show ?thesis
           using cont_rhs eq_on
           by (metis continuous_on_cong)
       qed
-      show "(Nth_derivative k (\<lambda>y. c * f y)) differentiable_on U \<and>
-            continuous_on U (Nth_derivative (Suc k) (\<lambda>y. c * f y))"
+      show "((deriv ^^ k) (\<lambda>y. c * f y)) differentiable_on U \<and>
+            continuous_on U ((deriv ^^ Suc k) (\<lambda>y. c * f y))"
         using Dscale Cscale by blast
     qed
-    with openU n_nonzero scale_diff 
+    with openU n_nonzero scale_diff
     show ?thesis
       unfolding C_k_on_def by simp
   qed
@@ -1688,7 +1710,7 @@ lemma C_k_add:
   shows   "C_k_on n (\<lambda>y. f y + g y) U"
 proof -
   have openU: "open U"
-    using C_k_on_def fCk by presburger 
+    using C_k_on_def fCk by presburger
 
   show ?thesis
     using assms
@@ -1710,62 +1732,62 @@ proof -
     then have g_n_diff: "k_times_differentiable_on n g U"
       using C_k_on_imp_k_times_differentiable_on by blast
     assume n_nonzero: "n = Suc m"
-    
+
     have sum_n_diff: "k_times_differentiable_on n (\<lambda>y. f(y)+ g(y)) U"
       using f_n_diff g_n_diff k_times_differentiable_on_def kth_deriv_add by auto
 
-    with f_Cn have f_diff: "(\<forall>k < n. (Nth_derivative k f) differentiable_on U 
-                         \<and> continuous_on U (Nth_derivative (Suc k) f))"
+    with f_Cn have f_diff: "(\<forall>k < n. ((deriv ^^ k) f) differentiable_on U
+                         \<and> continuous_on U ((deriv ^^ Suc k) f))"
       unfolding C_k_on_def by auto
 
-    with g_Cn have g_diff: "(\<forall>k < n. (Nth_derivative k g) differentiable_on U 
-                         \<and> continuous_on U (Nth_derivative (Suc k) g))"
+    with g_Cn have g_diff: "(\<forall>k < n. ((deriv ^^ k) g) differentiable_on U
+                         \<and> continuous_on U ((deriv ^^ Suc k) g))"
       unfolding C_k_on_def by auto
 
-    with f_n_diff g_n_diff sum_n_diff 
+    with f_n_diff g_n_diff sum_n_diff
     have Ck_less_n:
       "(\<forall>k < n.
-          (Nth_derivative k (\<lambda>x. f x + g x)) differentiable_on U
-        \<and> continuous_on U (Nth_derivative (Suc k) (\<lambda>x. f x + g x)))"
+          ((deriv ^^ k) (\<lambda>x. f x + g x)) differentiable_on U
+        \<and> continuous_on U ((deriv ^^ Suc k) (\<lambda>x. f x + g x)))"
     proof (clarify)
-      fix k :: nat      
+      fix k :: nat
       assume "k < n"
-      
-      have f_diff: "\<forall>k<n. Nth_derivative k f differentiable_on U"
+
+      have f_diff: "\<forall>k<n. (deriv ^^ k) f differentiable_on U"
         using f_diff by blast
-      have g_diff: "\<forall>k<n. Nth_derivative k g differentiable_on U"
+      have g_diff: "\<forall>k<n. (deriv ^^ k) g differentiable_on U"
         using g_diff by blast
       have Ck_less_n:
         "\<forall>k<n.
-            (Nth_derivative k (\<lambda>x. f x + g x)) differentiable_on U \<and>
-            continuous_on U (Nth_derivative (Suc k) (\<lambda>x. f x + g x))"
+            ((deriv ^^ k) (\<lambda>x. f x + g x)) differentiable_on U \<and>
+            continuous_on U ((deriv ^^ Suc k) (\<lambda>x. f x + g x))"
         using f_n_diff g_n_diff
 
       proof clarify
         fix k :: nat
         assume k_lt_n: "k < n"
         from f_diff[rule_format, OF k_lt_n] have
-                Df: "(Nth_derivative k f) differentiable_on U"
-            and Cf: "continuous_on U (Nth_derivative (Suc k) f)"
+                Df: "((deriv ^^ k) f) differentiable_on U"
+            and Cf: "continuous_on U ((deriv ^^ Suc k) f)"
           by(blast, metis C_k_on_def f_Cn k_lt_n n_nonzero nat.distinct(1))
-          
-        from g_diff[rule_format, OF k_lt_n] have 
-                Dg: "(Nth_derivative k g) differentiable_on U"
-            and Cg: "continuous_on U (Nth_derivative (Suc k) g)"
+
+        from g_diff[rule_format, OF k_lt_n] have
+                Dg: "((deriv ^^ k) g) differentiable_on U"
+            and Cg: "continuous_on U ((deriv ^^ Suc k) g)"
           by(blast, metis C_k_on_def g_Cn k_lt_n n_nonzero nat.distinct(1))
         have Dsum:
-          "(Nth_derivative k (\<lambda>x. f x + g x)) differentiable_on U"
-          by (metis differentiable_at_imp_differentiable_on k_lt_n k_times_differentiable_onD 
+          "((deriv ^^ k) (\<lambda>x. f x + g x)) differentiable_on U"
+          by (metis differentiable_at_imp_differentiable_on k_lt_n k_times_differentiable_onD
               n_times_diff_imp_lower_deriv_diff sum_n_diff)
-    
-        from Cf Cg 
-        have "continuous_on U (\<lambda>x. Nth_derivative (Suc k) f x + Nth_derivative (Suc k) g x)"
+
+        from Cf Cg
+        have "continuous_on U (\<lambda>x. (deriv ^^ Suc k) f x + (deriv ^^ Suc k) g x)"
           by(rule continuous_on_add)
         then have continuous_on: "\<forall>y\<in> U.  continuous (at y within U)
-             (\<lambda>t. Nth_derivative (Suc k) f t + Nth_derivative (Suc k) g t)"
+             (\<lambda>t. (deriv ^^ Suc k) f t + (deriv ^^ Suc k) g t)"
           using continuous_on_eq_continuous_within by blast
-          
-        have "\<forall>y\<in> U. continuous (at y within U)(\<lambda>t. Nth_derivative (Suc k) (\<lambda>x. f x + g x) t)"
+
+        have "\<forall>y\<in> U. continuous (at y within U)(\<lambda>t. (deriv ^^ Suc k) (\<lambda>x. f x + g x) t)"
         proof clarify
           fix y :: real
           assume y_bound: "y \<in> U"
@@ -1774,55 +1796,55 @@ proof -
                 k_times_differentiable_at_mono k_lt_n)
           then have f_Suc_k_diff: "k_times_differentiable_at (Suc k) f y"
             using k_times_differentiable_on_def y_bound by blast
-    
+
           have g_Suc_k_diff_on: "k_times_differentiable_on (Suc k) g U"
             by (meson Suc_leI g_n_diff k_times_differentiable_on_def
                 k_times_differentiable_at_mono k_lt_n)
           then have g_Suc_k_diff: "k_times_differentiable_at (Suc k) g y"
             using k_times_differentiable_on_def y_bound by blast
-     
+
           have continuity_at_y: "continuous (at y within U)
-             (\<lambda>t. Nth_derivative (Suc k) f t + Nth_derivative (Suc k) g t)"
-            using continuous_on y_bound by blast  
+             (\<lambda>t. (deriv ^^ Suc k) f t + (deriv ^^ Suc k) g t)"
+            using continuous_on y_bound by blast
           then have continuity_at_y': "\<forall>y \<in> U. continuous (at y)
-            (\<lambda>t. Nth_derivative (Suc k) f t + Nth_derivative (Suc k) g t)"
+            (\<lambda>t. (deriv ^^ Suc k) f t + (deriv ^^ Suc k) g t)"
             by (metis at_within_open local.continuous_on openU)
-     
-          have deriv_assoc: "\<forall>y \<in> U. 
-                Nth_derivative (Suc k) (\<lambda>y. f y + g y) y = 
-                Nth_derivative (Suc k) f y + Nth_derivative (Suc k) g y"
-            by (metis f_Suc_k_diff_on g_Suc_k_diff_on 
+
+          have deriv_assoc: "\<forall>y \<in> U.
+                (deriv ^^ Suc k) (\<lambda>y. f y + g y) y =
+                (deriv ^^ Suc k) f y + (deriv ^^ Suc k) g y"
+            by (metis f_Suc_k_diff_on g_Suc_k_diff_on
                 k_times_differentiable_on_def kth_deriv_add)
-          
+
           have "\<forall>y\<in>U. continuous (at y within U)
-              (\<lambda>t. Nth_derivative (Suc k) (\<lambda>x. f x + g x) t)"
+              (\<lambda>t. (deriv ^^ Suc k) (\<lambda>x. f x + g x) t)"
           proof clarify
-            fix y 
+            fix y
             assume y_in: "y \<in> U"
-          
+
             have "continuous (at y within U)
-                 (\<lambda>t. Nth_derivative (Suc k) f t + Nth_derivative (Suc k) g t)"
+                 (\<lambda>t. (deriv ^^ Suc k) f t + (deriv ^^ Suc k) g t)"
               using f_Suc_k_diff g_Suc_k_diff local.continuous_on y_in by blast
 
             with y_in deriv_assoc assms(1)
             show "continuous (at y within U)
-                    (Nth_derivative (Suc k) (\<lambda>x. f x + g x))"                                
-              by (subst continuous_transform_within[where 
-                    f = "\<lambda>t. Nth_derivative (Suc k) f t + Nth_derivative (Suc k) g t" 
-                    and \<delta> = 1], simp_all)
+                    ((deriv ^^ Suc k) (\<lambda>x. f x + g x))"
+              by (metis (mono_tags, lifting) \<open>continuous_on U (\<lambda>x. (deriv ^^ Suc k) f x + (deriv ^^ Suc k) g x)\<close> continuous_on_cong
+                  continuous_on_eq_continuous_within)
+
           qed
-          then show "continuous (at y within U) (Nth_derivative (Suc k) (\<lambda>x. f x + g x))"
+          then show "continuous (at y within U) ((deriv ^^ Suc k) (\<lambda>x. f x + g x))"
             using y_bound by blast
-        qed  
-        then show "Nth_derivative k (\<lambda>x. f x + g x) differentiable_on U 
-          \<and> continuous_on U (Nth_derivative (Suc k) (\<lambda>x. f x + g x))"
-          using Dsum continuous_on_eq_continuous_within by blast  
-      qed        
-  
-      show "Nth_derivative k (\<lambda>x. f x + g x) differentiable_on U 
-        \<and> continuous_on U (Nth_derivative (Suc k) (\<lambda>x. f x + g x))"
+        qed
+        then show "(deriv ^^ k) (\<lambda>x. f x + g x) differentiable_on U
+          \<and> continuous_on U ((deriv ^^ Suc k) (\<lambda>x. f x + g x))"
+          using Dsum continuous_on_eq_continuous_within by blast
+      qed
+
+      show "(deriv ^^ k) (\<lambda>x. f x + g x) differentiable_on U
+        \<and> continuous_on U ((deriv ^^ Suc k) (\<lambda>x. f x + g x))"
         using Ck_less_n \<open>k < n\<close> by blast
-    qed  
+    qed
     then show ?thesis
       by (simp add: C_k_on_def n_nonzero openU)
   qed
@@ -1840,7 +1862,7 @@ proof -
     by (rule C_k_add[OF fCk g_neg])
 
   thus ?thesis
-    by (simp add: fun_eq_iff)  
+    by (simp add: fun_eq_iff)
 qed
 
 lemma C_k_mult:
@@ -1849,7 +1871,7 @@ lemma C_k_mult:
   shows   "C_k_on n (\<lambda>y. f y * g y) U"
 proof -
   have openU: "open U"
-    using C_k_on_def fCk by presburger 
+    using C_k_on_def fCk by presburger
 
   show ?thesis
     using assms
@@ -1866,7 +1888,7 @@ proof -
     from fCk have f_diff:
       "k_times_differentiable_on n f U"
       using C_k_on_imp_k_times_differentiable_on by blast
-  
+
     from gCk have g_diff:
       "k_times_differentiable_on n g U"
       using C_k_on_imp_k_times_differentiable_on by blast
@@ -1879,55 +1901,55 @@ proof -
     then have g_n_diff: "k_times_differentiable_on n g U"
       using C_k_on_imp_k_times_differentiable_on by blast
     assume n_nonzero: "n = Suc m"
-    
+
     have prod_n_diff: "k_times_differentiable_on n (\<lambda>y. f(y)* g(y)) U"
       using f_n_diff g_n_diff k_times_differentiable_on_def kth_deriv_mult by auto
 
-    with f_Cn have f_D_C: "(\<forall>k < n. (Nth_derivative k f) differentiable_on U 
-                         \<and> continuous_on U (Nth_derivative (Suc k) f))"
-      unfolding C_k_on_def by auto
-      
-    with g_Cn have g_D_C: "(\<forall>k < n. (Nth_derivative k g) differentiable_on U 
-                         \<and> continuous_on U (Nth_derivative (Suc k) g))"
+    with f_Cn have f_D_C: "(\<forall>k < n. ((deriv ^^ k) f) differentiable_on U
+                         \<and> continuous_on U ((deriv ^^ Suc k) f))"
       unfolding C_k_on_def by auto
 
-    with f_n_diff g_n_diff prod_n_diff 
+    with g_Cn have g_D_C: "(\<forall>k < n. ((deriv ^^ k) g) differentiable_on U
+                         \<and> continuous_on U ((deriv ^^ Suc k) g))"
+      unfolding C_k_on_def by auto
+
+    with f_n_diff g_n_diff prod_n_diff
     have Ck_less_n:
       "\<forall>k<n.
-         (Nth_derivative k (\<lambda>y. f y * g y)) differentiable_on U \<and>
-         continuous_on U (Nth_derivative (Suc k) (\<lambda>y. f y * g y))"
+         ((deriv ^^ k) (\<lambda>y. f y * g y)) differentiable_on U \<and>
+         continuous_on U ((deriv ^^ Suc k) (\<lambda>y. f y * g y))"
     proof clarify
-      fix k 
-      assume k_lt_n: "k < n"     
+      fix k
+      assume k_lt_n: "k < n"
       have prod_diff:
-          "(Nth_derivative k (\<lambda>x. f x * g x)) differentiable_on U"
-        by (metis differentiable_at_imp_differentiable_on k_lt_n 
+          "((deriv ^^ k) (\<lambda>x. f x * g x)) differentiable_on U"
+        by (metis differentiable_at_imp_differentiable_on k_lt_n
             k_times_differentiable_on_def n_times_diff_imp_lower_deriv_diff prod_n_diff)
 
       have prod_cont:
-      "continuous_on U (Nth_derivative (Suc k) (\<lambda>y. f y * g y))"
+      "continuous_on U ((deriv ^^ Suc k) (\<lambda>y. f y * g y))"
       proof -
         have cont_every:
           "\<forall>j\<le>Suc k. continuous_on U
              (\<lambda>y. of_nat (Suc k choose j) *
-                  (Nth_derivative j f y *
-                   Nth_derivative (Suc k - j) g y))"
+                  ((deriv ^^ j) f y *
+                   (deriv ^^ (Suc k - j)) g y))"
         proof (clarify)
           fix j :: nat
-          assume j_le: "j \<le> Suc k"          
-          have cont_inner:
-            "continuous_on U
-               (\<lambda>y. Nth_derivative j f y * Nth_derivative (Suc k - j) g y)"
-            by (metis Suc_diff_le cancel_comm_monoid_add_class.diff_cancel continuous_on_mult 
-                differentiable_imp_continuous_on dual_order.strict_trans2 
-                f_D_C g_D_C j_le k_lt_n le_Suc_eq less_imp_diff_less)
-                              
+          assume j_le: "j \<le> Suc k"
+          have cont_inner: "continuous_on U (\<lambda>y. (deriv ^^ j) f y * (deriv ^^ (Suc k - j)) g y)"
+            using f_D_C j_le k_lt_n g_D_C
+            by(intro continuous_on_mult,
+               metis differentiable_imp_continuous_on le_Suc_eq order.strict_trans1,
+               metis Suc_diff_le Suc_le_eq diff_is_0_eq g_n_diff
+               k_times_differentiable_on_imp_continuous_on less_imp_diff_less
+               linorder_le_less_linear n_nonzero zero_le)
           have cont_const: "continuous_on U (\<lambda>y. of_nat (Suc k choose j))"
             by simp
           show "continuous_on U
                   (\<lambda>y. of_nat (Suc k choose j) *
-                       (Nth_derivative j f y *
-                        Nth_derivative (Suc k - j) g y))"
+                       ((deriv ^^ j) f y *
+                        (deriv ^^ (Suc k - j)) g y))"
             using cont_const cont_inner
             by (simp add: continuous_on_mult mult.assoc)
         qed
@@ -1935,16 +1957,16 @@ proof -
         then have cont_sum:
           "continuous_on U
              (\<lambda>x. \<Sum>j\<le>Suc k. of_nat (Suc k choose j) *
-                            Nth_derivative j f x *
-                            Nth_derivative (Suc k - j) g x)"
+                            (deriv ^^ j) f x *
+                            (deriv ^^ (Suc k - j)) g x)"
           by(subst continuous_on_sum, simp_all, simp add: ab_semigroup_mult_class.mult_ac(1))
-          
+
         have eq_on:
           "\<forall>x\<in>U.
              (\<Sum>j\<le>Suc k. of_nat (Suc k choose j) *
-                        Nth_derivative j f x *
-                        Nth_derivative (Suc k - j) g x)
-           = Nth_derivative (Suc k) (\<lambda>y. f y * g y) x"
+                        (deriv ^^ j) f x *
+                        (deriv ^^ (Suc k - j)) g x)
+           = (deriv ^^ Suc k) (\<lambda>y. f y * g y) x"
         proof clarify
           fix x :: real
           assume xU: "x \<in> U"
@@ -1955,18 +1977,18 @@ proof -
             using Suc_leI k_lt_n k_times_differentiable_at_mono by blast+
           with kth_deriv_mult[where k = "Suc k"]
           show "(\<Sum>j\<le>Suc k. of_nat (Suc k choose j) *
-                   Nth_derivative j f x *
-                   Nth_derivative (Suc k - j) g x)
-                = Nth_derivative (Suc k) (\<lambda>y. f y * g y) x"
+                   (deriv ^^ j) f x *
+                   (deriv ^^ (Suc k - j)) g x)
+                = (deriv ^^ Suc k) (\<lambda>y. f y * g y) x"
             by simp
         qed
 
         from cont_sum eq_on
         show ?thesis
-          using continuous_on_cong by fastforce          
-      qed    
-      show "Nth_derivative k (\<lambda>y. f y * g y) differentiable_on U \<and>
-            continuous_on U (Nth_derivative (Suc k) (\<lambda>y. f y * g y))"
+          using continuous_on_cong by fastforce
+      qed
+      show "(deriv ^^ k) (\<lambda>y. f y * g y) differentiable_on U \<and>
+            continuous_on U ((deriv ^^ Suc k) (\<lambda>y. f y * g y))"
         using prod_diff prod_cont by blast
     qed
     then show ?thesis
@@ -1978,9 +2000,9 @@ lemma C_1_inv:
   assumes fC1   : "C_k_on 1 f U"
       and nz    : "\<forall>y\<in>U. f y \<noteq> 0"
     shows   "C_k_on 1 (\<lambda>y. inverse (f y)) U"
-proof -    
+proof -
   have openU: "open U"
-    using C_k_on_def fC1 by presburger 
+    using C_k_on_def fC1 by presburger
 
   have derivative_exists: "\<forall>y\<in>U. \<exists>d .(f has_field_derivative d) (at y within U)"
     by (metis C1_cont_diff at_within_open fC1 openU)
@@ -1988,9 +2010,9 @@ proof -
   from fC1 obtain
      cont_f : "continuous_on U f"
    and diff_f : "\<forall>y\<in>U. (\<lambda>t. f t) differentiable (at y)"
-    using C1_cont_diff DERIV_deriv_iff_real_differentiable 
+    using C1_cont_diff DERIV_deriv_iff_real_differentiable
       differentiable_imp_continuous_on by blast
-  
+
   have cont_inv: "continuous_on U (\<lambda>y. inverse (f y))"
     using Limits.continuous_on_inverse cont_f nz by blast
 
@@ -2000,26 +2022,26 @@ proof -
 
   have "C_k_on 1 (\<lambda>y. inverse (f y)) U"
   proof -
-    have "Nth_derivative 0 (\<lambda>y. inverse (f y)) differentiable_on U"
+    have "(deriv ^^ 0) (\<lambda>y. inverse (f y)) differentiable_on U"
       using diff_inv differentiable_at_imp_differentiable_on by auto
-    moreover have "continuous_on U (Nth_derivative (Suc 0) (\<lambda>y. inverse (f y)))"
+    moreover have "continuous_on U ((deriv ^^ Suc 0) (\<lambda>y. inverse (f y)))"
     proof -
       have eq_on:
-        "\<forall>y\<in>U. Nth_derivative 1 (\<lambda>y. inverse (f y)) y =
+        "\<forall>y\<in>U. (deriv ^^ 1) (\<lambda>y. inverse (f y)) y =
                 - deriv f y / (f y)^2"
       proof clarify
-        fix y 
+        fix y
         assume yU: "y \<in> U"
         then obtain d where d_def: "(f has_field_derivative d) (at y within U)"
           using derivative_exists by blast
 
-        have "((\<lambda>x. inverse (f x)) has_field_derivative 
+        have "((\<lambda>x. inverse (f x)) has_field_derivative
           - (d * inverse (f y ^ Suc (Suc 0)))) (at y within U)"
           by(rule DERIV_inverse_fun, smt d_def, smt nz yU)
         then have "((\<lambda>t. inverse (f t)) has_field_derivative (- deriv f y / (f y)^2)) (at y)"
           by (metis DERIV_imp_deriv at_within_open d_def
               divide_minus_left divide_real_def numeral_2_eq_2 openU yU)
-        thus "Nth_derivative 1 (\<lambda>y. inverse (f y)) y =  - deriv f y / (f y)^2"
+        thus "(deriv ^^ 1) (\<lambda>y. inverse (f y)) y =  - deriv f y / (f y)^2"
           by (simp add: DERIV_imp_deriv)
       qed
 
@@ -2032,11 +2054,11 @@ proof -
       then have cont_rhs:
         "continuous_on U (\<lambda>y. - deriv f y * inverse ((f y)\<^sup>2))"
         by (metis (full_types) cont_derf cont_inv continuous_on_mult)
-      then show "continuous_on U (Nth_derivative (Suc 0) (\<lambda>y. inverse (f y)))"
+      then show "continuous_on U ((deriv ^^ Suc 0) (\<lambda>y. inverse (f y)))"
         using continuous_on_cong divide_real_def eq_on by fastforce
     qed
     ultimately show ?thesis
-      by (simp add: C_k_on_def openU)      
+      by (simp add: C_k_on_def openU)
   qed
   thus ?thesis.
 qed
@@ -2057,7 +2079,7 @@ proof -
 qed
 
 lemma C_k_sum_upto:
-  fixes F :: "nat \<Rightarrow> real \<Rightarrow> real" 
+  fixes F :: "nat \<Rightarrow> real \<Rightarrow> real"
   assumes FCk: "\<And>i. i \<le> N \<Longrightarrow> C_k_on k (F i) U"
   shows   "C_k_on k (\<lambda>x. \<Sum> i\<le>N. F i x) U"
 proof (cases k)
@@ -2067,7 +2089,7 @@ proof (cases k)
   have "continuous_on U (\<lambda>x. \<Sum> i\<le>N. F i x)"
     by (subst continuous_on_sum) (use cont_i in auto)
   with 0 show ?thesis
-    using C_k_on_def assms by auto 
+    using C_k_on_def assms by auto
 next
   case (Suc k')
   have openU: "open U"
@@ -2086,25 +2108,25 @@ next
   qed
 
   have Dj:
-    "\<And>j. j < Suc k' \<Longrightarrow> (Nth_derivative j (\<lambda>x. \<Sum> i\<le>N. F i x)) differentiable_on U"
+    "\<And>j. j < Suc k' \<Longrightarrow> ((deriv ^^ j) (\<lambda>x. \<Sum> i\<le>N. F i x)) differentiable_on U"
   proof -
     fix j :: nat
     assume jlt: "j < Suc k'"
     from openU jlt sum_kdiff_on
-    show "(Nth_derivative j (\<lambda>x. \<Sum> i\<le>N. F i x)) differentiable_on U"
+    show "((deriv ^^ j) (\<lambda>x. \<Sum> i\<le>N. F i x)) differentiable_on U"
       by (metis at_within_open differentiable_on_def
                 k_times_differentiable_onD n_times_diff_imp_lower_deriv_diff)
   qed
 
   have Cj:
-    "\<And>j. j < Suc k' \<Longrightarrow> continuous_on U (Nth_derivative (Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x))"
+    "\<And>j. j < Suc k' \<Longrightarrow> continuous_on U ((deriv ^^ Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x))"
   proof -
     fix j :: nat
     assume jlt: "j < Suc k'"
     have eq_on:
       "\<And>x. x \<in> U \<Longrightarrow>
-          Nth_derivative (Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x) x
-        = (\<Sum> i\<le>N. Nth_derivative (Suc j) (F i) x)"
+          (deriv ^^ Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x) x
+        = (\<Sum> i\<le>N. (deriv ^^ Suc j) (F i) x)"
     proof -
       fix x :: real
       assume xU: "x \<in> U"
@@ -2119,20 +2141,20 @@ next
           by (meson Suc_leI k_times_differentiable_at_mono)
       qed
 
-      then show "Nth_derivative (Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x) x
-            = (\<Sum> i\<le>N. Nth_derivative (Suc j) (F i) x)" 
+      then show "(deriv ^^ Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x) x
+            = (\<Sum> i\<le>N. (deriv ^^ Suc j) (F i) x)"
         by(subst kth_deriv_sum_upto, simp_all)
     qed
     have cont_sum:
-      "continuous_on U (\<lambda>x. \<Sum> i\<le>N. Nth_derivative (Suc j) (F i) x)"
+      "continuous_on U (\<lambda>x. \<Sum> i\<le>N. (deriv ^^ Suc j) (F i) x)"
     proof -
-      have "\<And>i. i \<le> N \<Longrightarrow> continuous_on U (Nth_derivative (Suc j) (F i))"
+      have "\<And>i. i \<le> N \<Longrightarrow> continuous_on U ((deriv ^^ Suc j) (F i))"
         using FCk Suc jlt
         by (simp add: C_k_on_def)
       then show ?thesis
         by (subst continuous_on_sum) auto
     qed
-    show "continuous_on U (Nth_derivative (Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x))"
+    show "continuous_on U ((deriv ^^ Suc j) (\<lambda>x. \<Sum> i\<le>N. F i x))"
       using cont_sum eq_on by auto
   qed
 
@@ -2157,9 +2179,10 @@ lemma frechet_derivative_one_eq_deriv:
   using frechet_derivative_at_real_eq_scaleR[OF assms]
   by simp
 
-lemma nth_derivative_eq_Nth_derivative:
+lemma nth_derivative_eq_kth_deriv:
+  fixes x :: real
   assumes "open S" and "higher_differentiable_on S f k" and "x \<in> S"
-  shows "nth_derivative k f x h = (h^k) * Nth_derivative k f x"
+  shows "nth_derivative k f x h = (h^k) * (deriv ^^ k) f x"
   using assms(2,3)
 proof (induct k arbitrary: f x h)
   case (Suc k)
@@ -2167,17 +2190,17 @@ proof (induct k arbitrary: f x h)
   proof(cases "k = 0")
     case True
     then show ?thesis
-      using Suc.prems frechet_derivative_to_deriv 
-        higher_differentiable_on.simps(2) 
+      using Suc.prems frechet_derivative_to_deriv
+        higher_differentiable_on.simps(2)
       by clarsimp blast
   next
     case False
     note higher_on_k = higher_differentiable_on_SucD[OF Suc.prems(1)]
-    have "nth_derivative k (\<lambda>x. frechet_derivative f (at x) h) x h 
+    have "nth_derivative k (\<lambda>x. frechet_derivative f (at x) h) x h
      = frechet_derivative (\<lambda>x. nth_derivative k f x h) (at x) h"
       by (simp add: frechet_derivative_nth_derivative_commute)
     also have "... = h * deriv (\<lambda>x. nth_derivative k f x h) x"
-      using Suc.prems(1,2) frechet_derivative_to_deriv 
+      using Suc.prems(1,2) frechet_derivative_to_deriv
         nth_derivative_differentiable
       by blast
     finally have obs1: "nth_derivative k (\<lambda>x. frechet_derivative f (at x) h) x h
@@ -2185,33 +2208,33 @@ proof (induct k arbitrary: f x h)
     have "\<forall>x\<in>S. (\<lambda>x. nth_derivative k f x h) differentiable at x"
       using Suc.prems(1) nth_derivative_differentiable by blast
     hence "\<forall>x\<in>S. \<exists>f'. ((\<lambda>x. nth_derivative k f x h) has_derivative (*) f') (at x within S)"
-      using DERIV_deriv_iff_real_differentiable differentiable_def 
-        has_derivative_at_withinI has_field_derivative_def 
+      using DERIV_deriv_iff_real_differentiable differentiable_def
+        has_derivative_at_withinI has_field_derivative_def
       by blast
     then obtain df where df_def:
       "((\<lambda>x. nth_derivative k f x h) has_derivative (*) df) (at x within S)"
       using Suc.prems(2) by blast
-    have obs2: "deriv (\<lambda>x. nth_derivative k f x h) x = deriv (\<lambda>x. h ^ k * Nth_derivative k f x) x"
+    have obs2: "deriv (\<lambda>x. nth_derivative k f x h) x = deriv (\<lambda>x. h ^ k * (deriv ^^ k) f x) x"
       using Suc.hyps[OF higher_on_k] df_def
-      by (subst Auxiliary_Facts.deriv_transfer(1)[OF \<open>open S\<close> \<open>x \<in> S\<close>, where f'=df], simp_all)      
-    have "\<forall>x\<in>S. (\<lambda>z. nth_derivative k f z 1) differentiable at x" 
+      by (subst Auxiliary_Facts.deriv_transfer(1)[OF \<open>open S\<close> \<open>x \<in> S\<close>, where f'=df], simp_all)
+    have "\<forall>x\<in>S. (\<lambda>z. nth_derivative k f z 1) differentiable at x"
       using higher_differentiable_on_real_Suc'[OF \<open>open S\<close>, THEN iffD1, OF Suc.prems(1)]
       by clarsimp
-    hence "Nth_derivative k f differentiable at y" if "y \<in> S" for y
+    hence "(deriv ^^ k) f differentiable at y" if "y \<in> S" for y
       using Suc.hyps[OF higher_on_k, where h=1, simplified] assms(1) \<open>y \<in> S\<close>
-      by (erule_tac x=y in ballE, metis (no_types, lifting) differentiable_eqI, meson)           
-    hence "deriv (\<lambda>x. h ^ k * Nth_derivative k f x) x 
-      = h ^ k * deriv (\<lambda>x. Nth_derivative k f x) x"
+      by (erule_tac x=y in ballE, metis (no_types, lifting) differentiable_eqI, meson)
+    hence "deriv (\<lambda>x. h ^ k * (deriv ^^ k) f x) x
+      = h ^ k * deriv (\<lambda>x. (deriv ^^ k) f x) x"
       using DERIV_deriv_iff_real_differentiable Suc.prems(2) field_differentiable_def
-      by(subst deriv_cmult, 
-          auto simp add: Nth_deriv_eq_compow_deriv field_differentiable_def, meson)
+      by(subst deriv_cmult,
+          auto simp add: field_differentiable_def, meson)
     thus ?thesis
       using False
       by (simp add: obs1 obs2)
   qed
 qed simp
 
-lemma "open S 
+lemma "open S
   \<Longrightarrow> higher_differentiable_on S (f::real \<Rightarrow> real) (Suc n) \<longleftrightarrow>
    (\<forall>x\<in>S. f differentiable (at x)) \<and>
    (\<forall>v. higher_differentiable_on S (\<lambda>x. v * deriv f x) n)"
@@ -2227,16 +2250,16 @@ lemma high_diff_on_imp_k_times_on:
   "higher_differentiable_on S f (Suc n) \<Longrightarrow> open S \<Longrightarrow> f (Suc n)-times_differentiable_on S"
 proof(induct n)
   case 0
-  then show ?case 
+  then show ?case
     using DERIV_deriv_iff_real_differentiable has_field_derivative_def zero_less_one
     by (clarsimp simp add: Smooth.higher_differentiable_on_real_Suc[OF \<open>open S\<close>]
-        k_times_differentiable_on_def, blast)    
+        k_times_differentiable_on_def, blast)
 next
   case (Suc n)
   hence obs1: "f (Suc n)-times_differentiable_on S"
     using higher_differentiable_on_SucD by blast
   note higher_on_n = higher_differentiable_on_SucD[OF Suc.prems(1)]
-  have obs2: "(Nth_derivative (Suc n) f has_derivative (*) (Nth_derivative (Suc (Suc n)) f z)) (at z)"
+  have obs2: "((deriv ^^ Suc n) f has_derivative (*) ((deriv ^^ Suc (Suc n)) f z)) (at z)"
     (is "?K")
     if "z \<in> S" for z
   proof-
@@ -2244,11 +2267,11 @@ next
       and f'_eq: "f' 1 = nth_derivative (Suc (Suc n)) f z 1"
       using nth_derivative_exists[OF Suc(2) \<open>open S\<close> \<open>z \<in> S\<close>]
       by (metis \<open>z \<in> S\<close> Suc(3) at_within_open)
-    hence "(Nth_derivative (Suc n) f has_derivative f') (at z within S)"
-      using nth_derivative_eq_Nth_derivative[OF \<open>open S\<close> higher_on_n, where h=1]
+    hence "((deriv ^^ Suc n) f has_derivative f') (at z within S)"
+      using nth_derivative_eq_kth_deriv[OF \<open>open S\<close> higher_on_n, where h=1]
       by (metis (no_types, lifting) has_derivative_transform mult_cancel_right2 power_one that)
-    moreover have "f' 1 = Nth_derivative (Suc (Suc n)) f z"
-      using nth_derivative_eq_Nth_derivative[OF \<open>open S\<close> Suc(2), where h=1]
+    moreover have "f' 1 = (deriv ^^ Suc (Suc n)) f z"
+      using nth_derivative_eq_kth_deriv[OF \<open>open S\<close> Suc(2), where h=1]
       by (simp add: f'_eq \<open>z \<in> S\<close>)
     ultimately show ?K
       by (metis DERIV_deriv_iff_real_differentiable Suc(3) at_within_open has_derivative_imp
@@ -2257,9 +2280,9 @@ next
   show ?case
     unfolding k_times_differentiable_on_def
     using obs1[unfolded k_times_differentiable_on_def] obs2
-    by (clarsimp simp: Smooth.higher_differentiable_on_real_Suc[OF \<open>open S\<close>] 
-         simp del: Nth_derivative.simps funpow.simps k_times_differentiable_at.simps,
-        subst k_times_differentiable_at.simps,   
+    by (clarsimp simp: Smooth.higher_differentiable_on_real_Suc[OF \<open>open S\<close>]
+         simp del: funpow.simps k_times_differentiable_at.simps,
+        subst k_times_differentiable_at.simps,
         metis Suc(3) open_real)
 qed
 
@@ -2301,28 +2324,28 @@ next
   next
     case (Suc m)
     then have "\<forall>x\<in>U. (\<lambda>x. deriv f x) differentiable (at x)"
-      using Hder by (simp add: higher_differentiable_on.simps)    
+      using Hder by (simp add: higher_differentiable_on.simps)
     thus ?thesis
-      using Hder higher_differentiable_on_imp_continuous_on by blast 
+      using Hder higher_differentiable_on_imp_continuous_on by blast
   qed
 
   text \<open>And f is differentiable on U by openness.\<close>
   have f_on: "f differentiable_on U"
-    using D0 Uop Suc.prems higher_differentiable_on_imp_differentiable_on by blast 
+    using D0 Uop Suc.prems higher_differentiable_on_imp_differentiable_on by blast
 
   text \<open>Assemble all rows n < Suc k for C_{Suc k}.\<close>
   have grid:
     "\<forall>n < Suc k.
-       Nth_derivative n f differentiable_on U
-     \<and> continuous_on U (Nth_derivative (Suc n) f)"
+       (deriv ^^ n) f differentiable_on U
+     \<and> continuous_on U ((deriv ^^ Suc n) f)"
   proof (intro allI impI)
     fix n assume nlt: "n < Suc k"
     consider (z) "n = 0" | (s) j where "n = Suc j" "j < k"
-      by (meson less_Suc_eq_0_disj nlt) 
+      by (meson less_Suc_eq_0_disj nlt)
 
     then show
-      "Nth_derivative n f differentiable_on U
-       \<and> continuous_on U (Nth_derivative (Suc n) f)"
+      "(deriv ^^ n) f differentiable_on U
+       \<and> continuous_on U ((deriv ^^ Suc n) f)"
     proof cases
       case z
       then show ?thesis using f_on cont_deriv by simp
@@ -2330,11 +2353,11 @@ next
       case s
       then obtain j where jlt: "j < k" and nj: "n = Suc j" by auto
       from CKder have
-        "Nth_derivative j (deriv f) differentiable_on U
-         \<and> continuous_on U (Nth_derivative (Suc j) (deriv f))"
+        "(deriv ^^ j) (deriv f) differentiable_on U
+         \<and> continuous_on U ((deriv ^^ Suc j) (deriv f))"
         using jlt by (simp add: C_k_on_def)
       thus ?thesis
-        using deriv_commutes_Nth_deriv nj by force
+        using kth_deriv_shift nj by metis
     qed
   qed
 
@@ -2354,20 +2377,22 @@ next
   case (Suc k)
   assume C: "C_k_on (Suc k) f U"
 
-  have Uop': "open U" 
+  have Uop': "open U"
     using C by (simp add: C_k_on_def)
 
   text \<open>Pointwise differentiability of f on U from the n=0 row.\<close>
 
   have "f differentiable_on U"
-    using C Uop' C_k_on_def by auto 
+    using C Uop' C_k_on_def by auto
 
   then have D0: "\<forall>x\<in>U. f differentiable (at x)"
-    using assms differentiable_on_openD by blast 
+    using assms differentiable_on_openD by blast
 
   text \<open>Build C_k_on for the derivative field from the grid for f.\<close>
   have Cg: "C_k_on k (\<lambda>x. deriv f x) U"
-    using C_k_on_def Suc.prems deriv_commutes_Nth_deriv by auto
+    using C_k_on_def Suc.prems kth_deriv_shift
+    by (metis One_nat_def Suc_eq_plus1 diff_Suc_1'
+        first_derivative_alt_def less_diff_conv old.nat.distinct(1) zero_less_Suc)
 
   text \<open>Convert that to higher_differentiable_on via IH.\<close>
   have HDg: "higher_differentiable_on U (\<lambda>x. deriv f x) k"
@@ -2381,7 +2406,7 @@ next
     have "higher_differentiable_on U (\<lambda>x. v * deriv f x) k"
       using HDg
     proof (induction k)
-      show "higher_differentiable_on U (deriv f) 0 \<Longrightarrow> 
+      show "higher_differentiable_on U (deriv f) 0 \<Longrightarrow>
             higher_differentiable_on U (\<lambda>x. v * deriv f x) 0"
         using C0_on_def C_k_scale assms higher_differentiable_on.simps(1) by blast
     next
@@ -2392,10 +2417,10 @@ next
         by (simp add: IH assms higher_differentiable_on_const higher_differentiable_on_mult)
     qed
     moreover have eqv: "\<And>x. x\<in>U \<Longrightarrow> frechet_derivative f (at x) v = v * deriv f x"
-      using D0 frechet_derivative_to_deriv by blast 
+      using D0 frechet_derivative_to_deriv by blast
 
     ultimately show "higher_differentiable_on U (\<lambda>x. frechet_derivative f (at x) v) k"
-      by (subst higher_differentiable_on_cong[OF _ _ eqv], simp_all, simp add: Uop) 
+      by (subst higher_differentiable_on_cong[OF _ _ eqv], simp_all, simp add: Uop)
   qed
   show ?case
     by (simp add: higher_differentiable_on.simps D0 Hv)
@@ -2407,20 +2432,5 @@ corollary higher_differentiable_on_real_iff_Ck_on:
   assumes Uop: "open U"
   shows "higher_differentiable_on U f k \<longleftrightarrow> C_k_on k f U"
   using Ck_on_imp_higher_differentiable_on_real assms higher_differentiable_on_real_imp_Ck_on by blast
-
-lemma k_times_on_imp_high_diff_on:
-  fixes f :: "real \<Rightarrow> real"
-  assumes "open S"
-  shows "f (Suc 0)-times_differentiable_on S
-  \<Longrightarrow> higher_differentiable_on S f (Suc 0)"
-  apply (clarsimp simp add: k_times_differentiable_on_def 
-      higher_differentiable_on.simps differentiable_def)
-  apply (rule conjI)
-   apply blast
-  apply clarsimp
-  oops
-
-
-
 
 end

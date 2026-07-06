@@ -1,7 +1,7 @@
 section \<open>Limits and Higher Order Derivatives\<close>
 
 theory Limits_Higher_Order_Derivatives
-  imports "HOL-Analysis.Analysis" 
+  imports "HOL-Analysis.Analysis"
 begin
 
 subsection \<open>\(\varepsilon\)--\(\delta\) Characterizations of Limits and Continuity\<close>
@@ -17,7 +17,7 @@ lemma tendsto_at_bot_epsilon_def:
 lemma tendsto_inf_at_top_epsilon_def:
   "(g \<longlongrightarrow> \<infinity>) at_top = (\<forall> \<epsilon> > 0. \<exists>N. \<forall>x \<ge> N. (g (x::real)::real) > \<epsilon>)"
   by (subst tendsto_PInfty', subst Filter.eventually_at_top_linorder, simp)
-  
+
 lemma tendsto_inf_at_bot_epsilon_def:
   "(g \<longlongrightarrow> \<infinity>) at_bot = (\<forall> \<epsilon> > 0. \<exists>N. \<forall>x \<le> N. (g (x::real)::real) > \<epsilon>)"
   by (subst tendsto_PInfty', subst Filter.eventually_at_bot_linorder, simp)
@@ -43,16 +43,16 @@ proof (subst eventually_at, safe)
   show "\<exists>\<delta>>0. \<forall>y. y \<noteq> x \<and> \<bar>y - x\<bar> < \<delta> \<longrightarrow> \<bar>f y - L\<bar> < \<epsilon>"
   proof -
     text \<open>Choose \(S\) as the open ball around \(L\) with radius \(\varepsilon\).\<close>
-    have "open (ball L \<epsilon>)" 
-      by simp 
+    have "open (ball L \<epsilon>)"
+      by simp
     text \<open>Confirm that \(L\) lies in the ball.\<close>
     moreover have "L \<in> ball L \<epsilon>"
       unfolding ball_def by (simp add: \<epsilon>_pos)
     text \<open>By applying lim\_neigh to the ball, we obtain a suitable \(\delta\).\<close>
-    ultimately obtain \<delta> where d_pos: "\<delta> > 0" 
+    ultimately obtain \<delta> where d_pos: "\<delta> > 0"
       and \<delta>_prop: "\<forall>y. y \<noteq> x \<and> dist y x < \<delta> \<longrightarrow> f y \<in> ball L \<epsilon>"
       by (meson UNIV_I lim_neigh)
-    text \<open>Since \(f(y)\in \mathrm{ball}(L,\varepsilon)\) means \(\lvert f(y)-L\rvert<\varepsilon\), 
+    text \<open>Since \(f(y)\in \mathrm{ball}(L,\varepsilon)\) means \(\lvert f(y)-L\rvert<\varepsilon\),
           we deduce the \(\varepsilon\)–\(\delta\) condition.\<close>
     hence "\<forall>y. y \<noteq> x \<and> \<bar>y - x\<bar> < \<delta> \<longrightarrow> \<bar>f y - L\<bar> < \<epsilon>"
       by (auto simp: ball_def dist_norm)
@@ -75,7 +75,7 @@ next
   yields a \(\delta > 0\) such that for all \(y\), if \(y \neq x\) and
   \(\lvert y - x\rvert < \delta\) then \(\lvert f(y) - L\rvert < \varepsilon\).\<close>
 
-  from eps_delta obtain \<delta> where \<delta>_pos: "\<delta> > 0" 
+  from eps_delta obtain \<delta> where \<delta>_pos: "\<delta> > 0"
     and \<delta>_prop: "\<forall>y. (y \<noteq> x \<and> \<bar>y - x\<bar> < \<delta>) \<longrightarrow> \<bar>f y - L\<bar> < \<epsilon>"
     using \<epsilon>_pos by blast
   text \<open> Notice that \(\lvert f(y) - L\rvert < \varepsilon\) is equivalent to
@@ -117,7 +117,7 @@ proof(subst tendsto_at_top_epsilon_def, clarify)
     by simp
 
   obtain N1 where N1_def: "\<forall>x\<ge>N1. abs (f x - c) < 1"
-    using f_lim tendsto_at_top_epsilon_def zero_less_one by blast 
+    using f_lim tendsto_at_top_epsilon_def zero_less_one by blast
 
   have f_bound: "\<forall>x\<ge>N1. abs (f x) < M"
     using M_def N1_def by fastforce
@@ -129,7 +129,7 @@ proof(subst tendsto_at_top_epsilon_def, clarify)
     using g_lim tendsto_inf_at_top_epsilon_def by blast
 
   obtain N where "N = max N1 N2" and N_ge_N1: "N \<ge> N1" and N_ge_N2: "N \<ge> N2"
-    by auto 
+    by auto
 
   show "\<exists>N::real. \<forall>x\<ge>N. \<bar>f x / g x - 0\<bar> < \<epsilon>"
   proof(intro exI [where x=N], clarify)
@@ -140,7 +140,7 @@ proof(subst tendsto_at_top_epsilon_def, clarify)
       using N_ge_N1 f_bound x_ge_N by auto
 
     have g_bound_x: "g x > M / \<epsilon>"
-      using N2_def N_ge_N2 x_ge_N by auto 
+      using N2_def N_ge_N2 x_ge_N by auto
 
     have "\<bar>f x / g x\<bar> = \<bar>f x\<bar> / \<bar>g x\<bar>"
       using abs_divide by blast
@@ -150,7 +150,7 @@ proof(subst tendsto_at_top_epsilon_def, clarify)
       by (metis  M_over_\<epsilon>_gt_0 \<epsilon>_pos abs_real_def g_bound_x mult.commute order_less_irrefl order_less_trans pos_divide_less_eq)
     finally show "\<bar>f x / g x - 0\<bar> < \<epsilon>"
       by linarith
-  qed      
+  qed
 qed
 
 lemma tendsto_divide_approaches_const_at_bot:
@@ -166,7 +166,7 @@ proof(subst tendsto_at_bot_epsilon_def, clarify)
     by simp
 
   obtain N1 where N1_def: "\<forall>x\<le>N1. abs (f x - c) < 1"
-    using f_lim tendsto_at_bot_epsilon_def zero_less_one by blast 
+    using f_lim tendsto_at_bot_epsilon_def zero_less_one by blast
 
   have f_bound: "\<forall>x\<le>N1. abs (f x) < M"
     using M_def N1_def by fastforce
@@ -178,8 +178,8 @@ proof(subst tendsto_at_bot_epsilon_def, clarify)
     using g_lim tendsto_inf_at_bot_epsilon_def by blast
 
   obtain N where "N = min N1 N2" and N_le_N1: "N \<le> N1" and N_le_N2: "N \<le> N2"
-    by auto 
-    
+    by auto
+
   show "\<exists>N::real. \<forall>x\<le>N. \<bar>f x / g x - 0\<bar> < \<epsilon>"
   proof(intro exI [where x=N], clarify)
     fix x :: real
@@ -189,7 +189,7 @@ proof(subst tendsto_at_bot_epsilon_def, clarify)
       using N_le_N1 f_bound x_le_N by auto
 
     have g_bound_x: "g x > M / \<epsilon>"
-      using N2_def N_le_N2 x_le_N by auto 
+      using N2_def N_le_N2 x_le_N by auto
 
     have "\<bar>f x / g x\<bar> = \<bar>f x\<bar> / \<bar>g x\<bar>"
       using abs_divide by blast
@@ -199,7 +199,7 @@ proof(subst tendsto_at_bot_epsilon_def, clarify)
       by (metis  M_over_\<epsilon>_gt_0 \<epsilon>_pos abs_real_def g_bound_x mult.commute order_less_irrefl order_less_trans pos_divide_less_eq)
     finally show "\<bar>f x / g x - 0\<bar> < \<epsilon>"
       by linarith
-  qed      
+  qed
 qed
 
 lemma equal_limits_diff_zero_at_top:
@@ -209,7 +209,7 @@ lemma equal_limits_diff_zero_at_top:
 proof -
   have "((\<lambda>x. f x - g x) \<longlongrightarrow> L1 - L2) at_top"
     by (rule tendsto_diff, rule f_lim, rule g_lim)
-  then show ?thesis 
+  then show ?thesis
     by (simp add: fun_diff_def)
 qed
 
@@ -220,37 +220,47 @@ lemma equal_limits_diff_zero_at_bot:
 proof -
   have "((\<lambda>x. f x - g x) \<longlongrightarrow> L1 - L2) at_bot"
     by (rule tendsto_diff, rule f_lim, rule g_lim)
-  then show ?thesis 
+  then show ?thesis
     by (simp add: fun_diff_def)
 qed
 
-subsection \<open>Nth Order Derivatives and $C^k(U)$ Smoothness\<close>
-fun Nth_derivative :: "nat \<Rightarrow> (real \<Rightarrow> real) \<Rightarrow> (real \<Rightarrow> real)" where
-  "Nth_derivative 0 f = f " |
-  "Nth_derivative (Suc n) f  = deriv (Nth_derivative n f)"
+subsection \<open>Higher-Order Derivatives and $C^k(U)$ Smoothness\<close>
+
+text \<open>Higher-order derivatives are expressed throughout via the standard-library
+iterated derivative @{term "(deriv ^^ n) f"}.  The following equations mirror the
+defining equations of an explicit recursive definition and are convenient to cite
+by name: \<close>
+
+lemma kth_deriv_simps:
+  "(deriv ^^ 0) f = f"
+  "(deriv ^^ Suc n) f = deriv ((deriv ^^ n) f)"
+  by simp_all
+
+lemma kth_deriv_Suc: "(deriv ^^ Suc n) f = deriv ((deriv ^^ n) f)"
+  by simp
 
 lemma first_derivative_alt_def:
-  "Nth_derivative 1 f = deriv f"
+  "(deriv ^^ 1) f = deriv f"
   by simp
 
 lemma second_derivative_alt_def:
-  "Nth_derivative 2 f  = deriv (deriv f)"
+  "(deriv ^^ 2) f = deriv (deriv f)"
   by (simp add: numeral_2_eq_2)
 
 lemma limit_def_nth_deriv:
   fixes f :: "real \<Rightarrow> real" and a :: real and n :: nat
   assumes n_pos: "n > 0"
-      and D_last: "DERIV (Nth_derivative (n - 1) f) a :> Nth_derivative n f a"
+      and D_last: "DERIV ((deriv ^^ (n - 1)) f) a :> (deriv ^^ n) f a"
   shows
-    "((\<lambda>x. (Nth_derivative (n - 1) f x - Nth_derivative (n - 1) f a) / (x - a))
-       \<longlongrightarrow> Nth_derivative n f a) (at a)"
+    "((\<lambda>x. ((deriv ^^ (n - 1)) f x - (deriv ^^ (n - 1)) f a) / (x - a))
+       \<longlongrightarrow> (deriv ^^ n) f a) (at a)"
   using D_last has_field_derivativeD by blast
 
 definition C_k_on :: "nat \<Rightarrow> (real \<Rightarrow> real) \<Rightarrow> real set \<Rightarrow> bool" where
-  "C_k_on k f U \<equiv> 
+  "C_k_on k f U \<equiv>
      (if k = 0 then (open U \<and> continuous_on U f)
-      else (open U \<and> (\<forall>n < k. (Nth_derivative n f) differentiable_on U 
-                         \<and> continuous_on U (Nth_derivative (Suc n) f))))"
+      else (open U \<and> (\<forall>n < k. ((deriv ^^ n) f) differentiable_on U
+                         \<and> continuous_on U ((deriv ^^ Suc n) f))))"
 
 lemma C0_on_def:
   "C_k_on 0 f U \<longleftrightarrow> (open U \<and> continuous_on U f)"
@@ -258,18 +268,18 @@ lemma C0_on_def:
 
 lemma C1_cont_diff:
   assumes "C_k_on 1 f U"
-  shows "f differentiable_on U \<and> continuous_on U (deriv f) \<and> 
+  shows "f differentiable_on U \<and> continuous_on U (deriv f) \<and>
          (\<forall> y  \<in> U. (f has_real_derivative (deriv f) y) (at y))"
   using C_k_on_def DERIV_deriv_iff_real_differentiable assms at_within_open differentiable_on_def by fastforce
 
 lemma C2_cont_diff:
   fixes f :: "real \<Rightarrow> real" and U :: "real set"
   assumes "C_k_on 2 f U"
-  shows "f differentiable_on U \<and> continuous_on U (deriv f) \<and> 
+  shows "f differentiable_on U \<and> continuous_on U (deriv f) \<and>
          (\<forall>y \<in> U. (f has_real_derivative (deriv f) y) (at y)) \<and>
          deriv f differentiable_on U \<and> continuous_on U (deriv (deriv f)) \<and>
          (\<forall>y \<in> U. (deriv f has_real_derivative (deriv (deriv f)) y) (at y))"
-  by (smt (verit, best) C1_cont_diff C_k_on_def Nth_derivative.simps(1,2) One_nat_def assms less_2_cases_iff less_numeral_extra(1) nat_1_add_1 order.asym pos_add_strict)
+  by (smt (verit, best) C1_cont_diff C_k_on_def kth_deriv_simps(1,2) One_nat_def assms less_2_cases_iff less_numeral_extra(1) nat_1_add_1 order.asym pos_add_strict)
 
 lemma C2_on_open_U_def2:
   fixes f :: "real \<Rightarrow> real"
@@ -282,7 +292,7 @@ lemma C2_on_open_U_def2:
 
 lemma C_k_on_subset:
   assumes "C_k_on k f U"
-  assumes open_subset: "open S \<and> S \<subset> U"  
+  assumes open_subset: "open S \<and> S \<subset> U"
   shows "C_k_on k f S"
   using assms
   by (smt (verit) C_k_on_def continuous_on_subset differentiable_on_eq_differentiable_at dual_order.strict_implies_order subset_eq)
