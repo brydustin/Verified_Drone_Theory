@@ -591,4 +591,362 @@ proof -
   thus ?thesis by simp
 qed
 
+
+section \<open>Layer 3: the analytic IFT chart engine for the D34 critical graph\<close>
+
+text \<open>At a critical steering angle with nondegenerate \<open>\<omega>\<close>-Hessian, the analytic
+  implicit-function theorem produces a REAL-ANALYTIC critical graph \<open>\<omega> = g(x)\<close>, and
+  the moment-rank-drop locus along it is the zero set of the real-analytic
+  \<open>h x = mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x\<close> --- closed-in-chart and nowhere dense
+  UNLESS \<open>h \<equiv> 0\<close> on the (connected) chart.  Contents:
+  \<^enum> the 1-D fact that \<open>deriv\<close> of a real-analytic function is real-analytic
+    (via the holomorphic extension and \<open>holomorphic_deriv\<close>);
+  \<^enum> \<open>cnj\<close>/\<open>cmod\<^sup>2\<close> closure, and joint \<open>(x,\<omega>)\<close>-analyticity of \<open>A_cart\<close>, \<open>dA_cart\<close>
+    and hence \<open>gradU (cvec_dip \<omega>0 \<omega>s) gain_dip\<close> via @{thm gradU_explicit} at the
+    concrete dipole jets;
+  \<^enum> \<open>det \<noteq> 0 \<Longrightarrow> bij\<close> for the Hessian action, and
+  \<^enum> the critical-graph dichotomy theorem \<open>dip_critical_graph_dichotomy\<close>.\<close>
+
+subsection \<open>\<open>deriv\<close> of a 1-D real-analytic function is real-analytic\<close>
+
+lemma real_analytic_at_1d_deriv:
+  fixes f :: "real \<Rightarrow> real"
+  assumes "real_analytic_at_1d f c"
+  shows "real_analytic_at_1d (deriv f) c"
+proof -
+  from assms obtain r g where r0: "0 < r"
+    and holo: "g holomorphic_on ball (complex_of_real c) r"
+    and agree: "\<forall>x. \<bar>x - c\<bar> < r \<longrightarrow> g (complex_of_real x) = complex_of_real (f x)"
+    unfolding real_analytic_at_1d_iff_holo_extension has_holo_extension_at_def by blast
+  have key: "deriv g (complex_of_real x) = complex_of_real (deriv f x)"
+    if hx: "\<bar>x - c\<bar> < r" for x
+  proof -
+    have zball: "complex_of_real x \<in> ball (complex_of_real c) r"
+      using hx by (simp add: dist_real_def)
+    have gder: "(g has_field_derivative deriv g (complex_of_real x))
+                  (at (complex_of_real x))"
+      by (rule holomorphic_derivI[OF holo open_ball zball])
+    have ofr: "((\<lambda>t::real. complex_of_real t) has_derivative complex_of_real) (at x)"
+      using bounded_linear.has_derivative[OF bounded_linear_of_real has_derivative_ident]
+      by simp
+    have comp: "((\<lambda>t. g (complex_of_real t)) has_derivative
+                  (\<lambda>h. deriv g (complex_of_real x) * complex_of_real h)) (at x)"
+      using has_derivative_compose[OF ofr gder[unfolded has_field_derivative_def]]
+      by simp
+    have ball_eq: "{t::real. \<bar>t - c\<bar> < r} = ball c r"
+      by (auto simp: ball_def dist_real_def)
+    have opn: "open {t::real. \<bar>t - c\<bar> < r}"
+      by (simp add: ball_eq)
+    have xin: "x \<in> {t::real. \<bar>t - c\<bar> < r}" using hx by simp
+    have trans: "((\<lambda>t::real. complex_of_real (f t)) has_derivative
+                  (\<lambda>h. deriv g (complex_of_real x) * complex_of_real h)) (at x)"
+      by (rule has_derivative_transform_within_open[OF comp opn xin])
+         (use agree in simp)
+    \<comment> \<open>real part: the genuine derivative of \<open>f\<close>\<close>
+    have ReD: "((\<lambda>t. Re (complex_of_real (f t))) has_derivative
+                (\<lambda>h. Re (deriv g (complex_of_real x) * complex_of_real h))) (at x)"
+      by (rule bounded_linear.has_derivative[OF bounded_linear_Re trans])
+    have fun_eqR: "(\<lambda>t. Re (complex_of_real (f t))) = f"
+      by (rule ext) simp
+    have map_eqR: "(\<lambda>h. Re (deriv g (complex_of_real x) * complex_of_real h))
+                 = (\<lambda>h. Re (deriv g (complex_of_real x)) * h)"
+      by (rule ext) simp
+    have fder: "(f has_derivative (\<lambda>h. Re (deriv g (complex_of_real x)) * h)) (at x)"
+      using ReD unfolding fun_eqR map_eqR .
+    have fRD: "(f has_field_derivative Re (deriv g (complex_of_real x))) (at x)"
+      unfolding has_field_derivative_def using fder by (simp add: fun_eq_iff)
+    have derivf: "deriv f x = Re (deriv g (complex_of_real x))"
+      by (rule DERIV_imp_deriv[OF fRD])
+    \<comment> \<open>imaginary part vanishes\<close>
+    have ImD: "((\<lambda>t. Im (complex_of_real (f t))) has_derivative
+                (\<lambda>h. Im (deriv g (complex_of_real x) * complex_of_real h))) (at x)"
+      by (rule bounded_linear.has_derivative[OF bounded_linear_Im trans])
+    have fun_eqI: "(\<lambda>t. Im (complex_of_real (f t))) = (\<lambda>t. 0)"
+      by (rule ext) simp
+    have zder: "((\<lambda>t::real. 0::real) has_derivative (\<lambda>h. 0)) (at x)"
+      by (rule has_derivative_const)
+    have "(\<lambda>h. Im (deriv g (complex_of_real x) * complex_of_real h)) = (\<lambda>h. 0)"
+      by (rule has_derivative_unique[OF ImD[unfolded fun_eqI] zder])
+    from fun_cong[OF this, of 1] have Im0: "Im (deriv g (complex_of_real x)) = 0"
+      by simp
+    show ?thesis
+      using derivf Im0 by (simp add: complex_eq_iff)
+  qed
+  have dholo: "deriv g holomorphic_on ball (complex_of_real c) r"
+    by (rule holomorphic_deriv[OF holo open_ball])
+  have "\<exists>g'. g' holomorphic_on ball (complex_of_real c) r
+           \<and> (\<forall>x. \<bar>x - c\<bar> < r \<longrightarrow> g' (complex_of_real x) = complex_of_real (deriv f x))"
+    using dholo key by blast
+  thus ?thesis
+    unfolding real_analytic_at_1d_iff_holo_extension has_holo_extension_at_def
+    by (intro exI[of _ r]) (simp add: r0)
+qed
+
+lemma real_analytic_on_deriv_1d:
+  fixes f :: "real \<Rightarrow> real"
+  assumes "real_analytic_on f U"
+  shows "real_analytic_on (deriv f) U"
+  using assms unfolding real_analytic_on_1d_iff
+  by (simp add: real_analytic_at_1d_deriv)
+
+subsection \<open>\<open>cnj\<close> and \<open>cmod\<^sup>2\<close> closure\<close>
+
+lemma real_analytic_on_cnj:
+  fixes f :: "'a::euclidean_space \<Rightarrow> complex"
+  assumes F: "real_analytic_on f U"
+  shows "real_analytic_on (\<lambda>p. cnj (f p)) U"
+proof -
+  from F have U: "open U" by (simp only: real_analytic_on_def)
+  have eq: "(\<lambda>p. cnj (f p)) = (\<lambda>p. Complex (Re (f p)) (- Im (f p)))"
+    by (rule ext) (simp add: complex_eq_iff)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_Complex[OF U] real_analytic_on_Re
+              real_analytic_on_uminus real_analytic_on_Im F)
+qed
+
+lemma real_analytic_on_cmod_sq:
+  fixes f :: "'a::euclidean_space \<Rightarrow> complex"
+  assumes F: "real_analytic_on f U"
+  shows "real_analytic_on (\<lambda>p. (cmod (f p))\<^sup>2) U"
+proof -
+  have eq: "(\<lambda>p. (cmod (f p))\<^sup>2) = (\<lambda>p. (Re (f p))\<^sup>2 + (Im (f p))\<^sup>2)"
+    by (rule ext) (simp add: cmod_power2)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_add real_analytic_on_power
+              real_analytic_on_Re real_analytic_on_Im F)
+qed
+
+subsection \<open>The dipole gain jet: \<open>deriv gdip\<close> is analytic, and the Fréchet form\<close>
+
+lemma real_analytic_on_deriv_gdip: "real_analytic_on (deriv gdip) UNIV"
+  by (rule real_analytic_on_deriv_1d[OF real_analytic_on_gdip])
+
+lemma DERIV_gdip: "DERIV gdip \<theta> :> deriv gdip \<theta>"
+proof -
+  have "(gdip has_derivative blinfun_apply (Dblinfun gdip \<theta>)) (at \<theta>)"
+    by (rule real_analytic_on_has_derivative_Dblinfun[OF real_analytic_on_gdip UNIV_I])
+  hence "gdip differentiable at \<theta>" unfolding differentiable_def by blast
+  thus ?thesis by (simp add: DERIV_deriv_iff_real_differentiable)
+qed
+
+lemma frechet_gdip_eq: "frechet_derivative gdip (at \<theta>) = (*) (deriv gdip \<theta>)"
+  by (rule frechet_derivative_at[symmetric])
+     (rule DERIV_gdip[unfolded has_field_derivative_def])
+
+subsection \<open>Joint \<open>(x,\<omega>)\<close>-analyticity of \<open>A_cart\<close>, \<open>dA_cart\<close> at the dipole jets\<close>
+
+text \<open>Throughout, the joint point is \<open>q :: ((real^2)^'n) \<times> (real^2)\<close> with \<open>x = fst q\<close>,
+  \<open>\<omega> = snd q\<close>.\<close>
+
+lemma real_analytic_on_fst_nth:
+  "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2). vec_nth (fst q) n) UNIV"
+  by (rule real_analytic_on_bounded_linear[OF open_UNIV
+        bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_fst]])
+
+lemma real_analytic_on_cvec_snd:
+  "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2). cvec_dip \<omega>0 \<omega>s (snd q)) UNIV"
+  by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
+        real_analytic_on_cvec_dip subset_UNIV])
+
+lemma real_analytic_on_phase_arg_xo:
+  "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
+      -(cvec_dip \<omega>0 \<omega>s (snd q) \<bullet> vec_nth (fst q) n)) UNIV"
+  by (intro real_analytic_on_uminus
+        real_analytic_on_inner[OF open_UNIV real_analytic_on_cvec_snd
+          real_analytic_on_fst_nth])
+
+lemma real_analytic_on_A_cart_dip:
+  "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
+      A_cart (cvec_dip \<omega>0 \<omega>s) (fst q) (snd q)) UNIV"
+  unfolding A_cart_def
+  by (intro real_analytic_on_sum[OF open_UNIV finite]
+        real_analytic_on_cis[OF real_analytic_on_phase_arg_xo])
+
+lemma real_analytic_on_Dcvec_dip_applied:
+  fixes h :: "real^2"
+  shows "real_analytic_on (\<lambda>\<omega>::real^2. Dcvec_dip \<omega>0 \<omega>s \<omega> h) UNIV"
+  unfolding Dcvec_dip_def
+  by (intro real_analytic_on_add real_analytic_on_scaleR_vec real_analytic_on_diff
+        real_analytic_on_mult real_analytic_on_uminus real_analytic_on_const[OF open_UNIV]
+        real_analytic_on_sin_comp real_analytic_on_cos_comp real_analytic_on_vec_nth)
+
+lemma real_analytic_on_dA_cart_dip:
+  fixes h :: "real^2"
+  shows "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
+      dA_cart (cvec_dip \<omega>0 \<omega>s) (Dcvec_dip \<omega>0 \<omega>s (snd q)) (fst q) (snd q) h) UNIV"
+proof -
+  have Dh: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      Dcvec_dip \<omega>0 \<omega>s (snd q) h) UNIV"
+    by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
+          real_analytic_on_Dcvec_dip_applied subset_UNIV])
+  show ?thesis
+    unfolding dA_cart_def
+    by (intro real_analytic_on_sum[OF open_UNIV finite]
+          real_analytic_on_cmult[OF open_UNIV] real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_of_real
+          real_analytic_on_inner[OF open_UNIV Dh real_analytic_on_fst_nth]
+          real_analytic_on_cis[OF real_analytic_on_phase_arg_xo])
+qed
+
+subsection \<open>Joint \<open>(x,\<omega>)\<close>-analyticity of the dipole gradient field\<close>
+
+theorem real_analytic_on_gradU_dip:
+  "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
+      gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) UNIV"
+proof -
+  have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+        gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q))
+      = (\<lambda>q. \<Sum>i\<in>UNIV. dU_cart (cvec_dip \<omega>0 \<omega>s) (Dcvec_dip \<omega>0 \<omega>s (snd q)) gain_dip
+              (\<lambda>v. frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth v 1))
+              (fst q) (snd q) (axis i 1) *\<^sub>R axis i 1)"
+    by (rule ext)
+       (rule gradU_explicit[OF has_derivative_cvec_dip gain_dip_has_derivative])
+  have dU: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+        dU_cart (cvec_dip \<omega>0 \<omega>s) (Dcvec_dip \<omega>0 \<omega>s (snd q)) gain_dip
+          (\<lambda>v. frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth v 1))
+          (fst q) (snd q) (axis i 1)) UNIV" for i
+  proof -
+    have gainq: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+        gain_dip (snd q)) UNIV"
+      by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
+            real_analytic_on_gain_dip subset_UNIV])
+    have sndc: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+        vec_nth (snd q) 1) UNIV"
+      by (rule real_analytic_on_bounded_linear[OF open_UNIV
+            bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_snd]])
+    have dgd: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+        deriv gdip (vec_nth (snd q) 1)) UNIV"
+      by (rule real_analytic_on_compose[OF sndc real_analytic_on_deriv_gdip subset_UNIV])
+    have fr_eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+          frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth (axis i 1) 1))
+        = (\<lambda>q. deriv gdip (vec_nth (snd q) 1) * vec_nth (axis i 1) 1)"
+      by (rule ext) (simp add: frechet_gdip_eq)
+    have dgain_term: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+        frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth (axis i 1) 1)) UNIV"
+      unfolding fr_eq
+      by (intro real_analytic_on_mult dgd real_analytic_on_const[OF open_UNIV])
+    show ?thesis
+      unfolding dU_cart_def
+      by (intro real_analytic_on_add real_analytic_on_mult dgain_term
+            real_analytic_on_cmod_sq[OF real_analytic_on_A_cart_dip] gainq
+            real_analytic_on_const[OF open_UNIV]
+            real_analytic_on_Re real_analytic_on_cmult[OF open_UNIV]
+            real_analytic_on_cnj[OF real_analytic_on_A_cart_dip]
+            real_analytic_on_dA_cart_dip)
+  qed
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_sum[OF open_UNIV finite]
+          real_analytic_on_scaleR_vec dU)
+qed
+
+subsection \<open>\<open>det \<noteq> 0\<close> makes the Hessian action a bijection\<close>
+
+lemma bij_matrix_vector_mult:
+  fixes A :: "real^'k^'k::finite"
+  assumes dA: "det A \<noteq> 0"
+  shows "bij ((*v) A)"
+proof -
+  from dA have "invertible A" by (simp add: invertible_det_nz)
+  then obtain B where AB: "A ** B = mat 1" and BA: "B ** A = mat 1"
+    unfolding invertible_def by blast
+  show ?thesis
+  proof (rule bijI)
+    show "inj ((*v) A)"
+    proof (rule injI)
+      fix u v assume "A *v u = A *v v"
+      hence "B *v (A *v u) = B *v (A *v v)" by simp
+      thus "u = v"
+        by (simp add: matrix_vector_mul_assoc BA matrix_vector_mul_lid)
+    qed
+    show "surj ((*v) A)"
+    proof (rule surjI)
+      fix w show "A *v (B *v w) = w"
+        by (simp add: matrix_vector_mul_assoc AB matrix_vector_mul_lid)
+    qed
+  qed
+qed
+
+subsection \<open>The critical-graph dichotomy\<close>
+
+text \<open>\<^bold>\<open>The layer-3 engine.\<close>  At any critical point \<open>(x0, \<omega>b)\<close> of the dipole pattern with
+  nondegenerate \<open>\<omega>\<close>-Hessian there is a connected open chart \<open>B \<ni> x0\<close> and a REAL-ANALYTIC
+  critical graph \<open>g\<close> through \<open>\<omega>b\<close> on which the gradient vanishes identically, and the
+  moment-rank-drop locus along the graph either is ALL of \<open>B\<close> (the case the transversality
+  witness must exclude) or has closure with empty interior (hence is nowhere dense, and
+  meagre-cover material).  Assumes nothing beyond the critical-point data.\<close>
+
+theorem dip_critical_graph_dichotomy:
+  fixes x0 :: "(real^2)^'n::finite" and \<omega>b \<omega>0 \<omega>s :: "real^2"
+  assumes crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b = 0"
+    and nds: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b) \<noteq> 0"
+  obtains B g where
+    "open B" and "connected B" and "x0 \<in> B" and "g x0 = \<omega>b"
+    and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "(\<forall>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0) \<or>
+         interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+proof -
+  define F where "F = (\<lambda>p::((real^2)^'n) \<times> (real^2).
+      gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))"
+  have Fana: "real_analytic_on F UNIV"
+    unfolding F_def by (rule real_analytic_on_gradU_dip)
+  have pW: "(x0, \<omega>b) \<in> (UNIV :: (((real^2)^'n) \<times> (real^2)) set)" by simp
+  have F0: "F (x0, \<omega>b) = 0" using crit by (simp add: F_def)
+  have reg: "\<exists>L. ((\<lambda>y. F (x0, y)) has_derivative L) (at \<omega>b) \<and> bij L"
+  proof (intro exI conjI)
+    have "(gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 has_derivative
+            (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b *v v)) (at \<omega>b)"
+      by (rule gradU_dip_has_derivative)
+    thus "((\<lambda>y. F (x0, y)) has_derivative
+            (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b *v v)) (at \<omega>b)"
+      by (simp add: F_def)
+    show "bij (\<lambda>v. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b *v v)"
+      using bij_matrix_vector_mult[OF nds] by (simp add: o_def)
+  qed
+  show ?thesis
+  proof (rule real_analytic_implicit_function[OF Fana open_UNIV pW F0 reg])
+    fix U g
+    assume Uo: "open U" and xU: "x0 \<in> U" and gx0: "g x0 = \<omega>b"
+      and gana: "real_analytic_on g U"
+      and sol: "\<forall>x\<in>U. (x, g x) \<in> UNIV \<and> F (x, g x) = 0"
+    obtain \<epsilon> where e0: "0 < \<epsilon>" and esub: "ball x0 \<epsilon> \<subseteq> U"
+      using openE[OF Uo xU] by blast
+    define B where "B = ball x0 \<epsilon>"
+    have Bo: "open B" by (simp add: B_def)
+    have Bc: "connected B" by (simp add: B_def)
+    have xB: "x0 \<in> B" by (simp add: B_def centre_in_ball e0)
+    have Bsub: "B \<subseteq> U" by (simp add: B_def esub)
+    have ganaB: "real_analytic_on g B"
+      by (rule real_analytic_on_open_subset[OF gana Bo Bsub])
+    have zero: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0" if "x \<in> B" for x
+      using sol Bsub that by (auto simp: F_def)
+    \<comment> \<open>the moment determinant along the graph\<close>
+    have idB: "real_analytic_on (\<lambda>x::(real^2)^'n. x) B"
+      by (rule real_analytic_on_bounded_linear[OF Bo bounded_linear_ident])
+    have pairB: "real_analytic_on (\<lambda>x::(real^2)^'n. (x, g x)) B"
+      by (rule real_analytic_on_Pair[OF idB ganaB])
+    have "real_analytic_on (\<lambda>x::(real^2)^'n.
+            (\<lambda>q::((real^2)^'n) \<times> (real^2). mstarg (cvec_dip \<omega>0 \<omega>s (snd q)) (fst q))
+              (x, g x)) B"
+      by (rule real_analytic_on_compose[OF pairB real_analytic_on_mstarg_cvec subset_UNIV])
+    hence hana: "real_analytic_on (\<lambda>x. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x) B"
+      by simp
+    have dich: "(\<forall>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0) \<or>
+         interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+    proof (cases "\<forall>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0")
+      case True thus ?thesis by blast
+    next
+      case False
+      hence "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0" by blast
+      from real_analytic_nowhere_dense_zeros[OF hana Bc this]
+      show ?thesis by blast
+    qed
+    show thesis
+      by (rule that[OF Bo Bc xB gx0 ganaB zero dich])
+  qed
+qed
+
 end

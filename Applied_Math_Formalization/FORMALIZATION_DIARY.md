@@ -3364,3 +3364,41 @@ then at gradU=0 & det HessU != 0 apply real_analytic_implicit_function to get th
 critical graph omega*(x); local bad set = {x. h x = 0} with h = mstarg_cvec o graph, closed +
 nowhere dense by real_analytic_nowhere_dense_zeros UNLESS h == 0 on a component (the
 transversality witness -- the genuine core), plus the det HessU = 0 stratum.
+
+### D34 ANALYTIC BRIDGE LAYER 3: the IFT chart engine PROVEN (2026-07-06, cont.)
+"Prove layer 3 now." Done -- green on the FIRST full eval_at pass, spliced into
+D34_Analytic_Bridge.thy (dev: M5_Dev_AnalyticIFT, stub after consolidation).
+
+NEW GENERIC FACTS (upstream candidates): real_analytic_at_1d_deriv / real_analytic_on_deriv_1d
+-- deriv of a 1-D real-analytic function is real-analytic. Proof: holomorphic extension g;
+deriv g holomorphic (holomorphic_deriv); deriv g extends deriv f: differentiate t |-> g(of_real t)
+= of_real(f t) (has_derivative_transform_within_open on the real ball), postcompose Re => DERIV f
+= Re(deriv g); postcompose Im: the constant-0 function forces Im(deriv g)=0 by
+has_derivative_unique + fun_cong at 1. Also real_analytic_on_cnj / _cmod_sq.
+
+DIPOLE LAYER: real_analytic_on_deriv_gdip (via the deriv lemma -- NO explicit gsinc'/Jsinc
+formula needed!), DERIV_gdip + frechet_gdip_eq (via real_analytic_on_has_derivative_Dblinfun +
+DERIV_deriv_iff_real_differentiable), A_cart/Dcvec_dip-applied/dA_cart joint analyticity, and
+real_analytic_on_gradU_dip: the dipole gradient field is real-analytic JOINTLY in (x,omega) --
+by rewriting through gradU_explicit[OF has_derivative_cvec_dip gain_dip_has_derivative] and
+closing the explicit dU_cart body with the layer-2 kit. bij_matrix_vector_mult (det != 0 => bij,
+metis-free via the invertible_def two-sided inverse).
+
+THE ENGINE: dip_critical_graph_dichotomy. At gradU(x0,wb)=0 & det HessU(x0,wb) != 0:
+real_analytic_implicit_function (F = gradU-joint on UNIV; reg from gradU_dip_has_derivative +
+bij) gives U g; shrink to a BALL B (connected!); g real-analytic on B (real_analytic_on_open_
+subset); gradU x (g x) = 0 on B; h x = mstarg (cvec_dip w0 ws (g x)) x real-analytic on B
+(pair-compose with layer-2 real_analytic_on_mstarg_cvec); then EITHER h == 0 on B OR
+interior(closure {x in B. h x = 0}) = {} (real_analytic_nowhere_dense_zeros). Assumes ONLY the
+critical-point data. Consumed the obtains-rule discipline: show ?thesis proof (rule
+real_analytic_implicit_function[OF ...]) fix U g assume ... show thesis by (rule that[OF ...]).
+
+REMAINING (the honest residue, see the session audit): (4a) LOCAL UNIQUENESS of the critical
+graph (bad points near (x0,wb) lie ON the graph) -- needs an implicit-function variant exposing
+the injectivity neighbourhood (re-derive from real_analytic_local_inverse's homeomorphism, or
+C1 inverse function theorem on Phi(x,w)=(x,gradU)); (4b) the TRANSVERSALITY WITNESS -- exclude
+h == 0 on a component (the genuine new mathematics; per-component witness by the identity
+theorem); (4c) the DEGENERATE stratum det HessU = 0; (5) the Robust3 splice: cover both D3/D4
+sorries by countably many dichotomy charts + the degenerate/collinear strata, rewire
+Robust3 to import the bridge (move its mstarg def), weaken the D4 cover lemma to
+closed+nowhere-dense pieces (downstream only uses meager via meager_negligible_closed_cover).
