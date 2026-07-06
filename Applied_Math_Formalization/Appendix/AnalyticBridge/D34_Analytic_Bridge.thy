@@ -1386,4 +1386,178 @@ proof -
   qed
 qed
 
+
+section \<open>Layer 4b, step 2: the good-triple layer\<close>
+
+text \<open>The Case-B branch certificates work in \<open>c\<close>-adapted coordinates over a GOOD
+  TRIPLE: three elements whose \<open>c\<close>-parallel coordinates \<open>t_j = c \<bullet> p_j\<close> are pairwise
+  distinct --- equivalently, \<open>c\<close> is orthogonal to no edge of the triple (the paper's
+  \<open>B(T)\<close>-avoidance).  This theory provides:
+  \<^enum> the goodness predicate and its \<open>t\<close>-separation reformulation;
+  \<^enum> chart persistence: goodness at the basepoint of a critical chart survives on a
+    shrunk ball (the same continuity-shrink the engine already uses);
+  \<^enum> the two-triple cover criterion: if no edge of \<open>T\<^sub>1\<close> is parallel to an edge of
+    \<open>T\<^sub>2\<close> (nine explicit \<open>2\<times>2\<close> determinants nonzero), then EVERY \<open>c \<noteq> 0\<close> is good
+    for one of the two triples --- the pointwise form of the paper's
+    \<open>lem:twotriplecover\<close>, and (via its failure being an explicit polynomial zero
+    set) the future \<open>\<Xi>\<close>-certificate for the no-good-triple stratum.\<close>
+
+subsection \<open>Goodness of a direction for a triple\<close>
+
+definition triple_good :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> bool" where
+  "triple_good c p q r \<longleftrightarrow>
+     c \<bullet> (p - q) \<noteq> 0 \<and> c \<bullet> (p - r) \<noteq> 0 \<and> c \<bullet> (q - r) \<noteq> 0"
+
+lemma triple_good_t_distinct:
+  "triple_good c p q r \<longleftrightarrow>
+     c \<bullet> p \<noteq> c \<bullet> q \<and> c \<bullet> p \<noteq> c \<bullet> r \<and> c \<bullet> q \<noteq> c \<bullet> r"
+  unfolding triple_good_def by (simp add: inner_diff_right)
+
+text \<open>Goodness forces the three positions to be pairwise distinct.\<close>
+
+lemma triple_good_distinct:
+  assumes "triple_good c p q r"
+  shows "p \<noteq> q" and "p \<noteq> r" and "q \<noteq> r"
+  using assms unfolding triple_good_def by auto
+
+subsection \<open>The edge determinant and the perpendicular characterisation\<close>
+
+definition edge_det2 :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "edge_det2 a b = vec_nth a 1 * vec_nth b 2 - vec_nth a 2 * vec_nth b 1"
+
+lemma common_perp_edge_det2:
+  fixes c a b :: "real^2"
+  assumes c0: "c \<noteq> 0" and pa: "c \<bullet> a = 0" and pb: "c \<bullet> b = 0"
+  shows "edge_det2 a b = 0"
+proof -
+  have ca: "vec_nth c 1 * vec_nth a 1 + vec_nth c 2 * vec_nth a 2 = 0"
+    using pa by (simp add: inner_vec_def sum_2)
+  have cb: "vec_nth c 1 * vec_nth b 1 + vec_nth c 2 * vec_nth b 2 = 0"
+    using pb by (simp add: inner_vec_def sum_2)
+  have cnz: "vec_nth c 1 \<noteq> 0 \<or> vec_nth c 2 \<noteq> 0"
+  proof (rule ccontr)
+    assume "\<not> (vec_nth c 1 \<noteq> 0 \<or> vec_nth c 2 \<noteq> 0)"
+    hence z: "vec_nth c 1 = 0" "vec_nth c 2 = 0" by auto
+    have "vec_nth c m = 0" for m
+      using exhaust_2[of m] z by auto
+    hence "c = 0" by (simp add: Finite_Cartesian_Product.vec_eq_iff)
+    with c0 show False by simp
+  qed
+  have key: "vec_nth c 1 * edge_det2 a b = 0 \<and> vec_nth c 2 * edge_det2 a b = 0"
+  proof (rule conjI)
+    have "vec_nth c 1 * edge_det2 a b
+        = (vec_nth c 1 * vec_nth a 1 + vec_nth c 2 * vec_nth a 2) * vec_nth b 2
+          - (vec_nth c 1 * vec_nth b 1 + vec_nth c 2 * vec_nth b 2) * vec_nth a 2"
+      by (simp add: edge_det2_def algebra_simps)
+    thus "vec_nth c 1 * edge_det2 a b = 0" by (simp add: ca cb)
+  next
+    have "vec_nth c 2 * edge_det2 a b
+        = (vec_nth c 1 * vec_nth b 1 + vec_nth c 2 * vec_nth b 2) * vec_nth a 1
+          - (vec_nth c 1 * vec_nth a 1 + vec_nth c 2 * vec_nth a 2) * vec_nth b 1"
+      by (simp add: edge_det2_def algebra_simps)
+    thus "vec_nth c 2 * edge_det2 a b = 0" by (simp add: ca cb)
+  qed
+  from cnz key show ?thesis by auto
+qed
+
+subsection \<open>The two-triple cover criterion\<close>
+
+text \<open>If none of the nine cross edges of two triples are parallel (nine explicit
+  \<open>2\<times>2\<close> determinants nonzero), every nonzero direction is good for at least one
+  triple: a common bad direction would be perpendicular to an edge of each, forcing
+  those two edges parallel.\<close>
+
+definition triples_transverse :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> bool" where
+  "triples_transverse p1 p2 p3 q1 q2 q3 \<longleftrightarrow>
+     (\<forall>e1\<in>{p1 - p2, p1 - p3, p2 - p3}. \<forall>e2\<in>{q1 - q2, q1 - q3, q2 - q3}.
+        edge_det2 e1 e2 \<noteq> 0)"
+
+theorem two_triple_cover_pointwise:
+  fixes c :: "real^2"
+  assumes tt: "triples_transverse p1 p2 p3 q1 q2 q3"
+    and c0: "c \<noteq> 0"
+  shows "triple_good c p1 p2 p3 \<or> triple_good c q1 q2 q3"
+proof (rule ccontr)
+  assume "\<not> (triple_good c p1 p2 p3 \<or> triple_good c q1 q2 q3)"
+  hence b1: "\<not> triple_good c p1 p2 p3" and b2: "\<not> triple_good c q1 q2 q3" by auto
+  from b1 obtain e1 where e1: "e1 \<in> {p1 - p2, p1 - p3, p2 - p3}" and pe1: "c \<bullet> e1 = 0"
+    unfolding triple_good_def by auto
+  from b2 obtain e2 where e2: "e2 \<in> {q1 - q2, q1 - q3, q2 - q3}" and pe2: "c \<bullet> e2 = 0"
+    unfolding triple_good_def by auto
+  have "edge_det2 e1 e2 = 0"
+    by (rule common_perp_edge_det2[OF c0 pe1 pe2])
+  with tt e1 e2 show False
+    unfolding triples_transverse_def by blast
+qed
+
+subsection \<open>Chart persistence of goodness\<close>
+
+text \<open>Goodness of the steered wavevector for a triple of configuration elements,
+  at the basepoint of a critical chart, persists on a shrunk ball: the three edge
+  functionals \<open>x \<mapsto> cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (x $ i - x $ j)\<close> are real-analytic,
+  hence continuous, and goodness is the preimage of three punctured lines.\<close>
+
+lemma triple_good_chart_persist:
+  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2" and x0 :: "(real^2)^'n"
+    and i j k :: 'n
+  assumes Bo: "open B" and xB: "x0 \<in> B"
+    and gana: "real_analytic_on g B"
+    and good0: "triple_good (cvec_dip \<omega>0 \<omega>s (g x0))
+                  (vec_nth x0 i) (vec_nth x0 j) (vec_nth x0 k)"
+  obtains B' where
+    "open B'" and "connected B'" and "x0 \<in> B'" and "B' \<subseteq> B"
+    and "\<And>x. x \<in> B' \<Longrightarrow>
+           triple_good (cvec_dip \<omega>0 \<omega>s (g x)) (vec_nth x i) (vec_nth x j) (vec_nth x k)"
+proof -
+  have cg_ana: "real_analytic_on (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) B"
+    by (rule real_analytic_on_compose[OF gana real_analytic_on_cvec_dip subset_UNIV])
+  have nth_ana: "real_analytic_on (\<lambda>x::(real^2)^'n. vec_nth x m) B" for m
+    by (rule real_analytic_on_bounded_linear[OF Bo bounded_linear_vec_nth])
+  have edge_ana: "real_analytic_on
+      (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x m - vec_nth x m')) B" for m m'
+    by (intro real_analytic_on_inner[OF Bo cg_ana] real_analytic_on_diff nth_ana)
+  have edge_cont: "continuous_on B
+      (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x m - vec_nth x m'))" for m m'
+  proof -
+    have "isCont (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x m - vec_nth x m')) x"
+      if "x \<in> B" for x
+      by (rule has_derivative_continuous[OF
+            real_analytic_on_has_derivative_Dblinfun[OF edge_ana that]])
+    thus ?thesis using continuous_at_imp_continuous_on by blast
+  qed
+  define S where "S = B
+      \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x i - vec_nth x j)) -` (- {0})
+      \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x i - vec_nth x k)) -` (- {0})
+      \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x j - vec_nth x k)) -` (- {0})"
+  have S1: "open (B \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x i - vec_nth x j)) -` (- {0}))"
+    by (rule continuous_open_preimage[OF edge_cont Bo])
+       (rule open_Compl[OF closed_singleton])
+  have S2: "open (B \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x i - vec_nth x k)) -` (- {0}))"
+    by (rule continuous_open_preimage[OF edge_cont Bo])
+       (rule open_Compl[OF closed_singleton])
+  have S3: "open (B \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x j - vec_nth x k)) -` (- {0}))"
+    by (rule continuous_open_preimage[OF edge_cont Bo])
+       (rule open_Compl[OF closed_singleton])
+  have S_eq: "S = (B \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x i - vec_nth x j)) -` (- {0}))
+      \<inter> ((B \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x i - vec_nth x k)) -` (- {0}))
+      \<inter> (B \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x) \<bullet> (vec_nth x j - vec_nth x k)) -` (- {0})))"
+    unfolding S_def by auto
+  have Sopen: "open S"
+    unfolding S_eq by (intro open_Int S1 S2 S3)
+  have x0S: "x0 \<in> S"
+    using xB good0 unfolding S_def triple_good_def by simp
+  obtain \<epsilon> where e0: "0 < \<epsilon>" and esub: "ball x0 \<epsilon> \<subseteq> S"
+    using openE[OF Sopen x0S] by blast
+  have bo: "open (ball x0 \<epsilon>)" by simp
+  have bc: "connected (ball x0 \<epsilon>)" by simp
+  have bx: "x0 \<in> ball x0 \<epsilon>" by (simp add: centre_in_ball e0)
+  have bsub: "ball x0 \<epsilon> \<subseteq> B" using esub by (auto simp: S_def)
+  have bgood: "triple_good (cvec_dip \<omega>0 \<omega>s (g x))
+                 (vec_nth x i) (vec_nth x j) (vec_nth x k)"
+    if "x \<in> ball x0 \<epsilon>" for x
+    using esub that unfolding S_def triple_good_def by auto
+  show ?thesis
+    by (rule that[OF bo bc bx bsub bgood])
+qed
+
 end

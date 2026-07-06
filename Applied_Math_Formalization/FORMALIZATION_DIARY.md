@@ -3449,3 +3449,21 @@ The paper's status section confirms lem:block (J5, det = -32 g^5 a^5) and lem:3x
 (det = +-8 g^3 a^3 H_*) as its formalized-elsewhere inputs; verify coverage against
 BlockDet before porting. 4c (det HessU = 0 stratum) has the same source pattern:
 app:H0res / prop:h0res-meager.
+
+### D34 LAYER 4b STEP 2: the good-triple layer PROVEN (2026-07-06, cont.)
+"Do it" (execute witness plan steps 1-3; and: audits must include the paper source, noted).
+Landed in the bridge (dev: M5_Dev_GoodTriple, stubbed): triple_good/_t_distinct/_distinct,
+edge_det2 + common_perp_edge_det2 (common perpendicular in R^2 kills the 2x2 det - proven by
+the two c-component eliminations, no metis), triples_transverse + two_triple_cover_pointwise
+(nine nonzero cross-edge dets => every c != 0 is good for one of the two triples - the
+POINTWISE lem:twotriplecover; its failure is an explicit polynomial certificate = the future
+no-good-triple-stratum Xi), triple_good_chart_persist (basepoint goodness survives on a
+shrunk ball; same analytic->isCont->open-preimage shrink as the engine).
+NEW MERGED-HEAP GOTCHAS: plain vec_eq_iff can resolve against JNF's Matrix.vec - qualify
+Finite_Cartesian_Product.vec_eq_iff; open (A Int V1 Int V2 Int V3) from open (A Int Vi)
+pieces needs explicit re-association before open_Int.
+INVENTORY (now complete, in D34_WITNESS_PLAN.md): applyT family split - M12/M_paper laws at
+Robust3:5/99 are OUTSIDE bridge scope (migrate for the rotation layer); BlockDet houses the
+part-II minor ladder (Bblk/Ablk/Cblk/bigJ); transport convention transpose T *v c = c0_paper
+= vector [1,0]. NEXT: step 1 remainder (concrete T(c) witness matrix; migrate M12/M_paper
+applyT), then step 3 (gauge-fixed quantities vs the K/L/M cofactors, tex 3650-3710).

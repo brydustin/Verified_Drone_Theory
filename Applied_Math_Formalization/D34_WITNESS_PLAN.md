@@ -79,6 +79,27 @@ Steps, in dependency order:
 Estimated effort: steps 1–3 days-scale (mostly porting/verification), step 4 the
 multi-week core (four branch families of explicit analytic linear algebra), step 5 days.
 
+### Progress log
+
+- 2026-07-06: **step 2 LANDED** (good-triple layer, in the bridge): `triple_good`
+  (+ t-separation, distinctness), `edge_det2` + `common_perp_edge_det2`,
+  `triples_transverse` + `two_triple_cover_pointwise` (nine nonzero cross-edge
+  determinants => every c /= 0 good for one triple - the pointwise
+  lem:twotriplecover; its failure set is the explicit polynomial certificate for
+  the no-good-triple stratum), `triple_good_chart_persist` (chart shrink).
+  INVENTORY VERIFIED: applyT transport family = phase/A/M1/M2 (Robust1:4567-4640),
+  M11/M22 (Robust2:17/98), M12/M_paper (Robust3:5/99 - OUTSIDE bridge scope, must
+  migrate into the bridge or be re-proven there for the rotation layer);
+  `lem_twotriplecover` (Nonemptiness_Paper:848) is the abstract finite-avoidance
+  core only - the geometric content is now the pointwise criterion above;
+  BlockDet = the Bblk/Ablk/Cblk/bigJ determinant chain (the paper's part-II minor
+  ladder), c0_paper = vector [1,0] with transport convention
+  `transpose T *v c = c0_paper` (Moment_Jacobian:36).
+  Remaining in step 1: the concrete T(c) witness matrix for c /= 0 (rotation+scale
+  with transpose T *v c = c0_paper) + migration of the M12/M_paper applyT laws.
+  Then step 3: connect gauge-fixed a,b,a_k,b_k,H-entries to the K/L/M cofactors
+  (tex 3650-3710) and check them against the BlockDet ladder.
+
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 
 Elementary C^ω layer; joint (c,x)-analyticity of moments/mstarg + closure kit +
