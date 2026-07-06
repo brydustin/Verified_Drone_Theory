@@ -3423,3 +3423,29 @@ gradU x (g x) = 0 & (x,gx) in N on B, every critical (x,w) in N over B lies ON t
 (w = g x), and the mstarg-along-graph dichotomy. This is everything the D34 covering
 argument needs from a single chart. Remaining: 4b transversality witness, 4c degenerate
 stratum, 5 Robust3 splice (see previous entry's audit).
+
+### D34 LAYER 4b OPENED: witness interface + the Case-B source map (2026-07-06, cont.)
+"Focus on 4b (the transversality witness)." Two deliverables:
+
+(1) INTERFACE PROVEN: dip_critical_chart_nowhere_dense (bridge). Upgrades the chart
+engine's dichotomy to an UNCONDITIONAL interior(closure {bad}) = {} conclusion under ONE
+hypothesis `wit` (a witness point on every connected real-analytic critical chart through
+the bad basepoint with cvec != 0 along the graph -- the exact 4b obligation, threaded like
+`nd`). Engine adds a continuity shrink (cvec o g != 0 on a ball): analytic => derivative
+(real_analytic_on_has_derivative_Dblinfun) => isCont => continuous_open_preimage. GOTCHAS:
+real_analytic_on_imp_continuous is REAL-VALUED only (route vector-valued continuity through
+the derivative); `open (- {0})` needs explicit open_Compl[OF closed_singleton] under this
+simp set.
+
+(2) SOURCE LOCATED + PLAN (D34_WITNESS_PLAN.md): the genuine 4b mathematics is the paper's
+Case-B appendix (nonemptiness_unified_singlefile_complete.tex app:caseB, ~3579-6253,
+cor:caseBmeager): branch decomposition in c-adapted coordinates over a good triple
+(lem_twotriplecover -- ALREADY FORMALIZED, Nonemptiness_Paper:848), four branch families
+(vpair22-full / uphi-exhausted / Lambda-closed / H11-closed) each with an explicit
+cofactor-determinant certificate. KEY REDUCTION: `wit` needs only the LOCAL form -- a
+chart inside the bad locus forces an explicit analytic certificate Xi == 0 on the chart,
+contradicted via real_analytic_nowhere_dense_zeros -- NOT the full meager projection.
+The paper's status section confirms lem:block (J5, det = -32 g^5 a^5) and lem:3x3
+(det = +-8 g^3 a^3 H_*) as its formalized-elsewhere inputs; verify coverage against
+BlockDet before porting. 4c (det HessU = 0 stratum) has the same source pattern:
+app:H0res / prop:h0res-meager.

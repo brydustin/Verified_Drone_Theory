@@ -1283,4 +1283,107 @@ proof -
   qed
 qed
 
+
+section \<open>Layer 4b interface: the transversality witness, isolated\<close>
+
+text \<open>\<^bold>\<open>The 4b interface.\<close>  The chart engine @{thm dip_critical_graph_dichotomy_unique}
+  leaves a disjunction: on a chart \<open>B\<close> the moment-rank-drop locus along the critical
+  graph is either ALL of \<open>B\<close> or thin.  The genuine remaining mathematics (the paper's
+  Case-B appendix: branch decomposition over a good triple in \<open>c\<close>-adapted coordinates)
+  is exactly the exclusion of the first alternative.  This theorem isolates that
+  content as ONE hypothesis \<open>wit\<close> --- stated in the weakest form the engine can
+  service: a witness point on each connected real-analytic critical chart through
+  the bad basepoint on which the steered wavevector never vanishes --- and delivers
+  the final chart interface consumed by the D3/D4 covering argument: a chart with
+  uniqueness neighbourhood on which the bad \<open>x\<close>-locus is UNCONDITIONALLY thin
+  (closure with empty interior).  \<open>wit\<close> plays the same role for 4b that \<open>nd\<close> plays
+  in the two Robust3 sorries.\<close>
+
+theorem dip_critical_chart_nowhere_dense:
+  fixes x0 :: "(real^2)^'n::finite" and \<omega>b \<omega>0 \<omega>s :: "real^2"
+  assumes crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b = 0"
+    and nds: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b) \<noteq> 0"
+    and c0: "cvec_dip \<omega>0 \<omega>s \<omega>b \<noteq> 0"
+    and wit: "\<And>B g. open B \<Longrightarrow> connected B \<Longrightarrow> x0 \<in> B \<Longrightarrow>
+                real_analytic_on g B \<Longrightarrow> g x0 = \<omega>b \<Longrightarrow>
+                (\<And>x. x \<in> B \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0) \<Longrightarrow>
+                (\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0) \<Longrightarrow>
+                \<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+  obtains B N g where
+    "open B" and "connected B" and "x0 \<in> B"
+    and "open N" and "(x0, \<omega>b) \<in> N"
+    and "g x0 = \<omega>b" and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+    and "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+    and "interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+proof -
+  show ?thesis
+  proof (rule dip_critical_graph_dichotomy_unique[OF crit nds])
+    fix B0 N g
+    assume B0o: "open B0" and B0c: "connected B0" and xB0: "x0 \<in> B0"
+      and Nopen: "open N" and pN: "(x0, \<omega>b) \<in> N"
+      and gx0: "g x0 = \<omega>b" and gana0: "real_analytic_on g B0"
+      and graph0: "\<And>x. x \<in> B0 \<Longrightarrow>
+             (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      and uniq0: "\<And>x \<omega>. x \<in> B0 \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+      and dich0: "(\<forall>x\<in>B0. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0) \<or>
+             interior (closure {x \<in> B0. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+    \<comment> \<open>shrink to a ball on which the steered wavevector along the graph is nonzero\<close>
+    have cg_ana: "real_analytic_on (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) B0"
+      by (rule real_analytic_on_compose[OF gana0 real_analytic_on_cvec_dip subset_UNIV])
+    have cg_isC: "isCont (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) x" if "x \<in> B0" for x
+      by (rule has_derivative_continuous[OF
+            real_analytic_on_has_derivative_Dblinfun[OF cg_ana that]])
+    have cg_cont: "continuous_on B0 (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x))"
+      using cg_isC continuous_at_imp_continuous_on by blast
+    have Sopen: "open (B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))"
+      by (rule continuous_open_preimage[OF cg_cont B0o])
+         (rule open_Compl[OF closed_singleton])
+    have x0S: "x0 \<in> B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0})"
+      using xB0 gx0 c0 by simp
+    obtain \<epsilon> where e0: "0 < \<epsilon>"
+      and esub: "ball x0 \<epsilon> \<subseteq> B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0})"
+      using openE[OF Sopen x0S] by blast
+    define B where "B = ball x0 \<epsilon>"
+    have Bo: "open B" by (simp add: B_def)
+    have Bc: "connected B" by (simp add: B_def)
+    have xB: "x0 \<in> B" by (simp add: B_def centre_in_ball e0)
+    have Bsub: "B \<subseteq> B0" using esub by (auto simp: B_def)
+    have cB: "cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0" if "x \<in> B" for x
+      using esub that by (auto simp: B_def)
+    have ganaB: "real_analytic_on g B"
+      by (rule real_analytic_on_open_subset[OF gana0 Bo Bsub])
+    have graphB: "(x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      if "x \<in> B" for x
+      using graph0 Bsub that by blast
+    have uniqB: "\<omega> = g x"
+      if "x \<in> B" and "(x, \<omega>) \<in> N" and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+      for x \<omega>
+      using uniq0 Bsub that by blast
+    \<comment> \<open>resolve the dichotomy: the witness kills the left disjunct\<close>
+    have thin: "interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+    proof (cases rule: disjE[OF dich0])
+      case 1
+      have "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+        by (rule wit[OF Bo Bc xB ganaB gx0]) (use graphB cB in blast)+
+      with 1 Bsub show ?thesis by blast
+    next
+      case 2
+      have "closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}
+              \<subseteq> closure {x \<in> B0. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}"
+        using Bsub by (intro closure_mono) blast
+      hence "interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0})
+              \<subseteq> interior (closure {x \<in> B0. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0})"
+        by (rule interior_mono)
+      with 2 show ?thesis by blast
+    qed
+    show thesis
+      by (rule that[OF Bo Bc xB Nopen pN gx0 ganaB graphB uniqB cB thin])
+  qed
+qed
+
 end
