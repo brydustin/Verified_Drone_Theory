@@ -1800,4 +1800,217 @@ proof -
   thus ?thesis by (metis surjI)
 qed
 
+
+section \<open>Layer 4b, step 3: division closure and the Case-B cofactor primitives\<close>
+
+text \<open>Two ingredients for the branch certificates:
+  \<^enum> the missing DIVISION closure for the analytic kit (\<open>inverse\<close>/\<open>divide\<close> where the
+    denominator is nonvanishing) --- needed for the gauge quantities of the branches
+    (e.g. \<open>G\<^sub>2\<^sub>2 = H\<^sub>1\<^sub>1 - H\<^sub>1\<^sub>2\<^sup>2/H\<^sub>2\<^sub>2\<close>);
+  \<^enum> the three familiar cofactors \<open>K, L, M\<close> of the Case-B appendix (tex 3650), in
+    \<open>\<kappa>\<close>-SCALED form: with \<open>t_j = c \<bullet> p_j\<close> (\<open>= \<kappa> u_j\<close>) and \<open>w_j = edge_det2 c p_j\<close>
+    (\<open>= \<kappa> v_j\<close>) the scaled columns are polynomial-trigonometric in \<open>(c, p)\<close>, so the
+    cofactors are ENTIRE jointly --- no division, no square roots.  The scaled and
+    paper cofactors differ by explicit positive powers of \<open>\<kappa> = |c|\<close> per row, so all
+    nonvanishing certificates transfer; the exact \<open>\<kappa>\<close>-bookkeeping enters only when
+    the \<open>v\<close>-block Jacobian identity (\<open>prop:vblock\<close>) is derived in step 4.\<close>
+
+subsection \<open>Division closure for the analytic kit\<close>
+
+lemma has_holo_extension_at_inverse:
+  fixes c :: real
+  assumes c0: "c \<noteq> 0"
+  shows "has_holo_extension_at (\<lambda>t. inverse t) c"
+proof -
+  have holo: "(\<lambda>z::complex. inverse z) holomorphic_on ball (complex_of_real c) \<bar>c\<bar>"
+  proof (intro holomorphic_intros)
+    fix z assume "z \<in> ball (complex_of_real c) \<bar>c\<bar>"
+    hence "dist z (complex_of_real c) < \<bar>c\<bar>" by (simp add: dist_commute)
+    moreover have "dist 0 (complex_of_real c) = \<bar>c\<bar>" by simp
+    ultimately show "z \<noteq> 0" by auto
+  qed
+  have agree: "\<forall>x. \<bar>x - c\<bar> < \<bar>c\<bar> \<longrightarrow>
+      inverse (complex_of_real x) = complex_of_real (inverse x)"
+    by (simp add: of_real_inverse)
+  have "\<exists>g. g holomorphic_on ball (complex_of_real c) \<bar>c\<bar>
+          \<and> (\<forall>x. \<bar>x - c\<bar> < \<bar>c\<bar> \<longrightarrow> g (complex_of_real x) = complex_of_real (inverse x))"
+    using holo agree by blast
+  thus ?thesis
+    unfolding has_holo_extension_at_def
+    by (intro exI[of _ "\<bar>c\<bar>"]) (simp add: c0)
+qed
+
+lemma real_analytic_on_inverse_1d:
+  "real_analytic_on (\<lambda>t::real. inverse t) (- {0})"
+  unfolding real_analytic_on_1d_iff
+  by (auto simp: real_analytic_at_1d_iff_holo_extension
+      intro: has_holo_extension_at_inverse)
+
+lemma real_analytic_on_inverse_comp:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real"
+  assumes F: "real_analytic_on f U"
+    and nz: "\<And>x. x \<in> U \<Longrightarrow> f x \<noteq> 0"
+  shows "real_analytic_on (\<lambda>x. inverse (f x)) U"
+proof -
+  have img: "f ` U \<subseteq> - {0}" using nz by auto
+  show ?thesis
+    by (rule real_analytic_on_compose[OF F real_analytic_on_inverse_1d img])
+qed
+
+lemma real_analytic_on_divide:
+  fixes f g :: "'a::euclidean_space \<Rightarrow> real"
+  assumes F: "real_analytic_on f U" and G: "real_analytic_on g U"
+    and nz: "\<And>x. x \<in> U \<Longrightarrow> g x \<noteq> 0"
+  shows "real_analytic_on (\<lambda>x. f x / g x) U"
+proof -
+  have "real_analytic_on (\<lambda>x. f x * inverse (g x)) U"
+    by (intro real_analytic_on_mult F real_analytic_on_inverse_comp[OF G nz])
+  thus ?thesis by (simp add: field_simps)
+qed
+
+subsection \<open>The explicit \<open>3\<times>3\<close> determinant primitive\<close>
+
+definition det3 :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+  "det3 a1 a2 a3 b1 b2 b3 e1 e2 e3 =
+     a1 * (b2 * e3 - b3 * e2) - a2 * (b1 * e3 - b3 * e1) + a3 * (b1 * e2 - b2 * e1)"
+
+lemma real_analytic_on_det3:
+  fixes A1 A2 A3 B1 B2 B3 E1 E2 E3 :: "'a::euclidean_space \<Rightarrow> real"
+  assumes U: "open U"
+    and "real_analytic_on A1 U" "real_analytic_on A2 U" "real_analytic_on A3 U"
+    and "real_analytic_on B1 U" "real_analytic_on B2 U" "real_analytic_on B3 U"
+    and "real_analytic_on E1 U" "real_analytic_on E2 U" "real_analytic_on E3 U"
+  shows "real_analytic_on (\<lambda>q. det3 (A1 q) (A2 q) (A3 q)
+                                    (B1 q) (B2 q) (B3 q)
+                                    (E1 q) (E2 q) (E3 q)) U"
+  unfolding det3_def
+  by (intro real_analytic_on_add real_analytic_on_diff real_analytic_on_mult assms)
+
+subsection \<open>The c-adapted triple scalars\<close>
+
+text \<open>\<open>tcoord c p = c \<bullet> p\<close> is the paper's \<open>t_j = \<kappa> u_j\<close>; \<open>wcoord c p = edge_det2 c p\<close>
+  is \<open>\<kappa> v_j\<close> (the \<open>c\<^sup>\<perp>\<close>-coordinate scaled by \<open>\<kappa>\<close>).\<close>
+
+definition tcoord :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "tcoord c p = c \<bullet> p"
+
+definition wcoord :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "wcoord c p = edge_det2 c p"
+
+lemma real_analytic_on_tcoord:
+  fixes C P :: "'a::euclidean_space \<Rightarrow> real^2"
+  assumes U: "open U" and C: "real_analytic_on C U" and P: "real_analytic_on P U"
+  shows "real_analytic_on (\<lambda>q. tcoord (C q) (P q)) U"
+  unfolding tcoord_def by (rule real_analytic_on_inner[OF U C P])
+
+lemma real_analytic_on_wcoord:
+  fixes C P :: "'a::euclidean_space \<Rightarrow> real^2"
+  assumes U: "open U" and C: "real_analytic_on C U" and P: "real_analytic_on P U"
+  shows "real_analytic_on (\<lambda>q. wcoord (C q) (P q)) U"
+proof -
+  have comp: "real_analytic_on (\<lambda>q. vec_nth (F q) m) U"
+    if "real_analytic_on F U" for F :: "'a \<Rightarrow> real^2" and m
+  proof -
+    have "real_analytic_on (\<lambda>q. F q \<bullet> axis m 1) U"
+      by (rule real_analytic_on_inner_component[OF that])
+    moreover have "(\<lambda>q. F q \<bullet> axis m 1) = (\<lambda>q. vec_nth (F q) m)"
+      by (rule ext) (simp add: inner_axis)
+    ultimately show ?thesis by simp
+  qed
+  show ?thesis
+    unfolding wcoord_def edge_det2_def
+    by (intro real_analytic_on_diff real_analytic_on_mult comp C P)
+qed
+
+subsection \<open>The three familiar cofactors (\<open>\<kappa>\<close>-scaled)\<close>
+
+text \<open>Rows follow tex 3650 with \<open>u_j c_j \<rightarrow> t_j cos t_j\<close> and \<open>v_j c_j \<rightarrow> w_j cos t_j\<close>
+  (each substitution scales a row by \<open>\<kappa> > 0\<close>): \<open>cofK = \<kappa>\<^sup>2 K\<close>, \<open>cofL = \<kappa> L\<close>,
+  \<open>cofM = \<kappa> M\<close>.\<close>
+
+definition cofK :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "cofK c p1 p2 p3 = det3
+     (sin (tcoord c p1)) (sin (tcoord c p2)) (sin (tcoord c p3))
+     (tcoord c p1 * cos (tcoord c p1)) (tcoord c p2 * cos (tcoord c p2))
+       (tcoord c p3 * cos (tcoord c p3))
+     (wcoord c p1 * cos (tcoord c p1)) (wcoord c p2 * cos (tcoord c p2))
+       (wcoord c p3 * cos (tcoord c p3))"
+
+definition cofL :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "cofL c p1 p2 p3 = det3
+     (cos (tcoord c p1)) (cos (tcoord c p2)) (cos (tcoord c p3))
+     (sin (tcoord c p1)) (sin (tcoord c p2)) (sin (tcoord c p3))
+     (wcoord c p1 * cos (tcoord c p1)) (wcoord c p2 * cos (tcoord c p2))
+       (wcoord c p3 * cos (tcoord c p3))"
+
+definition cofM :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "cofM c p1 p2 p3 = det3
+     (cos (tcoord c p1)) (cos (tcoord c p2)) (cos (tcoord c p3))
+     (sin (tcoord c p1)) (sin (tcoord c p2)) (sin (tcoord c p3))
+     (tcoord c p1 * cos (tcoord c p1)) (tcoord c p2 * cos (tcoord c p2))
+       (tcoord c p3 * cos (tcoord c p3))"
+
+lemma real_analytic_on_cofK:
+  fixes C P1 P2 P3 :: "'a::euclidean_space \<Rightarrow> real^2"
+  assumes U: "open U" and C: "real_analytic_on C U"
+    and P1: "real_analytic_on P1 U" and P2: "real_analytic_on P2 U"
+    and P3: "real_analytic_on P3 U"
+  shows "real_analytic_on (\<lambda>q. cofK (C q) (P1 q) (P2 q) (P3 q)) U"
+  unfolding cofK_def
+  by (intro real_analytic_on_det3[OF U] real_analytic_on_mult
+        real_analytic_on_sin_comp real_analytic_on_cos_comp
+        real_analytic_on_tcoord[OF U C] real_analytic_on_wcoord[OF U C] P1 P2 P3)
+
+lemma real_analytic_on_cofL:
+  fixes C P1 P2 P3 :: "'a::euclidean_space \<Rightarrow> real^2"
+  assumes U: "open U" and C: "real_analytic_on C U"
+    and P1: "real_analytic_on P1 U" and P2: "real_analytic_on P2 U"
+    and P3: "real_analytic_on P3 U"
+  shows "real_analytic_on (\<lambda>q. cofL (C q) (P1 q) (P2 q) (P3 q)) U"
+  unfolding cofL_def
+  by (intro real_analytic_on_det3[OF U] real_analytic_on_mult
+        real_analytic_on_sin_comp real_analytic_on_cos_comp
+        real_analytic_on_tcoord[OF U C] real_analytic_on_wcoord[OF U C] P1 P2 P3)
+
+lemma real_analytic_on_cofM:
+  fixes C P1 P2 P3 :: "'a::euclidean_space \<Rightarrow> real^2"
+  assumes U: "open U" and C: "real_analytic_on C U"
+    and P1: "real_analytic_on P1 U" and P2: "real_analytic_on P2 U"
+    and P3: "real_analytic_on P3 U"
+  shows "real_analytic_on (\<lambda>q. cofM (C q) (P1 q) (P2 q) (P3 q)) U"
+  unfolding cofM_def
+  by (intro real_analytic_on_det3[OF U] real_analytic_on_mult
+        real_analytic_on_sin_comp real_analytic_on_cos_comp
+        real_analytic_on_tcoord[OF U C] real_analytic_on_wcoord[OF U C] P1 P2 P3)
+
+text \<open>The chart-composed forms actually consumed by the certificates: along a critical
+  graph, each cofactor of a fixed triple of elements is real-analytic in \<open>x\<close>.\<close>
+
+lemma real_analytic_on_cofK_chart:
+  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2" and i j k :: 'n
+  assumes Bo: "open B" and gana: "real_analytic_on g B"
+  shows "real_analytic_on (\<lambda>x. cofK (cvec_dip \<omega>0 \<omega>s (g x))
+           (vec_nth x i) (vec_nth x j) (vec_nth x k)) B"
+  by (intro real_analytic_on_cofK[OF Bo
+        real_analytic_on_compose[OF gana real_analytic_on_cvec_dip subset_UNIV]]
+      real_analytic_on_bounded_linear[OF Bo bounded_linear_vec_nth])
+
+lemma real_analytic_on_cofL_chart:
+  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2" and i j k :: 'n
+  assumes Bo: "open B" and gana: "real_analytic_on g B"
+  shows "real_analytic_on (\<lambda>x. cofL (cvec_dip \<omega>0 \<omega>s (g x))
+           (vec_nth x i) (vec_nth x j) (vec_nth x k)) B"
+  by (intro real_analytic_on_cofL[OF Bo
+        real_analytic_on_compose[OF gana real_analytic_on_cvec_dip subset_UNIV]]
+      real_analytic_on_bounded_linear[OF Bo bounded_linear_vec_nth])
+
+lemma real_analytic_on_cofM_chart:
+  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2" and i j k :: 'n
+  assumes Bo: "open B" and gana: "real_analytic_on g B"
+  shows "real_analytic_on (\<lambda>x. cofM (cvec_dip \<omega>0 \<omega>s (g x))
+           (vec_nth x i) (vec_nth x j) (vec_nth x k)) B"
+  by (intro real_analytic_on_cofM[OF Bo
+        real_analytic_on_compose[OF gana real_analytic_on_cvec_dip subset_UNIV]]
+      real_analytic_on_bounded_linear[OF Bo bounded_linear_vec_nth])
+
 end

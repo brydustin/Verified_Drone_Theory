@@ -3484,3 +3484,16 @@ in ~25 s). All statement AND proof-level $ rewritten to vec_nth; consider-metis 
 exhaust_6[of i] + blast. Robust3 keeps its local copies until the layer-5 rewire
 (then DELETE L5-155, L322-341). c-adapted transport entry point now complete in the
 bridge (cadapt + the six moment transport laws + M_paper bundle + linear/surj).
+
+### D34 LAYER 4b STEP 3 (foundation): division closure + the Case-B cofactors (2026-07-06, cont.)
+Division closure added to the kit: has_holo_extension_at_inverse (witness 1/z on
+ball(c,|c|)), real_analytic_on_inverse_1d on -{0}, _inverse_comp, _divide -- unblocks the
+branch gauge quantities (G22 = H11 - H12^2/H22). det3 primitive + closure. tcoord/wcoord
+(kappa-scaled u/v coordinates; wcoord = edge_det2 c p) + closure. The three familiar
+cofactors cofK/cofL/cofM (tex 3650) defined kappa-SCALED (polynomial-trig, division- and
+sqrt-free; cofK = kappa^2 K etc. -- nonvanishing certificates transfer; the exact kappa
+powers enter only in the prop:vblock derivation). Joint analyticity + chart-composed
+real_analytic_on_cof[KLM]_chart along a critical graph. CHECKED: lem:block/lem:3x3 are
+NOT formalized and NOT needed (prop:dimZ surjective piece = D1/mstarg route).
+Steps 1-3 of D34_WITNESS_PLAN.md now COMPLETE. Step 4 = the core: gauge-fixed dictionary
++ prop:vblock + the four branch corollaries; step 5 = assembly of `wit`.

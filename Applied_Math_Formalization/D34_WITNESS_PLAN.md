@@ -111,6 +111,20 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   DM_paper_x_surj_transport + regular-point lifts (L343-495).
   NEXT = step 3: the K/L/M cofactors (tex 3650-3710) and the gauge-fixed
   a,b,a_k,b_k,H-entry dictionary, checked against the BlockDet ladder.
+- 2026-07-06 (cont.): **step 3 foundation LANDED**: division closure for the kit
+  (real_analytic_on_inverse_1d/_inverse_comp/_divide - needed for G22 etc.); det3;
+  tcoord (= kappa u_j) / wcoord (= kappa v_j, via edge_det2); the three familiar
+  cofactors cofK/cofL/cofM (tex 3650) in kappa-SCALED polynomial-trig form
+  (cofK = kappa^2 K, cofL = kappa L, cofM = kappa M; nonvanishing transfers,
+  exact kappa-bookkeeping deferred to the prop:vblock derivation), with joint
+  analyticity and the chart-composed real_analytic_on_cof[KLM]_chart forms.
+  CHECKED: the paper's lem:block/lem:3x3 (J5, rank-3 minor) are NOT in the heap
+  and NOT needed - they serve prop:dimZ's surjective piece, already covered by
+  the formalization's D1/mstarg route.
+  NEXT = step 4 (THE CORE): the gauge-fixed dictionary (a,b,a_k,b_k,H-entries as
+  functions of the configuration in the c0-frame; translation gauge b=0, a>0) and
+  prop:vblock: det d(Phi2,H12,H22)/d(v1,v2,v3) = -16 a^2 g^3 (aK + a1 L - a2 M)
+  in the scaled variables, then the four branch corollaries.
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 
