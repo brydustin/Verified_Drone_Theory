@@ -3515,3 +3515,18 @@ everything around it -- 4b is now EXACTLY ONE LEMMA (`wit_core`):
 GOTCHAS: pin the index type in higher-order hypotheses (B'::((real^2)^'n) set) or type
 vars float; wit_core[of B' g i j k, OF ...] (bare OF into HO slots: no unifiers); the
 interior_maximal step structured (metis on it HANGS in the merged heap -- confirmed again).
+
+### D34 wit_core SUBSTRATE: Hessian entry fields analytic (2026-07-07)
+"Continue on wit_core." The branches split on H-entries and Case B needs H != 0 threaded
+along charts; landed the substrate in the bridge (dev M5_Dev_HessAna, stubbed):
+real_analytic_on_HessU_dip_entry -- each (k,l) entry of HessU (cvec_dip w0 ws) gain_dip
+jointly real-analytic in (x,omega), assembled via the FORMALIZED moment dictionary
+(HessU_dip_entry_moments): sigma-swap into the (c,x) frame; Afun/Mcfun/M2cfun joint
+analyticity (phase-sum closure); Hcmat entries (Hcmat_def chi-chi + Re/cnj/cmult kit);
+c-pattern gradient components via gradU_c_field; gain second derivative via
+DERIV_deriv_gdip + frechet_gdip2_eq (deriv-of-analytic AGAIN -- no explicit gdip''
+formula ever needed); D2cvec_dip applied (trig closure); quadratic-form expansion
+inner_mv_expand (a . (M *v b) as a double sum). Then real_analytic_on_detHessU_dip
+(det_2) and the chart form real_analytic_on_detHessU_chart.
+NEXT: thread det HessU != 0 into wit/wit_core (interface upgrade, continuity shrink);
+then the H-entry vanishing-pattern case scaffold; then the four branch certificates.

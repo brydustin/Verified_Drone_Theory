@@ -142,6 +142,17 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   landed substrate. If the certificates need A /= 0 or det HessU /= 0 along the
   chart, add the corresponding analytic-dichotomy sub-cases inside wit_core's proof
   (A o graph == 0 is itself an analytic certificate; same pattern).
+- 2026-07-07: **wit_core substrate: Hessian fields analytic** (in the bridge):
+  real_analytic_on_HessU_dip_entry (each (k,l) entry of HessU jointly analytic in
+  (x,omega), assembled through HessU_dip_entry_moments), real_analytic_on_detHessU_dip
+  + _chart. Supporting: Afun/Mcfun/M2cfun joint (c,x); Hcmat entries; c-pattern
+  gradient components (gradU_c_field); deriv^2 gdip analytic + frechet_gdip2_eq;
+  D2cvec_dip applied; helpers field_nth / inner_expand_vec / inner_mv_expand.
+  NEXT: (a) thread det HessU != 0 along the chart into wit / wit_core (continuity
+  shrink via real_analytic_on_detHessU_chart - interface upgrade of
+  dip_critical_chart_nowhere_dense + dip_wit_reduction); (b) then the branch
+  case-split scaffold on H-entry vanishing patterns (identity theorem per entry
+  field), then the four certificates.
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 
