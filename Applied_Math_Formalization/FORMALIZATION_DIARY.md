@@ -3560,3 +3560,23 @@ term), six perp corollaries (c.v=0: only the weight term survives -- exactly the
 paper's d_vj Phi2/H12/H22 sources), glue D*_paper_eq_d_moment (the two derivative-entry
 families are definitionally equal). GOTCHA: standalone `c . v = 0` assumption is
 parse-ambiguous (JNF scalar_prod) -- pin with fixes :: real^2.
+
+### D34 ARCHITECTURE CORRECTION + first corrected-path brick (2026-07-07, cont.)
+"Do the full brH11 discharge." STOPPED and audited the sorries' relation to the F0 need
+FIRST -- and found the load-bearing fact: m5_D34_subset_mstarg_residual (Robust3:2365) is
+a pure-blast ENLARGEMENT; the true M5/D34 target RETAINS det HessU = 0, A_cart != 0, and
+not-surj-gradU-x-derivative. The two sorries are STRICTLY STRONGER than F0 needs. The
+needed set = the paper's Case-B set VERBATIM (Phi3 = det H = 0!), where the branch
+certificates apply directly at FIXED omega via rank-3 x-charts (charts_Nn shape; the June
+machinery regular_value_local_chart / charts_core_Nn / negligible_proj_charts_Nn are the
+consumers). The det-H != 0 "wit_core" framing (the moment-determinant transversality) is
+NOT needed for F0 -- it was the roadmap's "genuine new math" only because the enlarged
+statements demanded it. Layer 5 must restate D3'/D4' with the retained conjuncts (adapt
+m5_D34_residual, drop the subset step) and route the covering through rank-3-in-x charts,
+NOT the omega-graph engine (which remains sound + reusable). Everything else banked
+(analytic kit through slot calculus) carries over unchanged. Full consequence map in
+D34_WITNESS_PLAN.md section 0.
+FIRST CORRECTED-PATH BRICK (bridge, green): dEjm_zero1 + DM_paper_x_perp_slot_1/2/3 +
+dEjm_perp_slot_value + gradU_dip_xderiv_perp_slot -- the invariant
+d_{slot m v} Phi_j = 2 g (gamma_j . v) Im(cnj A phi_m) (paper's d_vj Phi2 = -2ag s_j),
+plugging directly into has_derivative_gradU_dip_x_explicit's derivative map.

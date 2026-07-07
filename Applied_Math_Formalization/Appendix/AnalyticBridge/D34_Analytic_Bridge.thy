@@ -2976,4 +2976,139 @@ lemma DM12_paper_eq_d_moment: "DM12_paper_x x c h = d_M12_moment_x x c h"
 lemma DM22_paper_eq_d_moment: "DM22_paper_x x c h = d_M22_moment_x x c h"
   by (simp add: DM22_paper_x_def d_M22_moment_x_def)
 
+
+section \<open>Layer 4b (corrected Case-B side): perp-slot derivatives of the gradient field\<close>
+
+text \<open>ARCHITECTURE NOTE (2026-07-07).  The true D34 target
+  (\<open>m5_D34_residual\<close>, Robust3) RETAINS \<open>det HessU = 0\<close> and \<open>A_cart \<noteq> 0\<close>; the two sorries
+  were stated for the ENLARGED residual (\<open>m5_D34_subset_mstarg_residual\<close> is a
+  pure \<open>blast\<close> weakening).  The needed bad set is thus EXACTLY the paper's Case-B set,
+  where the branch certificates (built on \<open>\<Phi>\<^sub>3 = det H = 0\<close>) apply --- at FIXED \<open>\<omega>\<close>,
+  with rank-3 \<open>x\<close>-charts, no \<open>\<omega>\<close>-graph needed.  This theory delivers the first
+  corrected-path derivative brick: the \<open>x\<close>-derivative of the gradient field
+  \<open>y \<mapsto> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>\<close> in a PERPENDICULAR slot direction,
+  in invariant form
+    \<open>\<partial>\<^bsub>slot m v\<^esub> \<Phi>\<^sub>j = 2 g (\<gamma>\<^sub>j \<bullet> v) Im(cnj A \<cdot> \<phi>\<^sub>m)\<close>,
+  \<open>\<gamma>\<^sub>j = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)\<close> --- the paper's \<open>\<partial>\<^sub>v\<^sub>j \<Phi>\<^sub>2 = -2ag s\<^sub>j\<close> after the
+  \<open>b = 0, a > 0\<close> gauge and \<open>c\<close>-frame specialisation.\<close>
+
+subsection \<open>\<open>dEjm\<close> on a tangent with vanishing first slot\<close>
+
+lemma dEjm_zero1:
+  fixes M0 \<delta> :: "complex^6"
+  assumes z1: "vec_nth \<delta> 1 = 0"
+  shows "dEjm p g c1 c2 M0 \<delta>
+       = 2 * g * Im (cnj (vec_nth M0 1)
+           * (complex_of_real c1 * vec_nth \<delta> 2 + complex_of_real c2 * vec_nth \<delta> 3))"
+proof -
+  have key: "Re (cnj (vec_nth M0 1) * ((- \<i>) * complex_of_real c1 * vec_nth \<delta> 2
+                 + (- \<i>) * complex_of_real c2 * vec_nth \<delta> 3))
+           = Im (cnj (vec_nth M0 1) * (complex_of_real c1 * vec_nth \<delta> 2
+                 + complex_of_real c2 * vec_nth \<delta> 3))"
+  proof -
+    have "cnj (vec_nth M0 1) * ((- \<i>) * complex_of_real c1 * vec_nth \<delta> 2
+             + (- \<i>) * complex_of_real c2 * vec_nth \<delta> 3)
+        = (- \<i>) * (cnj (vec_nth M0 1) * (complex_of_real c1 * vec_nth \<delta> 2
+             + complex_of_real c2 * vec_nth \<delta> 3))"
+      by (simp add: algebra_simps)
+    thus ?thesis by simp
+  qed
+  show ?thesis
+    unfolding dEjm_def by (simp add: z1 key algebra_simps)
+qed
+
+subsection \<open>The moment tangent of a perpendicular slot\<close>
+
+lemma DM_paper_x_perp_slot_1:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "vec_nth (DM_paper_x x c (slot m v)) 1 = 0"
+proof -
+  have "vec_nth (DM_paper_x x c (slot m v)) 1 = DA_paper_x x c (slot m v)"
+    by (simp add: DM_paper_x_def)
+  also have "\<dots> = d_A_moment_x x c (slot m v)"
+    by (rule DA_paper_eq_d_moment)
+  also have "\<dots> = 0"
+    by (rule d_A_moment_x_perp[OF perp])
+  finally show ?thesis .
+qed
+
+lemma DM_paper_x_perp_slot_2:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "vec_nth (DM_paper_x x c (slot m v)) 2 = of_real (vec_nth v 1) * phase c x m"
+proof -
+  have "vec_nth (DM_paper_x x c (slot m v)) 2 = DM1_paper_x x c (slot m v)"
+    by (simp add: DM_paper_x_def)
+  also have "\<dots> = d_M1_moment_x x c (slot m v)"
+    by (rule DM1_paper_eq_d_moment)
+  also have "\<dots> = of_real (vec_nth v 1) * phase c x m"
+    by (rule d_M1_moment_x_perp[OF perp])
+  finally show ?thesis .
+qed
+
+lemma DM_paper_x_perp_slot_3:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "vec_nth (DM_paper_x x c (slot m v)) 3 = of_real (vec_nth v 2) * phase c x m"
+proof -
+  have "vec_nth (DM_paper_x x c (slot m v)) 3 = DM2_paper_x x c (slot m v)"
+    by (simp add: DM_paper_x_def)
+  also have "\<dots> = d_M2_moment_x x c (slot m v)"
+    by (rule DM2_paper_eq_d_moment)
+  also have "\<dots> = of_real (vec_nth v 2) * phase c x m"
+    by (rule d_M2_moment_x_perp[OF perp])
+  finally show ?thesis .
+qed
+
+subsection \<open>The invariant perp-slot derivative of the gradient field\<close>
+
+lemma dEjm_perp_slot_value:
+  fixes c v :: "real^2" and \<gamma> :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "dEjm p g (vec_nth \<gamma> 1) (vec_nth \<gamma> 2) (M_paper x c) (DM_paper_x x c (slot m v))
+       = 2 * g * (\<gamma> \<bullet> v) * Im (cnj (vec_nth (M_paper x c) 1) * phase c x m)"
+proof -
+  have "dEjm p g (vec_nth \<gamma> 1) (vec_nth \<gamma> 2) (M_paper x c) (DM_paper_x x c (slot m v))
+      = 2 * g * Im (cnj (vec_nth (M_paper x c) 1)
+          * (complex_of_real (vec_nth \<gamma> 1) * (of_real (vec_nth v 1) * phase c x m)
+           + complex_of_real (vec_nth \<gamma> 2) * (of_real (vec_nth v 2) * phase c x m)))"
+    by (simp add: dEjm_zero1[OF DM_paper_x_perp_slot_1[OF perp]]
+        DM_paper_x_perp_slot_2[OF perp] DM_paper_x_perp_slot_3[OF perp])
+  also have "complex_of_real (vec_nth \<gamma> 1) * (of_real (vec_nth v 1) * phase c x m)
+           + complex_of_real (vec_nth \<gamma> 2) * (of_real (vec_nth v 2) * phase c x m)
+      = of_real (\<gamma> \<bullet> v) * phase c x m"
+    by (simp add: inner_vec_def sum_2 of_real_add of_real_mult algebra_simps)
+  also have "2 * g * Im (cnj (vec_nth (M_paper x c) 1) * (of_real (\<gamma> \<bullet> v) * phase c x m))
+      = 2 * g * (\<gamma> \<bullet> v) * Im (cnj (vec_nth (M_paper x c) 1) * phase c x m)"
+    by (simp add: algebra_simps)
+  finally show ?thesis .
+qed
+
+theorem gradU_dip_xderiv_perp_slot:
+  fixes x :: "(real^2)^'n::finite" and v :: "real^2" and m :: 'n and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes perp: "cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> v = 0"
+  shows "(\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                (gain_dip \<omega>)
+                (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m v)))
+       = (\<chi> j. 2 * gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> v)
+             * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+                   * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x m))"
+proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+  fix j :: 2
+  show "vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                (gain_dip \<omega>)
+                (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m v))) j
+       = vec_nth (\<chi> j. 2 * gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> v)
+             * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+                   * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x m)) j"
+    by (simp add: dEjm_perp_slot_value[OF perp])
+qed
+
 end

@@ -3,7 +3,39 @@
 _As of 2026-07-06. The single remaining GENUINE-MATHEMATICS obligation of the analytic
 route to a sorry-free `F0_dip_nonempty` (besides the degenerate stratum 4c)._
 
-## 1. The interface (DONE, in the bridge heap)
+
+## 0. ARCHITECTURE CORRECTION (2026-07-07) — READ FIRST
+
+`m5_D34_subset_mstarg_residual` (Robust3:2365) is a pure `blast` ENLARGEMENT: the true
+D34 target (`m5_D34_residual`, Robust3:2665) RETAINS `det HessU = 0`, `A_cart != 0`,
+and `not (EX Dx. gradU-x-derivative surjective)`. The two sorries were stated for the
+enlarged residual (those conjuncts dropped) — STRICTLY STRONGER than F0 needs.
+
+Consequences:
+- The NEEDED bad set = the paper's Case-B set verbatim (degenerate critical
+  `Phi3 = det H = 0` + rank drop + regular stratum `A != 0`). The paper's branch
+  certificates (built on `G11 = Phi3/H11` etc.) apply DIRECTLY — at FIXED omega,
+  via rank-3 x-charts (the original charts_Nn shape), NO omega-graph.
+- `wit_core` as stated (det H != 0 charts) is the roadmap's "genuinely new
+  mathematics" (moment-determinant transversality along nondegenerate critical
+  graphs) and is NOT needed for F0. The omega-graph engine
+  (dip_critical_graph_dichotomy_unique / dip_critical_chart_nowhere_dense /
+  dip_wit_reduction / dip_wit_core_scaffold) remains sound and reusable, but the
+  LAYER-5 covering of D34 should NOT route through it; it routes through
+  rank-3-in-x charts on the det-H=0 set.
+- Layer-5 restatement: replace the two sorried lemmas by versions RETAINING
+  `det HessU = 0 /\ A_cart != 0 /\ ...` (adapt m5_D34_residual to consume them
+  directly, dropping the subset step). Then prove them via the paper's Case-B
+  branches over the landed substrate.
+- What carries over unchanged to the corrected path: ALL of layers 1-3 + 4a
+  (analytic kit, moments/mstarg, gradU/HessU analyticity, IFT-unique), the
+  good-triple layer, cadapt/applyT transport, cofactors, division closure, the
+  slot calculus, the entry-shrink pattern (re-aim the scaffold's package at the
+  det-H=0 set), and the June heap machinery charts_core_Nn /
+  negligible_proj_charts_Nn / regular_value_local_chart (the rank-3 chart
+  consumers the paper's route needs).
+
+## 1. The interface (DONE, in the bridge heap) — see §0: engine retained, layer-5 re-aimed
 
 `dip_critical_chart_nowhere_dense` (`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy`)
 delivers the final chart the D3/D4 covering argument consumes — connected chart `B`,
@@ -185,6 +217,18 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   IFT-graph argument pins x locally to a codim-3 set vs openness. The precise
   bridge from 'rank-3 on the bad set' to the wit-witness is the step-5-style
   assembly of the H11 branch - spell it out when (1)-(3) are in).
+- 2026-07-07 (cont.): **ARCHITECTURE CORRECTION recorded (see §0)** + first
+  corrected-path brick: dEjm_zero1, DM_paper_x_perp_slot_1/2/3,
+  dEjm_perp_slot_value, gradU_dip_xderiv_perp_slot — the x-derivative of the
+  gradient field AT FIXED omega in a perpendicular slot direction, invariant form
+  d_{slot m v} Phi_j = 2 g (gamma_j . v) Im(cnj A phi_m) (the paper's
+  d_vj Phi2 = -2ag s_j), matching has_derivative_gradU_dip_x_explicit's map.
+  NEXT on the corrected path: (i) the HessU-entry perp-slot derivatives (chain
+  rule through HessU_dip_entry_moments — the Hcmat/gradc/Uc x-derivatives in slot
+  directions via the same collapse); (ii) prop:vpair11's Delta identity;
+  (iii) the rank-3 criterion feeding regular_value_local_chart /
+  charts_core_Nn-shaped bundles on the det-H=0 set; (iv) restate D3'/D4' with the
+  retained conjuncts and adapt m5_D34_residual (drop the subset step).
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 
