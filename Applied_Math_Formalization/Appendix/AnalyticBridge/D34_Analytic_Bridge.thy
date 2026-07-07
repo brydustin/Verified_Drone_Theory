@@ -1284,6 +1284,321 @@ proof -
 qed
 
 
+section \<open>Layer 4b, \<open>wit_core\<close> substrate: the Hessian entry fields are real-analytic\<close>
+
+text \<open>The Case-B branches split on the entries of the \<open>\<omega>\<close>-Hessian along the critical
+  graph, and Case B lives on \<open>H \<not>\<equiv> 0\<close> (supplied by \<open>det HessU \<noteq> 0\<close>, which the engine
+  holds at the basepoint).  This theory proves that the three Hessian entry fields
+  and \<open>det HessU\<close> are real-analytic JOINTLY in \<open>(x,\<omega>)\<close>, via the formalized moment
+  dictionary @{thm HessU_dip_entry_moments}: the substrate for (i) threading
+  \<open>det HessU \<noteq> 0\<close> along charts by a continuity shrink and (ii) the branch
+  certificates, which differentiate exactly these fields.\<close>
+
+subsection \<open>Component and quadratic-form helpers\<close>
+
+lemma real_analytic_on_field_nth:
+  fixes F :: "'a::euclidean_space \<Rightarrow> real^'k::finite"
+  assumes F: "real_analytic_on F U"
+  shows "real_analytic_on (\<lambda>q. vec_nth (F q) j) U"
+proof -
+  have "real_analytic_on (\<lambda>q. F q \<bullet> axis j 1) U"
+    by (rule real_analytic_on_inner_component[OF F])
+  moreover have "(\<lambda>q. F q \<bullet> axis j 1) = (\<lambda>q. vec_nth (F q) j)"
+    by (rule ext) (simp add: inner_axis)
+  ultimately show ?thesis by simp
+qed
+
+lemma inner_expand_vec:
+  fixes a b :: "real^'k::finite"
+  shows "a \<bullet> b = (\<Sum>i\<in>UNIV. vec_nth a i * vec_nth b i)"
+  by (simp add: inner_vec_def)
+
+lemma inner_mv_expand:
+  fixes a b :: "real^'k::finite" and M :: "real^'k^'k"
+  shows "a \<bullet> (M *v b)
+       = (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. vec_nth a i * (vec_nth (vec_nth M i) j * vec_nth b j))"
+  by (simp add: inner_vec_def matrix_vector_mult_def sum_distrib_left)
+
+subsection \<open>The \<open>c\<close>-pattern moment fields, jointly in \<open>(c,x)\<close>\<close>
+
+lemma real_analytic_on_Afun_cx:
+  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite). Afun (snd p) (fst p)) UNIV"
+  unfolding Afun_def
+  by (intro real_analytic_on_sum[OF open_UNIV finite]
+        real_analytic_on_cis[OF real_analytic_on_phase_arg])
+
+lemma real_analytic_on_Mcfun_cx:
+  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite). Mcfun (snd p) (fst p) k) UNIV"
+  unfolding Mcfun_def
+  by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_cmult[OF open_UNIV]
+        real_analytic_on_of_real[OF real_analytic_on_snd_nth_nth]
+        real_analytic_on_cis[OF real_analytic_on_phase_arg])
+
+lemma real_analytic_on_M2cfun_cx:
+  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite). M2cfun (snd p) (fst p) k l) UNIV"
+  unfolding M2cfun_def
+  by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_cmult[OF open_UNIV]
+        real_analytic_on_of_real[OF real_analytic_on_snd_nth_nth]
+        real_analytic_on_cis[OF real_analytic_on_phase_arg])
+
+subsection \<open>\<open>Hcmat\<close> entries and the \<open>c\<close>-pattern gradient components, jointly in \<open>(c,x)\<close>\<close>
+
+lemma Hcmat_entry_eq:
+  "vec_nth (vec_nth (Hcmat x c) k) l
+     = 2 * (Re (cnj (Mcfun x c l) * Mcfun x c k) - Re (cnj (Afun x c) * M2cfun x c k l))"
+  by (simp add: Hcmat_def)
+
+lemma real_analytic_on_Hcmat_entry_cx:
+  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite).
+      vec_nth (vec_nth (Hcmat (snd p) (fst p)) k) l) UNIV"
+proof -
+  have eq: "(\<lambda>p::planar \<times> ((real^2)^'n).
+      vec_nth (vec_nth (Hcmat (snd p) (fst p)) k) l)
+    = (\<lambda>p. 2 * (Re (cnj (Mcfun (snd p) (fst p) l) * Mcfun (snd p) (fst p) k)
+              - Re (cnj (Afun (snd p) (fst p)) * M2cfun (snd p) (fst p) k l)))"
+    by (rule ext) (simp add: Hcmat_entry_eq)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_diff real_analytic_on_Re real_analytic_on_cmult[OF open_UNIV]
+          real_analytic_on_cnj real_analytic_on_Mcfun_cx real_analytic_on_Afun_cx
+          real_analytic_on_M2cfun_cx)
+qed
+
+lemma real_analytic_on_gradUc_comp_cx:
+  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite).
+      vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (snd p) (fst p)) j) UNIV"
+proof -
+  have eq: "(\<lambda>p::planar \<times> ((real^2)^'n).
+      vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (snd p) (fst p)) j)
+    = (\<lambda>p. 2 * (Re (Afun (snd p) (fst p)) * Im (Mcfun (snd p) (fst p) j)
+              - Im (Afun (snd p) (fst p)) * Re (Mcfun (snd p) (fst p) j)))"
+    by (rule ext) (simp add: gradU_c_field)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_diff real_analytic_on_Re real_analytic_on_Im
+          real_analytic_on_Afun_cx real_analytic_on_Mcfun_cx)
+qed
+
+subsection \<open>The gain's second derivative\<close>
+
+lemma real_analytic_on_deriv2_gdip: "real_analytic_on (deriv (deriv gdip)) UNIV"
+  by (rule real_analytic_on_deriv_1d[OF real_analytic_on_deriv_gdip])
+
+lemma DERIV_deriv_gdip: "DERIV (deriv gdip) \<theta> :> deriv (deriv gdip) \<theta>"
+proof -
+  have "(deriv gdip has_derivative blinfun_apply (Dblinfun (deriv gdip) \<theta>)) (at \<theta>)"
+    by (rule real_analytic_on_has_derivative_Dblinfun[OF real_analytic_on_deriv_gdip UNIV_I])
+  hence "deriv gdip differentiable at \<theta>" unfolding differentiable_def by blast
+  thus ?thesis by (simp add: DERIV_deriv_iff_real_differentiable)
+qed
+
+lemma frechet_gdip2_eq:
+  "frechet_derivative (\<lambda>\<eta>::real^2. frechet_derivative gdip (at (vec_nth \<eta> 1)) c) (at \<omega>)
+   = (\<lambda>v. deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth v 1 * c)"
+proof -
+  have fun_eq: "(\<lambda>\<eta>::real^2. frechet_derivative gdip (at (vec_nth \<eta> 1)) c)
+              = (\<lambda>\<eta>. deriv gdip (vec_nth \<eta> 1) * c)"
+    by (rule ext) (simp add: frechet_gdip_eq)
+  have hv: "((\<lambda>\<eta>::real^2. vec_nth \<eta> 1) has_derivative (\<lambda>v. vec_nth v 1)) (at \<omega>)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_ident])
+  have hd: "((\<lambda>\<eta>::real^2. deriv gdip (vec_nth \<eta> 1)) has_derivative
+              (\<lambda>v. deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth v 1)) (at \<omega>)"
+    using has_derivative_compose[OF hv
+        DERIV_deriv_gdip[unfolded has_field_derivative_def, of "vec_nth \<omega> 1"]]
+    by simp
+  have hdc: "((\<lambda>\<eta>::real^2. deriv gdip (vec_nth \<eta> 1) * c) has_derivative
+              (\<lambda>v. deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth v 1 * c)) (at \<omega>)"
+    using bounded_linear.has_derivative[OF bounded_linear_mult_left hd] by simp
+  show ?thesis
+    unfolding fun_eq
+    by (rule frechet_derivative_at[symmetric, OF hdc])
+qed
+
+subsection \<open>The second chart jet, applied\<close>
+
+lemma real_analytic_on_D2cvec_dip_applied:
+  fixes h h' :: "real^2"
+  shows "real_analytic_on (\<lambda>\<omega>::real^2. D2cvec_dip \<omega>0 \<omega>s \<omega> h h') UNIV"
+  unfolding D2cvec_dip_def
+  by (intro real_analytic_on_add real_analytic_on_scaleR_vec real_analytic_on_diff
+        real_analytic_on_mult real_analytic_on_uminus real_analytic_on_const[OF open_UNIV]
+        real_analytic_on_sin_comp real_analytic_on_cos_comp real_analytic_on_vec_nth)
+
+subsection \<open>Assembly: the Hessian entry fields\<close>
+
+theorem real_analytic_on_HessU_dip_entry:
+  fixes k l :: 2
+  shows "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) k) l) UNIV"
+proof -
+  \<comment> \<open>the swap into the \<open>(c,x)\<close> frame\<close>
+  have sig: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      (cvec_dip \<omega>0 \<omega>s (snd q), fst q)) UNIV"
+    by (intro real_analytic_on_Pair
+          real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
+            real_analytic_on_cvec_dip subset_UNIV]
+          real_analytic_on_fst[OF open_UNIV])
+  \<comment> \<open>vector fields along the chart jet\<close>
+  have Dc: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      Dcvec_dip \<omega>0 \<omega>s (snd q) h) UNIV" for h
+    by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
+          real_analytic_on_Dcvec_dip_applied subset_UNIV])
+  have D2c: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      D2cvec_dip \<omega>0 \<omega>s (snd q) h h') UNIV" for h h'
+    by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
+          real_analytic_on_D2cvec_dip_applied subset_UNIV])
+  \<comment> \<open>scalar fields through the swap\<close>
+  have hcE: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      vec_nth (vec_nth (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i) j) UNIV" for i j
+    using real_analytic_on_compose[OF sig real_analytic_on_Hcmat_entry_cx subset_UNIV]
+    by simp
+  have gcC: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i) UNIV" for i
+    using real_analytic_on_compose[OF sig real_analytic_on_gradUc_comp_cx subset_UNIV]
+    by simp
+  have gain: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2). gain_dip (snd q)) UNIV"
+    by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
+          real_analytic_on_gain_dip subset_UNIV])
+  \<comment> \<open>term 1: the curvature quadratic form\<close>
+  have T1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
+        \<bullet> (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)) *v Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1))) UNIV"
+  proof -
+    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+        Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
+          \<bullet> (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)) *v Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)))
+      = (\<lambda>q. \<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV.
+            vec_nth (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)) i
+          * (vec_nth (vec_nth (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i) j
+             * vec_nth (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)) j))"
+      by (rule ext) (rule inner_mv_expand)
+    show ?thesis
+      unfolding eq
+      by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_mult
+            real_analytic_on_field_nth[OF Dc] hcE)
+  qed
+  \<comment> \<open>term 2 pattern: inner products against the \<open>c\<close>-gradient\<close>
+  have T2: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      F q \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) UNIV"
+    if F: "real_analytic_on F UNIV" for F :: "((real^2)^'n) \<times> (real^2) \<Rightarrow> real^2"
+  proof -
+    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+        F q \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
+      = (\<lambda>q. \<Sum>i\<in>UNIV. vec_nth (F q) i
+           * vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i)"
+      by (rule ext) (rule inner_expand_vec)
+    show ?thesis
+      unfolding eq
+      by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_mult
+            real_analytic_on_field_nth[OF F] gcC)
+  qed
+  \<comment> \<open>gain derivative fields\<close>
+  have G1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      frechet_derivative gdip (at (vec_nth (snd q) 1)) c) UNIV" for c
+  proof -
+    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+        frechet_derivative gdip (at (vec_nth (snd q) 1)) c)
+      = (\<lambda>q. deriv gdip (vec_nth (snd q) 1) * c)"
+      by (rule ext) (simp add: frechet_gdip_eq)
+    have snd1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2). vec_nth (snd q) 1) UNIV"
+      by (rule real_analytic_on_bounded_linear[OF open_UNIV
+            bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_snd]])
+    show ?thesis
+      unfolding eq
+      by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+            real_analytic_on_compose[OF snd1 real_analytic_on_deriv_gdip subset_UNIV])
+  qed
+  have G2: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) c)
+        (at (snd q)) v) UNIV" for c v
+  proof -
+    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+        frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) c)
+          (at (snd q)) v)
+      = (\<lambda>q. deriv (deriv gdip) (vec_nth (snd q) 1) * vec_nth v 1 * c)"
+      by (rule ext) (simp add: frechet_gdip2_eq)
+    have snd1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2). vec_nth (snd q) 1) UNIV"
+      by (rule real_analytic_on_bounded_linear[OF open_UNIV
+            bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_snd]])
+    show ?thesis
+      unfolding eq
+      by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+            real_analytic_on_compose[OF snd1 real_analytic_on_deriv2_gdip subset_UNIV])
+  qed
+  \<comment> \<open>the pattern value\<close>
+  have UC: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+      U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) UNIV"
+  proof -
+    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+        U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
+      = (\<lambda>q. (cmod (Afun (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))))\<^sup>2)"
+      by (rule ext) (simp add: U_cart_def A_cart_eq_Afun)
+    have Af: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
+        Afun (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) UNIV"
+      using real_analytic_on_compose[OF sig real_analytic_on_Afun_cx subset_UNIV]
+      by simp
+    show ?thesis
+      unfolding eq by (rule real_analytic_on_cmod_sq[OF Af])
+  qed
+  \<comment> \<open>final assembly through the moment dictionary\<close>
+  have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) k) l)
+    = (\<lambda>q. (gain_dip (snd q) * (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
+              \<bullet> (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)) *v (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)))
+            + (D2cvec_dip \<omega>0 \<omega>s (snd q) (axis k 1) (axis l 1))
+              \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
+        + frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth (axis l 1) 1)
+            * (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
+               \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))))
+      + (frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth (axis k 1) 1)
+            * (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)
+               \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
+        + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) (vec_nth (axis k 1) 1))
+            (at (snd q)) (axis l 1)
+            * U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))))"
+    by (rule ext) (rule HessU_dip_entry_moments)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_add real_analytic_on_mult gain T1 T2 Dc D2c G1 G2 UC)
+qed
+
+subsection \<open>The Hessian determinant field\<close>
+
+theorem real_analytic_on_detHessU_dip:
+  "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
+      det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q))) UNIV"
+proof -
+  have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
+      det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)))
+    = (\<lambda>q. vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 1) 1
+         * vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 2) 2
+         - vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 1) 2
+         * vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 2) 1)"
+    by (rule ext) (rule det_2)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_diff real_analytic_on_mult real_analytic_on_HessU_dip_entry)
+qed
+
+lemma real_analytic_on_detHessU_chart:
+  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2"
+  assumes Bo: "open B" and gana: "real_analytic_on g B"
+  shows "real_analytic_on (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) B"
+proof -
+  have idB: "real_analytic_on (\<lambda>x::(real^2)^'n. x) B"
+    by (rule real_analytic_on_bounded_linear[OF Bo bounded_linear_ident])
+  have pairB: "real_analytic_on (\<lambda>x::(real^2)^'n. (x, g x)) B"
+    by (rule real_analytic_on_Pair[OF idB gana])
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+          (\<lambda>q::((real^2)^'n) \<times> (real^2).
+             det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q))) (x, g x)) B"
+    by (rule real_analytic_on_compose[OF pairB real_analytic_on_detHessU_dip subset_UNIV])
+  thus ?thesis by simp
+qed
+
+
 section \<open>Layer 4b interface: the transversality witness, isolated\<close>
 
 text \<open>\<^bold>\<open>The 4b interface.\<close>  The chart engine @{thm dip_critical_graph_dichotomy_unique}
@@ -1308,6 +1623,7 @@ theorem dip_critical_chart_nowhere_dense:
                 real_analytic_on g B \<Longrightarrow> g x0 = \<omega>b \<Longrightarrow>
                 (\<And>x. x \<in> B \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0) \<Longrightarrow>
                 (\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0) \<Longrightarrow>
+                (\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0) \<Longrightarrow>
                 \<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
   obtains B N g where
     "open B" and "connected B" and "x0 \<in> B"
@@ -1318,6 +1634,7 @@ theorem dip_critical_chart_nowhere_dense:
     and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
     and "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
     and "interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
 proof -
   show ?thesis
@@ -1343,17 +1660,36 @@ proof -
     have Sopen: "open (B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))"
       by (rule continuous_open_preimage[OF cg_cont B0o])
          (rule open_Compl[OF closed_singleton])
-    have x0S: "x0 \<in> B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0})"
-      using xB0 gx0 c0 by simp
+    have dh_ana: "real_analytic_on
+        (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) B0"
+      by (rule real_analytic_on_detHessU_chart[OF B0o gana0])
+    have dh_isC: "isCont (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) x"
+      if "x \<in> B0" for x
+      by (rule has_derivative_continuous[OF
+            real_analytic_on_has_derivative_Dblinfun[OF dh_ana that]])
+    have dh_cont: "continuous_on B0 (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)))"
+      using dh_isC continuous_at_imp_continuous_on by blast
+    have Dopen: "open (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0}))"
+      by (rule continuous_open_preimage[OF dh_cont B0o])
+         (rule open_Compl[OF closed_singleton])
+    have SDopen: "open ((B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))
+        \<inter> (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0})))"
+      by (rule open_Int[OF Sopen Dopen])
+    have x0S: "x0 \<in> (B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))
+        \<inter> (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0}))"
+      using xB0 gx0 c0 nds by simp
     obtain \<epsilon> where e0: "0 < \<epsilon>"
-      and esub: "ball x0 \<epsilon> \<subseteq> B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0})"
-      using openE[OF Sopen x0S] by blast
+      and esub: "ball x0 \<epsilon> \<subseteq> (B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))
+        \<inter> (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0}))"
+      using openE[OF SDopen x0S] by blast
     define B where "B = ball x0 \<epsilon>"
     have Bo: "open B" by (simp add: B_def)
     have Bc: "connected B" by (simp add: B_def)
     have xB: "x0 \<in> B" by (simp add: B_def centre_in_ball e0)
     have Bsub: "B \<subseteq> B0" using esub by (auto simp: B_def)
     have cB: "cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0" if "x \<in> B" for x
+      using esub that by (auto simp: B_def)
+    have dB: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0" if "x \<in> B" for x
       using esub that by (auto simp: B_def)
     have ganaB: "real_analytic_on g B"
       by (rule real_analytic_on_open_subset[OF gana0 Bo Bsub])
@@ -1369,7 +1705,7 @@ proof -
     proof (cases rule: disjE[OF dich0])
       case 1
       have "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
-        by (rule wit[OF Bo Bc xB ganaB gx0]) (use graphB cB in blast)+
+        by (rule wit[OF Bo Bc xB ganaB gx0]) (use graphB cB dB in blast)+
       with 1 Bsub show ?thesis by blast
     next
       case 2
@@ -1382,7 +1718,7 @@ proof -
       with 2 show ?thesis by blast
     qed
     show thesis
-      by (rule that[OF Bo Bc xB Nopen pN gx0 ganaB graphB uniqB cB thin])
+      by (rule that[OF Bo Bc xB Nopen pN gx0 ganaB graphB uniqB cB dB thin])
   qed
 qed
 
@@ -2164,6 +2500,7 @@ theorem dip_wit_reduction:
           real_analytic_on g' B' \<Longrightarrow>
           (\<And>x. x \<in> B' \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x) = 0) \<Longrightarrow>
           (\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g' x) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x)) \<noteq> 0) \<Longrightarrow>
           (\<And>x. x \<in> B' \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g' x))
                  (vec_nth x i) (vec_nth x j) (vec_nth x k)) \<Longrightarrow>
           \<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g' x)) x \<noteq> 0"
@@ -2171,6 +2508,7 @@ theorem dip_wit_reduction:
     and gana: "real_analytic_on g B" and gx0: "g x0 = \<omega>b"
     and grad0: "\<And>x. x \<in> B \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
     and cnz: "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+    and dnz: "\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
   shows "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
 proof -
   \<comment> \<open>six distinct indices\<close>
@@ -2208,325 +2546,12 @@ proof -
       using grad0 B'sub by blast
     have Wcnz: "\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
       using cnz B'sub by blast
+    have Wdnz: "\<And>x. x \<in> B' \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
+      using dnz B'sub by blast
     have "\<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
-      by (rule wit_core[of B' g i j k, OF B'o B'c B'ne ganaB' Wgrad Wcnz goodB'])
+      by (rule wit_core[of B' g i j k, OF B'o B'c B'ne ganaB' Wgrad Wcnz Wdnz goodB'])
     thus ?thesis using B'sub by blast
   qed
-qed
-
-
-section \<open>Layer 4b, \<open>wit_core\<close> substrate: the Hessian entry fields are real-analytic\<close>
-
-text \<open>The Case-B branches split on the entries of the \<open>\<omega>\<close>-Hessian along the critical
-  graph, and Case B lives on \<open>H \<not>\<equiv> 0\<close> (supplied by \<open>det HessU \<noteq> 0\<close>, which the engine
-  holds at the basepoint).  This theory proves that the three Hessian entry fields
-  and \<open>det HessU\<close> are real-analytic JOINTLY in \<open>(x,\<omega>)\<close>, via the formalized moment
-  dictionary @{thm HessU_dip_entry_moments}: the substrate for (i) threading
-  \<open>det HessU \<noteq> 0\<close> along charts by a continuity shrink and (ii) the branch
-  certificates, which differentiate exactly these fields.\<close>
-
-subsection \<open>Component and quadratic-form helpers\<close>
-
-lemma real_analytic_on_field_nth:
-  fixes F :: "'a::euclidean_space \<Rightarrow> real^'k::finite"
-  assumes F: "real_analytic_on F U"
-  shows "real_analytic_on (\<lambda>q. vec_nth (F q) j) U"
-proof -
-  have "real_analytic_on (\<lambda>q. F q \<bullet> axis j 1) U"
-    by (rule real_analytic_on_inner_component[OF F])
-  moreover have "(\<lambda>q. F q \<bullet> axis j 1) = (\<lambda>q. vec_nth (F q) j)"
-    by (rule ext) (simp add: inner_axis)
-  ultimately show ?thesis by simp
-qed
-
-lemma inner_expand_vec:
-  fixes a b :: "real^'k::finite"
-  shows "a \<bullet> b = (\<Sum>i\<in>UNIV. vec_nth a i * vec_nth b i)"
-  by (simp add: inner_vec_def)
-
-lemma inner_mv_expand:
-  fixes a b :: "real^'k::finite" and M :: "real^'k^'k"
-  shows "a \<bullet> (M *v b)
-       = (\<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV. vec_nth a i * (vec_nth (vec_nth M i) j * vec_nth b j))"
-  by (simp add: inner_vec_def matrix_vector_mult_def sum_distrib_left)
-
-subsection \<open>The \<open>c\<close>-pattern moment fields, jointly in \<open>(c,x)\<close>\<close>
-
-lemma real_analytic_on_Afun_cx:
-  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite). Afun (snd p) (fst p)) UNIV"
-  unfolding Afun_def
-  by (intro real_analytic_on_sum[OF open_UNIV finite]
-        real_analytic_on_cis[OF real_analytic_on_phase_arg])
-
-lemma real_analytic_on_Mcfun_cx:
-  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite). Mcfun (snd p) (fst p) k) UNIV"
-  unfolding Mcfun_def
-  by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_cmult[OF open_UNIV]
-        real_analytic_on_of_real[OF real_analytic_on_snd_nth_nth]
-        real_analytic_on_cis[OF real_analytic_on_phase_arg])
-
-lemma real_analytic_on_M2cfun_cx:
-  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite). M2cfun (snd p) (fst p) k l) UNIV"
-  unfolding M2cfun_def
-  by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_cmult[OF open_UNIV]
-        real_analytic_on_of_real[OF real_analytic_on_snd_nth_nth]
-        real_analytic_on_cis[OF real_analytic_on_phase_arg])
-
-subsection \<open>\<open>Hcmat\<close> entries and the \<open>c\<close>-pattern gradient components, jointly in \<open>(c,x)\<close>\<close>
-
-lemma Hcmat_entry_eq:
-  "vec_nth (vec_nth (Hcmat x c) k) l
-     = 2 * (Re (cnj (Mcfun x c l) * Mcfun x c k) - Re (cnj (Afun x c) * M2cfun x c k l))"
-  by (simp add: Hcmat_def)
-
-lemma real_analytic_on_Hcmat_entry_cx:
-  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite).
-      vec_nth (vec_nth (Hcmat (snd p) (fst p)) k) l) UNIV"
-proof -
-  have eq: "(\<lambda>p::planar \<times> ((real^2)^'n).
-      vec_nth (vec_nth (Hcmat (snd p) (fst p)) k) l)
-    = (\<lambda>p. 2 * (Re (cnj (Mcfun (snd p) (fst p) l) * Mcfun (snd p) (fst p) k)
-              - Re (cnj (Afun (snd p) (fst p)) * M2cfun (snd p) (fst p) k l)))"
-    by (rule ext) (simp add: Hcmat_entry_eq)
-  show ?thesis
-    unfolding eq
-    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
-          real_analytic_on_diff real_analytic_on_Re real_analytic_on_cmult[OF open_UNIV]
-          real_analytic_on_cnj real_analytic_on_Mcfun_cx real_analytic_on_Afun_cx
-          real_analytic_on_M2cfun_cx)
-qed
-
-lemma real_analytic_on_gradUc_comp_cx:
-  "real_analytic_on (\<lambda>p::planar \<times> ((real^2)^'n::finite).
-      vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (snd p) (fst p)) j) UNIV"
-proof -
-  have eq: "(\<lambda>p::planar \<times> ((real^2)^'n).
-      vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (snd p) (fst p)) j)
-    = (\<lambda>p. 2 * (Re (Afun (snd p) (fst p)) * Im (Mcfun (snd p) (fst p) j)
-              - Im (Afun (snd p) (fst p)) * Re (Mcfun (snd p) (fst p) j)))"
-    by (rule ext) (simp add: gradU_c_field)
-  show ?thesis
-    unfolding eq
-    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
-          real_analytic_on_diff real_analytic_on_Re real_analytic_on_Im
-          real_analytic_on_Afun_cx real_analytic_on_Mcfun_cx)
-qed
-
-subsection \<open>The gain's second derivative\<close>
-
-lemma real_analytic_on_deriv2_gdip: "real_analytic_on (deriv (deriv gdip)) UNIV"
-  by (rule real_analytic_on_deriv_1d[OF real_analytic_on_deriv_gdip])
-
-lemma DERIV_deriv_gdip: "DERIV (deriv gdip) \<theta> :> deriv (deriv gdip) \<theta>"
-proof -
-  have "(deriv gdip has_derivative blinfun_apply (Dblinfun (deriv gdip) \<theta>)) (at \<theta>)"
-    by (rule real_analytic_on_has_derivative_Dblinfun[OF real_analytic_on_deriv_gdip UNIV_I])
-  hence "deriv gdip differentiable at \<theta>" unfolding differentiable_def by blast
-  thus ?thesis by (simp add: DERIV_deriv_iff_real_differentiable)
-qed
-
-lemma frechet_gdip2_eq:
-  "frechet_derivative (\<lambda>\<eta>::real^2. frechet_derivative gdip (at (vec_nth \<eta> 1)) c) (at \<omega>)
-   = (\<lambda>v. deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth v 1 * c)"
-proof -
-  have fun_eq: "(\<lambda>\<eta>::real^2. frechet_derivative gdip (at (vec_nth \<eta> 1)) c)
-              = (\<lambda>\<eta>. deriv gdip (vec_nth \<eta> 1) * c)"
-    by (rule ext) (simp add: frechet_gdip_eq)
-  have hv: "((\<lambda>\<eta>::real^2. vec_nth \<eta> 1) has_derivative (\<lambda>v. vec_nth v 1)) (at \<omega>)"
-    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_ident])
-  have hd: "((\<lambda>\<eta>::real^2. deriv gdip (vec_nth \<eta> 1)) has_derivative
-              (\<lambda>v. deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth v 1)) (at \<omega>)"
-    using has_derivative_compose[OF hv
-        DERIV_deriv_gdip[unfolded has_field_derivative_def, of "vec_nth \<omega> 1"]]
-    by simp
-  have hdc: "((\<lambda>\<eta>::real^2. deriv gdip (vec_nth \<eta> 1) * c) has_derivative
-              (\<lambda>v. deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth v 1 * c)) (at \<omega>)"
-    using bounded_linear.has_derivative[OF bounded_linear_mult_left hd] by simp
-  show ?thesis
-    unfolding fun_eq
-    by (rule frechet_derivative_at[symmetric, OF hdc])
-qed
-
-subsection \<open>The second chart jet, applied\<close>
-
-lemma real_analytic_on_D2cvec_dip_applied:
-  fixes h h' :: "real^2"
-  shows "real_analytic_on (\<lambda>\<omega>::real^2. D2cvec_dip \<omega>0 \<omega>s \<omega> h h') UNIV"
-  unfolding D2cvec_dip_def
-  by (intro real_analytic_on_add real_analytic_on_scaleR_vec real_analytic_on_diff
-        real_analytic_on_mult real_analytic_on_uminus real_analytic_on_const[OF open_UNIV]
-        real_analytic_on_sin_comp real_analytic_on_cos_comp real_analytic_on_vec_nth)
-
-subsection \<open>Assembly: the Hessian entry fields\<close>
-
-theorem real_analytic_on_HessU_dip_entry:
-  fixes k l :: 2
-  shows "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
-      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) k) l) UNIV"
-proof -
-  \<comment> \<open>the swap into the \<open>(c,x)\<close> frame\<close>
-  have sig: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      (cvec_dip \<omega>0 \<omega>s (snd q), fst q)) UNIV"
-    by (intro real_analytic_on_Pair
-          real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
-            real_analytic_on_cvec_dip subset_UNIV]
-          real_analytic_on_fst[OF open_UNIV])
-  \<comment> \<open>vector fields along the chart jet\<close>
-  have Dc: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      Dcvec_dip \<omega>0 \<omega>s (snd q) h) UNIV" for h
-    by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
-          real_analytic_on_Dcvec_dip_applied subset_UNIV])
-  have D2c: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      D2cvec_dip \<omega>0 \<omega>s (snd q) h h') UNIV" for h h'
-    by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
-          real_analytic_on_D2cvec_dip_applied subset_UNIV])
-  \<comment> \<open>scalar fields through the swap\<close>
-  have hcE: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      vec_nth (vec_nth (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i) j) UNIV" for i j
-    using real_analytic_on_compose[OF sig real_analytic_on_Hcmat_entry_cx subset_UNIV]
-    by simp
-  have gcC: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i) UNIV" for i
-    using real_analytic_on_compose[OF sig real_analytic_on_gradUc_comp_cx subset_UNIV]
-    by simp
-  have gain: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2). gain_dip (snd q)) UNIV"
-    by (rule real_analytic_on_compose[OF real_analytic_on_snd[OF open_UNIV]
-          real_analytic_on_gain_dip subset_UNIV])
-  \<comment> \<open>term 1: the curvature quadratic form\<close>
-  have T1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
-        \<bullet> (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)) *v Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1))) UNIV"
-  proof -
-    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
-        Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
-          \<bullet> (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)) *v Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)))
-      = (\<lambda>q. \<Sum>i\<in>UNIV. \<Sum>j\<in>UNIV.
-            vec_nth (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)) i
-          * (vec_nth (vec_nth (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i) j
-             * vec_nth (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)) j))"
-      by (rule ext) (rule inner_mv_expand)
-    show ?thesis
-      unfolding eq
-      by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_mult
-            real_analytic_on_field_nth[OF Dc] hcE)
-  qed
-  \<comment> \<open>term 2 pattern: inner products against the \<open>c\<close>-gradient\<close>
-  have T2: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      F q \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) UNIV"
-    if F: "real_analytic_on F UNIV" for F :: "((real^2)^'n) \<times> (real^2) \<Rightarrow> real^2"
-  proof -
-    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
-        F q \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
-      = (\<lambda>q. \<Sum>i\<in>UNIV. vec_nth (F q) i
-           * vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) i)"
-      by (rule ext) (rule inner_expand_vec)
-    show ?thesis
-      unfolding eq
-      by (intro real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_mult
-            real_analytic_on_field_nth[OF F] gcC)
-  qed
-  \<comment> \<open>gain derivative fields\<close>
-  have G1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      frechet_derivative gdip (at (vec_nth (snd q) 1)) c) UNIV" for c
-  proof -
-    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
-        frechet_derivative gdip (at (vec_nth (snd q) 1)) c)
-      = (\<lambda>q. deriv gdip (vec_nth (snd q) 1) * c)"
-      by (rule ext) (simp add: frechet_gdip_eq)
-    have snd1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2). vec_nth (snd q) 1) UNIV"
-      by (rule real_analytic_on_bounded_linear[OF open_UNIV
-            bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_snd]])
-    show ?thesis
-      unfolding eq
-      by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
-            real_analytic_on_compose[OF snd1 real_analytic_on_deriv_gdip subset_UNIV])
-  qed
-  have G2: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) c)
-        (at (snd q)) v) UNIV" for c v
-  proof -
-    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
-        frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) c)
-          (at (snd q)) v)
-      = (\<lambda>q. deriv (deriv gdip) (vec_nth (snd q) 1) * vec_nth v 1 * c)"
-      by (rule ext) (simp add: frechet_gdip2_eq)
-    have snd1: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2). vec_nth (snd q) 1) UNIV"
-      by (rule real_analytic_on_bounded_linear[OF open_UNIV
-            bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_snd]])
-    show ?thesis
-      unfolding eq
-      by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
-            real_analytic_on_compose[OF snd1 real_analytic_on_deriv2_gdip subset_UNIV])
-  qed
-  \<comment> \<open>the pattern value\<close>
-  have UC: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-      U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) UNIV"
-  proof -
-    have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
-        U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
-      = (\<lambda>q. (cmod (Afun (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))))\<^sup>2)"
-      by (rule ext) (simp add: U_cart_def A_cart_eq_Afun)
-    have Af: "real_analytic_on (\<lambda>q::((real^2)^'n) \<times> (real^2).
-        Afun (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))) UNIV"
-      using real_analytic_on_compose[OF sig real_analytic_on_Afun_cx subset_UNIV]
-      by simp
-    show ?thesis
-      unfolding eq by (rule real_analytic_on_cmod_sq[OF Af])
-  qed
-  \<comment> \<open>final assembly through the moment dictionary\<close>
-  have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
-      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) k) l)
-    = (\<lambda>q. (gain_dip (snd q) * (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
-              \<bullet> (Hcmat (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)) *v (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)))
-            + (D2cvec_dip \<omega>0 \<omega>s (snd q) (axis k 1) (axis l 1))
-              \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
-        + frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth (axis l 1) 1)
-            * (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis k 1)
-               \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))))
-      + (frechet_derivative gdip (at (vec_nth (snd q) 1)) (vec_nth (axis k 1) 1)
-            * (Dcvec_dip \<omega>0 \<omega>s (snd q) (axis l 1)
-               \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q)))
-        + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) (vec_nth (axis k 1) 1))
-            (at (snd q)) (axis l 1)
-            * U_cart (\<lambda>c. c) (\<lambda>_. 1) (fst q) (cvec_dip \<omega>0 \<omega>s (snd q))))"
-    by (rule ext) (rule HessU_dip_entry_moments)
-  show ?thesis
-    unfolding eq
-    by (intro real_analytic_on_add real_analytic_on_mult gain T1 T2 Dc D2c G1 G2 UC)
-qed
-
-subsection \<open>The Hessian determinant field\<close>
-
-theorem real_analytic_on_detHessU_dip:
-  "real_analytic_on (\<lambda>q::((real^2)^'n::finite) \<times> (real^2).
-      det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q))) UNIV"
-proof -
-  have eq: "(\<lambda>q::((real^2)^'n) \<times> (real^2).
-      det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)))
-    = (\<lambda>q. vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 1) 1
-         * vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 2) 2
-         - vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 1) 2
-         * vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) 2) 1)"
-    by (rule ext) (rule det_2)
-  show ?thesis
-    unfolding eq
-    by (intro real_analytic_on_diff real_analytic_on_mult real_analytic_on_HessU_dip_entry)
-qed
-
-lemma real_analytic_on_detHessU_chart:
-  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2"
-  assumes Bo: "open B" and gana: "real_analytic_on g B"
-  shows "real_analytic_on (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) B"
-proof -
-  have idB: "real_analytic_on (\<lambda>x::(real^2)^'n. x) B"
-    by (rule real_analytic_on_bounded_linear[OF Bo bounded_linear_ident])
-  have pairB: "real_analytic_on (\<lambda>x::(real^2)^'n. (x, g x)) B"
-    by (rule real_analytic_on_Pair[OF idB gana])
-  have "real_analytic_on (\<lambda>x::(real^2)^'n.
-          (\<lambda>q::((real^2)^'n) \<times> (real^2).
-             det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q))) (x, g x)) B"
-    by (rule real_analytic_on_compose[OF pairB real_analytic_on_detHessU_dip subset_UNIV])
-  thus ?thesis by simp
 qed
 
 end

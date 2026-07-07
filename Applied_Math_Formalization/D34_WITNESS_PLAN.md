@@ -153,6 +153,16 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   dip_critical_chart_nowhere_dense + dip_wit_reduction); (b) then the branch
   case-split scaffold on H-entry vanishing patterns (identity theorem per entry
   field), then the four certificates.
+- 2026-07-07 (cont.): **(a) DONE - det HessU != 0 threaded**: wit (in
+  dip_critical_chart_nowhere_dense) and wit_core (in dip_wit_reduction) now carry
+  `det (HessU ... x (g x)) != 0` along the chart; the engine shrinks on it by the
+  detHessU_chart continuity (same preimage pattern as cvec != 0); the HessAna
+  section moved before the interface section (forward reference). wit_core's
+  hypothesis package is now: open/connected/nonempty chart, analytic graph,
+  gradU = 0, cvec != 0, det HessU != 0, FIXED good triple -- Case B's exact
+  standing hypotheses (H != 0 pointwise follows from det H != 0).
+  NEXT = the branch case scaffold (H11 != 0 / H11 == 0 & H22 != 0 / both == 0
+  forces H12 != 0 by det H != 0) + the four certificates (the remaining core).
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 

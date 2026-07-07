@@ -3530,3 +3530,15 @@ inner_mv_expand (a . (M *v b) as a double sum). Then real_analytic_on_detHessU_d
 (det_2) and the chart form real_analytic_on_detHessU_chart.
 NEXT: thread det HessU != 0 into wit/wit_core (interface upgrade, continuity shrink);
 then the H-entry vanishing-pattern case scaffold; then the four branch certificates.
+
+### D34 wit_core: det HessU != 0 THREADED through the interfaces (2026-07-07, cont.)
+Interface upgrade IN PLACE in the bridge (both green): wit (dip_critical_chart_nowhere_
+dense) and wit_core (dip_wit_reduction) now carry det (HessU (cvec_dip w0 ws) gain_dip x
+(g x)) != 0 along the chart. Engine: second continuity shrink (real_analytic_on_
+detHessU_chart -> isCont -> open preimage, intersected with the cvec shrink); nds at the
+basepoint seeds it. HessAna section MOVED before the interface section (forward ref).
+wit_core's hypothesis package now = Case B's exact standing hypotheses: connected
+nonempty analytic critical chart, cvec != 0, det HessU != 0 (=> H != 0 pointwise), FIXED
+good triple. REMAINING CORE unchanged: the branch case scaffold on H-entry patterns
+(note: det H != 0 & H11 = H22 = 0 forces H12 != 0 -- only THREE branch families needed
+pointwise) + the four certificates.
