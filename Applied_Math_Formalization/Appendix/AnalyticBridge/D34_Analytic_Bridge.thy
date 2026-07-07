@@ -1560,4 +1560,62 @@ proof -
     by (rule that[OF bo bc bx bsub bgood])
 qed
 
+
+section \<open>Layer 4b, step 1: the concrete c-adapted transport matrix\<close>
+
+text \<open>For \<open>c \<noteq> 0\<close>, the matrix \<open>cadapt c\<close> (columns \<open>c/|c|\<^sup>2\<close> and \<open>c\<^sup>\<perp>\<close>) satisfies the
+  transport convention of the \<open>applyT\<close> moment laws, \<open>transpose T *v c = c0_paper\<close>,
+  with \<open>det = 1\<close>: the entry point of the c-adapted coordinate layer for the Case-B
+  branch certificates.\<close>
+
+definition cadapt :: "real^2 \<Rightarrow> real^2^2" where
+  "cadapt c = vector
+     [ vector [vec_nth c 1 / (norm c)\<^sup>2, - vec_nth c 2],
+       vector [vec_nth c 2 / (norm c)\<^sup>2,   vec_nth c 1] ]"
+
+lemma norm2_sum_sq: "(norm (c::real^2))\<^sup>2 = vec_nth c 1 * vec_nth c 1 + vec_nth c 2 * vec_nth c 2"
+  by (simp add: power2_norm_eq_inner inner_vec_def sum_2)
+
+lemma norm2_nz:
+  assumes "c \<noteq> (0::real^2)"
+  shows "(norm c)\<^sup>2 \<noteq> 0"
+  using assms by simp
+
+lemma cadapt_transport:
+  assumes c0: "c \<noteq> (0::real^2)"
+  shows "transpose (cadapt c) *v c = c0_paper"
+proof -
+  have n2: "vec_nth c 1 * vec_nth c 1 + vec_nth c 2 * vec_nth c 2 \<noteq> 0"
+    using norm2_nz[OF c0] by (simp add: norm2_sum_sq)
+  have comp: "vec_nth (transpose (cadapt c) *v c) m = vec_nth c0_paper m" for m
+    using exhaust_2[of m] n2
+    by (elim disjE)
+       (simp_all add: cadapt_def c0_paper_def transpose_def matrix_vector_mult_def
+          sum_2 norm2_sum_sq add_divide_distrib [symmetric])
+  show ?thesis
+    using comp by (simp add: Finite_Cartesian_Product.vec_eq_iff)
+qed
+
+lemma cadapt_det:
+  assumes c0: "c \<noteq> (0::real^2)"
+  shows "det (cadapt c) = 1"
+proof -
+  have n2: "vec_nth c 1 * vec_nth c 1 + vec_nth c 2 * vec_nth c 2 \<noteq> 0"
+    using norm2_nz[OF c0] by (simp add: norm2_sum_sq)
+  have "det (cadapt c)
+      = vec_nth (vec_nth (cadapt c) 1) 1 * vec_nth (vec_nth (cadapt c) 2) 2
+        - vec_nth (vec_nth (cadapt c) 1) 2 * vec_nth (vec_nth (cadapt c) 2) 1"
+    by (rule det_2)
+  also have "\<dots> = (vec_nth c 1 * vec_nth c 1 + vec_nth c 2 * vec_nth c 2) / (norm c)\<^sup>2"
+    by (simp add: cadapt_def add_divide_distrib field_simps)
+  also have "\<dots> = 1"
+    using n2 by (simp add: norm2_sum_sq)
+  finally show ?thesis .
+qed
+
+lemma cadapt_invertible:
+  assumes "c \<noteq> (0::real^2)"
+  shows "invertible (cadapt c)"
+  by (simp add: invertible_det_nz cadapt_det[OF assms])
+
 end

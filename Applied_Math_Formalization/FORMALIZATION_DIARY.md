@@ -3467,3 +3467,10 @@ Robust3:5/99 are OUTSIDE bridge scope (migrate for the rotation layer); BlockDet
 part-II minor ladder (Bblk/Ablk/Cblk/bigJ); transport convention transpose T *v c = c0_paper
 = vector [1,0]. NEXT: step 1 remainder (concrete T(c) witness matrix; migrate M12/M_paper
 applyT), then step 3 (gauge-fixed quantities vs the K/L/M cofactors, tex 3650-3710).
+
+### D34 LAYER 4b STEP 1 (entry point): the c-adapted transport matrix (2026-07-06, cont.)
+cadapt c = matrix with columns c/|c|^2 and c-perp: cadapt_transport (transpose (cadapt c)
+*v c = c0_paper -- the exact convention of the applyT moment laws), cadapt_det (= 1),
+cadapt_invertible. Green on first pass (component computation via exhaust_2 +
+matrix_vector_mult_def + sum_2; det via det_2). Spliced into the bridge. Still open in
+step 1: migrate M12_moment_applyT / M_paper_applyT (Robust3:5/99) into bridge scope.

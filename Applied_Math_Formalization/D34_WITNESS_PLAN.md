@@ -99,6 +99,9 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   with transpose T *v c = c0_paper) + migration of the M12/M_paper applyT laws.
   Then step 3: connect gauge-fixed a,b,a_k,b_k,H-entries to the K/L/M cofactors
   (tex 3650-3710) and check them against the BlockDet ladder.
+- 2026-07-06 (cont.): **step 1 transport entry point LANDED**: `cadapt c` (columns
+  c/|c|^2 and c-perp) with `cadapt_transport` (transpose (cadapt c) *v c = c0_paper),
+  `cadapt_det` (= 1), `cadapt_invertible` - the witness matrix for the applyT laws.
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 
