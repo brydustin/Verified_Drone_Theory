@@ -2554,4 +2554,426 @@ proof -
   qed
 qed
 
+
+section \<open>Layer 4b: the branch case scaffold for \<open>wit_core\<close>\<close>
+
+text \<open>\<open>det H \<noteq> 0\<close> makes the first Hessian row nonzero, so at any point of a
+  \<open>wit_core\<close> chart either \<open>H\<^sub>1\<^sub>1 \<noteq> 0\<close> or \<open>H\<^sub>1\<^sub>2 \<noteq> 0\<close>; if \<open>H\<^sub>1\<^sub>1 = 0\<close> but \<open>H\<^sub>2\<^sub>2 \<noteq> 0\<close> we
+  route through the \<open>H\<^sub>2\<^sub>2\<close> branch instead (matching the paper's branch families).
+  Each nonvanishing persists on a shrunk sub-chart by the standard continuity
+  shrink on the (analytic) entry field.  Hence \<open>wit_core\<close>'s conclusion follows
+  from THREE branch hypotheses, each with the full chart package plus one Hessian
+  entry nonvanishing ALONG the chart: the exact standing hypotheses of the paper's
+  \<open>H\<^sub>1\<^sub>1\<close>-branch (\<open>cor:H11-closed\<close>), \<open>H\<^sub>2\<^sub>2\<close>-branches (\<open>cor:vpair22-full\<close> /
+  \<open>cor:Lambda-closed\<close> / \<open>cor:uphi-exhausted\<close>), and the diagonal-degenerate
+  \<open>H\<^sub>1\<^sub>2\<close>-residual.\<close>
+
+lemma real_analytic_on_HessU_entry_chart:
+  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2" and k l :: 2
+  assumes Bo: "open B" and gana: "real_analytic_on g B"
+  shows "real_analytic_on (\<lambda>x.
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l) B"
+proof -
+  have idB: "real_analytic_on (\<lambda>x::(real^2)^'n. x) B"
+    by (rule real_analytic_on_bounded_linear[OF Bo bounded_linear_ident])
+  have pairB: "real_analytic_on (\<lambda>x::(real^2)^'n. (x, g x)) B"
+    by (rule real_analytic_on_Pair[OF idB gana])
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+          (\<lambda>q::((real^2)^'n) \<times> (real^2).
+             vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (snd q)) k) l)
+            (x, g x)) B"
+    by (rule real_analytic_on_compose[OF pairB real_analytic_on_HessU_dip_entry subset_UNIV])
+  thus ?thesis by simp
+qed
+
+text \<open>The generic sub-chart shrink on a nonvanishing Hessian entry.\<close>
+
+lemma HessU_entry_chart_shrink:
+  fixes g :: "(real^2)^'n::finite \<Rightarrow> real^2" and x1 :: "(real^2)^'n" and k l :: 2
+  assumes Bo: "open B" and x1B: "x1 \<in> B" and gana: "real_analytic_on g B"
+    and e1: "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) k) l \<noteq> 0"
+  obtains B' where
+    "open B'" and "connected B'" and "x1 \<in> B'" and "B' \<subseteq> B"
+    and "\<And>x. x \<in> B' \<Longrightarrow>
+           vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l \<noteq> 0"
+proof -
+  have hana: "real_analytic_on (\<lambda>x.
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l) B"
+    by (rule real_analytic_on_HessU_entry_chart[OF Bo gana])
+  have hisC: "isCont (\<lambda>x.
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l) x"
+    if "x \<in> B" for x
+    by (rule has_derivative_continuous[OF
+          real_analytic_on_has_derivative_Dblinfun[OF hana that]])
+  have hcont: "continuous_on B (\<lambda>x.
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l)"
+    using hisC continuous_at_imp_continuous_on by blast
+  have Sopen: "open (B \<inter> (\<lambda>x.
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l) -` (- {0}))"
+    by (rule continuous_open_preimage[OF hcont Bo])
+       (rule open_Compl[OF closed_singleton])
+  have x1S: "x1 \<in> B \<inter> (\<lambda>x.
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l) -` (- {0})"
+    using x1B e1 by simp
+  obtain \<epsilon> where e0: "0 < \<epsilon>" and esub: "ball x1 \<epsilon> \<subseteq> B \<inter> (\<lambda>x.
+      vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l) -` (- {0})"
+    using openE[OF Sopen x1S] by blast
+  show ?thesis
+  proof (rule that[of "ball x1 \<epsilon>"])
+    show "open (ball x1 \<epsilon>)" by simp
+    show "connected (ball x1 \<epsilon>)" by simp
+    show "x1 \<in> ball x1 \<epsilon>" by (simp add: centre_in_ball e0)
+    show "ball x1 \<epsilon> \<subseteq> B" using esub by auto
+    show "\<And>x. x \<in> ball x1 \<epsilon> \<Longrightarrow>
+        vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) k) l \<noteq> 0"
+      using esub by auto
+  qed
+qed
+
+text \<open>\<^bold>\<open>The scaffold.\<close>  \<open>wit_core\<close>'s conclusion from the three branch hypotheses.\<close>
+
+theorem dip_wit_core_scaffold:
+  fixes B :: "((real^2)^'n::finite) set" and g :: "(real^2)^'n \<Rightarrow> real^2"
+    and i j k :: 'n and \<omega>0 \<omega>s :: "real^2"
+  assumes Bo: "open B" and Bc: "connected B" and Bne: "B \<noteq> {}"
+    and gana: "real_analytic_on g B"
+    and grad0: "\<And>x. x \<in> B \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and cnz: "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+    and dnz: "\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
+    and good: "\<And>x. x \<in> B \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g x))
+                 (vec_nth x i) (vec_nth x j) (vec_nth x k)"
+    and brH11: "\<And>(B'::((real^2)^'n) set) g'. open B' \<Longrightarrow> connected B' \<Longrightarrow> B' \<noteq> {} \<Longrightarrow>
+          real_analytic_on g' B' \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x) = 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g' x) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x)) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g' x))
+                 (vec_nth x i) (vec_nth x j) (vec_nth x k)) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow>
+             vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x)) 1) 1 \<noteq> 0) \<Longrightarrow>
+          \<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g' x)) x \<noteq> 0"
+    and brH22: "\<And>(B'::((real^2)^'n) set) g'. open B' \<Longrightarrow> connected B' \<Longrightarrow> B' \<noteq> {} \<Longrightarrow>
+          real_analytic_on g' B' \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x) = 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g' x) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x)) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g' x))
+                 (vec_nth x i) (vec_nth x j) (vec_nth x k)) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow>
+             vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x)) 2) 2 \<noteq> 0) \<Longrightarrow>
+          \<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g' x)) x \<noteq> 0"
+    and brH12: "\<And>(B'::((real^2)^'n) set) g'. open B' \<Longrightarrow> connected B' \<Longrightarrow> B' \<noteq> {} \<Longrightarrow>
+          real_analytic_on g' B' \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x) = 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g' x) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x)) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g' x))
+                 (vec_nth x i) (vec_nth x j) (vec_nth x k)) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow>
+             vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x)) 1) 2 \<noteq> 0) \<Longrightarrow>
+          \<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g' x)) x \<noteq> 0"
+  shows "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+proof -
+  obtain x1 where x1B: "x1 \<in> B" using Bne by blast
+  \<comment> \<open>the pointwise entry dichotomy from \<open>det H \<noteq> 0\<close>\<close>
+  have entry_cases: "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 1) 1 \<noteq> 0
+      \<or> vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 2) 2 \<noteq> 0
+      \<or> vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 1) 2 \<noteq> 0"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    hence z: "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 1) 1 = 0"
+      "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 2) 2 = 0"
+      "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 1) 2 = 0"
+      by auto
+    have "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) = 0"
+      by (simp add: det_2 z)
+    with dnz[OF x1B] show False by simp
+  qed
+  \<comment> \<open>route each case through the matching branch on a shrunk sub-chart\<close>
+  have package: "\<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+    if B'o: "open B'" and B'c: "connected B'" and x1B': "x1 \<in> B'" and B'sub: "B' \<subseteq> B"
+    and br: "open B' \<Longrightarrow> connected B' \<Longrightarrow> B' \<noteq> {} \<Longrightarrow>
+          real_analytic_on g B' \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g x))
+                 (vec_nth x i) (vec_nth x j) (vec_nth x k)) \<Longrightarrow>
+          \<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+    for B'
+  proof -
+    have B'ne: "B' \<noteq> {}" using x1B' by blast
+    have ganaB': "real_analytic_on g B'"
+      by (rule real_analytic_on_open_subset[OF gana B'o B'sub])
+    show ?thesis
+      by (rule br[OF B'o B'c B'ne ganaB'])
+         (use grad0 cnz dnz good B'sub in blast)+
+  qed
+  from entry_cases show ?thesis
+  proof (elim disjE)
+    assume e1: "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 1) 1 \<noteq> 0"
+    show ?thesis
+    proof (rule HessU_entry_chart_shrink[OF Bo x1B gana e1])
+      fix B' assume B'o: "open B'" and B'c: "connected B'" and x1B': "x1 \<in> B'"
+        and B'sub: "B' \<subseteq> B"
+        and eB': "\<And>x. x \<in> B' \<Longrightarrow>
+            vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) 1) 1 \<noteq> 0"
+      have "\<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+        by (rule package[OF B'o B'c x1B' B'sub])
+           (rule brH11[of B' g], assumption+, rule eB', assumption)
+      thus ?thesis using B'sub by blast
+    qed
+  next
+    assume e2: "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 2) 2 \<noteq> 0"
+    show ?thesis
+    proof (rule HessU_entry_chart_shrink[OF Bo x1B gana e2])
+      fix B' assume B'o: "open B'" and B'c: "connected B'" and x1B': "x1 \<in> B'"
+        and B'sub: "B' \<subseteq> B"
+        and eB': "\<And>x. x \<in> B' \<Longrightarrow>
+            vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) 2) 2 \<noteq> 0"
+      have "\<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+        by (rule package[OF B'o B'c x1B' B'sub])
+           (rule brH22[of B' g], assumption+, rule eB', assumption)
+      thus ?thesis using B'sub by blast
+    qed
+  next
+    assume e3: "vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x1 (g x1)) 1) 2 \<noteq> 0"
+    show ?thesis
+    proof (rule HessU_entry_chart_shrink[OF Bo x1B gana e3])
+      fix B' assume B'o: "open B'" and B'c: "connected B'" and x1B': "x1 \<in> B'"
+        and B'sub: "B' \<subseteq> B"
+        and eB': "\<And>x. x \<in> B' \<Longrightarrow>
+            vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) 1) 2 \<noteq> 0"
+      have "\<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+        by (rule package[OF B'o B'c x1B' B'sub])
+           (rule brH12[of B' g], assumption+, rule eB', assumption)
+      thus ?thesis using B'sub by blast
+    qed
+  qed
+qed
+
+
+section \<open>Layer 4b, H11 certificate ground layer: single-slot moment derivative laws\<close>
+
+text \<open>The branch certificates differentiate the gauge-fixed \<open>\<Phi>\<close>/\<open>H\<close> formulas in the
+  \<open>u\<close>/\<open>v\<close>-slice directions of the good triple: configuration variations supported at
+  ONE element, parallel or perpendicular to \<open>c\<close>.  This theory provides the complete
+  single-slot calculus for the six moment \<open>x\<close>-derivatives:
+  \<^enum> \<open>slot j v\<close> (the variation moving only element \<open>j\<close> by \<open>v\<close>) and \<open>perp2 c\<close>
+    (the \<open>\<kappa>\<close>-scaled \<open>v\<close>-direction);
+  \<^enum> the master phase law \<open>d_phase_slot\<close> and the six collapsed moment laws
+    (\<open>d_A_moment_x_slot\<close>, \<dots>) --- each derivative is a SINGLE surviving term;
+  \<^enum> the perpendicular corollaries (\<open>c \<bullet> v = 0\<close>): the phase derivative dies and only
+    the weight term survives --- the source of \<open>\<partial>\<^sub>v\<^sub>j \<Phi>\<^sub>2 = -2ag s\<^sub>j\<close>,
+    \<open>\<partial>\<^sub>v\<^sub>j H\<^sub>1\<^sub>2 = 2gc\<^sub>j(a\<^sub>1 - au\<^sub>j)\<close>, \<open>\<partial>\<^sub>v\<^sub>j H\<^sub>2\<^sub>2 = 4gc\<^sub>j(a\<^sub>2 - av\<^sub>j)\<close> and
+    \<open>H\<^sub>1\<^sub>1\<close>/\<open>\<Phi>\<^sub>1\<close> \<open>v\<close>-independence in \<open>prop:vpair11\<close>;
+  \<^enum> the glue \<open>D*_paper_x = d_*_moment_x\<close> identifying the two derivative-entry
+    families in scope.\<close>
+
+subsection \<open>The slot direction and the perpendicular vector\<close>
+
+definition slot :: "'n::finite \<Rightarrow> real^2 \<Rightarrow> (real^2)^'n" where
+  "slot j v = (\<chi> m. if m = j then v else 0)"
+
+lemma slot_nth: "vec_nth (slot j v) n = (if n = j then v else 0)"
+  by (simp add: slot_def)
+
+definition perp2 :: "real^2 \<Rightarrow> real^2" where
+  "perp2 c = vector [- vec_nth c 2, vec_nth c 1]"
+
+lemma perp2_orth: "c \<bullet> perp2 c = 0"
+  by (simp add: perp2_def inner_vec_def sum_2)
+
+lemma perp2_nz:
+  assumes "c \<noteq> (0::real^2)"
+  shows "perp2 c \<noteq> 0"
+proof
+  assume z: "perp2 c = 0"
+  have "vec_nth (perp2 c) 1 = - vec_nth c 2" and "vec_nth (perp2 c) 2 = vec_nth c 1"
+    by (simp_all add: perp2_def)
+  with z have "vec_nth c 1 = 0" "vec_nth c 2 = 0" by auto
+  hence "vec_nth c m = 0" for m using exhaust_2[of m] by auto
+  hence "c = 0" by (simp add: Finite_Cartesian_Product.vec_eq_iff)
+  with assms show False by simp
+qed
+
+subsection \<open>The master phase law and the six slot laws\<close>
+
+lemma d_phase_slot:
+  "d_phase c x (slot j v) n
+     = (if n = j then -(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))) else 0)"
+  by (simp add: d_phase_def slot_nth)
+
+lemma d_A_moment_x_slot:
+  "d_A_moment_x x c (slot j v) = -(c \<bullet> v) *\<^sub>R (\<i> * phase c x j)"
+proof -
+  have "d_A_moment_x x c (slot j v)
+      = (\<Sum>n\<in>UNIV. if n = j then -(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))) else 0)"
+    unfolding d_A_moment_x_def by (rule sum.cong[OF refl]) (simp add: d_phase_slot)
+  also have "\<dots> = -(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j)))"
+    by (simp add: sum.delta')
+  finally show ?thesis by (simp add: phase_def)
+qed
+
+lemma d_M1_moment_x_slot:
+  "d_M1_moment_x x c (slot j v)
+     = of_real (vec_nth v 1) * phase c x j
+       + of_real (vec_nth (vec_nth x j) 1) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
+proof -
+  have "d_M1_moment_x x c (slot j v)
+      = (\<Sum>n\<in>UNIV. if n = j
+          then of_real (vec_nth v 1) * phase c x n
+             + of_real (vec_nth (vec_nth x n) 1)
+                 * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))))
+          else 0)"
+    unfolding d_M1_moment_x_def
+    by (rule sum.cong[OF refl]) (simp add: d_phase_slot slot_nth)
+  also have "\<dots> = of_real (vec_nth v 1) * phase c x j
+       + of_real (vec_nth (vec_nth x j) 1) * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
+    by (simp add: sum.delta')
+  finally show ?thesis by (simp add: phase_def)
+qed
+
+lemma d_M2_moment_x_slot:
+  "d_M2_moment_x x c (slot j v)
+     = of_real (vec_nth v 2) * phase c x j
+       + of_real (vec_nth (vec_nth x j) 2) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
+proof -
+  have "d_M2_moment_x x c (slot j v)
+      = (\<Sum>n\<in>UNIV. if n = j
+          then of_real (vec_nth v 2) * phase c x n
+             + of_real (vec_nth (vec_nth x n) 2)
+                 * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))))
+          else 0)"
+    unfolding d_M2_moment_x_def
+    by (rule sum.cong[OF refl]) (simp add: d_phase_slot slot_nth)
+  also have "\<dots> = of_real (vec_nth v 2) * phase c x j
+       + of_real (vec_nth (vec_nth x j) 2) * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
+    by (simp add: sum.delta')
+  finally show ?thesis by (simp add: phase_def)
+qed
+
+lemma d_M11_moment_x_slot:
+  "d_M11_moment_x x c (slot j v)
+     = of_real (2 * vec_nth (vec_nth x j) 1 * vec_nth v 1) * phase c x j
+       + of_real ((vec_nth (vec_nth x j) 1)\<^sup>2) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
+proof -
+  have "d_M11_moment_x x c (slot j v)
+      = (\<Sum>n\<in>UNIV. if n = j
+          then of_real (2 * vec_nth (vec_nth x n) 1 * vec_nth v 1) * phase c x n
+             + of_real ((vec_nth (vec_nth x n) 1)\<^sup>2)
+                 * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))))
+          else 0)"
+    unfolding d_M11_moment_x_def
+    by (rule sum.cong[OF refl]) (simp add: d_phase_slot slot_nth)
+  also have "\<dots> = of_real (2 * vec_nth (vec_nth x j) 1 * vec_nth v 1) * phase c x j
+       + of_real ((vec_nth (vec_nth x j) 1)\<^sup>2)
+           * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
+    by (simp add: sum.delta')
+  finally show ?thesis by (simp add: phase_def)
+qed
+
+lemma d_M12_moment_x_slot:
+  "d_M12_moment_x x c (slot j v)
+     = of_real (dw_M12 (vec_nth x j) v) * phase c x j
+       + of_real (w_M12 (vec_nth x j)) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
+proof -
+  have dwz: "dw_M12 p 0 = 0" for p :: "real^2"
+    by (simp add: dw_M12_def)
+  have "d_M12_moment_x x c (slot j v)
+      = (\<Sum>n\<in>UNIV. if n = j
+          then of_real (dw_M12 (vec_nth x n) v) * phase c x n
+             + of_real (w_M12 (vec_nth x n))
+                 * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))))
+          else 0)"
+    unfolding d_M12_moment_x_def
+    by (rule sum.cong[OF refl]) (simp add: d_phase_slot slot_nth dwz)
+  also have "\<dots> = of_real (dw_M12 (vec_nth x j) v) * phase c x j
+       + of_real (w_M12 (vec_nth x j))
+           * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
+    by (simp add: sum.delta')
+  finally show ?thesis by (simp add: phase_def)
+qed
+
+lemma d_M22_moment_x_slot:
+  "d_M22_moment_x x c (slot j v)
+     = of_real (2 * vec_nth (vec_nth x j) 2 * vec_nth v 2) * phase c x j
+       + of_real ((vec_nth (vec_nth x j) 2)\<^sup>2) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
+proof -
+  have "d_M22_moment_x x c (slot j v)
+      = (\<Sum>n\<in>UNIV. if n = j
+          then of_real (2 * vec_nth (vec_nth x n) 2 * vec_nth v 2) * phase c x n
+             + of_real ((vec_nth (vec_nth x n) 2)\<^sup>2)
+                 * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))))
+          else 0)"
+    unfolding d_M22_moment_x_def
+    by (rule sum.cong[OF refl]) (simp add: d_phase_slot slot_nth)
+  also have "\<dots> = of_real (2 * vec_nth (vec_nth x j) 2 * vec_nth v 2) * phase c x j
+       + of_real ((vec_nth (vec_nth x j) 2)\<^sup>2)
+           * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
+    by (simp add: sum.delta')
+  finally show ?thesis by (simp add: phase_def)
+qed
+
+subsection \<open>Perpendicular slots: the phase derivative dies\<close>
+
+lemma d_A_moment_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "d_A_moment_x x c (slot j v) = 0"
+  by (simp add: d_A_moment_x_slot assms)
+
+lemma d_M1_moment_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "d_M1_moment_x x c (slot j v) = of_real (vec_nth v 1) * phase c x j"
+  by (simp add: d_M1_moment_x_slot assms)
+
+lemma d_M2_moment_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "d_M2_moment_x x c (slot j v) = of_real (vec_nth v 2) * phase c x j"
+  by (simp add: d_M2_moment_x_slot assms)
+
+lemma d_M11_moment_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "d_M11_moment_x x c (slot j v)
+       = of_real (2 * vec_nth (vec_nth x j) 1 * vec_nth v 1) * phase c x j"
+  by (simp add: d_M11_moment_x_slot assms)
+
+lemma d_M12_moment_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "d_M12_moment_x x c (slot j v)
+       = of_real (dw_M12 (vec_nth x j) v) * phase c x j"
+  by (simp add: d_M12_moment_x_slot assms)
+
+lemma d_M22_moment_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "d_M22_moment_x x c (slot j v)
+       = of_real (2 * vec_nth (vec_nth x j) 2 * vec_nth v 2) * phase c x j"
+  by (simp add: d_M22_moment_x_slot assms)
+
+subsection \<open>Glue: the two derivative-entry families coincide\<close>
+
+lemma DA_paper_eq_d_moment: "DA_paper_x x c h = d_A_moment_x x c h"
+  by (simp add: DA_paper_x_def d_A_moment_x_def)
+
+lemma DM1_paper_eq_d_moment: "DM1_paper_x x c h = d_M1_moment_x x c h"
+  by (simp add: DM1_paper_x_def d_M1_moment_x_def)
+
+lemma DM2_paper_eq_d_moment: "DM2_paper_x x c h = d_M2_moment_x x c h"
+  by (simp add: DM2_paper_x_def d_M2_moment_x_def)
+
+lemma DM11_paper_eq_d_moment: "DM11_paper_x x c h = d_M11_moment_x x c h"
+  by (simp add: DM11_paper_x_def d_M11_moment_x_def)
+
+lemma DM12_paper_eq_d_moment: "DM12_paper_x x c h = d_M12_moment_x x c h"
+  by (simp add: DM12_paper_x_def d_M12_moment_x_def)
+
+lemma DM22_paper_eq_d_moment: "DM22_paper_x x c h = d_M22_moment_x x c h"
+  by (simp add: DM22_paper_x_def d_M22_moment_x_def)
+
 end

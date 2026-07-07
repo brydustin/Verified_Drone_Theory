@@ -163,6 +163,28 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   standing hypotheses (H != 0 pointwise follows from det H != 0).
   NEXT = the branch case scaffold (H11 != 0 / H11 == 0 & H22 != 0 / both == 0
   forces H12 != 0 by det H != 0) + the four certificates (the remaining core).
+- 2026-07-07 (cont.): **branch scaffold + slot calculus LANDED**:
+  (i) dip_wit_core_scaffold - wit_core's conclusion from THREE branch hypotheses
+  brH11/brH22/brH12 (full chart package + one Hessian entry nonvanishing along the
+  chart), via the pointwise det_2 entry dichotomy + HessU_entry_chart_shrink
+  (+ real_analytic_on_HessU_entry_chart);
+  (ii) the H11-certificate ground layer: slot j v / perp2 c, the master d_phase_slot
+  law, the six collapsed d_*_moment_x_slot laws, the six perpendicular corollaries
+  (c . v = 0: phase derivative dies, weight survives - the source of prop:vpair11's
+  d_vj formulas), and the D*_paper_eq_d_moment glue.
+  REMAINING for the H11 branch (cor:H11-closed, tex 4004-4365): (1) the gauge
+  dictionary layer: Phi2/H-entries' v_j-derivatives assembled from the slot laws
+  through gradU_dip_component_moments / HessU_dip_entry_moments (chain rule along
+  slot directions - needs the x-derivative of the HessU entry fields in slot
+  directions, i.e. differentiating the moment dictionary once in x);
+  (2) prop:vpair11's determinant identity Delta_ij^(11) = -8ag^2/H11 (s_i c_j R_j -
+  s_j c_i R_i); (3) cor:vpair11's rank-3 criterion; (4) prop:szero-local +
+  the uphi/residual sub-branches; (5) the branch conclusion in wit_core form
+  (mstarg-witness from rank-3: rank D_x Phi = 3 on the triple's six variables
+  CONTRADICTS mstarg == 0? NO - connect via: if mstarg == 0 on the chart then the
+  IFT-graph argument pins x locally to a codim-3 set vs openness. The precise
+  bridge from 'rank-3 on the bad set' to the wit-witness is the step-5-style
+  assembly of the H11 branch - spell it out when (1)-(3) are in).
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 

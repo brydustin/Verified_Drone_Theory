@@ -3542,3 +3542,21 @@ nonempty analytic critical chart, cvec != 0, det HessU != 0 (=> H != 0 pointwise
 good triple. REMAINING CORE unchanged: the branch case scaffold on H-entry patterns
 (note: det H != 0 & H11 = H22 = 0 forces H12 != 0 -- only THREE branch families needed
 pointwise) + the four certificates.
+
+### D34 wit_core: BRANCH SCAFFOLD + H11 slot calculus (2026-07-07, cont.)
+"Do the branch case scaffold and the H11 certificate." Scaffold DONE; H11 certificate
+ground layer DONE (the full certificate needs the gauge-dictionary v-derivative layer
+next -- see plan).
+(i) dip_wit_core_scaffold (bridge): wit_core's conclusion from THREE branch hypotheses
+brH11/brH22/brH12, each = full chart package + one Hessian entry != 0 ALONG the chart.
+Pointwise dichotomy: det_2 kills (H11,H22,H12) all zero; per case
+HessU_entry_chart_shrink (continuity shrink on the analytic entry field,
+real_analytic_on_HessU_entry_chart). Proof pattern: nested obtains-rule discipline +
+a generic `package` restriction helper.
+(ii) Slot calculus (bridge): slot j v (single-element variation), perp2 c (kappa-scaled
+v-direction; orth + nz), master law d_phase_slot, six collapsed slot laws
+d_*_moment_x_slot (sum.cong to if-form + sum.delta'; each derivative = ONE surviving
+term), six perp corollaries (c.v=0: only the weight term survives -- exactly the
+paper's d_vj Phi2/H12/H22 sources), glue D*_paper_eq_d_moment (the two derivative-entry
+families are definitionally equal). GOTCHA: standalone `c . v = 0` assumption is
+parse-ambiguous (JNF scalar_prod) -- pin with fixes :: real^2.
