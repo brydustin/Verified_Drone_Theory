@@ -2013,4 +2013,205 @@ lemma real_analytic_on_cofM_chart:
         real_analytic_on_compose[OF gana real_analytic_on_cvec_dip subset_UNIV]]
       real_analytic_on_bounded_linear[OF Bo bounded_linear_vec_nth])
 
+
+section \<open>Layer 4b, step 5 (pre-assembled): reduction of \<open>wit\<close> to the branch core\<close>
+
+text \<open>This theory closes everything around the Case-B branch computations.  Contents:
+  \<^enum> an EXPLICIT configuration whose two designated triples are transverse (all nine
+    cross-edge determinants nonzero) --- so the transversality product, a polynomial
+    in \<open>x\<close> alone (no \<open>c\<close>!), is globally nontrivial;
+  \<^enum> hence EVERY nonempty open set of configurations contains a transverse point
+    (the workhorse on the product certificate --- no Baire, and no global
+    perturbation: this REPLACES the paper's global two-triple neighbourhood \<open>V\<close>);
+  \<^enum> \<open>dip_wit_reduction\<close>: the witness obligation \<open>wit\<close> of
+    @{thm dip_critical_chart_nowhere_dense} follows from ONE remaining hypothesis
+    \<open>wit_core\<close> --- a witness on any connected analytic critical chart carrying a
+    FIXED good triple.  \<open>wit_core\<close> is exactly what the four Case-B branch
+    corollaries (tex \<open>cor:vpair22-full\<close>, \<open>cor:uphi-exhausted\<close>, \<open>cor:Lambda-closed\<close>,
+    \<open>cor:H11-closed\<close>) prove; it is the ONLY remaining 4b obligation.\<close>
+
+subsection \<open>An explicit transverse configuration\<close>
+
+lemma triples_transverse_witness:
+  fixes \<iota> :: "6 \<Rightarrow> 'n::finite"
+  assumes inji: "inj \<iota>"
+  shows "\<exists>x::(real^2)^'n. triples_transverse
+           (vec_nth x (\<iota> 1)) (vec_nth x (\<iota> 2)) (vec_nth x (\<iota> 3))
+           (vec_nth x (\<iota> 4)) (vec_nth x (\<iota> 5)) (vec_nth x (\<iota> 6))"
+proof -
+  define x :: "(real^2)^'n" where
+    "x = (\<chi> m. if m = \<iota> 1 then vector [0, 0]
+          else if m = \<iota> 2 then vector [1, 0]
+          else if m = \<iota> 3 then vector [0, 1]
+          else if m = \<iota> 4 then vector [0, 0]
+          else if m = \<iota> 5 then vector [1, 2]
+          else if m = \<iota> 6 then vector [3, 1]
+          else 0)"
+  have ne: "(\<iota> a = \<iota> b) = (a = b)" for a b
+    by (rule inj_eq[OF inji])
+  have P1: "vec_nth x (\<iota> 1) = vector [0, 0]"
+    by (simp add: x_def ne)
+  have P2: "vec_nth x (\<iota> 2) = vector [1, 0]"
+    by (simp add: x_def ne)
+  have P3: "vec_nth x (\<iota> 3) = vector [0, 1]"
+    by (simp add: x_def ne)
+  have P4: "vec_nth x (\<iota> 4) = vector [0, 0]"
+    by (simp add: x_def ne)
+  have P5: "vec_nth x (\<iota> 5) = vector [1, 2]"
+    by (simp add: x_def ne)
+  have P6: "vec_nth x (\<iota> 6) = vector [3, 1]"
+    by (simp add: x_def ne)
+  have "triples_transverse
+           (vec_nth x (\<iota> 1)) (vec_nth x (\<iota> 2)) (vec_nth x (\<iota> 3))
+           (vec_nth x (\<iota> 4)) (vec_nth x (\<iota> 5)) (vec_nth x (\<iota> 6))"
+    unfolding triples_transverse_def edge_det2_def
+    by (simp add: P1 P2 P3 P4 P5 P6 vector_minus_component)
+  thus ?thesis by blast
+qed
+
+subsection \<open>The transversality product certificate\<close>
+
+text \<open>The product of the nine cross-edge determinants, written as an EXPLICIT
+  nine-factor product (index-based, so it is a polynomial in \<open>x\<close> and in particular
+  jointly real-analytic --- a set-based product would not be, since coincidences
+  collapse the set).\<close>
+
+definition edet :: "(6 \<Rightarrow> 'n::finite) \<Rightarrow> (real^2)^'n \<Rightarrow> 6 \<Rightarrow> 6 \<Rightarrow> 6 \<Rightarrow> 6 \<Rightarrow> real" where
+  "edet \<iota> x a b c d = edge_det2 (vec_nth x (\<iota> a) - vec_nth x (\<iota> b))
+                                (vec_nth x (\<iota> c) - vec_nth x (\<iota> d))"
+
+definition ttprod :: "(6 \<Rightarrow> 'n::finite) \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
+  "ttprod \<iota> x =
+     edet \<iota> x 1 2 4 5 * edet \<iota> x 1 2 4 6 * edet \<iota> x 1 2 5 6
+   * edet \<iota> x 1 3 4 5 * edet \<iota> x 1 3 4 6 * edet \<iota> x 1 3 5 6
+   * edet \<iota> x 2 3 4 5 * edet \<iota> x 2 3 4 6 * edet \<iota> x 2 3 5 6"
+
+lemma ttprod_nz_iff:
+  "ttprod \<iota> x \<noteq> 0 \<longleftrightarrow> triples_transverse
+     (vec_nth x (\<iota> 1)) (vec_nth x (\<iota> 2)) (vec_nth x (\<iota> 3))
+     (vec_nth x (\<iota> 4)) (vec_nth x (\<iota> 5)) (vec_nth x (\<iota> 6))"
+  unfolding ttprod_def edet_def triples_transverse_def
+  by auto
+
+lemma real_analytic_on_ttprod:
+  fixes \<iota> :: "6 \<Rightarrow> 'n::finite"
+  shows "real_analytic_on (ttprod \<iota>) UNIV"
+proof -
+  have nth2: "real_analytic_on (\<lambda>x::(real^2)^'n. vec_nth (vec_nth x m) k) UNIV" for m k
+    by (rule real_analytic_on_bounded_linear[OF open_UNIV
+          bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_vec_nth]])
+  have ed: "real_analytic_on (\<lambda>x::(real^2)^'n. edet \<iota> x a b c d) UNIV" for a b c d
+  proof -
+    have expand: "(\<lambda>x::(real^2)^'n. edet \<iota> x a b c d)
+        = (\<lambda>x. (vec_nth (vec_nth x (\<iota> a)) 1 - vec_nth (vec_nth x (\<iota> b)) 1)
+             * (vec_nth (vec_nth x (\<iota> c)) 2 - vec_nth (vec_nth x (\<iota> d)) 2)
+             - (vec_nth (vec_nth x (\<iota> a)) 2 - vec_nth (vec_nth x (\<iota> b)) 2)
+             * (vec_nth (vec_nth x (\<iota> c)) 1 - vec_nth (vec_nth x (\<iota> d)) 1))"
+      by (rule ext) (simp add: edet_def edge_det2_def vector_minus_component)
+    show ?thesis
+      unfolding expand
+      by (intro real_analytic_on_diff real_analytic_on_mult nth2)
+  qed
+  show ?thesis
+    unfolding ttprod_def[abs_def]
+    by (intro real_analytic_on_mult ed)
+qed
+
+lemma transverse_point_in_open:
+  fixes \<iota> :: "6 \<Rightarrow> 'n::finite" and B :: "((real^2)^'n) set"
+  assumes inji: "inj \<iota>" and Bo: "open B" and Bne: "B \<noteq> {}"
+  shows "\<exists>x\<in>B. triples_transverse
+           (vec_nth x (\<iota> 1)) (vec_nth x (\<iota> 2)) (vec_nth x (\<iota> 3))
+           (vec_nth x (\<iota> 4)) (vec_nth x (\<iota> 5)) (vec_nth x (\<iota> 6))"
+proof (rule ccontr)
+  assume "\<not> ?thesis"
+  hence sub: "B \<subseteq> {x. ttprod \<iota> x = 0}"
+    using ttprod_nz_iff by blast
+  obtain xw where xw: "triples_transverse
+           (vec_nth xw (\<iota> 1)) (vec_nth xw (\<iota> 2)) (vec_nth xw (\<iota> 3))
+           (vec_nth xw (\<iota> 4)) (vec_nth xw (\<iota> 5)) (vec_nth xw (\<iota> 6))"
+    using triples_transverse_witness[OF inji] by blast
+  have exw: "\<exists>x\<in>UNIV. ttprod \<iota> x \<noteq> 0"
+    using xw ttprod_nz_iff by blast
+  have "interior (closure {x \<in> UNIV. ttprod \<iota> x = 0}) = {}"
+    by (rule real_analytic_nowhere_dense_zeros[OF real_analytic_on_ttprod
+          connected_UNIV exw])
+  moreover have "B \<subseteq> interior (closure {x \<in> UNIV. ttprod \<iota> x = 0})"
+  proof (rule interior_maximal[OF _ Bo])
+    show "B \<subseteq> closure {x \<in> UNIV. ttprod \<iota> x = 0}"
+      using sub closure_subset by fastforce
+  qed
+  ultimately show False using Bne by blast
+qed
+
+subsection \<open>The reduction: \<open>wit\<close> from the branch core\<close>
+
+text \<open>\<^bold>\<open>The final 4b reduction.\<close>  The hypothesis \<open>wit_core\<close> below is the exact shape
+  the Case-B branch corollaries establish: on a connected analytic critical chart
+  along which the steered wavevector is nonzero AND a FIXED triple of elements stays
+  good, the moment determinant is not identically zero.  Everything else --- finding
+  a transverse point on the chart (the product certificate), selecting the good
+  triple for the local wavevector (@{thm two_triple_cover_pointwise}), and making
+  goodness persist (@{thm triple_good_chart_persist}) --- is discharged here.  Note
+  the reduction needs \<open>6 \<le> CARD('n)\<close> only to pick the six indices.\<close>
+
+theorem dip_wit_reduction:
+  fixes B :: "((real^2)^'n::finite) set" and g :: "(real^2)^'n \<Rightarrow> real^2"
+    and x0 :: "(real^2)^'n" and \<omega>b \<omega>0 \<omega>s :: "real^2"
+  assumes n6: "6 \<le> CARD('n)"
+    and wit_core: "\<And>(B'::((real^2)^'n) set) g' (i::'n) j k.
+          open B' \<Longrightarrow> connected B' \<Longrightarrow> B' \<noteq> {} \<Longrightarrow>
+          real_analytic_on g' B' \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g' x) = 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g' x) \<noteq> 0) \<Longrightarrow>
+          (\<And>x. x \<in> B' \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g' x))
+                 (vec_nth x i) (vec_nth x j) (vec_nth x k)) \<Longrightarrow>
+          \<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g' x)) x \<noteq> 0"
+    and Bo: "open B" and Bc: "connected B" and xB: "x0 \<in> B"
+    and gana: "real_analytic_on g B" and gx0: "g x0 = \<omega>b"
+    and grad0: "\<And>x. x \<in> B \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and cnz: "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+  shows "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+proof -
+  \<comment> \<open>six distinct indices\<close>
+  have c6: "CARD(6) \<le> CARD('n)" using n6 by simp
+  obtain \<iota> :: "6 \<Rightarrow> 'n" where inji: "inj \<iota>"
+    using card_le_inj[OF finite_class.finite_UNIV finite_class.finite_UNIV c6]
+    by (auto simp: inj_def)
+  \<comment> \<open>a transverse point on the chart\<close>
+  have Bne: "B \<noteq> {}" using xB by blast
+  obtain x1 where x1B: "x1 \<in> B" and tt: "triples_transverse
+           (vec_nth x1 (\<iota> 1)) (vec_nth x1 (\<iota> 2)) (vec_nth x1 (\<iota> 3))
+           (vec_nth x1 (\<iota> 4)) (vec_nth x1 (\<iota> 5)) (vec_nth x1 (\<iota> 6))"
+    using transverse_point_in_open[OF inji Bo Bne] by blast
+  \<comment> \<open>the local wavevector is good for one of the two triples\<close>
+  have c1: "cvec_dip \<omega>0 \<omega>s (g x1) \<noteq> 0" by (rule cnz[OF x1B])
+  from two_triple_cover_pointwise[OF tt c1]
+  have "triple_good (cvec_dip \<omega>0 \<omega>s (g x1))
+          (vec_nth x1 (\<iota> 1)) (vec_nth x1 (\<iota> 2)) (vec_nth x1 (\<iota> 3))
+      \<or> triple_good (cvec_dip \<omega>0 \<omega>s (g x1))
+          (vec_nth x1 (\<iota> 4)) (vec_nth x1 (\<iota> 5)) (vec_nth x1 (\<iota> 6))" .
+  then obtain i j k where good1: "triple_good (cvec_dip \<omega>0 \<omega>s (g x1))
+          (vec_nth x1 i) (vec_nth x1 j) (vec_nth x1 k)"
+    by blast
+  \<comment> \<open>persist goodness on a sub-chart around the transverse point\<close>
+  show ?thesis
+  proof (rule triple_good_chart_persist[OF Bo x1B gana good1])
+    fix B' assume B'o: "open B'" and B'c: "connected B'" and x1B': "x1 \<in> B'"
+      and B'sub: "B' \<subseteq> B"
+      and goodB': "\<And>x. x \<in> B' \<Longrightarrow> triple_good (cvec_dip \<omega>0 \<omega>s (g x))
+             (vec_nth x i) (vec_nth x j) (vec_nth x k)"
+    have B'ne: "B' \<noteq> {}" using x1B' by blast
+    have ganaB': "real_analytic_on g B'"
+      by (rule real_analytic_on_open_subset[OF gana B'o B'sub])
+    have Wgrad: "\<And>x. x \<in> B' \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      using grad0 B'sub by blast
+    have Wcnz: "\<And>x. x \<in> B' \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+      using cnz B'sub by blast
+    have "\<exists>x\<in>B'. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+      by (rule wit_core[of B' g i j k, OF B'o B'c B'ne ganaB' Wgrad Wcnz goodB'])
+    thus ?thesis using B'sub by blast
+  qed
+qed
+
 end

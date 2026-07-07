@@ -125,6 +125,23 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   functions of the configuration in the c0-frame; translation gauge b=0, a>0) and
   prop:vblock: det d(Phi2,H12,H22)/d(v1,v2,v3) = -16 a^2 g^3 (aK + a1 L - a2 M)
   in the scaled variables, then the four branch corollaries.
+- 2026-07-06 (cont.): **4b REDUCED TO ONE LEMMA** (`dip_wit_reduction` in the bridge):
+  the interface obligation `wit` follows from the single hypothesis `wit_core` -- a
+  witness on any connected analytic critical chart with nonvanishing wavevector and
+  a FIXED good triple. Machinery: explicit transverse configuration witness
+  (triples_transverse_witness), the nine-factor transversality product ttprod
+  (polynomial in x alone!) with transverse_point_in_open (every open chart contains
+  a transverse point -- REPLACES the paper's globally perturbed two-triple V; no
+  perturbation argument needed), triple selection via two_triple_cover_pointwise +
+  persistence. ALSO VERIFIED: the moment-space dictionary needed by step 4 already
+  exists in bridge scope: gradU_dip_component_moments, HessU_dip_entry_moments,
+  Uc_eq_moment etc. (Robust1:2646-2800) -- the Phi = F o M_paper factorisation is
+  formalized; the gauge b=0/a>0 normalisation rides on the applyT/cadapt transport.
+  **REMAINING FOR 4b = prove `wit_core`** = the four Case-B branch corollaries
+  (vpair22-full, uphi-exhausted, Lambda-closed, H11-closed; tex 3826-6205) over the
+  landed substrate. If the certificates need A /= 0 or det HessU /= 0 along the
+  chart, add the corresponding analytic-dichotomy sub-cases inside wit_core's proof
+  (A o graph == 0 is itself an analytic certificate; same pattern).
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 

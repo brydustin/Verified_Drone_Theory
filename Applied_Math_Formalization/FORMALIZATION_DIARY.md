@@ -3497,3 +3497,21 @@ real_analytic_on_cof[KLM]_chart along a critical graph. CHECKED: lem:block/lem:3
 NOT formalized and NOT needed (prop:dimZ surjective piece = D1/mstarg route).
 Steps 1-3 of D34_WITNESS_PLAN.md now COMPLETE. Step 4 = the core: gauge-fixed dictionary
 + prop:vblock + the four branch corollaries; step 5 = assembly of `wit`.
+
+### D34 LAYER 4b CLOSE-OUT REDUCTION: wit => wit_core, ONE lemma left (2026-07-06, cont.)
+"Close out 4b." Full closure is the multi-week branch analysis; what IS closed today is
+everything around it -- 4b is now EXACTLY ONE LEMMA (`wit_core`):
+- triples_transverse_witness: explicit transverse config ((0,0),(1,0),(0,1)/(0,0),(1,2),(3,1))
+  for any six distinct indices (card_le_inj for the indices; inj_eq + vector_2 simp).
+- ttprod: the nine-factor cross-edge product as an EXPLICIT product (a set-based prod is NOT
+  analytic -- coincidences collapse the set); polynomial in x alone (no c!);
+  transverse_point_in_open: every nonempty open configuration set contains a transverse
+  point (workhorse on ttprod; replaces the paper's globally perturbed two-triple V).
+- dip_wit_reduction: wit (the dip_critical_chart_nowhere_dense hypothesis) follows from
+  wit_core = witness on any connected analytic critical chart with cvec != 0 and a FIXED
+  good triple -- the exact shape of the four Case-B branch corollaries.
+- Moment dictionary for step 4 CONFIRMED in bridge scope: gradU_dip_component_moments,
+  HessU_dip_entry_moments, Uc_eq_moment (Robust1:2646-2800): Phi = F o M_paper formalized.
+GOTCHAS: pin the index type in higher-order hypotheses (B'::((real^2)^'n) set) or type
+vars float; wit_core[of B' g i j k, OF ...] (bare OF into HO slots: no unifiers); the
+interior_maximal step structured (metis on it HANGS in the merged heap -- confirmed again).
