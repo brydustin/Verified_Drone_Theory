@@ -102,6 +102,15 @@ multi-week core (four branch families of explicit analytic linear algebra), step
 - 2026-07-06 (cont.): **step 1 transport entry point LANDED**: `cadapt c` (columns
   c/|c|^2 and c-perp) with `cadapt_transport` (transpose (cadapt c) *v c = c0_paper),
   `cadapt_det` (= 1), `cadapt_invertible` - the witness matrix for the applyT laws.
+- 2026-07-06 (cont.): **step 1 COMPLETE**: M12_moment_applyT / M_paper_applyT /
+  applyT_linear / applyT_surj migrated into the bridge (statements+proofs rewritten
+  to vec_nth: the verbatim $ forms PARSE-HANG >10 min in the merged heap; metis
+  consider replaced by exhaust_6+blast). Robust3's local copies (L5-155, L322-341)
+  to be DELETED at the layer-5 rewire. Still available in Robust3 only (migrate on
+  demand for the certificates): Smat/Smat_c/Lmat/Lmat_apply (L158-320),
+  DM_paper_x_surj_transport + regular-point lifts (L343-495).
+  NEXT = step 3: the K/L/M cofactors (tex 3650-3710) and the gauge-fixed
+  a,b,a_k,b_k,H-entry dictionary, checked against the BlockDet ladder.
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 

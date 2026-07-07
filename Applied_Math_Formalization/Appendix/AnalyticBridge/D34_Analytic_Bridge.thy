@@ -1618,4 +1618,186 @@ lemma cadapt_invertible:
   shows "invertible (cadapt c)"
   by (simp add: invertible_det_nz cadapt_det[OF assms])
 
+
+section \<open>Layer 4b, step 1 (cont.): the transport laws migrated into bridge scope\<close>
+
+text \<open>Verbatim migration of the \<open>applyT\<close> transport bricks from the top of
+  \<open>Nonemptiness_Robust3\<close> (L5--155, L322--341) into the bridge: \<open>M12_moment_applyT\<close>,
+  \<open>M_paper_applyT\<close>, \<open>applyT_linear\<close>, \<open>applyT_surj\<close>.  Together with the layer-1
+  \<open>cadapt\<close> witness matrix these complete the c-adapted transport entry point for the
+  Case-B branch certificates.  When Robust3 is rewired to import the bridge (layer 5),
+  its local copies are to be DELETED.\<close>
+
+lemma M12_moment_applyT:
+  fixes T :: "real^2^2"
+  assumes "transpose T *v c = c0_paper"
+  shows "M12_moment (applyT T y) c
+       = of_real ((vec_nth (vec_nth T 1) 1) * (vec_nth (vec_nth T 2) 1)) * M11_moment y c0_paper
+       + of_real ((vec_nth (vec_nth T 1) 1) * (vec_nth (vec_nth T 2) 2) + (vec_nth (vec_nth T 1) 2) * (vec_nth (vec_nth T 2) 1)) * M12_moment y c0_paper
+       + of_real ((vec_nth (vec_nth T 1) 2) * (vec_nth (vec_nth T 2) 2)) * M22_moment y c0_paper"
+proof -
+  \<comment> \<open>Abbreviate the four matrix entries as scalars: the pointwise \<open>key\<close>
+      identity otherwise carries ~24 vec-nth occurrences and hangs elaboration
+      at parse time (the *-overload graph noted at \<^const>\<open>w_M12\<close>).  With the
+      entries named, it parses immediately.\<close>
+  define t11 where "t11 = vec_nth (vec_nth T 1) 1"
+  define t12 where "t12 = vec_nth (vec_nth T 1) 2"
+  define t21 where "t21 = vec_nth (vec_nth T 2) 1"
+  define t22 where "t22 = vec_nth (vec_nth T 2) 2"
+  have key: "\<And>n.
+       phase c (applyT T y) n * of_real (w_M12 (vec_nth (applyT T y) n))
+       =
+       phase c0_paper y n
+         * (of_real ((vec_nth (vec_nth y n) 1)\<^sup>2) * of_real (t11 * t21))
+       + phase c0_paper y n
+         * (of_real (w_M12 (vec_nth y n)) * of_real (t11 * t22 + t12 * t21))
+       + phase c0_paper y n
+         * (of_real ((vec_nth (vec_nth y n) 2)\<^sup>2) * of_real (t12 * t22))"
+  proof -
+    fix n
+    have ph: "phase c (applyT T y) n = phase c0_paper y n"
+      by (rule phase_applyT[OF assms])
+    have lin1: "vec_nth (vec_nth (applyT T y) n) 1 = t11 * vec_nth (vec_nth y n) 1 + t12 * vec_nth (vec_nth y n) 2"
+      unfolding t11_def t12_def
+      by (simp add: applyT_def matrix_vector_mult_def sum_2)
+    have lin2: "vec_nth (vec_nth (applyT T y) n) 2 = t21 * vec_nth (vec_nth y n) 1 + t22 * vec_nth (vec_nth y n) 2"
+      unfolding t21_def t22_def
+      by (simp add: applyT_def matrix_vector_mult_def sum_2)
+    show "phase c (applyT T y) n * of_real (w_M12 (vec_nth (applyT T y) n))
+       =
+       phase c0_paper y n
+         * (of_real ((vec_nth (vec_nth y n) 1)\<^sup>2) * of_real (t11 * t21))
+       + phase c0_paper y n
+         * (of_real (w_M12 (vec_nth y n)) * of_real (t11 * t22 + t12 * t21))
+       + phase c0_paper y n
+         * (of_real ((vec_nth (vec_nth y n) 2)\<^sup>2) * of_real (t12 * t22))"
+      using ph lin1 lin2
+      by (simp add: w_M12_def of_real_add of_real_mult power2_eq_square algebra_simps)
+  qed
+
+  have sum_key:
+    "(\<Sum>n\<in>UNIV. phase c (applyT T y) n * of_real (w_M12 (vec_nth (applyT T y) n)))
+     =
+     (\<Sum>n\<in>UNIV. phase c0_paper y n
+          * (of_real ((vec_nth (vec_nth y n) 1)\<^sup>2) * of_real (t11 * t21)))
+     +
+     (\<Sum>n\<in>UNIV. phase c0_paper y n
+          * (of_real (w_M12 (vec_nth y n)) * of_real (t11 * t22 + t12 * t21)))
+     +
+     (\<Sum>n\<in>UNIV. phase c0_paper y n
+          * (of_real ((vec_nth (vec_nth y n) 2)\<^sup>2) * of_real (t12 * t22)))"
+  proof -
+    have "(\<Sum>n\<in>UNIV. phase c (applyT T y) n * of_real (w_M12 (vec_nth (applyT T y) n)))
+       =
+      (\<Sum>n\<in>UNIV.
+         phase c0_paper y n
+           * (of_real ((vec_nth (vec_nth y n) 1)\<^sup>2) * of_real (t11 * t21))
+       + phase c0_paper y n
+           * (of_real (w_M12 (vec_nth y n)) * of_real (t11 * t22 + t12 * t21))
+       + phase c0_paper y n
+           * (of_real ((vec_nth (vec_nth y n) 2)\<^sup>2) * of_real (t12 * t22)))"
+      by (rule sum.cong, rule refl, simp add: key)
+    also have "\<dots> =
+     (\<Sum>n\<in>UNIV. phase c0_paper y n
+          * (of_real ((vec_nth (vec_nth y n) 1)\<^sup>2) * of_real (t11 * t21)))
+     +
+     (\<Sum>n\<in>UNIV. phase c0_paper y n
+          * (of_real (w_M12 (vec_nth y n)) * of_real (t11 * t22 + t12 * t21)))
+     +
+     (\<Sum>n\<in>UNIV. phase c0_paper y n
+          * (of_real ((vec_nth (vec_nth y n) 2)\<^sup>2) * of_real (t12 * t22)))"
+      by (simp add: sum.distrib add.assoc)
+    finally show ?thesis .
+  qed
+
+  show ?thesis
+      unfolding M11_moment_def M12_moment_def M22_moment_def
+      using sum_key[unfolded t11_def t12_def t21_def t22_def]
+      by (simp add: sum_distrib_left algebra_simps power2_eq_square ac_simps)
+qed
+
+
+text \<open>\<^bold>\<open>[E] brick 4a: the vector moment law.\<close>  Bundling the six \<open>*_moment_applyT\<close>
+  laws into one equation \<open>M_paper(applyT T y) c = L\<^sub>T (M_paper y c\<^sub>0)\<close>.  The four matrix
+  entries are named \<open>a,b,p,q\<close> via \<^theory_text>\<open>defines\<close> so the explicit transported vector parses
+  (a bare \<open>T$i$j\<close> form would carry ~16 vec-nth occurrences and hang elaboration).\<close>
+
+
+lemma M_paper_applyT:
+  fixes T :: "real^2^2" and a b p q :: real
+  assumes Tc: "transpose T *v c = c0_paper"
+  defines "a \<equiv> vec_nth (vec_nth T 1) 1" and "b \<equiv> vec_nth (vec_nth T 1) 2"
+      and "p \<equiv> vec_nth (vec_nth T 2) 1" and "q \<equiv> vec_nth (vec_nth T 2) 2"
+  shows "M_paper (applyT T y) c = vector
+    [ A_moment y c0_paper,
+      of_real a * M1_moment y c0_paper + of_real b * M2_moment y c0_paper,
+      of_real p * M1_moment y c0_paper + of_real q * M2_moment y c0_paper,
+      of_real (a\<^sup>2) * M11_moment y c0_paper
+        + of_real (2 * a * b) * M12_moment y c0_paper
+        + of_real (b\<^sup>2) * M22_moment y c0_paper,
+      of_real (a * p) * M11_moment y c0_paper
+        + of_real (a * q + b * p) * M12_moment y c0_paper
+        + of_real (b * q) * M22_moment y c0_paper,
+      of_real (p\<^sup>2) * M11_moment y c0_paper
+        + of_real (2 * p * q) * M12_moment y c0_paper
+        + of_real (q\<^sup>2) * M22_moment y c0_paper ]"
+proof (subst Finite_Cartesian_Product.vec_eq_iff, intro allI)
+  fix i :: 6
+  consider "i = 1" | "i = 2" | "i = 3" | "i = 4" | "i = 5" | "i = 6"
+    using exhaust_6[of i] by blast
+  then show "vec_nth (M_paper (applyT T y) c) i =
+      vec_nth (vector
+        [ A_moment y c0_paper,
+          of_real a * M1_moment y c0_paper + of_real b * M2_moment y c0_paper,
+          of_real p * M1_moment y c0_paper + of_real q * M2_moment y c0_paper,
+          of_real (a\<^sup>2) * M11_moment y c0_paper
+            + of_real (2 * a * b) * M12_moment y c0_paper
+            + of_real (b\<^sup>2) * M22_moment y c0_paper,
+          of_real (a * p) * M11_moment y c0_paper
+            + of_real (a * q + b * p) * M12_moment y c0_paper
+            + of_real (b * q) * M22_moment y c0_paper,
+          of_real (p\<^sup>2) * M11_moment y c0_paper
+            + of_real (2 * p * q) * M12_moment y c0_paper
+            + of_real (q\<^sup>2) * M22_moment y c0_paper ]) i"
+  proof cases
+    case 1 then show ?thesis
+      by (simp add: A_moment_applyT[OF Tc] vector_def)
+  next
+    case 2 then show ?thesis
+      unfolding a_def b_def by (simp add: M1_moment_applyT[OF Tc] vector_def)
+  next
+    case 3 then show ?thesis
+      unfolding p_def q_def by (simp add: M2_moment_applyT[OF Tc] vector_def)
+  next
+    case 4 then show ?thesis
+      unfolding a_def b_def by (simp add: M11_moment_applyT[OF Tc] vector_def)
+  next
+    case 5 then show ?thesis
+      unfolding a_def b_def p_def q_def
+      by (simp add: M12_moment_applyT[OF Tc] vector_def)
+  next
+    case 6 then show ?thesis
+      unfolding p_def q_def by (simp add: M22_moment_applyT[OF Tc] vector_def)
+  qed
+qed
+
+lemma applyT_linear: "linear (applyT T)"
+proof (rule linearI)
+  have l: "linear ((*v) T)" by (rule matrix_vector_mul_linear)
+  show "applyT T (x + y) = applyT T x + applyT T y" for x y :: "(real^2)^'n"
+    by (simp add: applyT_def Finite_Cartesian_Product.vec_eq_iff vector_add_component linear_add[OF l])
+  show "applyT T (r *\<^sub>R x) = r *\<^sub>R applyT T x" for r and x :: "(real^2)^'n"
+    by (simp add: applyT_def Finite_Cartesian_Product.vec_eq_iff vector_scaleR_component linear_cmul[OF l])
+qed
+
+lemma applyT_surj:
+  assumes "invertible T" shows "surj (applyT T :: (real^2)^'n \<Rightarrow> _)"
+proof -
+  obtain B :: "real^2^2" where B: "T ** B = mat 1"
+    using assms unfolding invertible_def by blast
+  have "applyT T (applyT B z) = z" for z :: "(real^2)^'n"
+    by (simp add: applyT_def Finite_Cartesian_Product.vec_eq_iff matrix_vector_mul_assoc B matrix_vector_mul_lid)
+  thus ?thesis by (metis surjI)
+qed
+
 end

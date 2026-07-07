@@ -3474,3 +3474,13 @@ cadapt c = matrix with columns c/|c|^2 and c-perp: cadapt_transport (transpose (
 cadapt_invertible. Green on first pass (component computation via exhaust_2 +
 matrix_vector_mult_def + sum_2; det via det_2). Spliced into the bridge. Still open in
 step 1: migrate M12_moment_applyT / M_paper_applyT (Robust3:5/99) into bridge scope.
+
+### D34 LAYER 4b STEP 1 COMPLETE: transport laws migrated (2026-07-06, cont.)
+M12_moment_applyT, M_paper_applyT, applyT_linear, applyT_surj migrated from the top of
+Robust3 into the bridge. NOT verbatim-viable: the $ forms that parse in seconds on the
+Appendix heap PARSE-HANG >10 min in the merged D34 heap (super-linear $-overload cost,
+now MEASURED: killed a batch build at 10+ min stuck in parsing; vec_nth version checks
+in ~25 s). All statement AND proof-level $ rewritten to vec_nth; consider-metis ->
+exhaust_6[of i] + blast. Robust3 keeps its local copies until the layer-5 rewire
+(then DELETE L5-155, L322-341). c-adapted transport entry point now complete in the
+bridge (cadapt + the six moment transport laws + M_paper bundle + linear/surj).
