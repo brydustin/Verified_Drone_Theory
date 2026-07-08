@@ -304,65 +304,48 @@ shape of each, my priority order, and why.
 
 | Branch | Paper labels + lines | Size | Flavor |
 |---|---|---|---|
-| `H12=0,H22\neq0`, entry corollary | `prop:H12zero`/`cor:H12zero` (5447–5556) | small — 1 prop + 1 cor | block-triangular rank-3, **same pattern as H11/H22** |
+| `H12=0,H22\neq0`, entry corollary | `prop:H12zero`/`cor:H12zero` (5447–5556) | small statement, **but BLOCKED — see below, not a safe reuse** | block-triangular rank-3, looked like H11/H22 at first, turned out not to be |
 | `H12=0,H22\neq0`, full closure | `cor:Lambda-closed` + `prop:Lambda-simple`/`Lambda-onefold`/`Lambda-high`/`cor:double-impossible`/`prop:double-param` (5755–6202, ~450 lines) | large | monotonicity argument + auxiliary-variable lifting, several sub-lemmas |
 | `H12\neq0,H22\neq0`, full closure | `cor:vpair22-full` chain: `cor:vpair22-common`→`prop:vpair22-graph`→`prop:vpair22-elim`(5016)→`prop:vpair22-onezero`(5206)→`prop:vpair22-full`(5307)→`cor:vpair22-full` (4560–5460, ~900 lines) | largest | real-analytic IFT lifting with 3 auxiliary variables `(\delta,\mu,\rho)`, uniqueness via a Vandermonde-shaped 3×3 system, several sub-cases |
 | `H \equiv 0` residual | `app:H0res`/`prop:h0res-meager` (3086–3578, ~500 lines, 6 subsections, ~20 environments) | large, and **structurally separate** — its own `(q,r)` coordinate chart, doesn't reuse `HessU`/`Phi_par`/`det3` at all | transversality of hypersurfaces, residue-coordinate reduction |
 
-**My priority order: `cor:H12zero` first, then reassess.**
-`prop:H12zero`/`cor:H12zero` is the *entry point* to `cor:Lambda-closed`
-(`rem:H12zero`, right after it, explicitly says this corollary reduces the
-`H12=0` branch down to two residues — the rest of Lambda-closed *is* those
-two residues). It is also, structurally, the exact same block-triangular
-rank-3 argument I've now built twice (`cor:vpair11`, `cor:vpair22`) — just
-with a different pairing: `\Lambda^{(11)}_{ij} := \det \partial(\Phi_1,H_{11})
-/\partial(u_i,u_j)` (u-slot, not v-slot), and `s_k` (a v-slot quantity for
-the *third*, excluded index). High confidence, high reuse, same as before.
+**Correction (2026-07-08, after actually tracing the math): `cor:H12zero` is
+NOT a safe high-confidence reuse — I was wrong to say so.** I started
+building it and found a genuine obstacle before writing any Isabelle. Full
+details are in the diary entry "cor:H12zero investigation: a genuine
+obstacle, not a quick brick" — summary here since it changes the plan:
 
-**⚠ Cross-dependency with Codex's Tier 2 — read before starting either
-side.** `cor:H12zero` needs `\Phi_1`'s derivative in the *u-slot* (parallel)
-direction — exactly what Codex's u-slice Tier 2 is building
-(`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy`'s `Phi_par` differentiated
-via `slot j (cvec_dip \<omega>0 \<omega>s \<omega>))` instead of `perp2 (...)`, using
-`d_A_moment_x_slot` in place of `d_A_moment_x_perp`). Check the diary before
-duplicating this: if Codex has already landed the general u-slot derivative
-of `Phi_par`/`gradU`, reuse it directly rather than re-deriving it. What I
-need *beyond* that (which is genuinely my own, since it's Hessian- not
-gradient-level) is the **general (non-perpendicular) u-slot analogues of the
-Hessian-entry block derivatives** — `dV_x`, `dgradcV_x`, `dHcmat_x` currently
-only have `_perp` siblings (`dV_x_perp`, `dgradcV_x_perp`, `dHcmat_x_perp`,
-`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy:3450-3468`), built from
-`Uc_perp_slot_deriv`/`gradUc_comp_perp_slot_deriv`/`Hcmat_entry_perp_slot_deriv`.
-Those need general (`_slot`) siblings, mirroring `d_A_moment_x_slot` vs.
-`d_A_moment_x_perp` exactly, to get `H_{11}`'s u-slot derivative. If Codex
-gets to Tier 2 first and needs to touch any of these Hessian-level names,
-that's a signal to post a diary note rather than both of us extending the
-same lemma family independently.
+`prop:H12zero`'s determinant needs `H_{11}` independent of every v-slot,
+mirroring the `\Phi_1` independence claim from `cor:vpair11` — which does
+NOT hold automatically in our angular omega coordinates (that's exactly what
+`Phi_par`/`e_par` fixed, for the *first*-derivative case). I tried the same
+fix for `H_{11}` (contract both Hessian indices with `e_par` instead of
+`axis(1,1)`, call it `H_par`). Tracing `HessU_dip_entry_perp_slot_value`'s
+already-proven general formula, most terms *do* collapse the same clean way
+— but there's an extra term from `D2cvec_dip(e_par)(e_par) \<bullet> v`
+(the *second*-derivative analogue) that does not obviously vanish.
+Reasoning about `cvec_dip`'s structure (a fixed linear projection, with a
+constant beam-steering shift, of a point moving on the unit sphere) via the
+classical Gauss equation for a sphere's embedding Hessian suggests this
+residual is genuinely nonzero in general, not just an unsimplified
+artifact — though I have NOT formally verified this in Isabelle either way,
+and want to flag that distinction honestly: this is a differential-geometry
+plausibility argument, not a checked proof of non-vanishing.
 
-**Tier A for `cor:H12zero`** (my first concrete step, once I start this):
+**Status: `cor:H12zero` is BLOCKED, not "high confidence."** Do not treat it
+as reusable H11/H22-pattern work — for either of us. Next steps (not yet
+started): (a) attempt the `D2cvec_dip(e_par)(e_par) \<bullet> perp2(c)`
+computation directly to settle whether it's actually zero — bounded but
+algebraically involved, since `e_par`'s closed form comes from inverting
+`Dcvec_dip`'s 2×2 matrix; or (b) restate `cor:H12zero` with the residual
+carried as an explicit named hypothesis (weaker, but honest, matching this
+project's existing pattern of carrying genuine nondegeneracy conditions like
+`det(Dcvec_dip)\neq0`) and move on. Whichever of us gets back to this branch
+should re-verify this finding rather than trust the summary — I'd rather
+someone double-check a "this looks blocked" claim than propagate an error
+past it.
 
-1. Build the general (`_slot`, not `_perp`) versions of `dV_x`, `dgradcV_x`,
-   `dHcmat_x` — same derivation as `dV_x_perp`/`dgradcV_x_perp`/`dHcmat_x_perp`
-   (`D34_Analytic_Bridge.thy:3450-3468`) but from the general
-   `d_A_moment_x_slot` (not the perp-specialized `d_A_moment_x_perp`), with
-   `v := cvec_dip \<omega>0 \<omega>s \<omega>` for the u-slot case.
-2. Reuse `HessU_dip_entry_moments`'s assembly (same as sessions (i)/(i.5)) to
-   get `H_{11}`'s u-slot derivative in closed(ish) form — expect this to
-   mirror `HessU_dip_entry_perp_slot_value`'s shape closely.
-3. Define `Lambda_ij := det ∂(Φ1,H11)/∂(u_i,u_j)` (invariantly: `u_i = slot i
-   (cvec_dip \<omega>0 \<omega>s \<omega>)`), analogous to `Delta_ij`.
-4. Build the block-triangular `Jac3`-style determinant identity — this part
-   should be near-verbatim reuse of `Jac3`/`Jac3_identity`'s proof shape
-   (`det3`, cofactor expansion), just with `Phi_par`/`H11`/`s_k`'s v-slot
-   value (`Phi2_perp_slot_value`'s pattern, but for the *third* excluded
-   index `k` rather than the pair `i,j`) as the three rows.
-5. `cor:H12zero`'s nonzero criterion: given `s_k \neq 0` and
-   `Lambda_ij \neq 0`, rank 3 — same shape as `Jac3_nonzero_criterion`.
-
-Land this in its own file (`Appendix/AnalyticBridge/D34_H12zero_Branch.thy` +
-`M5_Dev_H12zero/`), same discipline as everything else in this project.
-
-**After `cor:H12zero`:** reassess based on what `rem:H12zero` says is left
+**After `cor:H12zero` is actually resolved:** reassess based on what `rem:H12zero` says is left
 (the all-sine-zero slice `s_1=s_2=s_3=0`, said to already be closed
 elsewhere as codimension-3 — check `nonemptiness_restricted_minors.tex` if
 it exists in this checkout — and the `Lambda_ij` all-zero residue, which is

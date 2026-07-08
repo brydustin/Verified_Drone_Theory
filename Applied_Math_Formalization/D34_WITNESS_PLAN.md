@@ -395,3 +395,29 @@ covering splice into Robust3).
   gap is now explicitly documented in `D34_UPhi_Branch.thy`: the c-adapted
   gauge dictionary (`a,b,b1`, `E1`, `eta`) and the final scalar trigonometric
   rewrite to `F_eta` are still needed.
+
+- 2026-07-08 (Claude, cont.): **cor:H12zero investigation + conditional landing.**
+  Started on cor:H12zero (the entry point to cor:Lambda-closed) expecting it to
+  reuse Phi_par/det3 the same clean way H11/H22 did. Found a genuine obstacle
+  before writing anything: prop:H12zero needs H11 independent of every v-slot
+  (mirroring the Phi_1 v-independence issue already found and fixed via
+  Phi_par/e_par). Tried the same e_par-contraction fix for H11 (call it H_par)
+  -- most terms collapse cleanly, but a residual D2cvec_dip(e_par)(e_par).v term
+  does not obviously vanish (a differential-geometry argument about cvec_dip's
+  structure as a shifted linear projection of the unit sphere suggests this is
+  a real obstruction, not just an unsimplified artifact -- not formally settled
+  either way). Retracted the earlier "high confidence, same pattern" claim in
+  PARALLEL_WITH_CODEX.md.
+  Rather than block on this, landed everything that IS honestly provable:
+  H_par + has_derivative_H_par_x + H_par_slot_value (fully proven, unconditional);
+  Phi_par_uslot_value + Phi2_uslot_value (fully proven, unconditional -- turned out
+  the existing has_derivative_gradU_inner_x/has_derivative_gradU_dip_x_explicit were
+  ALREADY general-direction, no new "u-slot" derivation needed, contrary to what I
+  expected); Lambda_ij + Jac3_H12zero + Jac3_H12zero_identity +
+  Jac3_H12zero_nonzero_criterion -- the last two carry `h_par_vslot_zero` as an
+  EXPLICIT NAMED HYPOTHESIS (not proven, not hidden), matching the project's
+  existing pattern of carrying genuine nondegeneracy conditions.
+  Applied_Math_D34_Analytic + dev session BUILD_EXIT=0 (both splices).
+  NEXT: (a) attempt the D2cvec_dip(e_par)(e_par).perp2(c) computation directly to
+  settle h_par_vslot_zero, or (b) leave it carried and move to scoping
+  cor:vpair22-full or app:H0res, or layer-5 assembly progress.

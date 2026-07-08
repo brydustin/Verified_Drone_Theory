@@ -3850,3 +3850,32 @@ cor:H12zero's Isabelle theorem with the residual as an explicit named hypothesis
 on, revisiting later, or (c) pivot to scoping cor:vpair22-full or app:H0res instead this
 session, since neither of those was claimed "high confidence" and both are honestly listed
 as large/novel already.
+
+### cor:H12zero: landed conditionally, one hypothesis explicit (2026-07-08, cont.)
+Follow-up to the investigation above. Rather than stop at "found an obstacle" or block on
+resolving the D2cvec_dip(e_par,e_par) question, built everything that IS honestly provable
+and carried the ONE unresolved piece as an explicit, named hypothesis rather than hiding it.
+Realized mid-build that most of what I thought would need NEW "general u-slot" derivations
+(the cross-dependency flagged with Codex's Tier 2) actually did NOT: has_derivative_gradU_inner_x
+and has_derivative_gradU_dip_x_explicit were ALREADY stated for an arbitrary direction h (not
+perp-restricted) -- so Phi_par's and Phi2's u-slot (parallel) values fall out of the SAME
+machinery already in the bridge, just kept packaged (raw dEjm form) rather than simplified.
+No new dEjm-general derivation was needed after all.
+Built: H_par (bilinear e_par-contraction of HessU, the analogue of Phi_par at Hessian level)
++ has_derivative_H_par_x + H_par_slot_value (fully proven, unconditional, ANY slot direction --
+mechanical composition of has_derivative_HessU_dip_entry_x at all four (k,l) pairs weighted by
+e_par); Phi_par_uslot_value + Phi2_uslot_value (fully proven, unconditional, reusing existing
+general has_derivative facts); Lambda_ij (:= det d(Phi_par,H_par)/d(u_i,u_j)) + Jac3_H12zero
+(block-triangular 3x3 via the existing det3) + Jac3_H12zero_identity + Jac3_H12zero_nonzero_criterion
+-- BOTH of these last two carry h_par_vslot_zero (H_par's v-slot value = 0) as an EXPLICIT NAMED
+HYPOTHESIS, not proven, not hidden -- clearly documented as the one place a genuinely unverified
+assumption enters, matching this project's existing pattern of carrying nondegeneracy conditions
+(e.g. det(Dcvec_dip)!=0) rather than silently baking them in.
+GOTCHA: naive repeated `rule has_derivative_add has_derivative_mult has_derivative_const ...`
+does NOT chain correctly for a 4-term sum (has_derivative_H_par_x's construction) -- needed
+explicit nested has_derivative_add[OF has_derivative_add[OF ...] ...] plus has_derivative_eq_rhs
+wrapping each product term (mirroring the h12sq pattern from the earlier G11 session).
+Applied_Math_D34_Analytic + dev session BUILD_EXIT=0 (both splices).
+NEXT: either (a) attempt the D2cvec_dip(e_par)(e_par).perp2(c) computation directly to settle
+h_par_vslot_zero, or (b) leave it as a carried hypothesis and move to scoping cor:vpair22-full
+or app:H0res, or layer-5 assembly once the other Case-B branches progress further.
