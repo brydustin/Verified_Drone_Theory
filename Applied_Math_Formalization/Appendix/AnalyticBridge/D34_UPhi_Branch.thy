@@ -144,18 +144,77 @@ corollary Phi_par_parallel_slot_value:
                (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m (cvec_dip \<omega>0 \<omega>s \<omega>)))) 2"
   by (rule Phi_par_slot_value)
 
-text \<open>NEEDS FOR THE FULL \<open>prop:uphi-reduce\<close> STATEMENT:
-\<^item> the c-adapted gauge dictionary relating \<open>M_paper x c\<close>'s first three
-  components to the paper's real variables \<open>a,b,b\<^sub>1\<close> on the slice \<open>b = 0\<close>;
-\<^item> the identification of the \<open>Phi_par\<close> parallel-slot derivative above with
-  \<open>\<partial>\<^sub>u\<^sub>j E\<^sub>1 = -2g(B\<^sub>j + \<kappa>\<eta>s\<^sub>j)\<close>, where
-  \<open>E\<^sub>1 = g\<^sub>1 a + 2g b\<^sub>1\<close> and \<open>\<eta> = g\<^sub>1/(2g)\<close>;
-\<^item> the algebraic rewrite
-  \<open>B\<^sub>j + \<kappa>\<eta>s\<^sub>j = 0 \<longleftrightarrow> F_eta \<eta> \<kappa> u\<^sub>j = 0\<close>, with
-  \<open>tcoord c (x$j) = \<kappa> * u\<^sub>j\<close>.
+definition ucoord :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "ucoord c p = (c \<bullet> p) / norm c"
 
-The derivative side is now exposed by @{thm Phi_par_parallel_slot_value}; the
-remaining obligations are gauge-specialisation and scalar trigonometric algebra,
-not another Fréchet-derivative computation.\<close>
+definition eta_par :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "eta_par \<omega>0 \<omega>s \<omega> =
+     frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+       / (2 * gain_dip \<omega>)"
+
+lemma uphi_E1_deriv_F_eta:
+  assumes g: "g \<noteq> 0" and eta: "\<eta> = g1 / (2 * g)"
+  shows "2 * g * (- cos (\<kappa> * u) + \<kappa> * u * sin (\<kappa> * u))
+           - g1 * \<kappa> * sin (\<kappa> * u)
+       = - 2 * g * F_eta \<eta> \<kappa> u"
+  using g unfolding eta F_eta_def
+  by (simp add: field_simps)
+
+lemma uphi_scalar_zero_iff:
+  assumes a: "a \<noteq> 0" and g: "g \<noteq> 0" and k: "\<kappa> \<noteq> 0"
+  shows "(- 2 * a * g * \<kappa> * F_eta \<eta> \<kappa> u = 0) \<longleftrightarrow> F_eta \<eta> \<kappa> u = 0"
+  using a g k by auto
+
+text \<open>The remaining upstream obligation is deliberately isolated here.  It is
+  the c-adapted gauge dictionary from the invariant derivative formula
+  @{thm Phi_par_parallel_slot_value} to the paper variables on the slice
+  \<open>Im (M\<^sub>1) = 0\<close>.  Downstream of this identity, the zero-equivalence is
+  sorry-free scalar algebra.\<close>
+theorem Phi_par_parallel_slot_F_eta_identification:
+  fixes m :: "'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n"
+  defines "c \<equiv> cvec_dip \<omega>0 \<omega>s \<omega>"
+    and "\<kappa> \<equiv> norm (cvec_dip \<omega>0 \<omega>s \<omega>)"
+    and "\<eta> \<equiv> eta_par \<omega>0 \<omega>s \<omega>"
+    and "u \<equiv> ucoord (cvec_dip \<omega>0 \<omega>s \<omega>) (vec_nth x m)"
+    and "a \<equiv> Re (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and cnz: "c \<noteq> 0"
+    and b0: "Im (vec_nth (M_paper x c) 1) = 0"
+    and crit: "Phi_par x \<omega> \<omega>0 \<omega>s = 0"
+  shows "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot m c)
+       = - 2 * a * gain_dip \<omega> * \<kappa> * F_eta \<eta> \<kappa> u"
+  sorry
+
+theorem uphi_reduce_pointwise:
+  fixes m :: "'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n"
+  defines "c \<equiv> cvec_dip \<omega>0 \<omega>s \<omega>"
+    and "\<kappa> \<equiv> norm (cvec_dip \<omega>0 \<omega>s \<omega>)"
+    and "\<eta> \<equiv> eta_par \<omega>0 \<omega>s \<omega>"
+    and "u \<equiv> ucoord (cvec_dip \<omega>0 \<omega>s \<omega>) (vec_nth x m)"
+    and "a \<equiv> Re (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and cnz: "c \<noteq> 0"
+    and b0: "Im (vec_nth (M_paper x c) 1) = 0"
+    and crit: "Phi_par x \<omega> \<omega>0 \<omega>s = 0"
+    and apos: "a > 0"
+    and gpos: "gain_dip \<omega> > 0"
+  shows "(frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot m c) = 0)
+       \<longleftrightarrow> F_eta \<eta> \<kappa> u = 0"
+proof -
+  have knz: "\<kappa> \<noteq> 0"
+    using cnz unfolding c_def \<kappa>_def by simp
+  have anz: "a \<noteq> 0" using apos by simp
+  have gnz: "gain_dip \<omega> \<noteq> 0" using gpos by simp
+  have cnz': "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    using cnz unfolding c_def by simp
+  have b0': "Im (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1) = 0"
+    using b0 unfolding c_def by simp
+  have id: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot m c)
+       = - 2 * a * gain_dip \<omega> * \<kappa> * F_eta \<eta> \<kappa> u"
+    unfolding c_def \<kappa>_def \<eta>_def u_def a_def
+    by (rule Phi_par_parallel_slot_F_eta_identification[OF detnz cnz' b0' crit])
+  show ?thesis
+    unfolding id using uphi_scalar_zero_iff[OF anz gnz knz, of \<eta> u] by simp
+qed
 
 end

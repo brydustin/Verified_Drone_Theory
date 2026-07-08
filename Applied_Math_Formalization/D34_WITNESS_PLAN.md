@@ -396,6 +396,22 @@ covering splice into Robust3).
   gauge dictionary (`a,b,b1`, `E1`, `eta`) and the final scalar trigonometric
   rewrite to `F_eta` are still needed.
 
+- 2026-07-08 (Codex, cont.): **u-slice Tier 2 pointwise reduction LANDED with
+  one precise upstream sorry**.  Added `ucoord`, `eta_par`,
+  `uphi_E1_deriv_F_eta`, `uphi_scalar_zero_iff`,
+  `Phi_par_parallel_slot_F_eta_identification`, and `uphi_reduce_pointwise`.
+  The new theorem `uphi_reduce_pointwise` proves the branch's pointwise
+  zero-equivalence from the isolated gauge-dictionary identity:
+  the parallel-slot derivative of `Phi_par` vanishes iff
+  `F_eta eta kappa u = 0`, assuming `det Dcvec != 0`, `c != 0`, the slice
+  equation `Im (M_1)=0`, `Phi_par=0`, `a>0`, and `gain_dip>0`.
+  The sole `sorry` is `Phi_par_parallel_slot_F_eta_identification`, which
+  exactly states the missing c-adapted gauge/algebra bridge from
+  `Phi_par_parallel_slot_value` to `-2*a*gain*kappa*F_eta eta kappa u`.
+  This follows the documented sorry-upstream escape hatch: Tier 1 and the
+  downstream Tier 2 scalar cancellation are shipped, while the remaining
+  upstream bridge is precision-scoped.
+
 - 2026-07-08 (Claude, cont.): **cor:H12zero investigation + conditional landing.**
   Started on cor:H12zero (the entry point to cor:Lambda-closed) expecting it to
   reuse Phi_par/det3 the same clean way H11/H22 did. Found a genuine obstacle

@@ -3879,3 +3879,20 @@ Applied_Math_D34_Analytic + dev session BUILD_EXIT=0 (both splices).
 NEXT: either (a) attempt the D2cvec_dip(e_par)(e_par).perp2(c) computation directly to settle
 h_par_vslot_zero, or (b) leave it as a carried hypothesis and move to scoping cor:vpair22-full
 or app:H0res, or layer-5 assembly once the other Case-B branches progress further.
+
+### D34 UPhi branch Tier 2 pointwise reduction (Codex) — one scoped upstream sorry (2026-07-08)
+Finished the rest of the UPhi Tier 2 handoff in the branch file without touching
+`D34_Analytic_Bridge.thy`.  Added `ucoord`, `eta_par`, the scalar identity
+`uphi_E1_deriv_F_eta`, the cancellation lemma `uphi_scalar_zero_iff`, the isolated
+upstream placeholder `Phi_par_parallel_slot_F_eta_identification`, and the downstream
+pointwise reduction theorem `uphi_reduce_pointwise`.
+
+Important status distinction: this is NOT a sorry-free gauge-dictionary proof.  The one
+remaining `sorry` is exactly the invariant-to-gauge bridge identifying the already-proved
+parallel-slot derivative expression with
+`-2*a*gain_dip omega*kappa*F_eta eta kappa u` under the c-adapted slice hypotheses.
+Once that identity is supplied, `uphi_reduce_pointwise` is proved by nonzero-factor
+cancellation (`a>0`, `gain_dip>0`, `kappa != 0` from `c != 0`) and scalar algebra.
+
+Final verification before commit:
+Applied_Math_M5_UPhi BUILD_EXIT=0 and Applied_Math_D34_Analytic BUILD_EXIT=0.

@@ -79,3 +79,32 @@ The relevant bridge names already available:
 - `has_derivative_gradU_dip_x_explicit`
 
 The shared bridge file was not modified by Codex.
+
+## Tier 2 pointwise reduction status
+
+Follow-up UPhi work extends Tier 2 beyond the derivative substrate.  The branch
+now adds:
+
+- `ucoord`
+- `eta_par`
+- `uphi_E1_deriv_F_eta`
+- `uphi_scalar_zero_iff`
+- `Phi_par_parallel_slot_F_eta_identification`
+- `uphi_reduce_pointwise`
+
+`uphi_reduce_pointwise` is the usable pointwise `prop:uphi-reduce` shape:
+under the c-adapted branch hypotheses (`det Dcvec != 0`, `c != 0`,
+`Im (M_1) = 0`, `Phi_par = 0`, `a > 0`, `gain_dip > 0`), the parallel-slot
+derivative vanishes iff `F_eta eta kappa u = 0`.
+
+There is exactly one intentional upstream placeholder:
+`Phi_par_parallel_slot_F_eta_identification`.  It isolates the missing
+c-adapted gauge dictionary from the invariant derivative formula
+`Phi_par_parallel_slot_value` to the scalar paper expression
+`-2*a*gain*kappa*F_eta eta kappa u`.  Everything downstream of that identity is
+proved, including the nonzero-factor cancellation.
+
+Builds checked during implementation:
+
+- `Applied_Math_M5_UPhi` BUILD_EXIT=0
+- `Applied_Math_D34_Analytic` BUILD_EXIT=0
