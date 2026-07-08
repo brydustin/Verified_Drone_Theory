@@ -3781,6 +3781,26 @@ edited.  Tier 2 remains open: the next real work is the parallel-slot derivative
 `Phi_par` via the general slot laws (`d_A_moment_x_slot` etc.) and its gauge algebra
 against `F_eta`.
 
+### D34 UPhi branch Tier 2 derivative substrate (Codex) — parallel slots (2026-07-08)
+Continued the UPhi branch after Tier 1.  Added the noncontroversial derivative
+substrate in `D34_UPhi_Branch.thy` and in `M5_Dev_UPhi/Scratch_UPhi.thy`:
+
+- `DM_paper_x_slot_1`
+- `DM_paper_x_slot_2`
+- `DM_paper_x_slot_3`
+- `Phi_par_slot_value`
+- `Phi_par_parallel_slot_value`
+
+This uses the bridge's general single-slot laws (`d_A_moment_x_slot`,
+`d_M1_moment_x_slot`, `d_M2_moment_x_slot`) and `has_derivative_gradU_inner_x` to
+expose the actual Fréchet derivative of `Phi_par` on the parallel slot
+`slot m (cvec_dip omega0 omegas omega)`.
+
+The full `prop:uphi-reduce` equivalence is NOT claimed yet.  The branch file now
+contains a `NEEDS` block spelling out the remaining obligations: the c-adapted
+gauge dictionary (`a,b,b1`, `E1 = g1 a + 2g b1`, `eta = g1/(2g)`) and the scalar
+trig rewrite from the derivative condition to `F_eta eta kappa u_j = 0`.
+
 ### cor:H12zero investigation: a genuine obstacle, not a quick brick (2026-07-08)
 "Continue with your own work" (after handing the u-slice branch to Codex). Per my own
 documented plan, started on cor:H12zero (the entry point to cor:Lambda-closed), expecting

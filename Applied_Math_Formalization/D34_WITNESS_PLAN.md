@@ -385,3 +385,13 @@ covering splice into Robust3).
   session in the same directory; the shared bridge file itself was not edited.
   Tier 2 (`prop:uphi-reduce`, the parallel-slot derivative of `Phi_par`) remains
   open.
+
+- 2026-07-08 (Codex, cont.): **u-slice Tier 2 derivative substrate LANDED** in
+  the UPhi branch file, still without touching the shared bridge.  Added
+  `DM_paper_x_slot_1`, `DM_paper_x_slot_2`, `DM_paper_x_slot_3`,
+  `Phi_par_slot_value`, and `Phi_par_parallel_slot_value`.  These expose the
+  Fréchet derivative of `Phi_par` on a general slot and on the parallel slot
+  `slot m (cvec_dip omega0 omegas omega)`.  The remaining `prop:uphi-reduce`
+  gap is now explicitly documented in `D34_UPhi_Branch.thy`: the c-adapted
+  gauge dictionary (`a,b,b1`, `E1`, `eta`) and the final scalar trigonometric
+  rewrite to `F_eta` are still needed.
