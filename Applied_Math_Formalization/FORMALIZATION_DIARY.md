@@ -3668,3 +3668,46 @@ body text \<open>...\<close> tolerates subscripts fine (used them freely in comm
 NEXT: (iii) the rank-3 criterion (Delta_ij != 0 => (Phi1,Phi2,G11)-Jacobian on
 (U,slot_i,slot_j) invertible, needs Phi1's v-slot independence + the 3x3 block-triangular
 determinant); (iv) szero-local/uphi/residual sub-branches; (v) layer 5.
+
+### D34 wit_core step (iii): the rank-3 criterion (cor:vpair11) itself (2026-07-08)
+"Immediately get on to the natural next step" (after landing G11/Delta_ij). Before writing
+anything, checked whether the paper's block-triangular argument (needing Phi_1 independent
+of every v-slot) transfers to our invariant setup -- IT DOES NOT AUTOMATICALLY:
+gradU_dip_xderiv_perp_slot gives BOTH components j=1,2 the identical nonzero shape
+2*g0*(gamma_j.v)*W_m, so the plain gradU$1 does not vanish on a v-slot in general (this is a
+fact of the paper's SPECIFIC omega-parametrization, not our (sin-theta-cos-phi,...) angles).
+RESOLVED via an invariant reformation rather than skipped: `e_par omega0 omegas omega` is the
+(unique, given det(matrix(Dcvec_dip))!=0) omega-tangent direction whose pushforward under
+Dcvec_dip IS c itself (built via bij_matrix_vector_mult already in the bridge + inv_into UNIV
+-- bare `inv` is algebra-structure syntax in this merged heap, a recorded gotcha). Then
+`Phi_par := gradU . e_par` plays Phi_1's role exactly, and `Phi_par_perp_slot_zero` proves its
+v-slot derivative vanishes BY CONSTRUCTION (D Phi_par(slot m v) = 2g0 W_m (Dcvec_dip(e_par).v)
+= 2g0 W_m (c.v) = 0) -- the invariant analogue of the paper's own omega-gauge choice.
+Getting Dcvec_dip_e_par (Dcvec_dip(e_par)=c) required sidestepping matrix_works/
+matrix_vector_mul entirely: those library lemmas resolve to a `Vector_Spaces.linear (*s) (*s)`
+typeclass variant specific to this heap's Cartesian_Space locale interpretation, NOT the
+standard `linear` produced by bounded_linear.linear, and no bridging fact was findable --
+proved the matrix-representation fact by ELEMENTARY matrix_def + basis-decomposition instead
+(the same pattern used successfully throughout this whole project for 2x2 matrix computations).
+Then the criterion itself: `Jac3` (the 3x3 Jacobian determinant of (Phi_par,Phi2,G11)
+restricted to (U, slot_i(perp2 c), slot_j(perp2 c)), reusing the existing det3 primitive from
+an earlier session) + `Jac3_identity` (Jac3 = D Phi_par(U) * Delta_ij(i,j), via the
+block-triangular cofactor-expansion collapse, using Phi_par_perp_slot_zero to zero the
+(1,2)/(1,3) entries) + `Jac3_nonzero_criterion` (given the paper's own two hypotheses --
+D Phi_par(U) != 0 for some x-direction U, and Delta_ij(i,j) != 0 -- Jac3 != 0, i.e. the
+restriction of D(Phi_par,Phi2,G11) to (U,slot_i,slot_j) has full rank 3). This IS cor:vpair11,
+in fully invariant (gauge-free) form.
+NEW GOTCHAS: (1) `vec_eq_iff` as a simp-set member does NOT auto-apply as a splitting rule in
+this heap (hit twice) -- use the structured `proof (rule
+Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI) fix i :: 2 show ...` pattern
+instead of `simp add: vec_eq_iff`. (2) mistyped U's fixes-clause as real^2 instead of
+(real^2)^'n (U is an x-space tangent direction matching x's own type, not an omega-space
+vector like omega/omega0/omegas) -- caught immediately via the resulting type-clash error,
+fixed by moving U into the same fixes group as x.
+Also this turn: jEdit opened for the user to watch progress -- first attempt wrongly used
+`-l Applied_Math_D34_Analytic` while opening D34_Analytic_Bridge.thy itself, which IS that
+session's own baked-in theory (user caught this immediately) -- relaunched with
+`-l Applied_Math_Appendix` (the actual parent, which does not bake in this file) so jEdit
+processes it live from source instead of treating an in-heap theory as an editable buffer.
+Applied_Math_D34_Analytic + dev session BUILD_EXIT=0 (both splices).
+NEXT: (iv) prop:szero-local + the uphi/residual sub-branches; (v) layer 5 (Robust3 splice).

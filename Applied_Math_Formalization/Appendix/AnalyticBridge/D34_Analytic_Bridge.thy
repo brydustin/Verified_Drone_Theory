@@ -3837,4 +3837,274 @@ proof -
     by (simp add: Phi2_perp_slot_value[OF perpi])
 qed
 
+
+section \<open>The rank-3 criterion (cor:vpair11), invariantly\<close>
+
+text \<open>The paper's block-triangular argument needs \<open>\<Phi>\<^sub>1\<close> INDEPENDENT of every v-slot
+  ---a fact of their SPECIFIC omega-parametrization, NOT automatic for our
+  \<open>(sin\<theta>cos\<phi>,...)\<close> angular coordinates: \<open>gradU_dip_xderiv_perp_slot\<close> gives BOTH
+  components \<open>j=1,2\<close> the SAME nonzero shape \<open>2g\<^sub>0(\<gamma>\<^sub>j\<bullet>v)W_m\<close>, so the plain component
+  \<open>gradU$1\<close> does NOT vanish on a v-slot in general.  The fix: replace the omega-basis
+  vector \<open>axis 1 1\<close> by \<open>e_par\<close>, the (unique, given \<open>det(matrix(Dcvec_dip))\<noteq>0\<close>) omega
+  DIRECTION whose PUSHFORWARD under \<open>Dcvec_dip\<close> is \<open>c\<close> itself.  Then
+  \<open>\<Phi>_par := gradU \<bullet> e_par\<close> plays \<open>\<Phi>\<^sub>1\<close>'s role EXACTLY: its v-slot derivative is
+  \<open>2g\<^sub>0 W_m (Dcvec_dip(e_par)\<bullet>v) = 2g\<^sub>0 W_m (c\<bullet>v) = 0\<close> for \<open>v = perp2 c\<close>, by
+  CONSTRUCTION --- this is the invariant analogue of the paper's own omega-gauge
+  choice, not an assumption.\<close>
+
+subsection \<open>The omega-direction \<open>e\_par\<close> pushing forward to \<open>c\<close>\<close>
+
+definition e_par :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2" where
+  "e_par \<omega>0 \<omega>s \<omega> = inv_into UNIV ((*v) (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))) (cvec_dip \<omega>0 \<omega>s \<omega>)"
+
+lemma Dcvec_dip_e_par:
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "Dcvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>) = cvec_dip \<omega>0 \<omega>s \<omega>"
+proof -
+  have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
+  have decomp: "\<And>h::real^2. h = vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1"
+  proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+    fix h :: "real^2" and i :: 2
+    show "vec_nth h i = vec_nth (vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1) i"
+      using exhaust_2[of i] by (auto simp: axis_def)
+  qed
+  have mv: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h = Dcvec_dip \<omega>0 \<omega>s \<omega> h" for h :: "real^2"
+  proof -
+    have expand: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h
+        = vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+    proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+      fix i :: 2
+      show "vec_nth (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h) i
+          = vec_nth (vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)
+                   + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) i"
+        by (simp add: matrix_def matrix_vector_mult_def sum_2 algebra_simps)
+    qed
+    have "Dcvec_dip \<omega>0 \<omega>s \<omega> h
+        = vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+      using decomp[of h] linear_add[OF lin] linear_cmul[OF lin] by metis
+    with expand show ?thesis by simp
+  qed
+  have bij: "bij ((*v) (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)))"
+    by (rule bij_matrix_vector_mult[OF detnz])
+  have "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v e_par \<omega>0 \<omega>s \<omega> = cvec_dip \<omega>0 \<omega>s \<omega>"
+    unfolding e_par_def by (rule surj_f_inv_f[OF bij_is_surj[OF bij]])
+  thus ?thesis
+    using mv by simp
+qed
+
+subsection \<open>\<open>\<Phi>_par\<close>: the omega-direction of the gradient that pushes forward to \<open>c\<close>\<close>
+
+definition Phi_par :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "Phi_par x \<omega> \<omega>0 \<omega>s = gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> \<bullet> e_par \<omega>0 \<omega>s \<omega>"
+
+text \<open>A fixed vector paired with the FULL \<open>gradU\<close> vector (not just \<open>gradcV\<close>): the
+  same 2-component-sum pattern as \<open>has_derivative_gradcV_inner_x\<close>, but composing
+  with @{thm has_derivative_gradU_dip_x_explicit} instead of the c-gradient block.\<close>
+
+lemma has_derivative_gradU_inner_x:
+  fixes w \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n::finite"
+  shows "((\<lambda>y. w \<bullet> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative
+      (\<lambda>h. vec_nth w 1
+             * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                  (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                  (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                  (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 1
+         + vec_nth w 2
+             * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                  (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                  (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                  (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 2)) (at x)"
+proof -
+  have d1: "((\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) has_derivative
+       (\<lambda>h. vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                  (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                  (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                  (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 1)) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_gradU_dip_x_explicit])
+  have d2: "((\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) has_derivative
+       (\<lambda>h. vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                  (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                  (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                  (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 2)) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_gradU_dip_x_explicit])
+  have core: "((\<lambda>y. vec_nth w 1 * vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1
+               + vec_nth w 2 * vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2)
+       has_derivative
+       (\<lambda>h. vec_nth w 1
+              * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                   (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                   (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                   (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 1
+            + vec_nth w 2
+              * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                   (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                   (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                   (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 2)) (at x)"
+      for y :: "(real^2)^'n"
+    by (rule has_derivative_eq_rhs[OF has_derivative_add[OF
+          has_derivative_mult[OF has_derivative_const d1]
+          has_derivative_mult[OF has_derivative_const d2]]])
+       (simp add: fun_eq_iff algebra_simps)
+  have eq: "(\<lambda>y. w \<bullet> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>)
+      = (\<lambda>y. vec_nth w 1 * vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1
+           + vec_nth w 2 * vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2)"
+    by (rule ext) (simp add: inner_vec_def sum_2)
+  show ?thesis unfolding eq by (rule core)
+qed
+
+subsection \<open>The key lemma: \<open>\<Phi>_par\<close>'s perp-slot derivative vanishes\<close>
+
+theorem Phi_par_perp_slot_zero:
+  fixes m :: "'n::finite" and v \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and perp: "cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> v = 0"
+  shows "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot m v) = 0"
+proof -
+  have hd: "((\<lambda>y. e_par \<omega>0 \<omega>s \<omega> \<bullet> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative
+       (\<lambda>h. vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+              * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                   (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                   (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                   (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 1
+            + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2
+              * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                   (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                   (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                   (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 2)) (at x)"
+    by (rule has_derivative_gradU_inner_x)
+  have val: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot m v)
+      = vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+          * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+               (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+               (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+               (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m v))) 1
+        + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2
+          * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+               (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+               (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+               (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m v))) 2"
+  proof -
+    have eq: "(\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) = (\<lambda>y. e_par \<omega>0 \<omega>s \<omega> \<bullet> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>)"
+      by (rule ext) (simp add: Phi_par_def inner_commute)
+    show ?thesis
+      unfolding eq
+      by (rule fun_cong[OF frechet_derivative_at[OF hd, symmetric]])
+  qed
+  have j1: "vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+               (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+               (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+               (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m v))) 1
+      = 2 * gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> v)
+          * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1) * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x m)"
+    using arg_cong[where f = "\<lambda>V. vec_nth V 1", OF gradU_dip_xderiv_perp_slot[OF perp]] by simp
+  have j2: "vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+               (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+               (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+               (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m v))) 2
+      = 2 * gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) \<bullet> v)
+          * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1) * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x m)"
+    using arg_cong[where f = "\<lambda>V. vec_nth V 2", OF gradU_dip_xderiv_perp_slot[OF perp]] by simp
+  have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
+  have decomp: "e_par \<omega>0 \<omega>s \<omega>
+      = vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 *\<^sub>R axis 1 1 + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2 *\<^sub>R axis 2 1"
+  proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+    fix i :: 2
+    show "vec_nth (e_par \<omega>0 \<omega>s \<omega>) i
+        = vec_nth (vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 *\<^sub>R axis 1 1
+                 + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2 *\<^sub>R axis 2 1) i"
+      using exhaust_2[of i] by (auto simp: axis_def)
+  qed
+  have push: "Dcvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>)
+      = vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)
+      + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+  proof -
+    have "Dcvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>)
+        = Dcvec_dip \<omega>0 \<omega>s \<omega> (vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 *\<^sub>R axis 1 1
+                 + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2 *\<^sub>R axis 2 1)"
+      using decomp by simp
+    also have "\<dots> = vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)
+                   + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+      by (simp add: linear_add[OF lin] linear_cmul[OF lin])
+    finally show ?thesis .
+  qed
+  have factor: "vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> v)
+              + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2 * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) \<bullet> v)
+      = Dcvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>) \<bullet> v"
+    unfolding push by (simp add: inner_add_left)
+  have regroup: "vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+        * (2 * gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> v)
+             * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1) * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x m))
+      + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2
+        * (2 * gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) \<bullet> v)
+             * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1) * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x m))
+      = 2 * gain_dip \<omega>
+          * (vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> v)
+           + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2 * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) \<bullet> v))
+          * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1) * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x m)"
+    by (simp add: algebra_simps)
+  show ?thesis
+    unfolding val j1 j2 regroup factor
+    using Dcvec_dip_e_par[OF detnz] perp
+    by simp
+qed
+
+
+section \<open>The rank-3 criterion itself: the Jac3 determinant identity\<close>
+
+text \<open>The paper's block-triangular reduction (cor:vpair11): given a direction U
+  (any x-tangent direction, playing the role of the paper's u-slot direction),
+  the Jacobian of \<open>(\<Phi>_par, \<Phi>2, G11)\<close> restricted to \<open>(U, slot_i(perp2 c),
+  slot_j(perp2 c))\<close> is BLOCK TRIANGULAR since \<open>\<Phi>_par\<close>'s entries in columns 2,3
+  vanish (@{thm Phi_par_perp_slot_zero}), so its determinant collapses to
+  \<open>D\<Phi>_par(U) * Delta_ij(i,j)\<close> via cofactor expansion along row 1 --- reusing
+  the existing \<open>det3\<close> primitive.\<close>
+
+definition Jac3 :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2
+      \<Rightarrow> (real^2)^'n \<Rightarrow> 'n \<Rightarrow> 'n \<Rightarrow> real" where
+  "Jac3 x \<omega> \<omega>0 \<omega>s U i j =
+     det3
+       (frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) U)
+       (frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot i (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+       (frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot j (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+       (frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x) U)
+       (frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+            (slot i (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+       (frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+            (slot j (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+       (frechet_derivative (\<lambda>y. G11 y \<omega> \<omega>0 \<omega>s) (at x) U)
+       (frechet_derivative (\<lambda>y. G11 y \<omega> \<omega>0 \<omega>s) (at x) (slot i (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+       (frechet_derivative (\<lambda>y. G11 y \<omega> \<omega>0 \<omega>s) (at x) (slot j (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))"
+
+theorem Jac3_identity:
+  fixes i j :: "'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2" and x U :: "(real^2)^'n"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "Jac3 x \<omega> \<omega>0 \<omega>s U i j
+       = frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) U * Delta_ij x \<omega> \<omega>0 \<omega>s i j"
+proof -
+  have perpi: "cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>) = 0"
+    by (rule perp2_orth)
+  have zi: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot i (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) = 0"
+    by (rule Phi_par_perp_slot_zero[OF detnz perpi])
+  have zj: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot j (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) = 0"
+    by (rule Phi_par_perp_slot_zero[OF detnz perpi])
+  show ?thesis
+    unfolding Jac3_def Delta_ij_def det3_def zi zj by simp
+qed
+
+text \<open>The rank-3 conclusion: given the paper's own two nondegeneracy hypotheses
+  --- \<open>D\<Phi>_par(U) \<noteq> 0\<close> for some tangent direction U (their \<open>U \<in> E_u, D\<Phi>_1(U)\<noteq>0\<close>)
+  and \<open>Delta_ij(i,j) \<noteq> 0\<close> (their own hypothesis) --- the Jac3 determinant is
+  nonzero, i.e. the restriction of \<open>D(\<Phi>_par,\<Phi>2,G11)\<close> to \<open>(U,slot_i,slot_j)\<close> is
+  a bijective linear map on \<open>R^3\<close> (full rank 3).\<close>
+
+corollary Jac3_nonzero_criterion:
+  fixes i j :: "'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2" and x U :: "(real^2)^'n"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and dPhi_par_U_nz: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) U \<noteq> 0"
+    and delta_nz: "Delta_ij x \<omega> \<omega>0 \<omega>s i j \<noteq> 0"
+  shows "Jac3 x \<omega> \<omega>0 \<omega>s U i j \<noteq> 0"
+  unfolding Jac3_identity[OF detnz] using dPhi_par_U_nz delta_nz by simp
+
 end

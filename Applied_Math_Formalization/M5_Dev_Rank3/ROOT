@@ -1,0 +1,4 @@
+session Applied_Math_M5_Rank3 in "." = Applied_Math_D34_Analytic +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Scratch_rank3

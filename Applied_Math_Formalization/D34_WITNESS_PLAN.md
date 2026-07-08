@@ -224,15 +224,39 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   \<Delta>\<^sub>i\<^sub>j) can trigger a spurious "Undefined document antiquotation: sub"
   parse error -- use plain ASCII (Delta_ij) in section/subsection headers; body
   text \<open>...\<close> tolerates the subscripts fine.
-  REMAINING for the H11 branch (cor:H11-closed): (iii) the rank-3 criterion itself
-  (Delta_ij != 0 => the (Phi1,Phi2,G11)-Jacobian restricted to (U,slot_i,slot_j) is
-  invertible, hence rank 3 on the SIX real variables of the triple) -- needs Phi1's
-  independence from every v-slot (Phi1 = gradU component 1, and by the paper's own
-  argument this should follow the SAME pattern as Phi2/H-entries, likely EASIER
-  since Phi1 may not even depend on the v-slot direction at all, matching
-  "Phi_1 is independent of every v_r" in prop:vpair11's own proof) + the explicit
-  3x3 block-triangular determinant; (iv) prop:szero-local + the uphi/residual
-  sub-branches; (v) layer 5 (Robust3 splice).
+- 2026-07-08 (cont. 2): **step (iii) DONE - the rank-3 criterion (cor:vpair11)
+  itself**, in fully invariant form (in the bridge): the paper's block-triangular
+  argument needs Phi_1 independent of every v-slot, a fact of their SPECIFIC
+  omega-parametrization -- NOT automatic for our (sin-theta-cos-phi,...) angular
+  coordinates (gradU_dip_xderiv_perp_slot gives BOTH components j=1,2 the SAME
+  nonzero shape 2*g0*(gamma_j.v)*W_m). Resolved via an invariant fix, not glossed
+  over: `e_par` (the omega direction pushing forward to c under Dcvec_dip, via
+  bij_matrix_vector_mult + inv_into UNIV) + `Dcvec_dip_e_par` (its defining
+  property, proven via ELEMENTARY matrix_def/basis-decomposition rather than
+  matrix_works/matrix_vector_mul, which resolve to the Vector_Spaces.linear (*s)
+  (*s) typeclass variant in this heap, not the standard `linear` from
+  bounded_linear.linear, with no bridging fact findable -- the elementary route
+  sidesteps this); `Phi_par := gradU . e_par` (playing Phi_1's role) +
+  `Phi_par_perp_slot_zero` (its perpendicular-slot x-derivative vanishes BY
+  CONSTRUCTION: D Phi_par(slot m v) = 2g0 W_m (Dcvec_dip(e_par).v) = 2g0 W_m
+  (c.v) = 0 -- the invariant analogue of the paper's own omega-gauge choice).
+  Then the criterion itself: `Jac3` (the 3x3 Jacobian determinant of
+  (Phi_par,Phi2,G11) restricted to (U, slot_i(perp2 c), slot_j(perp2 c)), via the
+  existing det3 primitive) + `Jac3_identity` (Jac3 = D Phi_par(U) * Delta_ij(i,j),
+  the block-triangular cofactor-expansion collapse) + `Jac3_nonzero_criterion`
+  (given D Phi_par(U) != 0 for some x-direction U and Delta_ij(i,j) != 0 -- the
+  paper's own two hypotheses -- Jac3 != 0, i.e. the restriction of
+  D(Phi_par,Phi2,G11) to (U,slot_i,slot_j) has full rank 3). This IS cor:vpair11
+  in fully invariant (gauge-free) form.
+  GOTCHA: another vec_eq_iff-as-simp-member failure (twice) -- plain
+  `simp add: vec_eq_iff ...` does NOT auto-apply the iff as a splitting rule;
+  use `proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+  fix i :: 2 show ...` instead.
+  GOTCHA: mistyped U's fixes-clause as real^2 instead of (real^2)^'n (U is an
+  x-space tangent direction matching x's type, not an omega-space vector like
+  omega/omega0/omegas) -- caught immediately via the resulting type-clash error.
+  REMAINING for the H11 branch (cor:H11-closed): (iv) prop:szero-local + the
+  uphi/residual sub-branches; (v) layer 5 (Robust3 splice).
   NEXT: (ii) prop:vpair11's G11 (=H22-H12^2/H11) perp-slot derivative via
   has_derivative_divide'/quotient rule from the H11/H12/H22 corollaries above,
   then the Delta_ij determinant identity; (iii) rank-3 criterion; layer 5.
