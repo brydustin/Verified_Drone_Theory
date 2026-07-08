@@ -134,63 +134,81 @@ it's how the two threads stay decoupled.
 
 ## 5. Task assignment
 
-Four sub-branches remain for the paper's `cor:caseBmeager` (Case B is meager
-on the `H \not\equiv 0` side), covering the two possible "good triples" per
-point:
+**Your target is the u-slice branch: `prop:uphi-reduce` / `prop:uphi-codim3`
+/ `cor:uphi-exhausted`.** Not `app:H0res`. This section explains the decision
+and then gives an exact, tiered build plan — read it in full before writing
+any Isabelle, since it fixes names and types you should reuse rather than
+invent your own.
 
-| Branch | Paper labels | Status | Flavor |
-|---|---|---|---|
-| `H11 \neq 0` | `prop:vpair11`/`cor:vpair11` | **DONE** (Claude, commit `b2e0601`) | Fréchet-derivative rank-3 argument |
-| `H12\neq0,H22\neq0` | `prop:vpair22`/`cor:vpair22` (bare) | **DONE** (Claude, commit `bd45b71`); `cor:vpair22-full`'s auxiliary-variable lifting NOT done | same, plus a lifting argument |
-| **u-slice vanishing** | `prop:uphi-reduce`/`prop:uphi-codim3`/`cor:uphi-exhausted` | **not started — recommended for Codex** | real-analytic isolated-zeros |
-| `H12=0,H22\neq0` | `cor:Lambda-closed` (+ 4 sub-props: `Lambda-simple`, `Lambda-onefold`, `Lambda-high`, `double-impossible`) | not started | mixed, large |
-| `H \equiv 0` residual | `app:H0res`/`prop:h0res-meager` | not started | separate appendix entirely |
+### Why this one, and not `app:H0res`
 
-### Recommended for Codex: the u-slice branch (`cor:uphi-exhausted`)
+I compared the two candidates by actually reading both in the paper source
+(`../Applied Math/nonemptiness_unified_singlefile_complete.tex`):
 
-**Why this one:** it's the smallest self-contained piece (one definition, two
-propositions, one corollary — paper lines 3826–4000 of
-`nonemptiness_unified_singlefile_complete.tex`), it is mathematically
-*distinct* from the rank-3/Jacobian work above (real-analytic zero-counting,
-not differentiation), so there's essentially zero file/lemma overlap with
-what Claude has been building — and **the hard analytic machinery already
-exists in this repo**, so this is mostly an assembly job, not new research.
+- **The u-slice branch** is 3 environments (one definition, two
+  propositions, one corollary) across paper lines 3826–4000 — small, and
+  I confirmed the core analytic lemma it needs is *already proved* in this
+  repo (see Tier 1 below).
+- **`app:H0res`** (lines 3086–3578) is a *whole appendix*: 6 subsections,
+  roughly 20 propositions/lemmas/corollaries, covering many distinct residual
+  sub-branches (`B_1=B_2=B_3=0`, residue control for `(a_1,a_2)`, the `S=0`
+  branch, branches with two/three vanishing cosines, a closeout section).
+  It is not a single well-scoped task — it would itself need to be split
+  into several pieces before being handed to one agent for one sitting, and
+  attempting the whole thing risks a shallow pass over everything rather
+  than a finished piece of anything.
 
-**The math (read the paper section first — section right after
-`cor:vpair11`'s corollary, titled "The vanishing u-slice branch"):**
+So: u-slice branch, definitely. If you finish it and want `app:H0res` next,
+say so in the diary first (`TO CLAUDE: ...`) so we can split it the same way
+`cor:caseBmeager` was split, rather than you picking a sub-piece unilaterally.
 
-- Definitions (paper, ~line 3826): `\eta := g_1/(2g)`,
-  `F_\eta(u) := \cos(\kappa u) - \kappa(u-\eta)\sin(\kappa u)`, where `\kappa`
-  is the (already-defined-elsewhere) constant `|c|>0`.
-- `prop:uphi-reduce`: on gauge `b=0`, `D\Phi_1|_{E_u}=0` (the "u-slice
-  differential of Φ1 vanishes", where `E_u := span{∂_{u_1},∂_{u_2},∂_{u_3}}`)
-  is *equivalent* to `F_\eta(u_j)=0` for `j=1,2,3`.
-- `prop:uphi-codim3`: `F_\eta` is real-analytic and not identically zero
-  (witness: `F_\eta(0) = \cos(0) - \kappa(0-\eta)\sin(0) = 1 \neq 0` — the
-  paper uses a fancier witness `F_\eta(m\pi/\kappa)=(-1)^m` for all integers
-  `m`, but you only need one nonzero value, and `u=0` is the simplest).
-  Hence `F_\eta`'s zero set is discrete, so the branch
-  `{D\Phi_1|_{E_u}=0}` is locally a finite union of codimension-3 coordinate
-  slices `u_1=\xi_1, u_2=\xi_2, u_3=\xi_3`.
+### The math, precisely
+
+Read the paper section right after `cor:vpair11`'s corollary, titled "The
+vanishing $u$-slice branch" (lines ~3826–4000). In brief:
+
+- `\eta := g_1/(2g)`, `F_\eta(u) := \cos(\kappa u) - \kappa(u-\eta)\sin(\kappa u)`.
+- `prop:uphi-reduce`: on gauge `b=0`, `D\Phi_1|_{E_u}=0` (where
+  `E_u := span{\partial_{u_1},\partial_{u_2},\partial_{u_3}}`, i.e. moving
+  each triple element *parallel* to `c`) is equivalent to
+  `F_\eta(u_j)=0` for `j=1,2,3`.
+- `prop:uphi-codim3`: `F_\eta` is real-analytic, not identically zero
+  (`F_\eta(0)=1`), hence has a discrete zero set, hence the branch is
+  locally a finite union of codimension-3 coordinate slices.
 - `cor:uphi-exhausted`: hence the branch is locally nowhere dense.
 
-**What already exists in this repo that you should use, not reprove**
-(all in `Analytic/Real_Analytic.thy` unless noted):
-- `real_analytic_on_sin` / `real_analytic_on_cos` — proved in
-  `Analytic/Complex/Real_Analytic_Complex.thy:544,548` via a
-  complex-holomorphic-extension bridge. Also `real_analytic_on_sin_comp` /
-  `real_analytic_on_cos_comp` (composed forms: given
-  `real_analytic_on f U`, get `real_analytic_on (\<lambda>x. sin (f x)) U`,
-  and likewise for `cos`) — these are exactly the shape you need for
-  `sin(\<kappa>u)`/`cos(\<kappa>u)`.
+### Exact correspondence to existing Isabelle terms (do not rename these)
+
+| Paper | Isabelle (already exists in the bridge / `Appendix/Nonemptiness_Robust1.thy`) |
+|---|---|
+| `g(\omega)` | `gain_dip \<omega>` (`= gdip (\<omega> $ 1)`) |
+| `g_1 = \partial_{\omega_1} g` | `frechet_derivative gdip (at (vec_nth \<omega> 1)) 1` |
+| `\kappa = |c|` | `norm (cvec_dip \<omega>0 \<omega>s \<omega>)` |
+| `\Phi_1` | `Phi_par` (see `Appendix/AnalyticBridge/D34_Analytic_Bridge.thy` — proven independent of every *perpendicular* slot; you are now differentiating it in the *parallel* direction instead) |
+| perpendicular slot for element `j` (`v_j`) | `slot j (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))` |
+| **parallel slot for element `j` (`u_j`) — new, build by direct analogy** | `slot j (cvec_dip \<omega>0 \<omega>s \<omega>)` |
+
+### Tier 1 (fully specified, low risk — do this first, it stands alone)
+
+Everything below is assembly from lemmas that already exist; I checked each
+one is actually in the repo before writing this (not guessing from memory):
+
+- `real_analytic_on_sin_comp`, `real_analytic_on_cos_comp`
+  (`Analytic/Complex/Real_Analytic_Complex.thy:604,610` — given
+  `real_analytic_on f U`, these give `real_analytic_on (\<lambda>x. sin (f x)) U`
+  / `cos` respectively);
 - `real_analytic_on_const`, `real_analytic_on_add`, `real_analytic_on_diff`,
   `real_analytic_on_mult`, `real_analytic_on_scaleR`,
-  `real_analytic_on_compose` — the composition algebra you'll chain together
-  to get `F_\eta`'s analyticity from its constituent pieces.
-- **The key workhorse, already proved** —
-  `theorem real_analytic_1d_nowhere_dense_zeros` (`Analytic/Real_Analytic.thy`,
+  `real_analytic_on_compose` (`Analytic/Real_Analytic.thy`) — the
+  composition algebra;
+- the identity function's analyticity and a `connected UNIV` fact are small
+  lookups I did *not* verify by name — search `Analytic/Real_Analytic.thy`
+  for something like `real_analytic_on_id`, and HOL-Analysis's `Connected.thy`
+  /`Abstract_Topology.thy` for `connected_UNIV`; if neither exists, both are
+  one-line derivations (`convex_connected[OF convex_UNIV]` for the latter);
+- **the key workhorse, already proved**, `Analytic/Real_Analytic.thy`,
   subsection "(1.6) Workhorse: a non-vanishing analytic function has
-  nowhere-dense zeros"):
+  nowhere-dense zeros":
   ```isabelle
   theorem real_analytic_1d_nowhere_dense_zeros:
     fixes f :: "real \<Rightarrow> real"
@@ -198,47 +216,88 @@ exists in this repo**, so this is mostly an assembly job, not new research.
       and ex: "\<exists>x\<in>U. f x \<noteq> 0"
     shows "interior (closure {x \<in> U. f x = 0}) = {}"
   ```
-  This is *exactly* `prop:uphi-codim3`'s core analytic step. Apply it with
-  `U := UNIV`, and the witness from `F_\eta(0) = 1`.
+  This *is* `prop:uphi-codim3`'s analytic content. Apply with `U := UNIV`.
 
-**What you'll likely have to build yourself** (not found in the repo as of
-this writing — search first, in case Claude or a prior session added it):
-- Lifting the single-variable "F_η's zero set is nowhere dense in ℝ" fact to
-  the 3-coordinate statement: the set
-  `{(u_1,u_2,u_3,v_1,v_2,v_3) : F_\eta(u_1)=0 \wedge F_\eta(u_2)=0 \wedge
-  F_\eta(u_3)=0}` is nowhere dense in `\<real>^6` (or whatever the project's
-  actual triple-coordinate type is — check `Nonemptiness_Robust3.thy` / the
-  `HessU`/triple-configuration types used elsewhere in the bridge for the
-  right ambient type, don't invent a new one). This is a general
-  product-space fact (a proper subset depending on only one of several
-  independent coordinates, when that subset is nowhere dense in its own
-  factor, gives a nowhere-dense set in the product) — check
-  `Appendix/AnalyticBridge/D34_Analytic_Bridge.thy` and
-  `Appendix/Robust3/Nonemptiness_Robust3.thy` for existing nowhere-dense /
-  closed-cover lemmas (e.g. `dip_critical_chart_nowhere_dense`,
-  `meager_negligible_closed_cover`) before building this from scratch — there
-  may already be a reusable combinator.
-- Connecting this to the actual `D\Phi_1|_{E_u}` object as it's represented
-  in the bridge (i.e. via `slot`/Fréchet-derivative machinery, matching the
-  invariant style Claude has used throughout — grep the bridge for
-  `Phi_par`, `slot`, `frechet_derivative` to see the house style before
-  introducing a different representation).
+Build exactly these, in this order, in your dev scratch:
 
-**Deliverable:** theorems corresponding to `prop:uphi-reduce`,
-`prop:uphi-codim3`, and `cor:uphi-exhausted`, landed in your own
-`Appendix/AnalyticBridge/D34_UPhi_Branch.thy` + `M5_Dev_UPhi/` dev session,
-verified, committed, pushed, with a diary entry.
+```isabelle
+definition F_eta :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real" where
+  "F_eta \<eta> \<kappa> u = cos (\<kappa> * u) - \<kappa> * (u - \<eta>) * sin (\<kappa> * u)"
+
+theorem real_analytic_on_F_eta: "real_analytic_on (F_eta \<eta> \<kappa>) UNIV"
+  (* compose sin_comp/cos_comp/mult/diff/const/scaleR as above *)
+
+theorem F_eta_at_0: "F_eta \<eta> \<kappa> 0 = 1"
+  unfolding F_eta_def by simp
+
+theorem F_eta_zeros_nowhere_dense:
+  "interior (closure {u. F_eta \<eta> \<kappa> u = 0}) = {}"
+  (* real_analytic_1d_nowhere_dense_zeros[OF real_analytic_on_F_eta conn]
+     with the witness from F_eta_at_0 *)
+```
+
+This tier is unambiguous and self-contained: land it, verify it, commit it,
+even if Tier 2 below turns out to need more time.
+
+### Tier 2 (needs real derivation work — the actual `prop:uphi-reduce`)
+
+This is where you connect `F_eta`'s zero condition to the *actual*
+`D\Phi_1|_{E_u}=0` statement, i.e. to `Phi_par`'s derivative in the
+*parallel*-slot direction `slot j (cvec_dip \<omega>0 \<omega>s \<omega>)`.
+
+Good news: the general (non-perpendicular-restricted) foundational fact you
+need already exists —
+```isabelle
+lemma d_A_moment_x_slot:
+  "d_A_moment_x x c (slot j v) = -(c \<bullet> v) *\<^sub>R (\<i> * phase c x j)"
+```
+(`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy:2807-2808`). Note
+`d_A_moment_x_perp` (line 2920) is just this specialized to `c \<bullet> v = 0`
+— for the parallel slot you want `v := cvec_dip \<omega>0 \<omega>s \<omega>` instead,
+which makes `c \<bullet> v = \<kappa>^2 \<noteq> 0`, i.e. genuinely nonzero, matching the
+paper's claim that `\Phi_1`'s u-slice derivative is generically nonzero.
+Redo the *same* derivation chain Claude used for
+`gradU_dip_xderiv_perp_slot` (`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy`
+— search for it and read the proof) but starting from `d_A_moment_x_slot`
+(general) instead of `d_A_moment_x_perp`, with `v := c` instead of
+`v := perp2 c`. That gives you `D\Phi_1`'s value at a parallel slot in
+closed form; matching it against `F_\eta(u_j)=0` is then the algebra in the
+paper's own proof of `prop:uphi-reduce` (gauge `b=0`, `E_1 := g_1 a + 2g b_1`,
+`\Phi_1 = a E_1`).
+
+**If this doesn't come together cleanly:** use the sorry-upstream protocol
+from §4. State `prop:uphi-reduce`'s conclusion as a `sorry`'d lemma with a
+`NEEDS:` comment explaining exactly what's missing, and still land
+`prop:uphi-codim3` + `cor:uphi-exhausted` built on top of it (marking their
+own dependence on the sorry clearly). A Tier 1 + honestly-flagged Tier 2 gap
+is a real, valuable, mergeable contribution — don't let Tier 2 block Tier 1
+from shipping.
+
+### Tier 3 (only after Tier 2, and only if you have room)
+
+Lifting the single-variable "nowhere dense in `\<real>`" fact to the full
+6-real-variable coordinate space (`cor:uphi-exhausted`'s actual conclusion):
+the set `{F_\eta(u_1)=0 \wedge F_\eta(u_2)=0 \wedge F_\eta(u_3)=0}` is
+nowhere dense in the ambient triple-configuration type. Check
+`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy` and
+`Appendix/Robust3/Nonemptiness_Robust3.thy` for an existing nowhere-dense /
+closed-cover combinator (`dip_critical_chart_nowhere_dense`,
+`meager_negligible_closed_cover`) before building a product-space lemma from
+scratch — and use the project's actual triple-configuration type (grep
+`HessU`'s signature in the bridge), don't invent a new one.
+
+**Deliverable:** `F_eta`/`real_analytic_on_F_eta`/`F_eta_zeros_nowhere_dense`
+(Tier 1, must-have) plus as much of `prop:uphi-reduce`/`prop:uphi-codim3`/
+`cor:uphi-exhausted` (Tiers 2–3) as comes together cleanly, landed in your
+own `Appendix/AnalyticBridge/D34_UPhi_Branch.thy` + `M5_Dev_UPhi/` dev
+session, verified, committed, pushed, with a diary entry stating exactly
+which tier you reached and what (if anything) is `sorry`'d.
 
 ### Reserved for Claude — please don't start these without checking first
 
 - `cor:vpair22-full`'s auxiliary-variable lifting (extends the `H22` branch).
 - `cor:Lambda-closed` and its four sub-propositions.
 - `app:H0res`/`prop:h0res-meager` (the separate appendix for `H \equiv 0`).
-
-If you finish the u-slice branch and want more work, leave a note in the
-diary (`TO CLAUDE: u-slice branch done, what's next?`) rather than picking
-one of these unilaterally — they're bigger, and coordinating first avoids
-two agents duplicating a multi-day effort.
 
 ## 6. Communication
 
