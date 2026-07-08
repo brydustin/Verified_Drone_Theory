@@ -174,6 +174,34 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   landed substrate. If the certificates need A /= 0 or det HessU /= 0 along the
   chart, add the corresponding analytic-dichotomy sub-cases inside wit_core's proof
   (A o graph == 0 is itself an analytic certificate; same pattern).
+- 2026-07-08: **step i.5 DONE: the Hessian-entry x-derivative assembled** (in the
+  bridge): `has_derivative_HessU_dip_entry_x` - the x-derivative (at FIXED omega) of
+  a single Hessian entry HessU(.,omega)$k$l, assembled from the three block
+  derivatives (V, gradcV, Hcmat) through HessU_dip_entry_moments's linear
+  combination (Dcvec_dip/D2cvec_dip/gain_dip/the gdip jets are all constant in x).
+  Machinery: dV_x/dgradcV_x/dHcmat_x named block-derivative abbreviations (+ their
+  already-proven perp-slot values repackaged); has_derivative_gradcV_inner_x /
+  has_derivative_Hcmat_bilinear_x (a fixed vector, resp. pair of vectors, paired
+  against the gradcV/Hcmat block via bounded-linearity + has_derivative_eq_rhs).
+  `HessU_dip_entry_perp_slot_value`: the VALUE of that derivative at a
+  perpendicular slot direction (frechet_derivative_at + fun_cong) - this is what
+  the branch certificates differentiate directly, giving H11/H12/H22's v-slot
+  derivatives as a corollary (k=l=1 / k=1,l=2 / k=l=2).
+  GOTCHAS (new): `define X where "X = ..."` introduces a genuine LOCAL CONSTANT,
+  so a fact proven using the abbreviated name does NOT syntactically match a goal
+  stated in unabbreviated form even though propositionally equal (unfolding the
+  _def on the goal vs on the fact diverge) - avoid `define` for this kind of
+  "prove in short form, restate in long form" pattern; write everything out in
+  full instead (verbose but safe), or use `let ?x = "..."` carefully (still
+  fragile under bulk regex editing - a manual full-rewrite was ultimately safer
+  than patching). Bare `HessU (...) $ k $ l` inside a `frechet_derivative (\y. ...)`
+  argument can hit the fps_nth/vec_nth $-ambiguity even where the identical
+  pattern parsed fine as a has_derivative LHS - spell vec_nth explicitly there.
+  `fixes m :: 'n` used with `slot` needs the explicit `'n::finite` sort annotated
+  at the SPECIFIC lemma (not inherited from context).
+  NEXT: (ii) prop:vpair11's G11 (=H22-H12^2/H11) perp-slot derivative via
+  has_derivative_divide'/quotient rule from the H11/H12/H22 corollaries above,
+  then the Delta_ij determinant identity; (iii) rank-3 criterion; layer 5.
 - 2026-07-07: **wit_core substrate: Hessian fields analytic** (in the bridge):
   real_analytic_on_HessU_dip_entry (each (k,l) entry of HessU jointly analytic in
   (x,omega), assembled through HessU_dip_entry_moments), real_analytic_on_detHessU_dip
