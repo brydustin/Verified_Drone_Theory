@@ -3637,3 +3637,34 @@ Also hit (again) the fps_nth/vec_nth $-ambiguity, but this time ONLY on a
 IDENTICAL "$ k $ l" pattern parsed FINE as a has_derivative LHS one theorem earlier,
 so this ambiguity is context-sensitive, not a blanket rule; when in doubt, spell
 vec_nth. And `fixes m :: 'n` needs '::finite' pinned locally wherever `slot` is used.
+
+### D34 wit_core step (ii): G11 quotient-rule derivative + Delta_ij identity (2026-07-08)
+"Do the G11 quotient-rule derivative and the Delta_ij determinant identity." Both delivered,
+fully verified, invariantly (no gauge specialization needed).
+Phi2_perp_slot_value: Phi_2 (gradU's angular component 2)'s perp-slot value in CLEAN closed
+form -- 2 g0 (gamma_2 . v) Im(cnj A phi_m) -- via bounded_linear.has_derivative[vec_nth] o
+has_derivative_gradU_dip_x_explicit, frechet_derivative_at+fun_cong to get the VALUE, then
+arg_cong[vec_nth _ 2] on gradU_dip_xderiv_perp_slot's vector identity to collapse.
+G11 := H22 - H12^2/H11 (the paper's Phi3/H11). has_derivative_G11_x: quotient-rule
+x-derivative at fixed omega (H11 != 0), assembled from has_derivative_HessU_dip_entry_x at
+(2,2)/(1,2)/(1,1) via has_derivative_mult (H12^2, self-product) + has_derivative_divide'
+(confirmed library lemma, standard quotient rule with denominator != 0) + has_derivative_diff.
+KEPT IN frechet_derivative NOTATION for H22/H12/H11 (not hand-flattened) -- SAME safe pattern
+established last session.
+G11_perp_slot_value: the VALUE at a perp slot (frechet_derivative_at+fun_cong, zero algebra).
+Delta_ij := det jacobian of (Phi2,G11) w.r.t. (v_i,v_j), invariantly: v_i = slot i (perp2 c)
+for triple element i. Delta_ij_identity: Phi2-factors collapse via Phi2_perp_slot_value;
+G11-factors STAY PACKAGED (G11_perp_slot_value available separately) -- this is
+prop:vpair11's determinant identity in gauge-free form.
+CAUGHT A MISTAKE BEFORE RUNNING (per user's "check first" discipline applied proactively):
+an early draft's G11_perp_slot_value RHS wrongly copied Phi2's formula for the H22 term --
+H22 (Hessian entry) and Phi2 (gradient component) are unrelated; fixed by switching to
+frechet_derivative-notation statements (mechanical) instead of a hand-invented "simplified"
+closed form whenever the actual collapse is nontrivial (H22's own perp value is a genuine
+7-term expression, nothing like Phi2's clean 1-term form).
+NEW GOTCHA: subscripted unicode (\<Delta>\<^sub>i\<^sub>j) in a section/subsection TITLE triggers a
+spurious "Undefined document antiquotation: sub" parse error -- use plain ASCII in headers;
+body text \<open>...\<close> tolerates subscripts fine (used them freely in comments without issue).
+NEXT: (iii) the rank-3 criterion (Delta_ij != 0 => (Phi1,Phi2,G11)-Jacobian on
+(U,slot_i,slot_j) invertible, needs Phi1's v-slot independence + the 3x3 block-triangular
+determinant); (iv) szero-local/uphi/residual sub-branches; (v) layer 5.

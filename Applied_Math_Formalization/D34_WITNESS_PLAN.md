@@ -199,6 +199,40 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   pattern parsed fine as a has_derivative LHS - spell vec_nth explicitly there.
   `fixes m :: 'n` used with `slot` needs the explicit `'n::finite` sort annotated
   at the SPECIFIC lemma (not inherited from context).
+- 2026-07-08 (cont.): **step (ii) DONE - G11 quotient-rule derivative + Delta_ij
+  determinant identity** (in the bridge): `Phi2_perp_slot_value` (Phi_2's perp-slot
+  value in clean closed form, via bounded_linear.has_derivative composed with
+  has_derivative_gradU_dip_x_explicit + frechet_derivative_at + fun_cong, matched
+  against gradU_dip_xderiv_perp_slot via arg_cong on the j=2 component); `G11`
+  (=H22-H12^2/H11) + `has_derivative_G11_x` (quotient-rule x-derivative, fixed
+  omega, assuming H11 != 0, built from has_derivative_HessU_dip_entry_x at
+  (2,2)/(1,2)/(1,1) via has_derivative_mult/has_derivative_divide'/has_derivative_diff
+  -- kept in frechet_derivative notation for the three Hessian entries rather than
+  hand-flattened); `G11_perp_slot_value` (the value at a perpendicular slot, via
+  frechet_derivative_at + fun_cong); `Delta_ij` (the rank-3 Jacobian determinant,
+  invariantly: v_i = slot i (perp2 c)) + `Delta_ij_identity` (Phi_2-factors collapse
+  to closed form; G11-factors stay packaged via G11_perp_slot_value, available on
+  demand).
+  CAUGHT BEFORE RUNNING: an early draft of G11_perp_slot_value's RHS mistakenly
+  copied Phi_2's closed-form formula for the H22 term -- H22 (a Hessian entry) and
+  Phi_2 (a gradU component) are UNRELATED quantities; the fix is to state such
+  "value" lemmas in frechet_derivative notation (mechanical, zero algebra) rather
+  than hand-inventing a collapsed closed form whenever the collapse is genuinely
+  nontrivial (H22's own perp-slot value is itself a 7-term dHcmat_x/dgradcV_x
+  expression, not reducible to anything as simple as Phi_2's).
+  GOTCHA: subscripted Unicode in a `section`/`subsection` title (e.g.
+  \<Delta>\<^sub>i\<^sub>j) can trigger a spurious "Undefined document antiquotation: sub"
+  parse error -- use plain ASCII (Delta_ij) in section/subsection headers; body
+  text \<open>...\<close> tolerates the subscripts fine.
+  REMAINING for the H11 branch (cor:H11-closed): (iii) the rank-3 criterion itself
+  (Delta_ij != 0 => the (Phi1,Phi2,G11)-Jacobian restricted to (U,slot_i,slot_j) is
+  invertible, hence rank 3 on the SIX real variables of the triple) -- needs Phi1's
+  independence from every v-slot (Phi1 = gradU component 1, and by the paper's own
+  argument this should follow the SAME pattern as Phi2/H-entries, likely EASIER
+  since Phi1 may not even depend on the v-slot direction at all, matching
+  "Phi_1 is independent of every v_r" in prop:vpair11's own proof) + the explicit
+  3x3 block-triangular determinant; (iv) prop:szero-local + the uphi/residual
+  sub-branches; (v) layer 5 (Robust3 splice).
   NEXT: (ii) prop:vpair11's G11 (=H22-H12^2/H11) perp-slot derivative via
   has_derivative_divide'/quotient rule from the H11/H12/H22 corollaries above,
   then the Delta_ij determinant identity; (iii) rank-3 criterion; layer 5.
