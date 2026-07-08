@@ -437,3 +437,21 @@ covering splice into Robust3).
   NEXT: (a) attempt the D2cvec_dip(e_par)(e_par).perp2(c) computation directly to
   settle h_par_vslot_zero, or (b) leave it carried and move to scoping
   cor:vpair22-full or app:H0res, or layer-5 assembly progress.
+
+- 2026-07-08 (Claude, cont. 2): **h_par_vslot_zero definitively resolved FALSE**
+  (not just unresolved). Isolated the residual precisely: H_par's v-slot value
+  = 2*gain_dip(omega)*Im(cnj(A)*phi_m)*Q, Q := D2cvec_dip(omega)[e_par,e_par].perp2(c)
+  (omega-only). Built explicit witness (omega0=(pi/4,0), omegas=(3pi/4,0),
+  omega=(pi/3,pi/6)), solved Dc(e_par)=c exactly (e_par=(sqrt3-sqrt6/2,sqrt6/6)),
+  closed form Q=23*sqrt6/24-5*sqrt3/4. Machine-verified via
+  HOL-Decision_Procs.Approximation's `approximation` method: 0.18<Q<0.19, definitely
+  nonzero -- BUILD_EXIT=0 on the standalone check. Since Q is real-analytic and
+  nonzero at a generic point, its zero set is nowhere dense (same logic as
+  real_analytic_1d_nowhere_dense_zeros) -- h_par_vslot_zero fails GENERICALLY, not
+  just at this witness. The H_par (contract-both-indices-with-e_par) approach for
+  cor:H12zero is a DEAD END, not a gap to patch -- see diary for the full
+  derivation and why the first-derivative fix (Phi_par) doesn't generalize to
+  second derivatives (needs geodesic/normal-coordinate machinery, not present in
+  this project).
+  cor:Lambda-closed is ON HOLD pending either that new infrastructure or a
+  different invariant characterization of H11 entirely.

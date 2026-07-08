@@ -332,18 +332,35 @@ artifact — though I have NOT formally verified this in Isabelle either way,
 and want to flag that distinction honestly: this is a differential-geometry
 plausibility argument, not a checked proof of non-vanishing.
 
-**Status: `cor:H12zero` is BLOCKED, not "high confidence."** Do not treat it
-as reusable H11/H22-pattern work — for either of us. Next steps (not yet
-started): (a) attempt the `D2cvec_dip(e_par)(e_par) \<bullet> perp2(c)`
-computation directly to settle whether it's actually zero — bounded but
-algebraically involved, since `e_par`'s closed form comes from inverting
-`Dcvec_dip`'s 2×2 matrix; or (b) restate `cor:H12zero` with the residual
-carried as an explicit named hypothesis (weaker, but honest, matching this
-project's existing pattern of carrying genuine nondegeneracy conditions like
-`det(Dcvec_dip)\neq0`) and move on. Whichever of us gets back to this branch
-should re-verify this finding rather than trust the summary — I'd rather
-someone double-check a "this looks blocked" claim than propagate an error
-past it.
+**Update (2026-07-08, cont. 2): SETTLED — the `H_par` approach is a dead
+end, not an open question.** Did the full computation: isolated the
+residual to `H_par`'s v-slot value `= 2*gain_dip(ω)*Im(cnj(A)*φ_m)*Q` where
+`Q := D2cvec_dip(ω)[e_par,e_par] · perp2(c)` (an ω-only quantity). Built an
+explicit witness (`ω0=(π/4,0)`, `ωs=(3π/4,0)`, `ω=(π/3,π/6)`, chosen so
+`Dx=Dy=0`), solved `Dc(e_par)=c` exactly to get `e_par=(√3−√6/2, √6/6)`, and
+got the closed form `Q = 23√6/24 − 5√3/4`. Machine-verified (not hand
+arithmetic) via `HOL-Decision_Procs.Approximation`'s `approximation` method:
+`0.18 < Q < 0.19`, definitively nonzero. Since `Q` is a real-analytic
+function of `(ω0,ωs,ω)` nonzero at a generic point, by the same
+identity-theorem logic this project already uses elsewhere
+(`real_analytic_1d_nowhere_dense_zeros`), its zero set is nowhere dense —
+`h_par_vslot_zero` fails **generically**, not just at this witness. Full
+derivation in the diary entry "h_par_vslot_zero: DEFINITIVELY RESOLVED
+FALSE, not just unresolved."
+
+**Do not pursue `H_par` (contract-both-indices-with-`e_par`) for
+`cor:H12zero` — it cannot work, not even after more effort.** The
+`Jac3_H12zero_identity`/`Jac3_H12zero_nonzero_criterion` theorems already in
+the bridge remain logically valid (true implications) but are practically
+inapplicable and should not be built on further. A real fix needs a
+genuinely different construction — most plausibly geodesic/Riemannian-
+normal-coordinate reparametrization on the sphere at each point (so the
+ambient Hessian's tangential/Christoffel part vanishes too, not just the
+first-order direction) — which is substantial new differential-geometry
+infrastructure this project doesn't have, not a quick brick. Treat
+`cor:Lambda-closed` (which depends on `cor:H12zero`) as **on hold** pending
+that infrastructure, or someone finding a different invariant
+characterization entirely.
 
 **After `cor:H12zero` is actually resolved:** reassess based on what `rem:H12zero` says is left
 (the all-sine-zero slice `s_1=s_2=s_3=0`, said to already be closed

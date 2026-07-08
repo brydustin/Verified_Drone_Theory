@@ -3896,3 +3896,55 @@ cancellation (`a>0`, `gain_dip>0`, `kappa != 0` from `c != 0`) and scalar algebr
 
 Final verification before commit:
 Applied_Math_M5_UPhi BUILD_EXIT=0 and Applied_Math_D34_Analytic BUILD_EXIT=0.
+
+### h_par_vslot_zero: DEFINITIVELY RESOLVED FALSE, not just unresolved (2026-07-08, cont. 2)
+"Can you attempt to resolve h_par_vslot_zero directly ultrathink." Did the full derivation
+rather than continue to hedge.
+Re-derived D2cvec_dip's bilinear structure from cvec_dip = P*r(omega) - const (P the fixed
+2x3 tilt-projection matrix, r(omega)=(sin th cos ph, sin th sin ph, cos th) the unit-sphere
+point) via direct differentiation, giving D2r(omega)[h,h] = -(h1^2+h2^2)*r + 2h1h2*T +
+h2^2*cos(th)*e3 with T=d_th d_ph r. Verified this EXACTLY term-by-term against the actual
+Isabelle D2cvec_dip definition (both output components) -- confirmed match, not just a
+plausible analogy.
+Traced HessU_dip_entry_perp_slot_value's general formula contracted with e_par on both
+Hessian indices: the dHcmat 4-term block and the two g1-jet terms ALL collapse to zero via
+c.v=0 (same mechanism as Phi_par, confirmed by direct symbolic re-derivation of the
+dHcmat_x_perp sum -- every term carries a c.v factor). The dV_x term is zero directly. The
+ONLY surviving piece: H_par's v-slot value = 2*gain_dip(omega)*Im(cnj(A)*phi_m)*Q, where
+Q := D2cvec_dip(omega)[e_par,e_par] . perp2(c) -- an omega-only quantity, independent of x,m.
+Constructed an explicit witness: omega0=(pi/4,0), omegas=(3pi/4,0) [chosen so Dx=Dy=0,
+simplifying Pe3 away], omega=(pi/3,pi/6) [generic, det(Dcvec_dip)!=0 and c!=0 both verified].
+Solved Dc(e_par)=c exactly at this point: e_par = (sqrt3 - sqrt6/2, sqrt6/6). Substituted
+through to an exact closed form: Q = 23*sqrt6/24 - 5*sqrt3/4.
+MACHINE-VERIFIED (not just hand arithmetic): built a standalone theory
+(/tmp/.../scratchpad/hpar_check/HparCheck.thy) importing HOL-Decision_Procs.Approximation,
+proved `0.18 < Qval \<and> Qval < 0.19` via the `approximation` method (rigorous interval
+arithmetic) -- BUILD_EXIT=0. So Q is definitively, rigorously nonzero (~0.182), not a
+hand-arithmetic artifact.
+CONCLUSION: h_par_vslot_zero is FALSE, and moreover FALSE GENERICALLY -- Q is a
+real-analytic function of (omega0,omegas,omega) nonzero at a generic witness point, so by
+the SAME identity-theorem logic this project already uses elsewhere
+(real_analytic_1d_nowhere_dense_zeros), its zero set is nowhere dense, not the reverse. The
+H_par construction (contract both Hessian indices with e_par, mirroring Phi_par's fix) is a
+DEAD END for cor:H12zero, not a gap to patch later -- even resolving THIS witness wouldn't
+help, since the hypothesis fails on essentially all configurations. `Jac3_H12zero_identity`/
+`Jac3_H12zero_nonzero_criterion` (landed last turn, conditional on h_par_vslot_zero) remain
+LOGICALLY VALID implications but are now known to be practically INAPPLICABLE -- not
+withdrawn from the bridge (they're not wrong, just not usable), but should NOT be built upon
+or presented as a viable path to cor:H12zero going forward.
+WHY THE FIRST-DERIVATIVE FIX (Phi_par) WORKED BUT THIS DOESN'T: Phi_par's v-slot derivative
+collapsed via A SINGLE application of Dc(e_par)=c (linear in the direction). H_par needs
+D2c(e_par,e_par), and second derivatives don't inherit e_par's defining property the same
+way -- e_par is a plain TANGENT VECTOR alignment (first-order), but making a SECOND
+derivative "radial" at a point requires a stronger condition (e.g. e_par's direction being
+parametrized by GEODESIC/arc-length coordinates at that specific point -- i.e. Riemannian
+normal coordinates on the sphere -- so that the Christoffel/tangential part of the ambient
+Hessian vanishes too, not just the vector alignment). This is NEW differential-geometry
+machinery not present anywhere in this project (no geodesic normal coordinate apparatus
+exists), and is a substantial standalone undertaking, not a quick fix.
+NEXT for cor:H12zero (if revisited): either (a) build geodesic/normal-coordinate machinery
+for the sphere at a point (large, new infrastructure), or (b) look for a genuinely different
+invariant characterization of "H11" that doesn't go through a naive e_par-contraction, or
+(c) set this branch aside (it is NOT required for cor:H11-closed/cor:vpair22, which are
+independently complete) and prioritize cor:vpair22-full, app:H0res, or layer-5 assembly
+instead, revisiting Lambda-closed later with fresh eyes.
