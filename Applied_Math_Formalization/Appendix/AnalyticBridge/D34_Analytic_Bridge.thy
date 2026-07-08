@@ -3405,4 +3405,285 @@ lemma Hcmat_entry_perp_slot_deriv:
   by (simp add: d_A_moment_x_perp[OF perp] dMcfun_x_perp[OF perp] dM2cfun_x_perp[OF perp]
       algebra_simps)
 
+
+section \<open>Assembling the HessU-entry x-derivative (fixed \<omega>) from the three blocks\<close>
+
+text \<open>@{thm HessU_dip_entry_moments} expresses \<open>HessU(\<cdot>,\<omega>)$k$l\<close> as a fixed-\<omega> linear
+  combination of the three \<open>x\<close>-varying blocks \<open>V\<close>, \<open>gradcV\<close>, \<open>Hcmat\<close> (everything else
+  --- \<open>Dcvec_dip\<close>, \<open>D2cvec_dip\<close>, \<open>gain_dip\<close>, the \<open>gdip\<close> jets --- depends only on \<open>\<omega>\<close>,
+  hence is CONSTANT in \<open>x\<close>).  This theory assembles the \<open>x\<close>-derivative of the entry
+  from the three already-proven block derivatives, then specialises to a
+  perpendicular slot direction.\<close>
+
+subsection \<open>Named block-derivative abbreviations (repackaging the proven block facts)\<close>
+
+definition dV_x :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
+  "dV_x x c h = 2 * (Re (Afun x c) * Re (d_A_moment_x x c h)
+                    + Im (Afun x c) * Im (d_A_moment_x x c h))"
+
+definition dgradcV_x :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
+  "dgradcV_x x c i h = 2 * (Re (d_A_moment_x x c h) * Im (Mcfun x c i)
+                          + Re (Afun x c) * Im (dMcfun_x x c i h)
+                          - (Im (d_A_moment_x x c h) * Re (Mcfun x c i)
+                          + Im (Afun x c) * Re (dMcfun_x x c i h)))"
+
+definition dHcmat_x :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> 2 \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
+  "dHcmat_x x c p q h = 2 * ((Re (dMcfun_x x c q h) * Re (Mcfun x c p)
+               + Im (dMcfun_x x c q h) * Im (Mcfun x c p)
+               + (Re (Mcfun x c q) * Re (dMcfun_x x c p h) + Im (Mcfun x c q) * Im (dMcfun_x x c p h)))
+              - ((Re (d_A_moment_x x c h) * Re (M2cfun x c p q) + Im (d_A_moment_x x c h) * Im (M2cfun x c p q))
+               + (Re (Afun x c) * Re (dM2cfun_x x c p q h) + Im (Afun x c) * Im (dM2cfun_x x c p q h))))"
+
+lemma has_derivative_Uc_x': "((\<lambda>y. U_cart (\<lambda>c. c) (\<lambda>_. 1) y c) has_derivative dV_x x c) (at x)"
+  unfolding dV_x_def by (rule has_derivative_Uc_x)
+
+lemma has_derivative_gradUc_comp_x':
+  "((\<lambda>y. vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) i) has_derivative dgradcV_x x c i) (at x)"
+  unfolding dgradcV_x_def by (rule has_derivative_gradUc_comp_x)
+
+lemma has_derivative_Hcmat_entry_x':
+  "((\<lambda>y. vec_nth (vec_nth (Hcmat y c) p) q) has_derivative dHcmat_x x c p q) (at x)"
+  unfolding dHcmat_x_def by (rule has_derivative_Hcmat_entry_x)
+
+subsection \<open>Perp-slot values of the block-derivative names\<close>
+
+lemma dV_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "dV_x x c (slot m v) = 0"
+  unfolding dV_x_def using Uc_perp_slot_deriv[OF assms] .
+
+lemma dgradcV_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "dgradcV_x x c i (slot m v) = 2 * vec_nth v i * Im (cnj (Afun x c) * phase c x m)"
+  unfolding dgradcV_x_def using gradUc_comp_perp_slot_deriv[OF assms] .
+
+lemma dHcmat_x_perp:
+  fixes c v :: "real^2"
+  assumes "c \<bullet> v = 0"
+  shows "dHcmat_x x c p q (slot m v)
+       = 2 * (vec_nth v q * Re (cnj (phase c x m) * Mcfun x c p)
+            + vec_nth v p * Re (cnj (Mcfun x c q) * phase c x m)
+            - (vec_nth v p * vec_nth (vec_nth x m) q
+             + vec_nth (vec_nth x m) p * vec_nth v q) * Re (cnj (Afun x c) * phase c x m))"
+  unfolding dHcmat_x_def using Hcmat_entry_perp_slot_deriv[OF assms] .
+
+subsection \<open>A fixed vector paired with the \<open>gradcV\<close> block\<close>
+
+lemma has_derivative_gradcV_inner_x:
+  fixes w c :: "real^2"
+  shows "((\<lambda>y. w \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y c) has_derivative
+           (\<lambda>h. vec_nth w 1 * dgradcV_x x c 1 h + vec_nth w 2 * dgradcV_x x c 2 h)) (at x)"
+proof -
+  have d1: "((\<lambda>y. vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) 1) has_derivative dgradcV_x x c 1) (at x)"
+    by (rule has_derivative_gradUc_comp_x')
+  have d2: "((\<lambda>y. vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) 2) has_derivative dgradcV_x x c 2) (at x)"
+    by (rule has_derivative_gradUc_comp_x')
+  have core: "((\<lambda>y. vec_nth w 1 * vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) 1
+               + vec_nth w 2 * vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) 2)
+       has_derivative (\<lambda>h. vec_nth w 1 * dgradcV_x x c 1 h + vec_nth w 2 * dgradcV_x x c 2 h)) (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_add[OF
+          has_derivative_mult[OF has_derivative_const d1]
+          has_derivative_mult[OF has_derivative_const d2]]])
+       (simp add: fun_eq_iff algebra_simps)
+  have eq: "(\<lambda>y. w \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y c)
+      = (\<lambda>y. vec_nth w 1 * vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) 1
+           + vec_nth w 2 * vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) 2)"
+    by (rule ext) (simp add: inner_vec_def sum_2)
+  show ?thesis unfolding eq by (rule core)
+qed
+
+subsection \<open>Two fixed vectors paired with the \<open>Hcmat\<close> block\<close>
+
+lemma has_derivative_Hcmat_bilinear_x:
+  fixes w1 w2 c :: "real^2"
+  shows "((\<lambda>y. w1 \<bullet> (Hcmat y c *v w2)) has_derivative
+           (\<lambda>h. vec_nth w1 1 * vec_nth w2 1 * dHcmat_x x c 1 1 h
+              + vec_nth w1 1 * vec_nth w2 2 * dHcmat_x x c 1 2 h
+              + vec_nth w1 2 * vec_nth w2 1 * dHcmat_x x c 2 1 h
+              + vec_nth w1 2 * vec_nth w2 2 * dHcmat_x x c 2 2 h)) (at x)"
+proof -
+  have d11: "((\<lambda>y. vec_nth (vec_nth (Hcmat y c) 1) 1) has_derivative dHcmat_x x c 1 1) (at x)"
+    by (rule has_derivative_Hcmat_entry_x')
+  have d12: "((\<lambda>y. vec_nth (vec_nth (Hcmat y c) 1) 2) has_derivative dHcmat_x x c 1 2) (at x)"
+    by (rule has_derivative_Hcmat_entry_x')
+  have d21: "((\<lambda>y. vec_nth (vec_nth (Hcmat y c) 2) 1) has_derivative dHcmat_x x c 2 1) (at x)"
+    by (rule has_derivative_Hcmat_entry_x')
+  have d22: "((\<lambda>y. vec_nth (vec_nth (Hcmat y c) 2) 2) has_derivative dHcmat_x x c 2 2) (at x)"
+    by (rule has_derivative_Hcmat_entry_x')
+  have core: "((\<lambda>y. vec_nth w1 1 * vec_nth w2 1 * vec_nth (vec_nth (Hcmat y c) 1) 1
+               + vec_nth w1 1 * vec_nth w2 2 * vec_nth (vec_nth (Hcmat y c) 1) 2
+               + vec_nth w1 2 * vec_nth w2 1 * vec_nth (vec_nth (Hcmat y c) 2) 1
+               + vec_nth w1 2 * vec_nth w2 2 * vec_nth (vec_nth (Hcmat y c) 2) 2)
+       has_derivative
+       (\<lambda>h. vec_nth w1 1 * vec_nth w2 1 * dHcmat_x x c 1 1 h
+          + vec_nth w1 1 * vec_nth w2 2 * dHcmat_x x c 1 2 h
+          + vec_nth w1 2 * vec_nth w2 1 * dHcmat_x x c 2 1 h
+          + vec_nth w1 2 * vec_nth w2 2 * dHcmat_x x c 2 2 h)) (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_add[OF has_derivative_add[OF has_derivative_add[OF
+          has_derivative_mult[OF has_derivative_const d11]
+          has_derivative_mult[OF has_derivative_const d12]]
+          has_derivative_mult[OF has_derivative_const d21]]
+          has_derivative_mult[OF has_derivative_const d22]]])
+       (simp add: fun_eq_iff algebra_simps)
+  have eq: "(\<lambda>y. w1 \<bullet> (Hcmat y c *v w2))
+      = (\<lambda>y. vec_nth w1 1 * vec_nth w2 1 * vec_nth (vec_nth (Hcmat y c) 1) 1
+           + vec_nth w1 1 * vec_nth w2 2 * vec_nth (vec_nth (Hcmat y c) 1) 2
+           + vec_nth w1 2 * vec_nth w2 1 * vec_nth (vec_nth (Hcmat y c) 2) 1
+           + vec_nth w1 2 * vec_nth w2 2 * vec_nth (vec_nth (Hcmat y c) 2) 2)"
+    by (rule ext) (simp add: inner_vec_def matrix_vector_mult_def sum_2 algebra_simps)
+  show ?thesis unfolding eq by (rule core)
+qed
+
+subsection \<open>Assembly: the Hessian entry's \<open>x\<close>-derivative (fixed \<open>\<omega>\<close>)\<close>
+
+
+theorem has_derivative_HessU_dip_entry_x:
+  fixes k l :: 2
+  shows "((\<lambda>y. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ k $ l) has_derivative
+      (\<lambda>h. gain_dip \<omega> *
+             ((vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 1 h
+             + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 2 h
+             + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 1 h
+             + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 2 h)
+             + (vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+              + vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h))
+         + frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis l 1) 1)
+             * (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+              + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h)
+         + frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis k 1) 1)
+             * (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+              + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h)
+         + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) (vec_nth (axis k 1) 1)) (at \<omega>)
+             (axis l 1) * dV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) (at x)"
+proof -
+  have hcbil: "((\<lambda>y. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> (Hcmat y (cvec_dip \<omega>0 \<omega>s \<omega>) *v Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)))
+       has_derivative
+       (\<lambda>h. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+              * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 1 h
+          + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+              * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 2 h
+          + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+              * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 1 h
+          + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+              * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 2 h)) (at x)"
+    by (rule has_derivative_Hcmat_bilinear_x)
+  have gk: "((\<lambda>y. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>)) has_derivative
+       (\<lambda>h. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+          + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h)) (at x)"
+    by (rule has_derivative_gradcV_inner_x)
+  have gl: "((\<lambda>y. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>)) has_derivative
+       (\<lambda>h. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+          + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h)) (at x)"
+    by (rule has_derivative_gradcV_inner_x)
+  have dk: "((\<lambda>y. D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>))
+       has_derivative
+       (\<lambda>h. vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+          + vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h)) (at x)"
+    by (rule has_derivative_gradcV_inner_x)
+  have vv: "((\<lambda>y. U_cart (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>)) has_derivative
+       dV_x x (cvec_dip \<omega>0 \<omega>s \<omega>)) (at x)"
+    by (rule has_derivative_Uc_x')
+  have part1: "((\<lambda>y. gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)
+                    \<bullet> (Hcmat y (cvec_dip \<omega>0 \<omega>s \<omega>) *v Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1))
+                + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       has_derivative
+       (\<lambda>h. gain_dip \<omega> *
+              ((vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+                   * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 1 h
+               + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+                   * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 2 h
+               + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+                   * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 1 h
+               + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+                   * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 2 h)
+              + (vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+               + vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h))))
+       (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF has_derivative_const has_derivative_add[OF hcbil dk]]])
+       (simp add: fun_eq_iff algebra_simps)
+  have part2: "((\<lambda>y. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis l 1) 1)
+                    * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       has_derivative
+       (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis l 1) 1)
+              * (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+               + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h)))
+       (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF has_derivative_const gk]])
+       (simp add: fun_eq_iff)
+  have part3: "((\<lambda>y. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis k 1) 1)
+                    * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       has_derivative
+       (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis k 1) 1)
+              * (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 h
+               + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 h)))
+       (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF has_derivative_const gl]])
+       (simp add: fun_eq_iff)
+  have part4: "((\<lambda>y. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) (vec_nth (axis k 1) 1))
+                    (at \<omega>) (axis l 1) * U_cart (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>))
+       has_derivative
+       (\<lambda>h. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) (vec_nth (axis k 1) 1)) (at \<omega>)
+              (axis l 1) * dV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h))
+       (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF has_derivative_const vv]])
+       (simp add: fun_eq_iff)
+  have fun_eq: "(\<lambda>y. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega> $ k $ l)
+      = (\<lambda>y. gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)
+                  \<bullet> (Hcmat y (cvec_dip \<omega>0 \<omega>s \<omega>) *v Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1))
+              + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis l 1) 1)
+               * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis k 1) 1)
+               * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1) \<bullet> gradU (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) (vec_nth (axis k 1) 1)) (at \<omega>)
+               (axis l 1) * U_cart (\<lambda>c. c) (\<lambda>_. 1) y (cvec_dip \<omega>0 \<omega>s \<omega>))"
+    by (rule ext) (simp add: HessU_dip_entry_moments algebra_simps)
+  show ?thesis
+    unfolding fun_eq
+    by (rule has_derivative_eq_rhs[OF has_derivative_add[OF has_derivative_add[OF
+          has_derivative_add[OF part1 part2] part3] part4]])
+       (simp add: fun_eq_iff algebra_simps)
+qed
+
+subsection \<open>Perp-slot corollary: the Hessian entry's derivative in a perpendicular slot\<close>
+
+text \<open>The Fr\'echet derivative of the entry, evaluated at \<open>h = slot m v\<close> with
+  \<open>c \<bullet> v = 0\<close>: substitute the three block perp-slot values
+  (@{thm dV_x_perp}, @{thm dgradcV_x_perp}, @{thm dHcmat_x_perp}) into the general
+  formula from @{thm has_derivative_HessU_dip_entry_x}.\<close>
+
+theorem HessU_dip_entry_perp_slot_value:
+  fixes k l :: 2 and m :: "'n::finite" and v \<omega>0 \<omega>s :: "real^2"
+    and x :: "(real^2)^'n"
+  assumes perp: "cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> v = 0"
+  shows "frechet_derivative (\<lambda>y. vec_nth (vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) k) l) (at x) (slot m v)
+       = gain_dip \<omega> *
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 1 (slot m v)
+             + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 2 (slot m v)
+             + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 1 (slot m v)
+             + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2
+                  * dHcmat_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 2 (slot m v)
+             + (vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 1
+                  * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 (slot m v)
+              + vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis k 1) (axis l 1)) 2
+                  * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 (slot m v)))
+         + frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis l 1) 1)
+             * (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 (slot m v)
+              + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 (slot m v))
+         + frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis k 1) 1)
+             * (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 1 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 1 (slot m v)
+              + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis l 1)) 2 * dgradcV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) 2 (slot m v))
+         + frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (vec_nth \<eta> 1)) (vec_nth (axis k 1) 1)) (at \<omega>)
+             (axis l 1) * dV_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot m v)"
+  by (rule fun_cong[OF frechet_derivative_at[OF has_derivative_HessU_dip_entry_x, symmetric]])
+
 end

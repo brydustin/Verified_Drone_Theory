@@ -3600,3 +3600,40 @@ which left the has_derivative goal unrewritten); a bare `c . v = 0` assumption i
 parse-ambiguous — pin `fixes c v :: real^2`.
 NEXT: assemble the Hessian-ENTRY x-derivative (combine the three blocks through
 HessU_dip_entry_moments; omega-side jets are x-constant) -> prop:vpair11 Delta identity.
+
+### D34 wit_core step i.5: the Hessian-entry x-derivative ASSEMBLED (2026-07-08)
+"Assemble the full Hessian-entry x-derivative by combining the three blocks through
+HessU_dip_entry_moments; then prop:vpair11's Delta-identity. ultrathink." Delivered
+step i.5 fully verified; Delta-identity work scoped as next (see plan). CHECKED FIRST
+(per instruction): not already done (no x-derivative of any Hessian block existed
+beyond the three per-block facts from the prior session); strictly necessary (the
+branch certificates differentiate H11/H12/H22 in v-slot directions, and every x-
+dependence of a Hessian ENTRY routes through exactly these three blocks per
+HessU_dip_entry_moments's own shape).
+has_derivative_HessU_dip_entry_x: the x-derivative (fixed omega) of HessU(.,omega)$k$l,
+assembled via has_derivative_add/has_derivative_mult[OF has_derivative_const ...]
+chains combining has_derivative_gradcV_inner_x (a FIXED vector paired with the
+gradcV block, via component sum + inner_vec_def/sum_2) and
+has_derivative_Hcmat_bilinear_x (two fixed vectors paired with the Hcmat block,
+via the 4-term bilinear expansion, same expansion pattern as cadapt_transport) --
+each has_derivative_eq_rhs-cleaned individually BEFORE combining (avoids the mess
+of nested has_derivative_add outputs accumulating unsimplified "+0*.." terms).
+HessU_dip_entry_perp_slot_value: the VALUE at a perpendicular slot, via
+frechet_derivative_at + fun_cong (NOT metis -- avoids the merged-heap hang).
+HARD-WON GOTCHA: attempted `define c where "c=..."` + `\<gamma>k` etc to keep the proof
+readable, matched against the theorem's (necessarily) long-form 'shows' clause via
+"unfolding fun_eq c_def \<gamma>k_def ... by (rule core)" -- FAILED, because unfolding
+_def on the GOAL (long form) and having `core` stated in SHORT form are genuinely
+DIFFERENT terms (define makes a real constant, not a notation), so `rule core`
+can't match no matter which side gets unfolded. A follow-up attempt to patch this
+via `let` + bulk regex substitution DUPLICATED and corrupted the file (regex
+block-boundary detection matched the wrong "qed" landmark). Recovered by discarding
+back to the last clean prefix and rewriting the ENTIRE assembly proof in FULL LONG
+FORM by hand (verbose, ~110 lines, but every term is unambiguous) -- this is now the
+established safe pattern for "prove in parts, combine, match an external long-form
+goal" whenever the external goal can't be restated in short form.
+Also hit (again) the fps_nth/vec_nth $-ambiguity, but this time ONLY on a
+`frechet_derivative (\<lambda>y. HessU(...) $ k $ l) (at x) (slot m v)` argument -- the
+IDENTICAL "$ k $ l" pattern parsed FINE as a has_derivative LHS one theorem earlier,
+so this ambiguity is context-sensitive, not a blanket rule; when in doubt, spell
+vec_nth. And `fixes m :: 'n` needs '::finite' pinned locally wherever `slot` is used.
