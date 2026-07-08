@@ -3752,3 +3752,81 @@ None of these are small increments like G22 was; each is its own multi-session u
 NEXT: pick one of (a)-(d) to scope out in detail (probably (b) uphi-exhausted first, since
 it's the most self-contained and reuses existing real-analytic infrastructure) before
 committing to an implementation plan.
+
+### D34 UPhi branch Tier 1 (Codex) — F_eta analytic zero set (2026-07-08)
+Codex took the assigned u-slice branch (`prop:uphi-reduce` / `prop:uphi-codim3` /
+`cor:uphi-exhausted`) and first read `PARALLEL_WITH_CODEX.md`,
+`D34_WITNESS_PLAN.md`, this diary, and the paper section "The vanishing u-slice
+branch" (`nonemptiness_unified_singlefile_complete.tex` lines 3826-4000).
+
+Landed the fully specified Tier 1 only:
+- dev scratch `M5_Dev_UPhi/ROOT` + `M5_Dev_UPhi/Scratch_UPhi.thy`;
+- permanent branch theory `Appendix/AnalyticBridge/D34_UPhi_Branch.thy`;
+- `F_eta`, `real_analytic_on_F_eta`, `F_eta_at_0`, and
+  `F_eta_zeros_nowhere_dense`.
+
+The zero-set theorem is the paper's analytic content of `prop:uphi-codim3` in the
+available local form: apply `real_analytic_1d_nowhere_dense_zeros` on `UNIV`,
+with `connected_UNIV` and the nonzero witness `F_eta eta kappa 0 = 1`.
+
+Builds:
+- `Applied_Math_M5_UPhi` BUILD_EXIT=0.
+- `Applied_Math_D34_Analytic` BUILD_EXIT=0 after registering the new UPhi theory.
+
+Architecture note: `PARALLEL_WITH_CODEX.md` requested an own permanent session in
+`Appendix/AnalyticBridge`, but Isabelle rejects duplicate session directories.  The
+buildable compromise is that `D34_UPhi_Branch.thy` is a separate theory in the
+existing `Applied_Math_D34_Analytic` session.  `D34_Analytic_Bridge.thy` was not
+edited.  Tier 2 remains open: the next real work is the parallel-slot derivative of
+`Phi_par` via the general slot laws (`d_A_moment_x_slot` etc.) and its gauge algebra
+against `F_eta`.
+
+### cor:H12zero investigation: a genuine obstacle, not a quick brick (2026-07-08)
+"Continue with your own work" (after handing the u-slice branch to Codex). Per my own
+documented plan, started on cor:H12zero (the entry point to cor:Lambda-closed), expecting
+it to reuse Phi_par/det3 the same clean way H11 and H22 did.
+CAUGHT BEFORE BUILDING ANYTHING: prop:H12zero's determinant identity needs H11 independent
+of every v-slot (paper: "Since H11 is independent of every v_j"), mirroring the Phi_1
+v-independence claim from cor:vpair11 -- which I already found does NOT hold automatically
+in our (theta,phi)-angular omega coordinates, and fixed via Phi_par (contracting the omega
+direction with e_par so Dcvec_dip(e_par)=c, making the v-slot derivative collapse via
+c.v=0). Tried the SAME fix for H11: define H_par by contracting BOTH Hessian indices with
+e_par instead of axis(1,1). Tracing through the ALREADY-PROVEN general formula
+(HessU_dip_entry_perp_slot_value), the dHcmat_x 4-term block and the two gdip-derivative
+terms DO collapse the same clean way (each reduces to something with a c.v=0 factor) --
+but there is an EXTRA term, from D2cvec_dip(axis k)(axis l) contracted with e_par twice
+(i.e. D2cvec_dip(e_par)(e_par)), that does NOT obviously vanish: it becomes
+gain_dip * Im(...) * (D2cvec_dip(e_par)(e_par) . v), and D2cvec_dip(e_par)(e_par) is some
+FIXED vector (depending only on omega/omega0/omegas) with no manifest reason to be
+parallel to c.
+Checked this is plausible via classical differential geometry (not yet a formal Isabelle
+proof either way): cvec_dip(omega) is a FIXED linear projection (with beam-steering tilt
+Dx,Dy) of the point (kx,ky,kz)=(sin th cos ph, sin th sin ph, cos th) on the unit sphere,
+MINUS a constant shift (kx(omega_s)-etc). The Gauss equation for a sphere's ambient
+Hessian gives D^2 r (h,h') = Christoffel-tangential-term - g(h,h') * r (position-parallel
+term with a MINUS sign, standard unit-sphere curvature). Since cvec_dip = P*r - const (P
+the 2x3 tilt-projection), D2cvec_dip(h)(h') = P*Christoffel(h,h') - g(h,h')*(c+shift) --
+the radial-looking piece is proportional to c PLUS a nonzero constant shift vector, so it
+is NOT purely parallel to c, and the tangential Christoffel piece has no obvious reason to
+be either. This suggests H_par's v-slot derivative has a genuinely nonzero residual in
+general -- STOPPED before building cor:H12zero on top of an assumption I now doubt, rather
+than push forward and risk an incorrect theorem.
+IMPORTANT CORRECTION to last turn's PARALLEL_WITH_CODEX.md: I described cor:H12zero as
+"high confidence, high reuse, same as before [H11/H22]" -- THAT WAS WRONG. The
+FIRST-derivative story (Phi_par) worked via ONE e_par contraction; the SECOND-derivative
+story (H_par) has an extra term that doesn't obviously cancel the same way. Retracted that
+claim in PARALLEL_WITH_CODEX.md (see next commit) so the coordination doc doesn't mislead
+either of us (or Codex) into treating this as a safe pattern-reuse task.
+STATUS: cor:H12zero is BLOCKED pending resolution of whether
+D2cvec_dip(e_par)(e_par) . perp2(c) actually vanishes (a specific, computable, but
+algebraically involved scalar identity depending only on omega/omega0/omegas -- not yet
+attempted formally) OR whether the residual should instead be carried as an explicit
+hypothesis on the theorem (weaker but honest, matching the project's existing pattern of
+carrying genuinely-needed nondegeneracy conditions, e.g. det(Dcvec_dip)!=0).
+NEXT: either (a) attempt the D2cvec_dip(e_par,e_par) computation directly (tedious but
+bounded -- e_par's closed form would need to be derived from the 2x2 matrix inverse of
+Dcvec_dip, then substituted into D2cvec_dip's explicit sin/cos formula), or (b) restate
+cor:H12zero's Isabelle theorem with the residual as an explicit named hypothesis and move
+on, revisiting later, or (c) pivot to scoping cor:vpair22-full or app:H0res instead this
+session, since neither of those was claimed "high confidence" and both are honestly listed
+as large/novel already.

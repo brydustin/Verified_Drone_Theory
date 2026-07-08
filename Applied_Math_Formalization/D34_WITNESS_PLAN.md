@@ -371,3 +371,17 @@ analytic IFT with uniqueness neighbourhood; the chart engine
 `det HessU = 0` — the paper closes its `H ≡ 0` residue in `app:H0res`,
 `prop:h0res-meager`; same interface pattern applies) and layer 5 (the Lindelöf
 covering splice into Robust3).
+
+- 2026-07-08 (Codex): **u-slice Tier 1 LANDED** in a separate branch theory:
+  `Appendix/AnalyticBridge/D34_UPhi_Branch.thy` plus dev scratch
+  `M5_Dev_UPhi/`.  Added `F_eta`, `real_analytic_on_F_eta`, `F_eta_at_0`,
+  and `F_eta_zeros_nowhere_dense`, using the existing
+  `real_analytic_1d_nowhere_dense_zeros` workhorse with witness `u=0`.
+  Verified:
+  `Applied_Math_M5_UPhi` BUILD_EXIT=0 and `Applied_Math_D34_Analytic`
+  BUILD_EXIT=0 after registering the new UPhi theory.  Note: Isabelle rejects a
+  second session rooted at `Appendix/AnalyticBridge`, so the permanent branch is
+  a separate theory in the existing D34 analytic session rather than a second
+  session in the same directory; the shared bridge file itself was not edited.
+  Tier 2 (`prop:uphi-reduce`, the parallel-slot derivative of `Phi_par`) remains
+  open.
