@@ -257,6 +257,36 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   omega/omega0/omegas) -- caught immediately via the resulting type-clash error.
   REMAINING for the H11 branch (cor:H11-closed): (iv) prop:szero-local + the
   uphi/residual sub-branches; (v) layer 5 (Robust3 splice).
+- 2026-07-08 (cont. 3): **the symmetric H22 branch (prop:vpair22/cor:vpair22)
+  DONE** (in the bridge) via DIRECT REUSE of the H11-branch pattern: `G22`
+  (:= H11 - H12^2/H22) + `has_derivative_G22_x` (quotient-rule x-derivative,
+  H22 != 0) + `G22_perp_slot_value`; `Delta_ij_22` (:= det d(Phi2,G22)/d(v_i,v_j)
+  -- SAME Phi2 as prop:vpair11, paired with G22 instead of G11) +
+  `Delta_ij_22_identity`; `Jac3_22` + `Jac3_22_identity` (= D Phi_par(U) *
+  Delta_ij_22(i,j)) + `Jac3_22_nonzero_criterion` -- cor:vpair22's rank-3
+  criterion, fully invariant. Crucially, `Phi_par`/`Phi_par_perp_slot_zero`
+  (the H11-branch's invariant fix for Phi_1's v-independence) and `det3` were
+  REUSED VERBATIM with zero changes, since Phi_par doesn't depend on the
+  H11/H22 choice at all -- checked the paper's prop:vpair22/cor:vpair22 proofs
+  first and confirmed they are STRUCTURALLY IDENTICAL to vpair11/cor:vpair11
+  (same Phi2 factor, same block-triangular argument), just G11->G22. All five
+  theorems checked cleanly on the FIRST eval_at attempt.
+  NOTE: this is the BARE rank-3 criterion (cor:vpair22), not the deeper
+  cor:vpair22-full (needs a real-analytic lifting argument with auxiliary
+  variables, codimension counting in an EXTENDED space -- a genuinely
+  different, larger piece of work, not yet attempted).
+  REMAINING for Case B (cor:caseBmeager, the full H-not-identically-0 closure):
+  (iv-a) cor:vpair22-full's auxiliary-variable lifting (needs new machinery,
+  Hausdorff-dimension/codimension-in-extended-space arguments -- NOT the
+  has_derivative toolkit used so far); (iv-b) cor:uphi-exhausted (the u-slice
+  D Phi_1|_{E_u}=0 residue is nowhere dense -- needs prop:uphi-codim3's
+  REAL-ANALYTIC isolated-zero argument, a different flavor of proof entirely,
+  likely drawing on Applied_Math_Analytic_Complex/Real_Analytic_IFT); (iv-c)
+  cor:Lambda-closed (the H12=0,H22!=0 branch -- needs FOUR more sub-
+  propositions: Lambda-simple, Lambda-onefold, Lambda-high, double-impossible,
+  a substantial standalone piece); (iv-d) app:H0res/prop:h0res-meager (the
+  H-identically-0 degenerate stratum, a whole separate appendix); (v) layer 5
+  (Robust3 splice) once the above close.
   NEXT: (ii) prop:vpair11's G11 (=H22-H12^2/H11) perp-slot derivative via
   has_derivative_divide'/quotient rule from the H11/H12/H22 corollaries above,
   then the Delta_ij determinant identity; (iii) rank-3 criterion; layer 5.

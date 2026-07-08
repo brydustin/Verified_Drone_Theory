@@ -3711,3 +3711,44 @@ session's own baked-in theory (user caught this immediately) -- relaunched with
 processes it live from source instead of treating an in-heap theory as an editable buffer.
 Applied_Math_D34_Analytic + dev session BUILD_EXIT=0 (both splices).
 NEXT: (iv) prop:szero-local + the uphi/residual sub-branches; (v) layer 5 (Robust3 splice).
+
+### D34 wit_core: the symmetric H22 branch (prop:vpair22/cor:vpair22) (2026-07-08)
+"Get at it please :)" (continuing to the sub-branches after cor:H11-closed). Read the
+paper's overview (cor:caseBmeager) to see the full shape of what remains: Case B's
+H-not-identically-0 closure needs FOUR sub-branches covering the two possible good triples
+-- cor:vpair22-full (H12!=0,H22!=0), cor:uphi-exhausted (u-slice residue), cor:Lambda-closed
+(H12=0,H22!=0), cor:H11-closed (H11!=0, DONE last turn) -- plus app:H0res for the
+H-identically-0 degenerate stratum.
+Read prop:vpair22/cor:vpair22's exact statements and proofs before writing anything: they
+are STRUCTURALLY IDENTICAL to prop:vpair11/cor:vpair11 -- same Phi2 factor
+(partial_{v_j}Phi2 = -2ag s_j in both), same block-triangular Jacobian argument with Phi_1
+independent of every v_r, just G11 (:=H22-H12^2/H11) replaced by G22 (:=H11-H12^2/H22). This
+meant the ENTIRE Phi_par/Phi_par_perp_slot_zero machinery (last turn's hard-won invariant fix
+for Phi_1's v-independence) and det3 carry over VERBATIM with zero changes -- Phi_par doesn't
+know or care which of H11/H22 is nonzero.
+Built G22 + has_derivative_G22_x (quotient rule, H22!=0) + G22_perp_slot_value;
+Delta_ij_22 (:= det d(Phi2,G22)/d(v_i,v_j)) + Delta_ij_22_identity; Jac3_22 +
+Jac3_22_identity (= D Phi_par(U) * Delta_ij_22(i,j)) + Jac3_22_nonzero_criterion --
+cor:vpair22's rank-3 criterion. All five theorems checked cleanly on the FIRST eval_at
+attempt (direct copy of the H11-branch proof skeleton with G11->G22, H11!=0->H22!=0
+substituted throughout) -- the symmetry the paper itself exhibits paid off completely, no new
+gotchas.
+One cosmetic hiccup: an early stub's text comment used "G11\<rightarrow>G22, H11\<noteq>0\<rightarrow>H22\<noteq>0" and
+hit a "malformed command" parse error in the text cartouche; reworded in plain prose (not a
+proof issue, purely a comment).
+Applied_Math_D34_Analytic + dev session BUILD_EXIT=0 (both splices).
+IMPORTANT SCOPE NOTE for next time: what remains for the FULL Case B closure is substantially
+larger and more varied than what's been built so far --
+  (a) cor:vpair22-full needs an auxiliary-variable real-analytic LIFTING argument
+      (codimension counting in an EXTENDED space) -- not the has_derivative toolkit;
+  (b) cor:uphi-exhausted needs prop:uphi-codim3's REAL-ANALYTIC ISOLATED-ZERO argument
+      (a function's zero set is discrete unless identically zero) -- likely draws on
+      Applied_Math_Analytic_Complex/Real_Analytic_IFT rather than Fréchet-derivative facts;
+  (c) cor:Lambda-closed needs FOUR further sub-propositions of its own (Lambda-simple,
+      Lambda-onefold, Lambda-high, double-impossible) -- a substantial standalone piece;
+  (d) app:H0res/prop:h0res-meager is a WHOLE SEPARATE appendix for the H-identically-0
+      degenerate stratum.
+None of these are small increments like G22 was; each is its own multi-session undertaking.
+NEXT: pick one of (a)-(d) to scope out in detail (probably (b) uphi-exhausted first, since
+it's the most self-contained and reuses existing real-analytic infrastructure) before
+committing to an implementation plan.
