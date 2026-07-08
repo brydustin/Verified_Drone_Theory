@@ -3111,4 +3111,298 @@ proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
     by (simp add: dEjm_perp_slot_value[OF perp])
 qed
 
+
+section \<open>Layer 4b (Case-B path): perp-slot \<open>x\<close>-derivatives of the Hessian blocks\<close>
+
+text \<open>The branch certificates differentiate \<open>H\<^sub>1\<^sub>2\<close>, \<open>H\<^sub>2\<^sub>2\<close> (and \<open>\<Phi>\<^sub>3 = det H\<close>) in
+  \<open>v\<close>-slot directions.  Through @{thm HessU_dip_entry_moments} every \<open>x\<close>-dependence of
+  a Hessian entry routes through THREE blocks at fixed \<open>c\<close>: the pattern value
+  \<open>V = |A|\<^sup>2\<close>, the \<open>c\<close>-gradient components \<open>(\<nabla>\<^sub>cV)\<^sub>i\<close>, and the \<open>Hcmat\<close> entries.  This
+  theory delivers their explicit \<open>x\<close>-derivatives (at fixed \<open>c\<close>) and the perp-slot
+  values, in invariant form:
+  \<^enum> \<open>\<partial>\<^bsub>slot m v\<^esub> V = 0\<close>;
+  \<^enum> \<open>\<partial>\<^bsub>slot m v\<^esub> (\<nabla>\<^sub>cV)\<^sub>i = 2 v\<^sub>i Im(cnj A \<cdot> \<phi>\<^sub>m)\<close>;
+  \<^enum> \<open>\<partial>\<^bsub>slot m v\<^esub> Hcmat\<^sub>k\<^sub>l = 2[v\<^sub>l Re(cnj \<phi>\<^sub>m M\<^sub>k) + v\<^sub>k Re(cnj M\<^sub>l \<phi>\<^sub>m)
+        - (v\<^sub>k x\<^sub>l + x\<^sub>k v\<^sub>l) Re(cnj A \<phi>\<^sub>m)]\<close>
+  --- the gauge/frame-free generators of the paper's \<open>\<partial>\<^sub>v\<^sub>j H\<^sub>1\<^sub>2 = 2gc\<^sub>j(a\<^sub>1-au\<^sub>j)\<close>,
+  \<open>\<partial>\<^sub>v\<^sub>j H\<^sub>2\<^sub>2 = 4gc\<^sub>j(a\<^sub>2-av\<^sub>j)\<close> and the \<open>H\<^sub>1\<^sub>1\<close> \<open>v\<close>-behaviour in \<open>prop:vpair11\<close> /
+  \<open>prop:vblock\<close>.\<close>
+
+subsection \<open>Glue: the \<open>c\<close>-pattern moment functions are the paper moments\<close>
+
+lemma Mcfun_eq_M1_moment: "Mcfun x c 1 = M1_moment x c"
+  by (simp add: Mcfun_def M1_moment_def phase_def)
+
+lemma Mcfun_eq_M2_moment: "Mcfun x c 2 = M2_moment x c"
+  by (simp add: Mcfun_def M2_moment_def phase_def)
+
+lemma M2cfun_eq_M11_moment: "M2cfun x c 1 1 = M11_moment x c"
+  unfolding M2cfun_def M11_moment_def phase_def
+  by (rule sum.cong[OF refl]) (simp add: power2_eq_square)
+
+lemma M2cfun_eq_M12_moment: "M2cfun x c 1 2 = M12_moment x c"
+  unfolding M2cfun_def M12_moment_def phase_def w_M12_def
+  by (rule sum.cong[OF refl]) simp
+
+lemma M2cfun_eq_M12_moment': "M2cfun x c 2 1 = M12_moment x c"
+  unfolding M2cfun_def M12_moment_def phase_def w_M12_def
+  by (rule sum.cong[OF refl]) (simp add: ac_simps)
+
+lemma M2cfun_eq_M22_moment: "M2cfun x c 2 2 = M22_moment x c"
+  unfolding M2cfun_def M22_moment_def phase_def
+  by (rule sum.cong[OF refl]) (simp add: power2_eq_square)
+
+subsection \<open>Uniform derivative entries for the \<open>c\<close>-pattern moments\<close>
+
+definition dMcfun_x :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> (real^2)^'n \<Rightarrow> complex" where
+  "dMcfun_x x c k = (if k = 1 then d_M1_moment_x x c else d_M2_moment_x x c)"
+
+definition dM2cfun_x :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> 2 \<Rightarrow> (real^2)^'n \<Rightarrow> complex" where
+  "dM2cfun_x x c k l =
+     (if k = 1 then (if l = 1 then d_M11_moment_x x c else d_M12_moment_x x c)
+      else (if l = 1 then d_M12_moment_x x c else d_M22_moment_x x c))"
+
+lemma has_derivative_Afun_x:
+  "((\<lambda>y. Afun y c) has_derivative (\<lambda>h. d_A_moment_x x c h)) (at x)"
+proof -
+  have F: "((\<lambda>y. A_moment y c) has_derivative (\<lambda>h. d_A_moment_x x c h)) (at x)"
+    by (rule has_derivative_A_moment_x)
+  have eqn: "(\<lambda>y. Afun y c) = (\<lambda>y. A_moment y c)"
+    by (rule ext) (simp add: Afun_eq_A_moment)
+  show ?thesis unfolding eqn by (rule F)
+qed
+
+lemma has_derivative_Mcfun_x:
+  "((\<lambda>y. Mcfun y c k) has_derivative dMcfun_x x c k) (at x)"
+proof -
+  consider "k = (1::2)" | "k = 2" using exhaust_2 by blast
+  thus ?thesis
+  proof cases
+    case 1
+    have F: "((\<lambda>y. M1_moment y c) has_derivative (\<lambda>h. d_M1_moment_x x c h)) (at x)"
+      by (rule has_derivative_M1_moment_x)
+    have eqn: "(\<lambda>y. Mcfun y c k) = (\<lambda>y. M1_moment y c)"
+      using 1 by (simp add: fun_eq_iff Mcfun_eq_M1_moment)
+    have dEq: "dMcfun_x x c k = (\<lambda>h. d_M1_moment_x x c h)"
+      using 1 by (simp add: dMcfun_x_def)
+    show ?thesis unfolding eqn dEq by (rule F)
+  next
+    case 2
+    have F: "((\<lambda>y. M2_moment y c) has_derivative (\<lambda>h. d_M2_moment_x x c h)) (at x)"
+      by (rule has_derivative_M2_moment_x)
+    have eqn: "(\<lambda>y. Mcfun y c k) = (\<lambda>y. M2_moment y c)"
+      using 2 by (simp add: fun_eq_iff Mcfun_eq_M2_moment)
+    have dEq: "dMcfun_x x c k = (\<lambda>h. d_M2_moment_x x c h)"
+      using 2 by (simp add: dMcfun_x_def)
+    show ?thesis unfolding eqn dEq by (rule F)
+  qed
+qed
+
+lemma has_derivative_M2cfun_x:
+  "((\<lambda>y. M2cfun y c k l) has_derivative dM2cfun_x x c k l) (at x)"
+proof -
+  consider "k = (1::2) \<and> l = (1::2)" | "k = 1 \<and> l = 2" | "k = 2 \<and> l = 1" | "k = 2 \<and> l = 2"
+    using exhaust_2[of k] exhaust_2[of l] by blast
+  thus ?thesis
+  proof cases
+    case 1
+    have F: "((\<lambda>y. M11_moment y c) has_derivative (\<lambda>h. d_M11_moment_x x c h)) (at x)"
+      by (rule has_derivative_M11_moment_x)
+    have eqn: "(\<lambda>y. M2cfun y c k l) = (\<lambda>y. M11_moment y c)"
+      using 1 by (simp add: fun_eq_iff M2cfun_eq_M11_moment)
+    have dEq: "dM2cfun_x x c k l = (\<lambda>h. d_M11_moment_x x c h)"
+      using 1 by (simp add: dM2cfun_x_def)
+    show ?thesis unfolding eqn dEq by (rule F)
+  next
+    case 2
+    have F: "((\<lambda>y. M12_moment y c) has_derivative (\<lambda>h. d_M12_moment_x x c h)) (at x)"
+      by (rule has_derivative_M12_moment_x)
+    have eqn: "(\<lambda>y. M2cfun y c k l) = (\<lambda>y. M12_moment y c)"
+      using 2 by (simp add: fun_eq_iff M2cfun_eq_M12_moment)
+    have dEq: "dM2cfun_x x c k l = (\<lambda>h. d_M12_moment_x x c h)"
+      using 2 by (simp add: dM2cfun_x_def)
+    show ?thesis unfolding eqn dEq by (rule F)
+  next
+    case 3
+    have F: "((\<lambda>y. M12_moment y c) has_derivative (\<lambda>h. d_M12_moment_x x c h)) (at x)"
+      by (rule has_derivative_M12_moment_x)
+    have eqn: "(\<lambda>y. M2cfun y c k l) = (\<lambda>y. M12_moment y c)"
+      using 3 by (simp add: fun_eq_iff M2cfun_eq_M12_moment')
+    have dEq: "dM2cfun_x x c k l = (\<lambda>h. d_M12_moment_x x c h)"
+      using 3 by (simp add: dM2cfun_x_def)
+    show ?thesis unfolding eqn dEq by (rule F)
+  next
+    case 4
+    have F: "((\<lambda>y. M22_moment y c) has_derivative (\<lambda>h. d_M22_moment_x x c h)) (at x)"
+      by (rule has_derivative_M22_moment_x)
+    have eqn: "(\<lambda>y. M2cfun y c k l) = (\<lambda>y. M22_moment y c)"
+      using 4 by (simp add: fun_eq_iff M2cfun_eq_M22_moment)
+    have dEq: "dM2cfun_x x c k l = (\<lambda>h. d_M22_moment_x x c h)"
+      using 4 by (simp add: dM2cfun_x_def)
+    show ?thesis unfolding eqn dEq by (rule F)
+  qed
+qed
+
+subsection \<open>Uniform perp-slot values\<close>
+
+lemma dMcfun_x_perp:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "dMcfun_x x c k (slot m v) = of_real (vec_nth v k) * phase c x m"
+proof -
+  consider "k = (1::2)" | "k = 2" using exhaust_2 by blast
+  thus ?thesis
+    by cases (simp_all add: dMcfun_x_def d_M1_moment_x_perp[OF perp] d_M2_moment_x_perp[OF perp])
+qed
+
+lemma dM2cfun_x_perp:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "dM2cfun_x x c k l (slot m v)
+       = of_real (vec_nth v k * vec_nth (vec_nth x m) l
+                + vec_nth (vec_nth x m) k * vec_nth v l) * phase c x m"
+proof -
+  consider "k = (1::2) \<and> l = (1::2)" | "k = 1 \<and> l = 2" | "k = 2 \<and> l = 1" | "k = 2 \<and> l = 2"
+    using exhaust_2[of k] exhaust_2[of l] by blast
+  thus ?thesis
+    by cases (simp_all add: dM2cfun_x_def d_M11_moment_x_perp[OF perp]
+        d_M12_moment_x_perp[OF perp] d_M22_moment_x_perp[OF perp] dw_M12_def algebra_simps)
+qed
+
+subsection \<open>Block 1: the pattern value \<open>V = |A|\<^sup>2\<close>\<close>
+
+lemma has_derivative_Uc_x:
+  "((\<lambda>y. U_cart (\<lambda>c. c) (\<lambda>_. 1) y c) has_derivative
+      (\<lambda>h. 2 * (Re (Afun x c) * Re (d_A_moment_x x c h)
+              + Im (Afun x c) * Im (d_A_moment_x x c h)))) (at x)"
+proof -
+  have ReA: "((\<lambda>y. Re (Afun y c)) has_derivative (\<lambda>h. Re (d_A_moment_x x c h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Afun_x])
+  have ImA: "((\<lambda>y. Im (Afun y c)) has_derivative (\<lambda>h. Im (d_A_moment_x x c h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Afun_x])
+  have sq: "((\<lambda>y. (Re (Afun y c))\<^sup>2 + (Im (Afun y c))\<^sup>2) has_derivative
+      (\<lambda>h. 2 * Re (Afun x c) * Re (d_A_moment_x x c h)
+         + 2 * Im (Afun x c) * Im (d_A_moment_x x c h))) (at x)"
+    unfolding power2_eq_square
+    by (rule has_derivative_eq_rhs[OF has_derivative_add[OF
+          has_derivative_mult[OF ReA ReA] has_derivative_mult[OF ImA ImA]]])
+       (simp add: fun_eq_iff algebra_simps)
+  have fun_eq: "(\<lambda>y. U_cart (\<lambda>c. c) (\<lambda>_. 1) y c)
+      = (\<lambda>y. (Re (Afun y c))\<^sup>2 + (Im (Afun y c))\<^sup>2)"
+    by (rule ext) (simp add: U_cart_def A_cart_eq_Afun cmod_power2)
+  show ?thesis
+    unfolding fun_eq
+    by (rule has_derivative_eq_rhs[OF sq]) (simp add: fun_eq_iff algebra_simps)
+qed
+
+lemma Uc_perp_slot_deriv:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "2 * (Re (Afun x c) * Re (d_A_moment_x x c (slot m v))
+            + Im (Afun x c) * Im (d_A_moment_x x c (slot m v))) = 0"
+  by (simp add: d_A_moment_x_perp[OF perp])
+
+subsection \<open>Block 2: the \<open>c\<close>-gradient components\<close>
+
+lemma has_derivative_gradUc_comp_x:
+  "((\<lambda>y. vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) i) has_derivative
+      (\<lambda>h. 2 * (Re (d_A_moment_x x c h) * Im (Mcfun x c i)
+              + Re (Afun x c) * Im (dMcfun_x x c i h)
+              - (Im (d_A_moment_x x c h) * Re (Mcfun x c i)
+              + Im (Afun x c) * Re (dMcfun_x x c i h))))) (at x)"
+proof -
+  have ReA: "((\<lambda>y. Re (Afun y c)) has_derivative (\<lambda>h. Re (d_A_moment_x x c h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Afun_x])
+  have ImA: "((\<lambda>y. Im (Afun y c)) has_derivative (\<lambda>h. Im (d_A_moment_x x c h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Afun_x])
+  have ReM: "((\<lambda>y. Re (Mcfun y c i)) has_derivative (\<lambda>h. Re (dMcfun_x x c i h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Mcfun_x])
+  have ImM: "((\<lambda>y. Im (Mcfun y c i)) has_derivative (\<lambda>h. Im (dMcfun_x x c i h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Mcfun_x])
+  have core: "((\<lambda>y. 2 * (Re (Afun y c) * Im (Mcfun y c i) - Im (Afun y c) * Re (Mcfun y c i)))
+      has_derivative
+      (\<lambda>h. 2 * (Re (d_A_moment_x x c h) * Im (Mcfun x c i)
+              + Re (Afun x c) * Im (dMcfun_x x c i h)
+              - (Im (d_A_moment_x x c h) * Re (Mcfun x c i)
+              + Im (Afun x c) * Re (dMcfun_x x c i h))))) (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult_right[OF has_derivative_diff[OF
+          has_derivative_mult[OF ReA ImM] has_derivative_mult[OF ImA ReM]]]])
+       (simp add: fun_eq_iff algebra_simps)
+  have fun_eq: "(\<lambda>y. vec_nth (gradU (\<lambda>c. c) (\<lambda>_. 1) y c) i)
+      = (\<lambda>y. 2 * (Re (Afun y c) * Im (Mcfun y c i) - Im (Afun y c) * Re (Mcfun y c i)))"
+    by (rule ext) (simp add: gradU_c_field)
+  show ?thesis unfolding fun_eq by (rule core)
+qed
+
+lemma gradUc_comp_perp_slot_deriv:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "2 * (Re (d_A_moment_x x c (slot m v)) * Im (Mcfun x c i)
+            + Re (Afun x c) * Im (dMcfun_x x c i (slot m v))
+            - (Im (d_A_moment_x x c (slot m v)) * Re (Mcfun x c i)
+            + Im (Afun x c) * Re (dMcfun_x x c i (slot m v))))
+       = 2 * vec_nth v i * Im (cnj (Afun x c) * phase c x m)"
+  by (simp add: d_A_moment_x_perp[OF perp] dMcfun_x_perp[OF perp] algebra_simps)
+
+subsection \<open>Block 3: the \<open>Hcmat\<close> entries\<close>
+
+lemma has_derivative_Hcmat_entry_x:
+  "((\<lambda>y. vec_nth (vec_nth (Hcmat y c) k) l) has_derivative
+      (\<lambda>h. 2 * ((Re (dMcfun_x x c l h) * Re (Mcfun x c k) + Im (dMcfun_x x c l h) * Im (Mcfun x c k)
+               + (Re (Mcfun x c l) * Re (dMcfun_x x c k h) + Im (Mcfun x c l) * Im (dMcfun_x x c k h)))
+              - ((Re (d_A_moment_x x c h) * Re (M2cfun x c k l) + Im (d_A_moment_x x c h) * Im (M2cfun x c k l))
+               + (Re (Afun x c) * Re (dM2cfun_x x c k l h) + Im (Afun x c) * Im (dM2cfun_x x c k l h)))))) (at x)"
+proof -
+  have ReA: "((\<lambda>y. Re (Afun y c)) has_derivative (\<lambda>h. Re (d_A_moment_x x c h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Afun_x])
+  have ImA: "((\<lambda>y. Im (Afun y c)) has_derivative (\<lambda>h. Im (d_A_moment_x x c h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Afun_x])
+  have ReMk: "((\<lambda>y. Re (Mcfun y c k)) has_derivative (\<lambda>h. Re (dMcfun_x x c k h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Mcfun_x])
+  have ImMk: "((\<lambda>y. Im (Mcfun y c k)) has_derivative (\<lambda>h. Im (dMcfun_x x c k h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Mcfun_x])
+  have ReMl: "((\<lambda>y. Re (Mcfun y c l)) has_derivative (\<lambda>h. Re (dMcfun_x x c l h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Mcfun_x])
+  have ImMl: "((\<lambda>y. Im (Mcfun y c l)) has_derivative (\<lambda>h. Im (dMcfun_x x c l h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Mcfun_x])
+  have ReM2: "((\<lambda>y. Re (M2cfun y c k l)) has_derivative (\<lambda>h. Re (dM2cfun_x x c k l h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_M2cfun_x])
+  have ImM2: "((\<lambda>y. Im (M2cfun y c k l)) has_derivative (\<lambda>h. Im (dM2cfun_x x c k l h))) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_M2cfun_x])
+  have core: "((\<lambda>y. 2 * ((Re (Mcfun y c l) * Re (Mcfun y c k) + Im (Mcfun y c l) * Im (Mcfun y c k))
+                       - (Re (Afun y c) * Re (M2cfun y c k l) + Im (Afun y c) * Im (M2cfun y c k l))))
+      has_derivative
+      (\<lambda>h. 2 * ((Re (dMcfun_x x c l h) * Re (Mcfun x c k) + Im (dMcfun_x x c l h) * Im (Mcfun x c k)
+               + (Re (Mcfun x c l) * Re (dMcfun_x x c k h) + Im (Mcfun x c l) * Im (dMcfun_x x c k h)))
+              - ((Re (d_A_moment_x x c h) * Re (M2cfun x c k l) + Im (d_A_moment_x x c h) * Im (M2cfun x c k l))
+               + (Re (Afun x c) * Re (dM2cfun_x x c k l h) + Im (Afun x c) * Im (dM2cfun_x x c k l h)))))) (at x)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult_right[OF has_derivative_diff[OF
+          has_derivative_add[OF has_derivative_mult[OF ReMl ReMk] has_derivative_mult[OF ImMl ImMk]]
+          has_derivative_add[OF has_derivative_mult[OF ReA ReM2] has_derivative_mult[OF ImA ImM2]]]]])
+       (simp add: fun_eq_iff algebra_simps)
+  have fun_eq: "(\<lambda>y. vec_nth (vec_nth (Hcmat y c) k) l)
+      = (\<lambda>y. 2 * ((Re (Mcfun y c l) * Re (Mcfun y c k) + Im (Mcfun y c l) * Im (Mcfun y c k))
+              - (Re (Afun y c) * Re (M2cfun y c k l) + Im (Afun y c) * Im (M2cfun y c k l))))"
+    by (rule ext) (simp add: Hcmat_entry_eq algebra_simps)
+  show ?thesis unfolding fun_eq by (rule core)
+qed
+
+lemma Hcmat_entry_perp_slot_deriv:
+  fixes c v :: "real^2"
+  assumes perp: "c \<bullet> v = 0"
+  shows "2 * ((Re (dMcfun_x x c l (slot m v)) * Re (Mcfun x c k)
+             + Im (dMcfun_x x c l (slot m v)) * Im (Mcfun x c k)
+             + (Re (Mcfun x c l) * Re (dMcfun_x x c k (slot m v))
+             + Im (Mcfun x c l) * Im (dMcfun_x x c k (slot m v))))
+            - ((Re (d_A_moment_x x c (slot m v)) * Re (M2cfun x c k l)
+             + Im (d_A_moment_x x c (slot m v)) * Im (M2cfun x c k l))
+             + (Re (Afun x c) * Re (dM2cfun_x x c k l (slot m v))
+             + Im (Afun x c) * Im (dM2cfun_x x c k l (slot m v)))))
+       = 2 * (vec_nth v l * Re (cnj (phase c x m) * Mcfun x c k)
+            + vec_nth v k * Re (cnj (Mcfun x c l) * phase c x m)
+            - (vec_nth v k * vec_nth (vec_nth x m) l
+             + vec_nth (vec_nth x m) k * vec_nth v l) * Re (cnj (Afun x c) * phase c x m))"
+  by (simp add: d_A_moment_x_perp[OF perp] dMcfun_x_perp[OF perp] dM2cfun_x_perp[OF perp]
+      algebra_simps)
+
 end

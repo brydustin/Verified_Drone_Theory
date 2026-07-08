@@ -3580,3 +3580,23 @@ FIRST CORRECTED-PATH BRICK (bridge, green): dEjm_zero1 + DM_paper_x_perp_slot_1/
 dEjm_perp_slot_value + gradU_dip_xderiv_perp_slot -- the invariant
 d_{slot m v} Phi_j = 2 g (gamma_j . v) Im(cnj A phi_m) (paper's d_vj Phi2 = -2ag s_j),
 plugging directly into has_derivative_gradU_dip_x_explicit's derivative map.
+
+### D34 Case-B path: HessU-entry perp-slot x-derivatives (2026-07-08)
+"Do the HessU-entry perp-slot derivatives" (checked first: NOT already done, and
+strictly needed — the branch certificates differentiate H12/H22 in v-slot directions,
+and HessU_dip_entry_moments routes every x-dependence through V/gradcV/Hcmat).
+Landed in the bridge (dev M5_Dev_HessSlot, stubbed): the three block x-derivatives at
+fixed c — has_derivative_Uc_x (V=|A|^2), has_derivative_gradUc_comp_x ((nabla_c V)_i),
+has_derivative_Hcmat_entry_x (Hcmat_kl) — each via bounded_linear.has_derivative on
+Re/Im composed with the six heap has_derivative_*_moment_x laws (transferred to Afun/
+Mcfun/M2cfun by the Mcfun_eq/M2cfun_eq glue), and each with its perp-slot value:
+Uc = 0, gradUc_i = 2 v_i Im(cnj A phi_m), Hcmat_kl = 2[v_l Re(cnj phi_m M_k) +
+v_k Re(cnj M_l phi_m) - (v_k x_l + x_k v_l) Re(cnj A phi_m)]. Introduced uniform
+derivative-entry constants dMcfun_x/dM2cfun_x (case-split over 2 / 2x2 folded into a
+single symbol) so the Hcmat proof is one has_derivative tree.
+GOTCHAS: the M_moment=Mcfun function equations must be oriented Mcfun=..M_moment for
+`unfolding` (and proved via a deterministic F/eqn/dEq structure, not `ultimately simp`,
+which left the has_derivative goal unrewritten); a bare `c . v = 0` assumption is
+parse-ambiguous — pin `fixes c v :: real^2`.
+NEXT: assemble the Hessian-ENTRY x-derivative (combine the three blocks through
+HessU_dip_entry_moments; omega-side jets are x-constant) -> prop:vpair11 Delta identity.

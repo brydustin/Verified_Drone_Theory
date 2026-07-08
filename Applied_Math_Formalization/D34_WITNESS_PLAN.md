@@ -229,6 +229,21 @@ multi-week core (four branch families of explicit analytic linear algebra), step
   (iii) the rank-3 criterion feeding regular_value_local_chart /
   charts_core_Nn-shaped bundles on the det-H=0 set; (iv) restate D3'/D4' with the
   retained conjuncts and adapt m5_D34_residual (drop the subset step).
+- 2026-07-08: **(i) DONE — HessU-entry perp-slot derivatives** (bridge): the three
+  block x-derivatives at fixed c (has_derivative_Uc_x, has_derivative_gradUc_comp_x,
+  has_derivative_Hcmat_entry_x) plus perp-slot values (Uc = 0; gradUc_i = 2 v_i
+  Im(cnj A phi_m); Hcmat_kl = 2[v_l Re(cnj phi_m M_k)+v_k Re(cnj M_l phi_m)
+  -(v_k x_l + x_k v_l)Re(cnj A phi_m)]). Supporting: Mcfun/M2cfun = paper moments
+  glue; uniform dMcfun_x/dM2cfun_x with has_derivative laws (reuse the six heap
+  has_derivative_*_moment_x) and perp collapses. These are the gauge/frame-free
+  generators of the paper's d_vj H12/H22.
+  NOTE the M5 x-derivative of a Hessian ENTRY along a v-slot combines all three
+  blocks via HessU_dip_entry_moments's chain-rule structure (D2cvec/Dcvec jets are
+  omega-side, constant in x; only V, gradcV, Hcmat carry x). Assemble that entry
+  x-derivative next, then:
+  (ii) prop:vpair11's Delta_ij^(11) = -8ag^2/H11 (s_i c_j R_j - s_j c_i R_i);
+  (iii) rank-3 criterion -> regular_value_local_chart bundles on det-H=0;
+  (iv) restate D3'/D4' with retained conjuncts, adapt m5_D34_residual.
 
 ## 4. What is already banked (2026-07-06, commits 07b21bc..)
 
