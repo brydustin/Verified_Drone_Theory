@@ -346,3 +346,47 @@ Remaining explicit `sorry` tactics in Robust4 are now exactly:
 
 - `d3_retained_arc_charts_Nn`
 - `branchP_indep_charts_Nn`
+
+## Robust4 D3 retained wrapper reduced to det-HessU H0 core
+
+Codex work on 2026-07-09 attacked `d3_retained_arc_charts_Nn` in
+`Appendix/Robust4/Nonemptiness_Robust4.thy`.
+
+The old retained-Case-B per-arc chart lemma is now proved.  Its proof is a
+checked subset reduction from the precise retained fibre `D3BadXG` to a newly
+named upstream core:
+
+- `D3BadXG_H0core`
+- `D3BadXG_subset_H0core`
+- `d3_detHess_arc_charts_Nn`
+
+The remaining D3 analytic sorry has deliberately moved to
+`d3_detHess_arc_charts_Nn`.  This core states the actual det-HessU/H0 retained
+critical fibre over one C1 arc:
+
+- `gradU = 0`;
+- `det (HessU ...) = 0`;
+- `cvec_dip ... != 0`;
+- `not surj (DM_paper_x ...)`.
+
+The stronger `D3BadXG` fibre additionally has the Case-B side conditions
+`A_cart != 0`, steering immersion, and failure of the configuration derivative,
+so it is a direct subset of the H0 core.  Downstream D3 bookkeeping now consumes
+the proved `d3_retained_arc_charts_Nn` wrapper; the unresolved work is the
+genuine H0 chart theorem, not the downstream D3 cover plumbing.
+
+Build command used:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Applied_Math_Appendix_Frontier
+```
+
+Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+Remaining explicit `sorry` tactics in Robust4 are now exactly:
+
+- `d3_detHess_arc_charts_Nn`
+- `branchP_indep_charts_Nn`

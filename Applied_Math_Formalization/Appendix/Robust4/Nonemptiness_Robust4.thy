@@ -7,6 +7,40 @@ text \<open>The D3 branch is now reduced to two explicit obligations: a finite C
   bundle for the retained Case-B fibre.  The active x-fibre cover is checked
   set algebra from the angle-locus cover.\<close>
 
+definition D3BadXG_H0core :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
+  "D3BadXG_H0core \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
+        gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+      \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+      \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+
+lemma D3BadXG_subset_H0core:
+  "(D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> D3BadXG_H0core \<omega>0 \<omega>s \<Gamma>"
+  unfolding D3BadXG_def D3BadXG_H0core_def by blast
+
+lemma d3_detHess_arc_charts_Nn:
+  fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and arc: "analytic_arc \<gamma>"
+    and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
+              nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+            \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+  \<comment> \<open>GENUINE D3 analytic core: the det-HessU retained critical fibre over one
+      C1 arc.  This is the H0 half identified in the D3 soundness analysis:
+      \<open>gradU=0\<close>, \<open>det HessU=0\<close>, and moment rank drop.  The stronger retained
+      Case-B fibre @{const D3BadXG} is a checked subset of this core.\<close>
+  sorry
+
 lemma d3_retained_arc_charts_Nn:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
@@ -24,11 +58,28 @@ lemma d3_retained_arc_charts_Nn:
             ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
          (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
-  \<comment> \<open>GENUINE D3 analytic core: retained Case-B fibre over one C1 arc, including
-      \<open>gradU=0\<close>, \<open>det HessU=0\<close>, \<open>A_cart\<noteq>0\<close>, steering immersion, moment rank drop,
-      and failure of the configuration derivative.  This is the precise per-arc
-      chart obligation replacing the previous opaque D3 branch sorry.\<close>
-  sorry
+proof -
+  obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+     and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+     and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+    where cover: "(V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+                    \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
+      and rank: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      and clo: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+    using d3_detHess_arc_charts_Nn[OF openV Vne c6 arc gsub pf nd]
+    by (smt (verit, best))
+  have sub: "(V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+              \<subseteq> V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>"
+    using D3BadXG_subset_H0core by blast
+  have cover': "(V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+                  \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+    using sub cover by blast
+  show ?thesis
+    by (intro exI[where x = charts] exI[where x = Crit] exI[where x = D] conjI)
+       (use cover' der rank clo in blast)+
+qed
 
 lemma d3_retained_arc_negligible_closed_cover:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"

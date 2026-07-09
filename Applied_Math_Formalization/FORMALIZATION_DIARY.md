@@ -4167,3 +4167,20 @@ Updated `ROOT` with a child session `Applied_Math_Appendix_Frontier` in
 Verified both sessions:
 `Applied_Math_Appendix_Full` finished, then `Applied_Math_Appendix_Frontier`
 finished; `BUILD_EXIT=0`.
+
+### Robust4 D3 retained wrapper reduced to H0 core (Codex, 2026-07-09)
+
+Attacked the Robust4 frontier target `d3_retained_arc_charts_Nn`.
+
+Added `D3BadXG_H0core` for the broader det-HessU/H0 retained critical fibre
+over a C1 arc, and proved `D3BadXG_subset_H0core`.  The old
+`d3_retained_arc_charts_Nn` statement is now a checked subset wrapper from
+`D3BadXG` into that H0 core.
+
+The remaining D3 chart sorry is now named `d3_detHess_arc_charts_Nn`.  This is
+intentional scoping: it isolates the genuine analytic chart theorem for
+`gradU = 0`, `det HessU = 0`, `cvec != 0`, and moment-rank drop, while keeping
+the downstream retained Case-B D3 assembly proved.
+
+Verified with `Applied_Math_Appendix_Frontier`; build result:
+`Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
