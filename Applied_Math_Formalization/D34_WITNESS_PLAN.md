@@ -505,3 +505,14 @@ covering splice into Robust3).
   `branchP_indep_charts_Nn`.  This is the intended shape for grafting the
   `M5_Dev_curvecover` C1 phase-collinear cover.  Verified
   `Applied_Math_Appendix_Full` with `BUILD_EXIT=0`.
+
+- 2026-07-08 (Codex, D3 nonsing side condition): **the D3 curve-cover target now
+  carries the required `nsing_all` hypothesis and F0 proves it concretely**.
+  Added `d3_crossTheta`, `phase_collinear_iff_d3_crossTheta`,
+  `d3_collinear_d1`, `d3_collinear_d2`, and `d3_collinear_nsing_all`; threaded
+  the predicate through the D3/D34 meagerness and feasible-witness chain; and
+  discharged it in `F0_dip_nonempty` for `ω0 = vector [pi/2,0]`,
+  `ωs = vector [0,0]`, `δ = pi/4`.  This preserves the current three Robust3
+  open obligations but fixes the statement shape for grafting
+  `M5_Dev_curvecover`.  Verified `Applied_Math_Appendix_Full` with
+  `BUILD_EXIT=0`.

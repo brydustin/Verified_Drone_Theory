@@ -2360,6 +2360,78 @@ definition phase_collinear :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 
      (\<exists>t. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) = t *\<^sub>R cvec_dip \<omega>0 \<omega>s \<omega>)
    \<or> (\<exists>t. cvec_dip \<omega>0 \<omega>s \<omega> = t *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))"
 
+definition d3_crossTheta :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "d3_crossTheta \<omega>0 \<omega>s \<omega> =
+     Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) $ 1 * cvec_dip \<omega>0 \<omega>s \<omega> $ 2
+   - Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) $ 2 * cvec_dip \<omega>0 \<omega>s \<omega> $ 1"
+
+lemma phase_collinear_iff_d3_crossTheta:
+  "phase_collinear \<omega>0 \<omega>s \<omega> \<longleftrightarrow> d3_crossTheta \<omega>0 \<omega>s \<omega> = 0"
+proof
+  define Dc where "Dc = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)"
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  assume "phase_collinear \<omega>0 \<omega>s \<omega>"
+  then consider (a) "\<exists>t. Dc = t *\<^sub>R c" | (b) "\<exists>t. c = t *\<^sub>R Dc"
+    unfolding phase_collinear_def Dc_def c_def by blast
+  thus "d3_crossTheta \<omega>0 \<omega>s \<omega> = 0"
+  proof cases
+    case a
+    then obtain t where t: "Dc = t *\<^sub>R c" by blast
+    have "Dc $ 1 * c $ 2 - Dc $ 2 * c $ 1 = 0"
+      by (simp add: t)
+    thus ?thesis unfolding d3_crossTheta_def Dc_def c_def .
+  next
+    case b
+    then obtain t where t: "c = t *\<^sub>R Dc" by blast
+    have "Dc $ 1 * c $ 2 - Dc $ 2 * c $ 1 = 0"
+      by (simp add: t algebra_simps)
+    thus ?thesis unfolding d3_crossTheta_def Dc_def c_def .
+  qed
+next
+  define Dc where "Dc = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)"
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  assume "d3_crossTheta \<omega>0 \<omega>s \<omega> = 0"
+  hence det0: "Dc $ 1 * c $ 2 - c $ 1 * Dc $ 2 = 0"
+    unfolding d3_crossTheta_def Dc_def c_def by simp
+  show "phase_collinear \<omega>0 \<omega>s \<omega>"
+  proof (cases "c = 0")
+    case True
+    have "c = 0 *\<^sub>R Dc" using True by simp
+    thus ?thesis unfolding phase_collinear_def Dc_def c_def by blast
+  next
+    case False
+    obtain t where "Dc = t *\<^sub>R c"
+      using cols_dependent_2d[OF det0 False] by blast
+    thus ?thesis unfolding phase_collinear_def Dc_def c_def by blast
+  qed
+qed
+
+definition d3_crossA :: "real \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real" where
+  "d3_crossA Bc \<omega>s t = Bc - (Bc * kz \<omega>s + ky \<omega>s) * cos t"
+
+definition d3_crossB :: "real \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real" where
+  "d3_crossB Ac \<omega>s t = - Ac + (Ac * kz \<omega>s + kx \<omega>s) * cos t"
+
+definition d3_collinear_d2 :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "d3_collinear_d2 \<omega>0 \<omega>s \<omega> =
+     - d3_crossA ((ky \<omega>0 - ky \<omega>s) / (kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * sin (\<omega>$2)
+     + d3_crossB ((kx \<omega>0 - kx \<omega>s) / (kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * cos (\<omega>$2)"
+
+definition d3_collinear_d1 :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "d3_collinear_d1 \<omega>0 \<omega>s \<omega> =
+     (((ky \<omega>0 - ky \<omega>s) / (kz \<omega>s - kz \<omega>0)) * kz \<omega>s + ky \<omega>s)
+        * sin (\<omega>$1) * cos (\<omega>$2)
+     - (((kx \<omega>0 - kx \<omega>s) / (kz \<omega>s - kz \<omega>0)) * kz \<omega>s + kx \<omega>s)
+        * sin (\<omega>$1) * sin (\<omega>$2)
+     + (((kx \<omega>0 - kx \<omega>s) / (kz \<omega>s - kz \<omega>0)) * ky \<omega>s
+        - ((ky \<omega>0 - ky \<omega>s) / (kz \<omega>s - kz \<omega>0)) * kx \<omega>s)
+        * cos (\<omega>$1)"
+
+definition d3_collinear_nsing_all :: "real^2 \<Rightarrow> real \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> bool" where
+  "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s \<longleftrightarrow>
+     (\<forall>\<omega>\<in>{\<omega> \<in> OmegaPF ctr \<delta>. d3_crossTheta \<omega>0 \<omega>s \<omega> = 0}.
+        d3_collinear_d2 \<omega>0 \<omega>s \<omega> \<noteq> 0 \<or> d3_collinear_d1 \<omega>0 \<omega>s \<omega> \<noteq> 0)"
+
 (* ---- D34: residual assembly (m5_D34_D3_collinear + m5_D34_D4_branchP = the 2 scoped sorries) ---- *)
 
 lemma m5_D34_subset_mstarg_residual:
@@ -2562,11 +2634,13 @@ lemma d3_collinear_locus_finite_arc_cover:
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
   shows "d3_finitely_arc_coverable
            {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
   \<comment> \<open>GENUINE D3 curve-cover obligation, now scoped only to the steering-angle
-      phase-collinear locus.  The x-fibre bookkeeping is discharged separately
-      by @{thm d3_active_cover_from_angle_cover}.\<close>
+      phase-collinear locus and carrying the same nonsingular-level-set side
+      condition as the C1 curve-cover development.  The x-fibre bookkeeping is
+      discharged separately by @{thm d3_active_cover_from_angle_cover}.\<close>
   sorry
 
 lemma d3_active_collinear_finite_arc_cover:
@@ -2574,6 +2648,7 @@ lemma d3_active_collinear_finite_arc_cover:
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>(I::nat set) arc. finite I
             \<and> (V \<inter> D3BadXG \<omega>0 \<omega>s {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>}
                   :: ((real^2)^'n) set)
@@ -2582,7 +2657,7 @@ lemma d3_active_collinear_finite_arc_cover:
 proof -
   have Lcov: "d3_finitely_arc_coverable
            {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
-    by (rule d3_collinear_locus_finite_arc_cover[OF d0 pf hsep kdiff])
+    by (rule d3_collinear_locus_finite_arc_cover[OF d0 pf hsep kdiff nsing])
   show ?thesis
     by (rule d3_active_cover_from_angle_cover[OF Lcov])
 qed
@@ -2604,6 +2679,7 @@ lemma m5_D34_D3_collinear:
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
@@ -2633,7 +2709,7 @@ proof -
       and cover: "(V \<inter> D3BadXG \<omega>0 \<omega>s ?L :: ((real^2)^'n) set)
                     \<subseteq> (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
       and arcprops: "\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>"
-    using d3_active_collinear_finite_arc_cover[OF d0 pf hsep kdiff, of V] by blast
+    using d3_active_collinear_finite_arc_cover[OF d0 pf hsep kdiff nsing, of V] by blast
   have meagU: "meager (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
   proof (rule meager_Union_finite[OF finI])
     fix i :: nat assume iI: "i \<in> I"
@@ -2902,6 +2978,7 @@ lemma m5_D34_residual:
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
@@ -2945,7 +3022,7 @@ proof -
   \<comment> \<open>The residual is the D3/D4 union (excluded middle on \<open>phase_collinear\<close>).\<close>
   have RsubD: "?R \<subseteq> ?D3 \<union> ?D4" by blast
   \<comment> \<open>Each piece is meager (the two genuine obligations, sorried inside).\<close>
-  have mD3: "meager ?D3" by (rule m5_D34_D3_collinear[OF openV Vne c6 d0 pf hsep kdiff nd])
+  have mD3: "meager ?D3" by (rule m5_D34_D3_collinear[OF openV Vne c6 d0 pf hsep kdiff nsing nd])
   have mD4: "meager ?D4" by (rule m5_D34_D4_branchP[OF openV Vne c6 d0 pf nd])
   have mR: "meager ?R"
     by (rule meager_subset[OF RsubD meager_Un[OF mD3 mD4]])
@@ -2989,6 +3066,7 @@ lemma meager_rank_deficient_stratum:
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
@@ -3031,7 +3109,7 @@ proof -
           m5_D1_regular[OF openV Vne]
           m5_D2_beamcenter[OF openV Vne c6 d0 pf]
           m5_D5_steersing[OF openV Vne c6 d0 pf hsep kdiff]
-          m5_D34_residual[OF openV Vne c6 d0 pf hsep kdiff])
+          m5_D34_residual[OF openV Vne c6 d0 pf hsep kdiff nsing])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
@@ -3090,6 +3168,7 @@ lemma Phi_bad_meager_dip:
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
 proof -
   let ?reg = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
@@ -3111,7 +3190,7 @@ proof -
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
   have meag4: "meager (?reg \<union> ?def \<union> ?steer \<union> ?null)"
     by (intro meager_Un meager_bad_regular_stratum_on[OF openV Vne c6]
-              meager_rank_deficient_stratum[OF openV Vne c6 d0 pf hsep kdiff]
+              meager_rank_deficient_stratum[OF openV Vne c6 d0 pf hsep kdiff nsing]
               meager_steering_singular_stratum[OF openV Vne c6 d0 pf hsep kdiff]
               meager_Azero_degenerate_stratum[OF openV Vne c6 oddN d0 pf])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
@@ -3387,6 +3466,7 @@ lemma regular_config_exists:
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and int_ne: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
@@ -3398,7 +3478,7 @@ proof -
   have openI: "open I" unfolding I_def by (rule open_interior)
   have Ine: "I \<noteq> {}" unfolding I_def by (rule int_ne)
   have meagB: "meager {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
-    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN hsep kdiff d0 pf])
+    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN hsep kdiff d0 pf nsing])
   have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
   proof
     assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
@@ -3575,6 +3655,7 @@ lemma regular_feasible_point_dip:
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and dpi: "\<delta> \<le> pi"
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                       :: (planar^'n) set) \<noteq> {}"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
@@ -3591,7 +3672,7 @@ proof -
   obtain x0 :: "planar^'n"
     where x0I: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
       and x0reg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-    using regular_config_exists[OF c6 oddN hsep kdiff d0 pf feasible] by blast
+    using regular_config_exists[OF c6 oddN hsep kdiff d0 pf nsing feasible] by blast
   have x0F: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
     using x0I interior_subset by blast
   have nondeg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
@@ -3651,6 +3732,7 @@ lemma regular_feasible_witness_dip:
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and dpi: "\<delta> \<le> pi"
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                       :: (planar^'n) set) \<noteq> {}"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
@@ -3672,7 +3754,7 @@ proof -
       and rO: "\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
-    using regular_feasible_point_dip[OF c6 oddN hsep kdiff d0 dpi pf feasible] by blast
+    using regular_feasible_point_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible] by blast
   have c1: "continuous_on (sphere ctr \<epsilon>)
               (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))"
     by (rule norm_gradU_dip_continuous_on)
@@ -3727,6 +3809,61 @@ proof -
     have "0 < sin (\<omega> $ 1)" by (rule sin_gt_zero[OF lo hi])
     thus "sin (\<omega> $ 1) \<noteq> 0" by simp
   qed
+  have nsing: "d3_collinear_nsing_all \<omega>0 (pi/4) \<omega>0 \<omega>s"
+  proof (unfold d3_collinear_nsing_all_def, intro ballI)
+    fix \<omega> :: planar
+    assume wL: "\<omega> \<in> {\<omega> \<in> OmegaPF \<omega>0 (pi/4). d3_crossTheta \<omega>0 \<omega>s \<omega> = 0}"
+    hence wO: "\<omega> \<in> OmegaPF \<omega>0 (pi/4)"
+      and z: "d3_crossTheta \<omega>0 \<omega>s \<omega> = 0" by auto
+    have mb: "(\<omega>0 - vector [pi/4, pi]) $ 1 \<le> \<omega> $ 1
+        \<and> \<omega> $ 1 \<le> (\<omega>0 + vector [pi/4, pi]) $ 1"
+      using wO unfolding OmegaPF_def mem_box_cart by blast
+    have l1: "(\<omega>0 - vector [pi/4, pi]) $ 1 = pi/4"
+      by (simp add: \<omega>0_def vector_minus_component vector_2)
+    have l2: "(\<omega>0 + vector [pi/4, pi]) $ 1 = 3*pi/4"
+      by (simp add: \<omega>0_def vector_add_component vector_2)
+    have lo: "0 < \<omega> $ 1" and hi: "\<omega> $ 1 < pi"
+      using mb l1 l2 pi_gt_zero by linarith+
+    have c_lt1: "cos (\<omega> $ 1) < 1"
+    proof -
+      have h0: "0 < (\<omega> $ 1) / 2" using lo by simp
+      have h2: "(\<omega> $ 1) / 2 < 2" using hi pi_less_4 by linarith
+      have "cos (2 * ((\<omega> $ 1) / 2)) < 1"
+        by (rule cos_double_less_one[OF h0 h2])
+      thus ?thesis by simp
+    qed
+    have cne: "cos (\<omega> $ 1) - 1 \<noteq> 0" using c_lt1 by linarith
+    have trig_collapse: "cos (\<omega>$1) * (cos (\<omega>$1) * sin (\<omega>$2))
+        + sin (\<omega>$1) * (sin (\<omega>$1) * sin (\<omega>$2)) = sin (\<omega>$2)"
+    proof -
+      have "cos (\<omega>$1) * (cos (\<omega>$1) * sin (\<omega>$2))
+          + sin (\<omega>$1) * (sin (\<omega>$1) * sin (\<omega>$2))
+          = (cos (\<omega>$1) * cos (\<omega>$1) + sin (\<omega>$1) * sin (\<omega>$1)) * sin (\<omega>$2)"
+        by (simp only: mult.assoc distrib_right)
+      also have "\<dots> = sin (\<omega>$2)"
+        by (simp add: sin_cos_squared_add3)
+      finally show ?thesis .
+    qed
+    have theta_eq: "d3_crossTheta \<omega>0 \<omega>s \<omega> = (cos (\<omega>$1) - 1) * sin (\<omega>$2)"
+      by (simp add: d3_crossTheta_def cvec_dip_def Dcvec_dip_def
+          \<omega>0_def \<omega>s_def kx_def ky_def kz_def axis_def vector_2
+          sin_pi_half cos_pi_half algebra_simps trig_collapse)
+    have s2z: "sin (\<omega>$2) = 0" using z theta_eq cne by auto
+    have c2nz: "cos (\<omega>$2) \<noteq> 0"
+    proof
+      assume c2z: "cos (\<omega>$2) = 0"
+      have "\<bar>cos (\<omega>$2)\<bar> = (1::real)" by (rule sin_zero_abs_cos_one[OF s2z])
+      thus False using c2z by simp
+    qed
+    have d2eq: "d3_collinear_d2 \<omega>0 \<omega>s \<omega> = (cos (\<omega>$1) - 1) * cos (\<omega>$2)"
+      by (simp add: d3_collinear_d2_def d3_crossA_def d3_crossB_def
+          \<omega>0_def \<omega>s_def kx_def ky_def kz_def vector_2
+          sin_pi_half cos_pi_half algebra_simps)
+    have "d3_collinear_d2 \<omega>0 \<omega>s \<omega> \<noteq> 0"
+      using cne c2nz d2eq by simp
+    thus "d3_collinear_d2 \<omega>0 \<omega>s \<omega> \<noteq> 0
+       \<or> d3_collinear_d1 \<omega>0 \<omega>s \<omega> \<noteq> 0" by blast
+  qed
   have cn: "cvec_dip \<omega>0 \<omega>s \<omega>null \<noteq> 0"
   proof -
     have "cvec_dip \<omega>0 \<omega>s \<omega>null $ 1 = - 2"
@@ -3775,7 +3912,7 @@ proof -
   have "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
           \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 (OmegaPF \<omega>0 (pi/4)) 1 0 \<xi> \<kappa> \<epsilon>
               \<noteq> ({}::(planar^'n) set)"
-    using regular_feasible_witness_dip[OF c6 oddN hsep kdiff d0 dpi pf feasible]
+    using regular_feasible_witness_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible]
     by (blast intro: F0_nonempty_of_witness OmegaPF_compact)
   thus ?thesis using d0 by blast
 qed

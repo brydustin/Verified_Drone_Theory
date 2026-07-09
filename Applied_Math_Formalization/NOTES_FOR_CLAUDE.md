@@ -202,3 +202,37 @@ bookkeeping.
 
 Verified with `Applied_Math_Appendix_Full` build, `BUILD_EXIT=0`
 (`Finished Applied_Math_Appendix_Full`, session elapsed `0:04:22`).
+
+## Robust3 D3 nonsingularity side condition
+
+Codex follow-up work on 2026-07-08 corrected the generic D3 curve-cover
+statement again: it now carries the nonsingularity side condition required by
+`M5_Dev_curvecover`.
+
+Added in `Appendix/Robust3/Nonemptiness_Robust3.thy`:
+
+- `d3_crossTheta` and `phase_collinear_iff_d3_crossTheta`;
+- `d3_collinear_d1`, `d3_collinear_d2`, and
+  `d3_collinear_nsing_all`;
+- explicit threading of `d3_collinear_nsing_all ctr δ ω0 ωs` through
+  `d3_collinear_locus_finite_arc_cover`, the D3/D34 meagerness chain,
+  `Phi_bad_meager_dip`, and the feasible-witness chain;
+- a concrete proof of `d3_collinear_nsing_all ω0 (pi/4) ω0 ωs` inside
+  `F0_dip_nonempty` for `ω0 = vector [pi/2,0]`, `ωs = vector [0,0]`.
+
+The concrete proof uses
+`d3_crossTheta = (cos(ω$1)-1) * sin(ω$2)` on the F0 configuration, the existing
+`OmegaPF` box bound `ω$1 ∈ [pi/4,3*pi/4]` to get `cos(ω$1)-1 != 0`, and then
+shows `d3_collinear_d2 = (cos(ω$1)-1) * cos(ω$2) != 0` on the zero locus.
+
+Current Robust3 open obligations remain:
+
+- `d3_retained_arc_charts_Nn`
+- `d3_collinear_locus_finite_arc_cover`
+- `branchP_indep_charts_Nn`
+
+But `d3_collinear_locus_finite_arc_cover` is no longer overstated: it has the
+same nonsingularity hypothesis shape as the proven C1 curve-cover development.
+
+Verified with `Applied_Math_Appendix_Full` build, `BUILD_EXIT=0`
+(`Finished Applied_Math_Appendix_Full`, session elapsed `0:04:26`).

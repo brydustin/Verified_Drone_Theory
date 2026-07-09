@@ -4106,3 +4106,37 @@ This removes x-fibre bookkeeping from the cover sorry and lines the open D3
 cover target up with the `M5_Dev_curvecover` theorem shape.  Verified with the
 same full appendix command; build result: `Finished Applied_Math_Appendix_Full`,
 `BUILD_EXIT=0` (`0:04:22` elapsed reported for the session).
+
+### D3 curve-cover nonsingularity threaded to F0 (Codex, 2026-07-08)
+
+Corrected the remaining D3 curve-cover obligation so it exposes the
+nonsingularity condition required by `M5_Dev_curvecover`, rather than claiming
+that `hsep`/`kdiff` alone suffice.
+
+Added `d3_crossTheta` with the checked equivalence
+`phase_collinear_iff_d3_crossTheta`, plus the derivative components
+`d3_collinear_d1`, `d3_collinear_d2`, and the packaged predicate
+`d3_collinear_nsing_all`.
+
+Threaded `d3_collinear_nsing_all ctr δ ω0 ωs` through:
+
+- `d3_collinear_locus_finite_arc_cover`;
+- `d3_active_collinear_finite_arc_cover`;
+- `m5_D34_D3_collinear`, `m5_D34_residual`,
+  `meager_rank_deficient_stratum`;
+- `Phi_bad_meager_dip`, `regular_config_exists`,
+  `regular_feasible_point_dip`, and `regular_feasible_witness_dip`.
+
+Then discharged the predicate in the concrete `F0_dip_nonempty` construction
+for `ω0 = vector [pi/2,0]`, `ωs = vector [0,0]`, `δ = pi/4`.  The proof derives
+`d3_crossTheta = (cos(ω$1)-1) * sin(ω$2)`, uses the existing `OmegaPF` box
+bound to prove `cos(ω$1)-1 != 0`, and concludes the zero locus has
+`d3_collinear_d2 = (cos(ω$1)-1) * cos(ω$2) != 0`.
+
+This is a statement-quality correction, not a sorry-count reduction.  The open
+Robust3 obligations remain `d3_retained_arc_charts_Nn`,
+`d3_collinear_locus_finite_arc_cover`, and `branchP_indep_charts_Nn`, but the
+middle one is now stated with the side condition needed by the C1 curve-cover
+engine.  Verified with `Applied_Math_Appendix_Full`; build result:
+`Finished Applied_Math_Appendix_Full`, `BUILD_EXIT=0` (`0:04:26` elapsed
+reported for the session).
