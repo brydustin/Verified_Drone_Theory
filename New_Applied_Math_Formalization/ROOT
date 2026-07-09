@@ -1,0 +1,159 @@
+(* ==========================================================================
+   New_Applied_Math_Formalization: the streamlined live proof chain for
+   F0_dip_nonempty (Appendix/Robust4/Nonemptiness_Robust4.thy).
+
+   This is a cleaned-up copy of the legacy Applied_Math_Formalization tree:
+   only the sessions on the import path of the capstone theorem (plus the
+   real-analytic bridge stack intended to discharge its two remaining
+   analytic hypotheses) are kept.  All M5_Dev_* scratch sessions, dead
+   theories, and the sorried Nonemptiness_Capstone / unused
+   Nonemptiness_Regnonzero_Appendix layers were dropped; Robust1 now imports
+   Nonemptiness_Paper directly.  Every theory in this tree is free of
+   `sorry`.  See README.md for the full map and honest status.
+   ========================================================================== *)
+
+session Applied_Math_Base in "Base" = "HOL-Complex_Analysis" +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Munkres_Topology_Local
+    Jordan_Normal_Form
+    Perron_Frobenius
+    "HOL-Types_To_Sets"
+  theories
+    Munkres_Topology_Local.Munkres_Topology
+    "HOL-Complex_Analysis.Conformal_Mappings"
+    "Perron_Frobenius.HMA_Connect"
+
+session Applied_Math_BlockDet in "BlockDet" = Applied_Math_Base +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Block_Determinants
+    Block_Determinants_BigJ
+    Moment_Map
+
+(* Moment_Jacobian (transports + the D_x M_paper = bigJ Jacobian identification)
+   lives in its OWN session/dir, parented on Applied_Math_BlockDet, so it can be edited
+   interactively with -l Applied_Math_BlockDet. *)
+session Applied_Math_MomentJac in "MomentJac" = Applied_Math_BlockDet +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Moment_Jacobian
+
+session Applied_Math_Nonemptiness in "." = Applied_Math_MomentJac +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_BlockDet
+    Applied_Math_MomentJac
+  theories
+    Nonemptiness_Paper
+
+(* Higher-order (k-times Fréchet) differentiability, ported from the
+   Verified_Numerical_Algorithms project.  Parented directly on HOL-Analysis +
+   the AFP's Smooth_Manifolds; deliberately independent of the Munkres/Jordan
+   stack above, since these theories only need real-analysis. *)
+session Applied_Math_HigherDiff in "HigherDiff" = "HOL-Analysis" +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Smooth_Manifolds
+  theories
+    Limits_Higher_Order_Derivatives
+    Auxiliary_Facts
+    Higher_Differentiability
+    Higher_Differentiability_Multi
+    Taylor_Peano
+    Ck1_C1_Bridge
+
+(* The robust-feasible-set development, split for build granularity:
+   Nonemptiness_Robust1 (the long, stable first half) bakes into the
+   Applied_Math_Appendix_Base heap; Nonemptiness_Robust2 sits alone in the
+   Applied_Math_Appendix leaf so it can be rebuilt/iterated in minutes;
+   Nonemptiness_Robust3 is the stable M5 scaffold heap; and
+   Nonemptiness_Robust4 is the live F0 frontier theory. *)
+session Applied_Math_Appendix_Base in "Appendix" = Applied_Math_Nonemptiness +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_HigherDiff
+  theories
+    Nonemptiness_Regnonzero_Appendix
+    Nonemptiness_Robust1
+
+session Applied_Math_Appendix in "Appendix/Robust2" = Applied_Math_Appendix_Base +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Nonemptiness_Robust2
+
+(* M5 consolidation stable heap: Nonemptiness_Robust3 contains the checked
+   upstream scaffold through the D3 cover set-algebra bridge.  The active F0
+   frontier lives in the child sessions below. *)
+session Applied_Math_Appendix_Full in "Appendix/Robust3" = Applied_Math_Appendix +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Nonemptiness_Robust3
+
+(* 2D Morse/saddle helper stack used by the D3 curve-cover port. *)
+session Applied_Math_Morse in "Morse" = "HOL-Analysis" +
+  options [document = false, quick_and_dirty = true, timeout = 1800]
+  theories
+    Morse_Saddle_2D
+    Hadamard_2D
+    Arc_Clip
+    Trig_SMOOTH3
+    Saddle_Cover
+    Disc_Pos
+
+session Applied_Math_D3_Curve_Cover in "Appendix/Robust4Cover" = Applied_Math_Appendix_Full +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_Morse
+  theories
+    D3_Curve_Cover
+
+(* Live frontier for the M5/F0 capstone.  This theory imports the stable
+   D3 curve-cover heap and contains the remaining D3/D4 chart obligations plus
+   the downstream F0_dip_nonempty target. *)
+session Applied_Math_Appendix_Frontier in "Appendix/Robust4" = Applied_Math_D3_Curve_Cover +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Nonemptiness_Robust4
+
+(* Standalone real-analytic (C^omega) function theory + analytic IFT.  Foundational
+   and reusable: parented only on the higher-derivative/Taylor stack,
+   independent of the dipole/Robust development. *)
+session Applied_Math_Analytic in "Analytic" = Applied_Math_HigherDiff +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Smooth_Manifolds
+  theories
+    Real_Analytic
+    Real_Analytic_Bump
+
+(* The formal-series local inverse of a real-analytic map (majorant method). *)
+session Applied_Math_Analytic_Inverse in "Analytic/Inverse" = Applied_Math_Analytic +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Real_Analytic_Inverse
+
+(* Complexification bridge: several-variable Cauchy-Riemann criterion,
+   holomorphic => real C^infinity, real-analytic <=> local holomorphic
+   extension, and the analytic IFT. *)
+session Applied_Math_Analytic_Complex in "Analytic/Complex" = Applied_Math_Analytic_Inverse +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    "HOL-Complex_Analysis"
+  theories
+    Real_Analytic_Complex
+    Real_Analytic_IFT
+
+(* The D34 analytic-bridge platform: ONE heap containing BOTH the robust
+   nonemptiness development (through Nonemptiness_Robust2) AND the
+   real-analytic stack (through the analytic IFT + the nowhere-dense-zeros
+   workhorse).  This is the machinery intended to eventually discharge the two
+   analytic hypotheses of F0_dip_nonempty (d3_detHess_arc_chart_core_all and
+   branchP_indep_closed_cover_core_all). *)
+session Applied_Math_D34_Analytic in "Appendix/AnalyticBridge" = Applied_Math_Appendix +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_Analytic_Complex
+  theories
+    D34_Analytic_Bridge
+    D34_H0res_Branch

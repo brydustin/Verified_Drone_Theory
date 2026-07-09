@@ -1,0 +1,3882 @@
+theory Nonemptiness_Paper
+  imports
+    Parametric_Transversality_Euclidean
+    Nonemptiness_Array_Factor
+    Nonemptiness_Feasibility
+    Nonemptiness_Spine
+    Regular_Value_Theorem
+    Applied_Math_BlockDet.Block_Determinants
+    Applied_Math_BlockDet.Block_Determinants_BigJ
+    Applied_Math_BlockDet.Moment_Map
+    Applied_Math_MomentJac.Moment_Jacobian
+    "Perron_Frobenius.HMA_Connect"
+    "HOL-Complex_Analysis.Conformal_Mappings"
+begin
+
+text \<open>
+  Working file for the formalization of
+   \<open>../Applied Math/nonemptiness_unified_singlefile_complete.tex\<close>.
+
+  This theory is intentionally organized in the same order as the TeX document.
+  The rule is: prove each lemma/proposition before using it later.
+
+  We keep the closeout lemma separate (it is already proved in
+   Nonemptiness_Spine as \<open>nonemptiness_from_meager_branches\<close>.
+\<close>
+
+
+section \<open>Setup\<close>
+
+text \<open>
+  TeX Section 2 defines: \<open>k\<close>, \<open>\<Delta>k\<close>, \<open>D\<^sub>x,D\<^sub>y\<close>, \<open>cvec\<close>, and the pattern
+  \<open>U(x,\<omega>) = g(\<omega>) * |A(x,\<omega>)|^2\<close>.
+
+  This has not yet been mirrored fully in Isabelle; currently we have a generic
+  \<open>cvec\<close> and \<open>array factor\<close> layer in theory Nonemptiness_Array_Factor.
+\<close>
+
+
+type_synonym angle = "real^2"   (* (theta, phi) as a 2-vector *)
+
+section \<open>Cartesian Array Factor and Steered Derivatives\<close>
+
+text \<open>
+ 
+  The paper's steering-center angle is represented by a fixed parameter
+  @{term \<omega>s}.  If @{term kvec} is the paper's wave-vector map, then the
+  phase vector used below is
+
+    kvec \<omega> - kvec \<omega>s.
+
+  The paper writes the element factor inside the squared modulus,
+
+    | e(\<omega>) * A(x,\<omega>) |^2.
+
+  In this formalization we use
+
+    gain \<omega> = (e \<omega>)^2,
+
+  so that
+
+    |e(\<omega>) * A(x,\<omega>)|^2 = gain \<omega> * |A(x,\<omega>)|^2.
+\<close>
+
+subsection \<open>Amplitude, gain, and objective\<close>
+
+definition A_cart ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> complex"
+where
+  "A_cart cvec x \<omega> = (\<Sum>n\<in>UNIV. cis (-(cvec \<omega> \<bullet> (x $ n))))"
+
+definition U_cart ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real"
+where
+  "U_cart cvec gain x \<omega> = gain \<omega> * (cmod (A_cart cvec x \<omega>))\<^sup>2"
+
+definition gain_from_element ::
+  "(angle \<Rightarrow> real) \<Rightarrow> angle \<Rightarrow> real"
+where
+  "gain_from_element e \<omega> = (e \<omega>)\<^sup>2"
+
+subsection \<open>Steered wave-vector\<close>
+
+text \<open>
+  The paper's phase term is
+
+    exp(-i * ([k(\<omega>) - k(\<omega>s)] \<sqdot> r'_n(x))).
+
+  Thus the generic @{term cvec} used by @{term A_cart} should be instantiated
+  as @{term "cvec_steered kvec \<omega>s"}.
+\<close>
+
+definition cvec_steered ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> planar"
+where
+  "cvec_steered kvec \<omega>s \<omega> = kvec \<omega> - kvec \<omega>s"
+
+lemma A_cart_steered_expand:
+  "A_cart (cvec_steered kvec \<omega>s) x \<omega> =
+     (\<Sum>n\<in>UNIV. cis (-((kvec \<omega> - kvec \<omega>s) \<bullet> (x $ n))))"
+  unfolding A_cart_def cvec_steered_def
+  by simp
+
+lemma U_cart_paper_expand:
+  "U_cart (cvec_steered kvec \<omega>s) (gain_from_element e) x \<omega> =
+     (e \<omega>)\<^sup>2 *
+       (cmod (\<Sum>n\<in>UNIV. cis (-((kvec \<omega> - kvec \<omega>s) \<bullet> (x $ n)))))\<^sup>2"
+  unfolding U_cart_def A_cart_def cvec_steered_def gain_from_element_def
+  by simp
+
+subsection \<open>Derivatives of the Cartesian amplitude and objective\<close>
+
+text \<open>
+  Since @{typ angle} is @{typ "real^2"}, derivatives with respect to the
+  angle variable are Fréchet derivatives.
+
+  If
+
+    @{term "(cvec has_derivative dc) (at \<omega>)"}
+
+  then @{term dc} is the linear derivative map of @{term cvec} at @{term \<omega>}.
+  Similarly, if
+
+    @{term "(gain has_derivative dgain) (at \<omega>)"}
+
+  then @{term dgain} is the linear derivative map of @{term gain} at @{term \<omega>}.
+\<close>
+
+definition dA_cart ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> planar) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> complex"
+where
+  "dA_cart cvec dc x \<omega> h =
+     (\<Sum>n\<in>UNIV.
+        (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+        * cis (-(cvec \<omega> \<bullet> (x $ n))))"
+
+definition dU_cart ::
+  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> planar) \<Rightarrow>
+   (angle \<Rightarrow> real) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow>
+   (planar^'n) \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real"
+where
+  "dU_cart cvec dc gain dgain x \<omega> h =
+     dgain h * (cmod (A_cart cvec x \<omega>))\<^sup>2
+   + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+             * dA_cart cvec dc x \<omega> h))"
+
+lemma has_derivative_cis_neg_inner:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and y    :: planar
+    and \<omega>    :: angle
+  assumes neg_inner_deriv:
+    "((\<lambda>\<omega>. - (cvec \<omega> \<bullet> y))
+       has_derivative
+         (\<lambda>h. - (dc h \<bullet> y)))
+     (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> y)))
+       has_derivative
+         (\<lambda>h. (- (dc h \<bullet> y)) *\<^sub>R
+              (\<i> * cis (-(cvec \<omega> \<bullet> y)))))
+     (at \<omega>)"
+proof -
+  have cis_deriv:
+    "(cis has_derivative
+       (\<lambda>r. r *\<^sub>R (\<i> * cis (-(cvec \<omega> \<bullet> y)))))
+     (at (-(cvec \<omega> \<bullet> y)))"
+    by (auto intro!: derivative_eq_intros)
+
+  have comp:
+    "((cis \<circ> (\<lambda>\<omega>. - (cvec \<omega> \<bullet> y)))
+       has_derivative
+         ((\<lambda>r. r *\<^sub>R (\<i> * cis (-(cvec \<omega> \<bullet> y))))
+            \<circ> (\<lambda>h. - (dc h \<bullet> y))))
+     (at \<omega>)"
+    using neg_inner_deriv cis_deriv diff_chain_at has_derivative_ident
+    by (subst has_derivative_compose, blast, simp_all)
+  then show ?thesis
+    by (simp add: o_def)
+qed
+
+lemma has_derivative_cis_neg_inner_complex:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and y    :: planar
+    and \<omega>    :: angle
+  assumes neg_inner_deriv:
+    "((\<lambda>\<omega>. - (cvec \<omega> \<bullet> y))
+       has_derivative
+         (\<lambda>h. - (dc h \<bullet> y)))
+     (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> y)))
+       has_derivative
+         (\<lambda>h. \<i> * complex_of_real (-(dc h \<bullet> y))
+              * cis (-(cvec \<omega> \<bullet> y))))
+     (at \<omega>)"
+proof -
+  have h:
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> y)))
+       has_derivative
+         (\<lambda>h. (- (dc h \<bullet> y)) *\<^sub>R
+              (\<i> * cis (-(cvec \<omega> \<bullet> y)))))
+     (at \<omega>)"
+    using neg_inner_deriv
+    by (rule has_derivative_cis_neg_inner)
+
+  then show ?thesis
+    by (simp add: scaleR_conv_of_real algebra_simps)
+qed
+
+lemma has_derivative_A_cart_term:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> (x $ n))))
+       has_derivative
+         (\<lambda>h. (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+              * cis (-(cvec \<omega> \<bullet> (x $ n)))))
+     (at \<omega>)"
+proof -
+  let ?y = "x $ n"
+
+  have inner_deriv:
+    "((\<lambda>\<omega>. cvec \<omega> \<bullet> ?y)
+       has_derivative
+         (\<lambda>h. dc h \<bullet> ?y))
+     (at \<omega>)"
+  proof -
+    have inner_at:
+      "((\<lambda>z::planar. z \<bullet> ?y)
+         has_derivative
+           (\<lambda>h. h \<bullet> ?y))
+       (at (cvec \<omega>))"
+      by (auto intro!: derivative_eq_intros)
+
+    have comp:
+      "(((\<lambda>z::planar. z \<bullet> ?y) \<circ> cvec)
+         has_derivative
+           ((\<lambda>h. h \<bullet> ?y) \<circ> dc))
+       (at \<omega>)"
+      using cvec_deriv inner_at diff_chain_at
+      by (subst has_derivative_compose, blast, simp_all)
+
+    then show ?thesis
+      by (simp only: o_def)
+  qed
+
+  have neg_inner_deriv:
+    "((\<lambda>\<omega>. - (cvec \<omega> \<bullet> ?y))
+       has_derivative
+         (\<lambda>h. - (dc h \<bullet> ?y)))
+     (at \<omega>)"
+    using inner_deriv
+    by (auto intro!: derivative_eq_intros)
+
+  have cis_deriv:
+    "((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> ?y)))
+       has_derivative
+         (\<lambda>h. \<i> * complex_of_real (-(dc h \<bullet> ?y))
+              * cis (-(cvec \<omega> \<bullet> ?y))))
+     (at \<omega>)"
+    using neg_inner_deriv
+    by (rule has_derivative_cis_neg_inner_complex)
+
+  then show ?thesis
+    by (simp add: algebra_simps)
+qed
+
+lemma has_derivative_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. A_cart cvec x \<omega>) has_derivative dA_cart cvec dc x \<omega>) (at \<omega>)"
+proof -
+  have term_deriv:
+    "\<And>n. ((\<lambda>\<omega>. cis (-(cvec \<omega> \<bullet> (x $ n))))
+       has_derivative
+         (\<lambda>h. (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+              * cis (-(cvec \<omega> \<bullet> (x $ n)))))
+     (at \<omega>)"
+    using cvec_deriv
+    by (rule has_derivative_A_cart_term)
+
+  have sum_deriv:
+    "((\<lambda>\<omega>. \<Sum>n\<in>UNIV. cis (-(cvec \<omega> \<bullet> (x $ n))))
+       has_derivative
+         (\<lambda>h. \<Sum>n\<in>UNIV.
+              (- \<i>) * complex_of_real (dc h \<bullet> (x $ n))
+              * cis (-(cvec \<omega> \<bullet> (x $ n)))))
+     (at \<omega>)"
+    by (rule has_derivative_sum, rule term_deriv)
+
+  then show ?thesis
+    unfolding A_cart_def dA_cart_def
+    by simp
+qed
+
+lemma differentiable_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "(\<lambda>\<omega>. A_cart cvec x \<omega>) differentiable (at \<omega>)"
+  using has_derivative_A_cart[OF cvec_deriv]
+  unfolding differentiable_def
+  by blast
+
+lemma has_derivative_cmod_sq_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega>    :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. (cmod (A_cart cvec x \<omega>))\<^sup>2)
+       has_derivative
+         (\<lambda>h. 2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h)))
+     (at \<omega>)"
+proof -
+  let ?A = "\<lambda>u. A_cart cvec x u"
+  let ?dA = "dA_cart cvec dc x \<omega>"
+
+  have A_deriv:
+    "(?A has_derivative ?dA) (at \<omega>)"
+    using cvec_deriv
+    by (rule has_derivative_A_cart)
+
+  have cmod_sq_id:
+    "\<And>z::complex. (cmod z)\<^sup>2 = Re (cnj z * z)"
+    by (simp add: power2_eq_square, metis cmod_power2 power2_eq_square)
+
+  have cnj_deriv:
+    "((\<lambda>u. cnj (?A u)) has_derivative (\<lambda>h. cnj (?dA h))) (at \<omega>)"
+    using A_deriv
+    by (auto intro!: derivative_eq_intros)
+
+  have prod_deriv:
+    "((\<lambda>u. cnj (?A u) * ?A u)
+       has_derivative
+         (\<lambda>h. cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h))
+     (at \<omega>)"
+    using cnj_deriv A_deriv
+    by (auto intro!: derivative_eq_intros simp add: algebra_simps)
+
+  have Re_at:
+    "(Re has_derivative (\<lambda>z. Re z))
+       (at (cnj (?A \<omega>) * ?A \<omega>))"
+    by (auto intro!: derivative_eq_intros)
+
+  have Re_deriv:
+    "((\<lambda>u. Re (cnj (?A u) * ?A u))
+       has_derivative
+         (\<lambda>h. Re (cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)))
+     (at \<omega>)"
+  proof -
+    have comp:
+      "((Re \<circ> (\<lambda>u. cnj (?A u) * ?A u))
+         has_derivative
+           ((\<lambda>z. Re z) \<circ>
+             (\<lambda>h. cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)))
+       (at \<omega>)"
+      using prod_deriv Re_at
+      by (simp add: diff_chain_at)
+
+    then show ?thesis
+      by (simp add: o_def)
+  qed
+
+  have simp_deriv:
+    "\<And>h. Re (cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)
+        = 2 * Re (cnj (?A \<omega>) * ?dA h)"
+  proof -
+    fix h
+    have "Re (cnj (?dA h) * ?A \<omega>)
+        = Re (cnj (cnj (?A \<omega>) * ?dA h))"
+      by (simp add: algebra_simps)
+    also have "... = Re (cnj (?A \<omega>) * ?dA h)"
+      by simp
+    finally have h1:
+      "Re (cnj (?dA h) * ?A \<omega>)
+       = Re (cnj (?A \<omega>) * ?dA h)" .
+    show "Re (cnj (?dA h) * ?A \<omega> + cnj (?A \<omega>) * ?dA h)
+        = 2 * Re (cnj (?A \<omega>) * ?dA h)"
+      by (simp add: h1)
+  qed
+
+  have
+    "((\<lambda>u. Re (cnj (?A u) * ?A u))
+       has_derivative
+         (\<lambda>h. 2 * Re (cnj (?A \<omega>) * ?dA h)))
+     (at \<omega>)"
+    using Re_deriv
+    by (simp add: simp_deriv)
+
+  then show ?thesis
+    by (simp add: cmod_sq_id)
+qed
+
+lemma has_derivative_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega>     :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. U_cart cvec gain x \<omega>) has_derivative dU_cart cvec dc gain dgain x \<omega>) (at \<omega>)"
+proof -
+  have amp_deriv:
+    "((\<lambda>\<omega>. (cmod (A_cart cvec x \<omega>))\<^sup>2)
+       has_derivative
+         (\<lambda>h. 2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h)))
+     (at \<omega>)"
+    using cvec_deriv
+    by (rule has_derivative_cmod_sq_A_cart)
+
+  have prod_deriv:
+    "((\<lambda>\<omega>. gain \<omega> * (cmod (A_cart cvec x \<omega>))\<^sup>2)
+       has_derivative
+         (\<lambda>h. dgain h * (cmod (A_cart cvec x \<omega>))\<^sup>2
+            + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h))))
+     (at \<omega>)"
+  proof -
+    have h:
+      "((\<lambda>\<omega>. gain \<omega> * (cmod (A_cart cvec x \<omega>))\<^sup>2)
+         has_derivative
+           (\<lambda>h. gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
+                    * dA_cart cvec dc x \<omega> h))
+              + dgain h * (cmod (A_cart cvec x \<omega>))\<^sup>2))
+       (at \<omega>)"
+      using gain_deriv amp_deriv
+      by (rule has_derivative_mult)
+
+    then show ?thesis
+      by (simp add: algebra_simps)
+  qed
+
+  then show ?thesis
+    unfolding U_cart_def dU_cart_def
+    by simp
+qed
+
+lemma differentiable_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega>     :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "(\<lambda>\<omega>. U_cart cvec gain x \<omega>) differentiable (at \<omega>)"
+  using has_derivative_U_cart[OF cvec_deriv gain_deriv]
+  unfolding differentiable_def
+  by blast
+
+subsection \<open>Derivative of the squared element factor\<close>
+
+lemma has_derivative_gain_from_element:
+  fixes e  :: "angle \<Rightarrow> real"
+    and de :: "angle \<Rightarrow> real"
+    and \<omega>  :: angle
+  assumes e_deriv:
+    "(e has_derivative de) (at \<omega>)"
+  shows
+    "((gain_from_element e) has_derivative (\<lambda>h. 2 * e \<omega> * de h)) (at \<omega>)"
+proof -
+  have h:
+    "((\<lambda>\<omega>. e \<omega> * e \<omega>) has_derivative (\<lambda>h. e \<omega> * de h + de h * e \<omega>)) (at \<omega>)"
+    using e_deriv e_deriv
+    by (rule has_derivative_mult)
+  then show ?thesis
+    unfolding gain_from_element_def
+    by (simp add: power2_eq_square algebra_simps)
+qed
+
+subsection \<open>Steered derivative theorems\<close>
+
+lemma has_derivative_cvec_steered:
+  fixes kvec :: "angle \<Rightarrow> planar"
+    and dk   :: "angle \<Rightarrow> planar"
+    and \<omega> \<omega>s :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  shows
+    "((cvec_steered kvec \<omega>s) has_derivative dk) (at \<omega>)"
+  unfolding cvec_steered_def
+  using kvec_deriv
+  by (auto intro!: derivative_eq_intros)
+
+lemma has_derivative_U_cart_steered:
+  fixes kvec  :: "angle \<Rightarrow> planar"
+    and dk    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega> \<omega>s  :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. U_cart (cvec_steered kvec \<omega>s) gain x \<omega>)
+       has_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk gain dgain x \<omega>)
+     (at \<omega>)"
+proof -
+  have cvec_deriv:
+    "((cvec_steered kvec \<omega>s) has_derivative dk) (at \<omega>)"
+    using kvec_deriv
+    by (rule has_derivative_cvec_steered)
+
+  show ?thesis
+    using cvec_deriv gain_deriv
+    by (rule has_derivative_U_cart)
+qed
+
+lemma has_derivative_U_cart_paper:
+  fixes kvec :: "angle \<Rightarrow> planar"
+    and dk   :: "angle \<Rightarrow> planar"
+    and e    :: "angle \<Rightarrow> real"
+    and de   :: "angle \<Rightarrow> real"
+    and x    :: "planar^'n"
+    and \<omega> \<omega>s :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes e_deriv:
+    "(e has_derivative de) (at \<omega>)"
+  shows
+    "((\<lambda>\<omega>. U_cart (cvec_steered kvec \<omega>s) (gain_from_element e) x \<omega>)
+       has_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk (gain_from_element e)
+           (\<lambda>h. 2 * e \<omega> * de h) x \<omega>)
+     (at \<omega>)"
+proof -
+  have gain_deriv:
+    "((gain_from_element e) has_derivative (\<lambda>h. 2 * e \<omega> * de h)) (at \<omega>)"
+    using e_deriv
+    by (rule has_derivative_gain_from_element)
+
+  show ?thesis
+    using kvec_deriv gain_deriv
+    by (rule has_derivative_U_cart_steered)
+qed
+
+subsection \<open>Line-direction derivatives\<close>
+
+lemma has_vector_derivative_along_from_has_derivative:
+  fixes F :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_vector"
+    and F' :: "'a \<Rightarrow> 'b"
+    and x h :: 'a
+  assumes F_deriv:
+    "(F has_derivative F') (at x)"
+  shows
+    "((\<lambda>t::real. F (x + t *\<^sub>R h))
+       has_vector_derivative F' h)
+     (at 0)"
+proof -
+  let ?path = "\<lambda>t::real. x + t *\<^sub>R h"
+
+  have path_deriv:
+    "(?path has_derivative (\<lambda>r. r *\<^sub>R h)) (at 0)"
+    by (auto intro!: derivative_eq_intros)
+
+  have comp:
+    "((F \<circ> ?path) has_derivative (F' \<circ> (\<lambda>r. r *\<^sub>R h))) (at 0)"
+    using path_deriv F_deriv
+    by (simp add: diff_chain_at)
+
+  have bl:
+    "bounded_linear F'"
+    using F_deriv
+    unfolding has_derivative_def
+    by simp
+
+  have deriv_eq:
+    "(F' \<circ> (\<lambda>r. r *\<^sub>R h)) = (\<lambda>r. r *\<^sub>R F' h)"
+    by (simp add: bl comp_def linear_simps)
+
+  show ?thesis
+    unfolding has_vector_derivative_def
+  proof -
+    have "(\<lambda>t::real. F (x + t *\<^sub>R h)) = F \<circ> ?path"
+      by auto
+    then show "((\<lambda>t::real. F (x + t *\<^sub>R h))
+        has_derivative (\<lambda>r. r *\<^sub>R F' h)) (at 0)"
+      using comp deriv_eq
+      by argo
+  qed
+qed
+
+lemma has_vector_derivative_A_cart_along:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega> h  :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. A_cart cvec x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative dA_cart cvec dc x \<omega> h)
+     (at 0)"
+  using has_derivative_A_cart[OF cvec_deriv]
+  by (rule has_vector_derivative_along_from_has_derivative)
+
+lemma has_vector_derivative_cmod_sq_A_cart_along:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc   :: "angle \<Rightarrow> planar"
+    and x    :: "planar^'n"
+    and \<omega> h  :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. (cmod (A_cart cvec x (\<omega> + t *\<^sub>R h)))\<^sup>2)
+       has_vector_derivative
+         2 * Re (cnj (A_cart cvec x \<omega>) * dA_cart cvec dc x \<omega> h))
+     (at 0)"
+  using has_derivative_cmod_sq_A_cart[OF cvec_deriv]
+  by (rule has_vector_derivative_along_from_has_derivative)
+
+lemma has_vector_derivative_U_cart_along:
+  fixes cvec :: "angle \<Rightarrow> planar"
+    and dc    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega> h   :: angle
+  assumes cvec_deriv:
+    "(cvec has_derivative dc) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. U_cart cvec gain x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative dU_cart cvec dc gain dgain x \<omega> h)
+     (at 0)"
+  using has_derivative_U_cart[OF cvec_deriv gain_deriv]
+  by (rule has_vector_derivative_along_from_has_derivative)
+
+lemma has_vector_derivative_U_cart_steered_along:
+  fixes kvec  :: "angle \<Rightarrow> planar"
+    and dk    :: "angle \<Rightarrow> planar"
+    and gain  :: "angle \<Rightarrow> real"
+    and dgain :: "angle \<Rightarrow> real"
+    and x     :: "planar^'n"
+    and \<omega> \<omega>s h :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes gain_deriv:
+    "(gain has_derivative dgain) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. U_cart (cvec_steered kvec \<omega>s) gain x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk gain dgain x \<omega> h)
+     (at 0)"
+proof -
+  have cvec_deriv:
+    "((cvec_steered kvec \<omega>s) has_derivative dk) (at \<omega>)"
+    using kvec_deriv
+    by (rule has_derivative_cvec_steered)
+
+  show ?thesis
+    using cvec_deriv gain_deriv
+    by (rule has_vector_derivative_U_cart_along)
+qed
+
+lemma has_vector_derivative_U_cart_paper_along:
+  fixes kvec :: "angle \<Rightarrow> planar"
+    and dk   :: "angle \<Rightarrow> planar"
+    and e    :: "angle \<Rightarrow> real"
+    and de   :: "angle \<Rightarrow> real"
+    and x    :: "planar^'n"
+    and \<omega> \<omega>s h :: angle
+  assumes kvec_deriv:
+    "(kvec has_derivative dk) (at \<omega>)"
+  assumes e_deriv:
+    "(e has_derivative de) (at \<omega>)"
+  shows
+    "((\<lambda>t::real. U_cart (cvec_steered kvec \<omega>s) (gain_from_element e) x (\<omega> + t *\<^sub>R h))
+       has_vector_derivative
+         dU_cart (cvec_steered kvec \<omega>s) dk (gain_from_element e)
+           (\<lambda>h. 2 * e \<omega> * de h) x \<omega> h)
+     (at 0)"
+proof -
+  have gain_deriv:
+    "((gain_from_element e) has_derivative (\<lambda>h. 2 * e \<omega> * de h)) (at \<omega>)"
+    using e_deriv
+    by (rule has_derivative_gain_from_element)
+
+  show ?thesis
+    using kvec_deriv gain_deriv
+    by (rule has_vector_derivative_U_cart_steered_along)
+qed
+
+section \<open>Open Feasible Family and Two-Triple Cover\<close>
+
+subsection \<open>Proposition: Open Feasible Family (Constructive Core)\<close>
+
+text \<open>
+  The TeX proof of Proposition~(Open feasible family) has two parts:
+  \<^item> an explicit configuration with exact nulling at \<open>\<omega>\<^sub>N\<close> (root-of-unity construction);
+  \<^item> a continuity argument that an open neighborhood preserves strict inequalities
+    (spacing and null bound).
+
+  We formalize the first part now. The second part is packaged abstractly in
+  Nonemptiness_Feasibility and will be instantiated later.
+\<close>
+
+lemma root_of_unity_nulling:
+  fixes c :: planar and q s :: planar and L :: real
+  assumes "N > 1"
+    and cq: "c \<bullet> q = 1"
+    and cs: "c \<bullet> s = 0"
+  defines "p n \<equiv> (2*pi*real n/real N) *\<^sub>R q + (real (Suc n) * L) *\<^sub>R s"
+  shows "(\<Sum>n<N. cis (-(c \<bullet> p n))) = 0"
+proof -
+  have sum_cis_roots_unity: "(\<Sum>n<N. cis (2*pi*real n/real N)) = 0"
+  proof -
+    define \<omega> where "\<omega> = cis (2 * pi / real N)"
+    have deMoivre_local: "(cis a :: complex) ^ m = cis (real m * a)" for a m
+      by (induction m) (simp_all add: algebra_simps cis_mult)
+    have [simp]: "\<omega> \<noteq> 1"
+    proof
+      assume h: "\<omega> = 1"
+      from h assms obtain k :: int where hk: "2 * pi / real N = 2 * pi * of_int k"
+        by (auto simp: \<omega>_def complex_eq_iff cos_one_2pi_int mult_ac)
+      from hk assms have "real N * of_int k = 1"
+        by (simp add: field_simps)
+      then have "of_int (int N * k) = (1::real)"
+        by simp
+      then have "int N * k = 1"
+        using of_int_eq_iff by blast
+      then have "int N = 1"
+        by (auto simp: zmult_eq_1_iff)
+      then show False
+        using assms by simp
+    qed
+
+    have "(\<Sum>n<N. cis (2*pi*real n/real N)) = (\<Sum>n<N. \<omega> ^ n)"
+    proof (rule sum.cong[OF refl])
+      fix n assume "n \<in> {..<N}"
+      have "cis (2*pi*real n/real N) = cis (real n * (2*pi/real N))"
+        by (simp add: mult_ac)
+      also have "\<dots> = (cis (2*pi/real N)) ^ n"
+      proof -
+        have hpow: "(cis (2*pi/real N) :: complex) ^ n = cis (real n * (2*pi/real N))"
+          by (rule deMoivre_local)
+        show ?thesis
+          using hpow by simp
+      qed
+      finally show "cis (2*pi*real n/real N) = \<omega> ^ n"
+        by (simp add: \<omega>_def)
+    qed
+    also have "\<dots> = (\<omega> ^ N - 1) / (\<omega> - 1)"
+      by (subst geometric_sum[OF \<open>\<omega> \<noteq> 1\<close>]) simp
+    also have "\<omega> ^ N - 1 = cis (2 * pi) - 1"
+      using assms by (simp add: \<omega>_def deMoivre_local field_simps)
+    also have "\<dots> = 0"
+      by (simp add: complex_eq_iff)
+    finally show ?thesis
+      by simp
+  qed
+  have "c \<bullet> p n = 2*pi*real n/real N" for n
+    by (simp only: p_def inner_add_right inner_scaleR_right cq cs)
+  then have "(\<Sum>n<N. cis (-(c \<bullet> p n))) = (\<Sum>n<N. cis (-(2*pi*real n/real N)))"
+    by simp
+  also have "\<dots> = 0"
+  proof -
+    have "(\<Sum>n<N. cis (-(2*pi*real n/real N))) = (\<Sum>n<N. cnj (cis (2*pi*real n/real N)))"
+      by (simp add: cis_cnj)
+    also have "\<dots> = cnj (\<Sum>n<N. cis (2*pi*real n/real N))"
+      by (simp only: cnj_sum)
+    also have "\<dots> = 0"
+      using sum_cis_roots_unity by simp
+    finally show ?thesis .
+  qed
+  finally show ?thesis .
+qed
+
+theorem prop_openfeas:
+  fixes cvec :: "angle \<Rightarrow> planar" and \<omega>N :: angle
+  assumes "N > 1" and "cvec \<omega>N \<noteq> 0"
+  shows "\<exists>ps::planar list. length ps = N \<and> array_factor cvec ps \<omega>N = 0"
+proof -
+  obtain q s :: planar
+    where cq: "cvec \<omega>N \<bullet> q = 1" and cs: "cvec \<omega>N \<bullet> s = 0"
+    by (meson assms(2) hyperplane_eq_Ex)
+  define L :: real where "L = 1"
+  define p where "p n = (2*pi*real n/real N) *\<^sub>R q + (real (Suc n) * L) *\<^sub>R s" for n
+  define ps where "ps = map p [0..<N]"
+
+  have hlen: "length ps = N"
+    by (simp add: ps_def)
+
+  have hsum: "(\<Sum>n<N. cis (-(cvec \<omega>N \<bullet> p n))) = 0"
+    using root_of_unity_nulling[OF assms(1) cq cs, of L] by (simp add: p_def)
+
+  have "array_factor cvec ps \<omega>N = 0"
+  proof -
+    have "array_factor cvec ps \<omega>N = sum_list (map (\<lambda>x. cis (-(cvec \<omega>N \<bullet> x))) ps)"
+      by (simp add: array_factor_def)
+    also have "\<dots> = sum_list (map (\<lambda>n. cis (-(cvec \<omega>N \<bullet> p n))) [0..<N])"
+      by (simp add: ps_def o_def)
+    also have "\<dots> = sum (\<lambda>n. cis (-(cvec \<omega>N \<bullet> p n))) (set [0..<N])"
+      by (simp add: interv_sum_list_conv_sum_set_nat)
+    also have "\<dots> = (\<Sum>n<N. cis (-(cvec \<omega>N \<bullet> p n)))"
+      by (simp add: atLeast0LessThan)
+    also have "\<dots> = 0"
+      by (rule hsum)
+    finally show ?thesis.
+  qed
+
+  then show ?thesis
+    using hlen by (intro exI[of _ ps], blast)
+qed
+
+text \<open>
+  The combinatorial heart of the two-triple cover (TeX Lemma~(Two-triple cover)).
+  For a noncollinear triple \<open>T\<close> the set \<open>B(T) \<subseteq> S\<^sup>1\<close> of directions orthogonal to an
+  edge is finite. Rotating the second triple by \<open>\<alpha>\<close> sends \<open>B(T\<^sub>2)\<close> to \<open>B(T\<^sub>2)+\<alpha>\<close>; the
+  "bad" rotations are the finite set \<open>{\<beta>-\<gamma> : \<beta>\<in>B(T\<^sub>1), \<gamma>\<in>B(T\<^sub>2)}\<close>. Choosing \<open>\<alpha>\<close>
+  outside it makes \<open>B(T\<^sub>1)\<close> and \<open>B(T\<^sub>2)+\<alpha>\<close> disjoint, so every direction is good for at
+  least one triple. We prove this avoidance fact; the geometric packaging of the
+  triples and the working set \<open>V\<close> is downstream openness.
+\<close>
+
+lemma lem_twotriplecover:
+  fixes B1 B2 :: "real set"
+  assumes "finite B1" and "finite B2"
+  shows "\<exists>\<alpha>. \<forall>\<beta>\<in>B1. \<forall>\<gamma>\<in>B2. \<beta> \<noteq> \<gamma> + \<alpha>"
+proof -
+  have "finite ((\<lambda>(\<beta>, \<gamma>). \<beta> - \<gamma>) ` (B1 \<times> B2))"
+    using assms by simp
+  then obtain \<alpha> where "\<alpha> \<notin> (\<lambda>(\<beta>, \<gamma>). \<beta> - \<gamma>) ` (B1 \<times> B2)"
+    using ex_new_if_finite[OF infinite_UNIV_char_0] by blast
+  then show ?thesis by force
+qed
+
+
+section \<open>Global Lemma for @{term "cvec = 0"}\<close>
+
+text \<open>
+  The norm-comparison core of the TeX argument: a point \<open>c\<close> on a sphere lying on the
+  secant line through two sphere points \<open>a \<noteq> b\<close>, \<open>c = b + \<alpha>(a - b)\<close>, must be one of
+  the endpoints (\<open>\<alpha> \<in> {0,1}\<close>). In the paper this yields \<open>\<alpha>(1-\<alpha>)|k(\<omega>\<^sub>0)-k(\<omega>\<^sub>s)|\<^sup>2 = 0\<close>,
+  hence \<open>k(\<omega>) \<in> {k(\<omega>\<^sub>0), k(\<omega>\<^sub>s)}\<close>.
+\<close>
+
+lemma secant_sphere:
+  fixes a b c :: "'a::real_inner" and \<rho> \<alpha> :: real
+  assumes na: "norm a = \<rho>" and nb: "norm b = \<rho>" and nc: "norm c = \<rho>"
+    and hc: "c = b + \<alpha> *\<^sub>R (a - b)" and hab: "a \<noteq> b"
+  shows "\<alpha> = 0 \<or> \<alpha> = 1"
+proof -
+  have expand: "\<And>t::real. (norm (b + t *\<^sub>R (a - b)))\<^sup>2
+                  = (norm b)\<^sup>2 + 2*t*(b \<bullet> (a - b)) + t\<^sup>2 * (norm (a - b))\<^sup>2"
+    by (simp only: power2_norm_eq_inner)
+       (simp only: inner_add_left inner_add_right inner_scaleR_left inner_scaleR_right
+                  inner_diff_left inner_diff_right inner_commute power2_eq_square)
+  have anz: "a - b \<noteq> 0" using hab by simp
+  then have nz: "(norm (a - b))\<^sup>2 > 0" by simp
+  have hF1: "2*\<alpha>*(b \<bullet> (a - b)) + \<alpha>\<^sup>2 * (norm (a - b))\<^sup>2 = 0"
+  proof -
+    have "(norm c)\<^sup>2 = (norm b)\<^sup>2 + 2*\<alpha>*(b \<bullet> (a - b)) + \<alpha>\<^sup>2 * (norm (a - b))\<^sup>2"
+      using hc expand[of \<alpha>] by simp
+    then show ?thesis using na nb nc by simp
+  qed
+  have hF2: "2*(b \<bullet> (a - b)) + (norm (a - b))\<^sup>2 = 0"
+  proof -
+    have "(norm a)\<^sup>2 = (norm (b + 1 *\<^sub>R (a - b)))\<^sup>2" by simp
+    also have "\<dots> = (norm b)\<^sup>2 + 2*(b \<bullet> (a - b)) + (norm (a - b))\<^sup>2"
+      using expand[of 1] by simp
+    finally show ?thesis using na nb by simp
+  qed
+  have "(\<alpha>\<^sup>2 - \<alpha>) * (norm (a - b))\<^sup>2
+          = (2*\<alpha>*(b \<bullet> (a - b)) + \<alpha>\<^sup>2 * (norm (a - b))\<^sup>2)
+            - \<alpha> * (2*(b \<bullet> (a - b)) + (norm (a - b))\<^sup>2)"
+    by (simp add: algebra_simps)
+  also have "\<dots> = 0" using hF1 hF2 by simp
+  finally have "(\<alpha>\<^sup>2 - \<alpha>) * (norm (a - b))\<^sup>2 = 0" .
+  with nz have "\<alpha>\<^sup>2 - \<alpha> = 0" by simp
+  then have "\<alpha> * (\<alpha> - 1) = 0" by (simp only: power2_eq_square algebra_simps)
+  then show ?thesis by simp
+qed
+
+text \<open>
+  The 3-D wavevector \<open>k(\<omega>) = (sin\<theta> cos\<phi>, sin\<theta> sin\<phi>, cos\<theta>)\<close> (unit-normalized; the
+  physical scale \<open>2\<pi>/\<lambda>\<close> is irrelevant to vanishing of \<open>cvec\<close>), modeled as a real
+  triple so its components are plain projections. The planar effective wavevector
+  \<open>cvec\<^sub>0\<close> is the paper's \<open>(\<Delta>k\<^sub>x + D\<^sub>x \<Delta>k\<^sub>z, \<Delta>k\<^sub>y + D\<^sub>y \<Delta>k\<^sub>z)\<close> with beam-lift constants
+  \<open>D\<^sub>x = (k\<^sub>x(\<omega>\<^sub>0)-k\<^sub>x(\<omega>\<^sub>s))/(k\<^sub>z(\<omega>\<^sub>s)-k\<^sub>z(\<omega>\<^sub>0))\<close>, similarly \<open>D\<^sub>y\<close>.
+\<close>
+
+type_synonym wavevec = "real \<times> real \<times> real"
+
+definition kx :: "angle \<Rightarrow> real" where "kx \<omega> = sin (\<omega>$1) * cos (\<omega>$2)"
+definition ky :: "angle \<Rightarrow> real" where "ky \<omega> = sin (\<omega>$1) * sin (\<omega>$2)"
+definition kz :: "angle \<Rightarrow> real" where "kz \<omega> = cos (\<omega>$1)"
+
+definition kvec :: "angle \<Rightarrow> wavevec" where
+  "kvec \<omega> = (kx \<omega>, ky \<omega>, kz \<omega>)"
+
+lemma norm_kvec [simp]: "norm (kvec \<omega>) = 1"
+proof -
+  have s1: "(sin (\<omega>$1))\<^sup>2 = 1 - (cos (\<omega>$1))\<^sup>2"
+    using sin_cos_squared_add[of "\<omega>$1"] by (metis add_diff_cancel_right')
+  have s2: "(sin (\<omega>$2))\<^sup>2 = 1 - (cos (\<omega>$2))\<^sup>2"
+    using sin_cos_squared_add[of "\<omega>$2"] by (metis add_diff_cancel_right')
+  have "inner (kvec \<omega>) (kvec \<omega>) = (kx \<omega>)\<^sup>2 + (ky \<omega>)\<^sup>2 + (kz \<omega>)\<^sup>2"
+    by (simp add: kvec_def inner_prod_def power2_eq_square)
+  also have "\<dots> = 1"
+    unfolding kx_def ky_def kz_def
+    by (simp only: s1 s2 algebra_simps)
+  finally have "inner (kvec \<omega>) (kvec \<omega>) = 1" .
+  then have "(norm (kvec \<omega>))\<^sup>2 = 1"
+    by (simp add: power2_norm_eq_inner)
+  then show ?thesis
+    using norm_ge_zero[of "kvec \<omega>"] by (auto simp: power2_eq_1_iff)
+qed
+
+definition cvec0 :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real \<times> real" where
+  "cvec0 \<omega>0 \<omega>s \<omega> =
+     ( (kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s),
+       (ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s) )"
+
+theorem lem_czero:
+  fixes \<omega>0 \<omega>s \<omega> :: angle
+  assumes hsep: "kz \<omega>0 \<noteq> kz \<omega>s"
+    and hz: "cvec0 \<omega>0 \<omega>s \<omega> = (0, 0)"
+  shows "kvec \<omega> = kvec \<omega>0 \<or> kvec \<omega> = kvec \<omega>s"
+proof -
+  define az where "az = kz \<omega>0 - kz \<omega>s"
+  have az0: "az \<noteq> 0" using hsep by (simp add: az_def)
+  have den0: "kz \<omega>s - kz \<omega>0 \<noteq> 0" using az0 by (simp add: az_def)
+  have hz1: "(kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s) = 0"
+    using hz by (simp add: cvec0_def)
+  have hz2: "(ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s) = 0"
+    using hz by (simp add: cvec0_def)
+  define al where "al = (kz \<omega> - kz \<omega>s) / az"
+  have X: "kx \<omega> - kx \<omega>s = al * (kx \<omega>0 - kx \<omega>s)"
+    using hz1 az0 den0 by (simp add: al_def az_def field_simps)
+  have Y: "ky \<omega> - ky \<omega>s = al * (ky \<omega>0 - ky \<omega>s)"
+    using hz2 az0 den0 by (simp add: al_def az_def field_simps)
+  have Z: "kz \<omega> - kz \<omega>s = al * (kz \<omega>0 - kz \<omega>s)"
+    using az0 by (simp add: al_def az_def)
+  have key: "kvec \<omega> = kvec \<omega>s + al *\<^sub>R (kvec \<omega>0 - kvec \<omega>s)"
+    using X Y Z by (simp add: kvec_def prod_eq_iff algebra_simps)
+  have hne: "kvec \<omega>0 \<noteq> kvec \<omega>s"
+    using az0 by (auto simp: kvec_def az_def)
+  from secant_sphere[OF norm_kvec norm_kvec norm_kvec key hne]
+  have "al = 0 \<or> al = 1" .
+  then show ?thesis
+  proof
+    assume "al = 0"
+    then show ?thesis using key by simp
+  next
+    assume "al = 1"
+    then show ?thesis using key by (simp add: algebra_simps)
+  qed
+qed
+
+
+section \<open>Regular-Stratum Zeros of the Array Factor\<close>
+
+theorem lem_Azero_surj:
+  fixes cvec :: "real^2 \<Rightarrow> real^2" and x :: "(real^2)^'n" and \<omega> :: "real^2"
+  assumes "odd CARD('n)" "cvec \<omega> \<noteq> 0" "af cvec x \<omega> = 0"
+  shows "\<exists>h. dxA cvec x \<omega> h = 1"
+  using dxA_surj[OF assms, of 1] .
+
+subsection \<open>Transversality Predicate (Minimal)\<close>
+
+definition transverse0_on ::
+  "('a::real_normed_vector \<Rightarrow> 'b::real_normed_vector) \<Rightarrow> 'a set \<Rightarrow> bool"
+where
+  "transverse0_on f S \<longleftrightarrow>
+     (\<forall>x\<in>S. f x = 0 \<longrightarrow> (\<exists>f'. (f has_derivative f') (at x within S) \<and> surj f'))"
+
+lemma surj_comp:
+  assumes "surj f" and "surj g"
+  shows "surj (g \<circ> f)"
+  using assms unfolding surj_def
+  by (metis comp_apply) 
+
+lemma has_derivative_cplx_r2_within:
+  fixes z :: complex
+  shows "(cplx_r2 has_derivative cplx_r2) (at z within S)"
+  by (simp add: has_derivative_at_withinI has_derivative_cplx_r2)
+
+definition r2_cplx :: "real^2 \<Rightarrow> complex" where
+  "r2_cplx v = Complex (v $ 1) (v $ 2)"
+
+lemma r2_cplx_cplx_r2 [simp]: "r2_cplx (cplx_r2 z) = z"
+  unfolding r2_cplx_def cplx_r2_def
+  by (simp add: complex_eq_iff vec_eq_iff forall_2)
+
+lemma cplx_r2_r2_cplx [simp]: "cplx_r2 (r2_cplx v) = v"
+  unfolding r2_cplx_def cplx_r2_def
+  by (smt (verit, best) Finite_Cartesian_Product.vec_eq_iff complex.sel(1,2) exhaust_2 vector_2(1,2))
+
+
+lemma bounded_linear_r2_cplx: "bounded_linear r2_cplx"
+  unfolding r2_cplx_def
+  by (intro bounded_linearI', simp_all add: vec_eq_iff forall_2 complex_eq_iff)
+
+lemma has_derivative_r2_cplx [derivative_intros]:
+  fixes v :: "real^2"
+  shows "(r2_cplx has_derivative r2_cplx) (at v)"
+  by (simp only: bounded_linear_r2_cplx bounded_linear_imp_has_derivative)
+
+lemma surj_r2_cplx: "surj r2_cplx"
+  by (metis UNIV_eq_I r2_cplx_cplx_r2 rangeI)
+
+lemma regular_value_on_cplx_r2_comp:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  assumes joint_trans:
+      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
+        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+  shows "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V\<times>\<Omega>reg) 0"
+proof (rule regular_value_onI)
+  fix z
+  assume zS: "z \<in> V \<times> \<Omega>reg"
+  assume hz: "(\<lambda>z. cplx_r2 (A z)) z = 0"
+  then have Az0: "A z = 0"
+    by (simp only: cplx_r2_0_iff)
+  from joint_trans zS Az0 obtain F where
+    derA: "((\<lambda>z. A z) has_derivative F) (at z within V \<times> \<Omega>reg)"
+    and surjF: "surj F"
+    by blast
+  have derc: "(cplx_r2 has_derivative cplx_r2) (at (A z) within UNIV)"
+    by (simp add: has_derivative_cplx_r2)
+  have derG:
+      "((\<lambda>z. cplx_r2 (A z)) has_derivative (cplx_r2 \<circ> F)) (at z within V \<times> \<Omega>reg)"
+    using has_derivative_compose[OF derA derc]
+    by (simp add: o_def)
+  have "surj (cplx_r2 \<circ> F)"
+    by (rule surj_comp[OF surjF surj_cplx_r2])
+  then show "\<exists>f'. ((\<lambda>z. cplx_r2 (A z)) has_derivative f') (at z within V \<times> \<Omega>reg) \<and> surj f'"
+    using derG by blast
+qed
+
+text \<open>
+  \<open>C\<^sup>1\<close>-lifting: if \<open>A\<close> is continuously Fr\<a>chet-differentiable on \<open>S\<close> (a continuous
+  blinfun derivative), so is \<open>cplx_r2 \<circ> A\<close>, since \<open>cplx_r2\<close> is bounded-linear. This
+  is exactly the smoothness input {thm charts_core_Nn} needs (the chart construction
+  rests on the inverse function theorem, hence on \<open>C\<^sup>1\<close>, not merely a surjective
+  derivative at the zeros).
+\<close>
+
+lemma C1_cplx_r2_comp:
+  fixes A :: "'a::euclidean_space \<Rightarrow> complex" and S :: "'a set"
+  assumes "\<exists>A'. (\<forall>z\<in>S. (A has_derivative blinfun_apply (A' z)) (at z)) \<and> continuous_on S A'"
+  shows "\<exists>G'. (\<forall>z\<in>S. ((\<lambda>z. cplx_r2 (A z)) has_derivative blinfun_apply (G' z)) (at z))
+                \<and> continuous_on S G'"
+proof -
+  obtain A' :: "'a \<Rightarrow> ('a \<Rightarrow>\<^sub>L complex)"
+    where A'd: "\<And>z. z\<in>S \<Longrightarrow> (A has_derivative blinfun_apply (A' z)) (at z)"
+      and A'c: "continuous_on S A'"
+    using assms by blast
+  define cr2 :: "complex \<Rightarrow>\<^sub>L (real^2)" where "cr2 = Blinfun cplx_r2"
+  have cr2_apply: "blinfun_apply cr2 = cplx_r2"
+    unfolding cr2_def by (rule bounded_linear_Blinfun_apply[OF bounded_linear_cplx_r2])
+  define G' where "G' = (\<lambda>z. cr2 o\<^sub>L A' z)"
+  have apply_eq: "blinfun_apply (G' z) = (\<lambda>h. cplx_r2 (blinfun_apply (A' z) h))" for z
+    using G'_def cr2_apply by fastforce
+  have der: "((\<lambda>z. cplx_r2 (A z)) has_derivative blinfun_apply (G' z)) (at z)"
+    if z: "z \<in> S" for z
+    using bounded_linear.has_derivative[OF bounded_linear_cplx_r2 A'd[OF z]]
+    by (simp add: apply_eq)
+  have cont: "continuous_on S G'"
+    unfolding G'_def
+    using bounded_bilinear.bounded_linear_right[OF bounded_bilinear_blinfun_compose]
+          A'c bounded_linear.continuous_on by blast
+  show ?thesis using der cont by blast
+qed
+
+lemma transverse0_on_cplx_r2_iff:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  shows "transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg \<longleftrightarrow>
+         transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg"
+  unfolding transverse0_on_def
+proof
+  assume H: "\<forall>\<omega>\<in>\<Omega>reg.
+      cplx_r2 (A (x, \<omega>)) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  show "\<forall>\<omega>\<in>\<Omega>reg.
+      A (x, \<omega>) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. A (x, \<omega>)) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  proof (intro ballI impI)
+    fix \<omega> :: "real^2"
+    assume w: "\<omega> \<in> \<Omega>reg"
+    assume Az0: "A (x, \<omega>) = 0"
+    have "cplx_r2 (A (x, \<omega>)) = 0"
+      using Az0 by (simp only: cplx_r2_0_iff)
+	    then obtain f' where der:
+	        "((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg)"
+	      and surj_f': "surj f'"
+	      using H w by blast
+            have der_r2: "(r2_cplx has_derivative r2_cplx) (at (cplx_r2 (A (x, \<omega>))) within UNIV)"
+              by (simp add: has_derivative_at_withinI has_derivative_r2_cplx)
+            have derA:
+                "((\<lambda>\<omega>. A (x, \<omega>)) has_derivative (r2_cplx \<circ> f')) (at \<omega> within \<Omega>reg)"
+              using has_derivative_compose[OF der der_r2]
+              by (simp add: o_def)
+            have surjF: "surj (r2_cplx \<circ> f')"
+              by (rule surj_comp[OF surj_f' surj_r2_cplx])
+	    show "\<exists>f'. ((\<lambda>\<omega>. A (x, \<omega>)) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f'"
+	      using derA surjF by blast
+	  qed
+next
+  assume H: "\<forall>\<omega>\<in>\<Omega>reg.
+      A (x, \<omega>) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. A (x, \<omega>)) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  show "\<forall>\<omega>\<in>\<Omega>reg.
+      cplx_r2 (A (x, \<omega>)) = 0 \<longrightarrow>
+      (\<exists>f'. ((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f')"
+  proof (intro ballI impI)
+    fix \<omega> :: "real^2"
+    assume w: "\<omega> \<in> \<Omega>reg"
+    assume hz: "cplx_r2 (A (x, \<omega>)) = 0"
+    then have Az0: "A (x, \<omega>) = 0"
+      by (simp only: cplx_r2_0_iff)
+    from H w Az0 obtain F where derA:
+        "((\<lambda>\<omega>. A (x, \<omega>)) has_derivative F) (at \<omega> within \<Omega>reg)"
+      and surjF: "surj F"
+      by blast
+    have derc: "(cplx_r2 has_derivative cplx_r2) (at (A (x, \<omega>)) within UNIV)"
+      by (simp add: has_derivative_cplx_r2)
+    have derG:
+        "((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative (cplx_r2 \<circ> F)) (at \<omega> within \<Omega>reg)"
+      using has_derivative_compose[OF derA derc] by (simp add: o_def)
+    have "surj (cplx_r2 \<circ> F)"
+      by (rule surj_comp[OF surjF surj_cplx_r2])
+    then show "\<exists>f'. ((\<lambda>\<omega>. cplx_r2 (A (x, \<omega>))) has_derivative f') (at \<omega> within \<Omega>reg) \<and> surj f'"
+      using derG by blast
+  qed
+qed
+
+
+text \<open>
+  The Euclidean chart pipeline in \<open>Parametric_Transversality_Euclidean_Base\<close>
+  is typed for a \<^emph>\<open>single-level\<close> parameter space \<open>real^'m\<close>, and records the
+  rank defect as \<open>rank (matrix \<dots>) < CARD('m)\<close> --- which only type-checks for
+  \<open>real^'m\<close> (the entries must form a \<^class>\<open>field\<close>). Here the parameter space is the
+  product \<open>(real^2)^'n\<close>, so we record the two pipeline obligations at that type, with
+  the rank defect expressed coordinate-free as \<open>\<not> surj\<close>. These are the genuine
+  (still-open) analytic obligations for the antenna parameter space; they will be
+  discharged from the general regular-value theorem.
+\<close>
+
+text \<open>
+  Algebraic core of the chart construction. At a regular zero \<open>(x,\<omega>)\<close> of \<open>G\<close> the
+  full derivative \<open>DG = [D\<^sub>x G \<bar> D\<^sub>\<omega> G]\<close> is surjective, so the zero set is a manifold
+  whose tangent space is \<open>ker DG\<close>. The projection \<open>\<pi>\<^sub>V\<close> to the \<open>x\<close>-factor, restricted
+  to this tangent space, is surjective (the chart point is \<^emph>\<open>regular\<close> for \<open>\<pi>\<^sub>V\<close>)
+  \<^emph>\<open>iff\<close> the \<open>\<omega>\<close>-partial \<open>D\<^sub>\<omega> G\<close> is surjective. Equivalently: the chart point is
+  \<open>\<pi>\<^sub>V\<close>-\<^emph>\<open>critical\<close> exactly when the \<open>\<omega>\<close>-derivative degenerates --- which is precisely
+  the \<^emph>\<open>bad\<close> set covered by \<open>charts_core_Nn\<close> and fed to
+  \<open>negligible_singular_image_2n\<close>. The proof is pure linear algebra: \<open>\<pi>\<^sub>V (ker DG)\<close>
+  is everything iff \<open>range D\<^sub>x G \<subseteq> range D\<^sub>\<omega> G\<close>, which under joint surjectivity is
+  equivalent to \<open>range D\<^sub>\<omega> G = UNIV\<close>.
+\<close>
+
+lemma proj_kernel_full_iff_partial_surj:
+  fixes Dx :: "'a::euclidean_space \<Rightarrow> 'c::euclidean_space"
+    and Dw :: "'b::euclidean_space \<Rightarrow> 'c"
+  assumes linw: "linear Dw"
+    and joint: "surj (\<lambda>p. Dx (fst p) + Dw (snd p))"
+  shows "(fst ` {p. Dx (fst p) + Dw (snd p) = 0} = UNIV) \<longleftrightarrow> surj Dw"
+proof
+  assume L: "fst ` {p. Dx (fst p) + Dw (snd p) = 0} = UNIV"
+  have "\<exists>y. c = Dw y" for c
+  proof -
+    obtain p where p: "Dx (fst p) + Dw (snd p) = c"
+      by (metis (no_types, lifting) joint surj_def)
+    have "fst p \<in> fst ` {p. Dx (fst p) + Dw (snd p) = 0}" using L by simp
+    then obtain q where q: "fst q = fst p" "Dx (fst q) + Dw (snd q) = 0"
+      by force
+    have "Dx (fst p) + Dw (snd q) = 0" using q by simp
+    hence Dxp: "Dx (fst p) = - Dw (snd q)"
+      by (simp add: eq_neg_iff_add_eq_0)
+    have "c = Dw (snd p) - Dw (snd q)" using p Dxp by simp
+    also have "\<dots> = Dw (snd p - snd q)" using linw by (simp add: linear_diff)
+    finally show ?thesis by blast
+  qed
+  thus "surj Dw" by (auto simp: surj_def)
+next
+  assume R: "surj Dw"
+  have "a \<in> fst ` {p. Dx (fst p) + Dw (snd p) = 0}" for a
+  proof -
+    obtain b where b: "Dw b = - Dx a" using R by (metis surjD)
+    have "Dx (fst (a, b)) + Dw (snd (a, b)) = 0" using b by simp
+    thus ?thesis by (intro image_eqI[where x = "(a, b)"]) auto
+  qed
+  thus "fst ` {p. Dx (fst p) + Dw (snd p) = 0} = UNIV" by auto
+qed
+
+text \<open>
+  Specialisation to a chart derivative. If \<open>D\<phi>\<close> is a linear parametrisation of the
+  kernel of a surjective \<open>L = DG\<close> (\<open>range D\<phi> = ker L\<close>, as delivered by
+  @{thm regular_value_local_chart}), then the \<open>x\<close>-factor projection \<open>fst \<circ> D\<phi>\<close> is
+  surjective \<^emph>\<open>iff\<close> the \<open>\<omega>\<close>-partial \<open>b \<mapsto> L(0,b)\<close> is. This is the bridge from the
+  chart's regularity for the projection to non-degeneracy of \<open>D\<^sub>\<omega> G\<close>.
+\<close>
+
+lemma chart_proj_surj_iff:
+  fixes L :: "('a::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'b"
+    and D\<phi> :: "'a \<Rightarrow> ('a \<times> 'b)"
+  assumes linL: "linear L" and surjL: "surj L"
+    and rngD: "range D\<phi> = {w. L w = 0}"
+  shows "surj (\<lambda>h. fst (D\<phi> h)) \<longleftrightarrow> surj (\<lambda>b. L (0, b))"
+proof -
+  have split: "L (a, 0) + L (0, b) = L (a, b)" for a b
+    by (metis add.commute add_0 add_Pair linL linear_add)
+  have joint: "surj (\<lambda>p. L (fst p, 0) + L (0, snd p))"
+  proof -
+    have "(\<lambda>p. L (fst p, 0) + L (0, snd p)) = L"
+      by (rule ext, metis split prod.collapse)
+    thus ?thesis
+      using surjL by presburger
+  qed
+  have lin_embed: "linear (\<lambda>b::'b. ((0::'a), b))"
+    by (rule linearI) (auto simp: zero_prod_def)
+  have linw: "linear (\<lambda>b. L (0, b))"
+    using linear_compose[OF lin_embed linL] by (simp add: o_def)
+  have key: "(fst ` {p. L (fst p, 0) + L (0, snd p) = 0} = UNIV) \<longleftrightarrow> surj (\<lambda>b. L (0,b))"
+    by (rule proj_kernel_full_iff_partial_surj[OF linw joint])
+  have setEq: "{p. L (fst p, 0) + L (0, snd p) = 0} = {w. L w = 0}"
+    using split by auto 
+  have rangeEq: "range (\<lambda>h. fst (D\<phi> h)) = fst ` {w. L w = 0}"
+    by (metis image_image rngD)
+  show ?thesis
+    using key by (simp only: setEq flip: rangeEq)
+qed
+
+text \<open>
+  The \<open>\<omega>\<close>-partial (slice) derivative of \<open>G\<close> at \<open>(x,\<omega>)\<close> is \<open>h \<mapsto> DG(0,h)\<close>: restrict
+  \<open>G\<close> to the affine slice \<open>u \<mapsto> (x,u)\<close> and apply the chain rule.
+\<close>
+
+lemma partial_omega_deriv:
+  fixes G :: "('c::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'd::euclidean_space"
+  assumes "(G has_derivative blinfun_apply Gd) (at (x,\<omega>))"
+  shows "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega>)"
+proof -
+  have embed: "((\<lambda>u::'b. (x, u)) has_derivative (\<lambda>h. (0, h))) (at \<omega>)"
+    by (auto intro!: derivative_eq_intros)
+  have "((\<lambda>u. G (x, u)) has_derivative (\<lambda>h. blinfun_apply Gd (0, h))) (at \<omega>)"
+    using has_derivative_compose[OF embed assms] by (simp add: o_def)
+  thus ?thesis.
+qed
+
+text \<open>
+  Consequently, on an open \<open>\<Omega>\<close>, \<open>(\<lambda>u. G(x,u))\<close> has \<^emph>\<open>some\<close> surjective derivative at
+  \<open>\<omega>\<close> iff its (unique) \<open>\<omega>\<close>-partial \<open>h \<mapsto> DG(0,h)\<close> is surjective. This converts the
+  abstract ``bad'' transversality condition into concrete non-degeneracy of \<open>D\<^sub>\<omega> G\<close>.
+\<close>
+
+lemma exists_surj_deriv_iff_partial:
+  fixes G :: "('c::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'd::euclidean_space"
+  assumes \<Omega>: "open \<Omega>" "\<omega> \<in> \<Omega>"
+    and Gd: "(G has_derivative blinfun_apply Gd) (at (x,\<omega>))"
+  shows "(\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>)
+         \<longleftrightarrow> surj (\<lambda>h. blinfun_apply Gd (0,h))"
+proof
+  assume "\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>"
+  then obtain D\<omega> where d: "((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>)"
+    and s: "surj D\<omega>" by blast
+  have part: "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega> within \<Omega>)"
+    using partial_omega_deriv[OF Gd] has_derivative_at_withinI by blast
+  have d_at: "((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega>)"
+    using d \<Omega> by (metis at_within_open)
+  have part_at: "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega>)"
+    using partial_omega_deriv[OF Gd].
+  have "D\<omega> = (\<lambda>h. blinfun_apply Gd (0,h))"
+    using has_derivative_unique[OF d_at part_at].
+  thus "surj (\<lambda>h. blinfun_apply Gd (0,h))" using s by simp
+next
+  assume s: "surj (\<lambda>h. blinfun_apply Gd (0,h))"
+  have "((\<lambda>u. G (x,u)) has_derivative (\<lambda>h. blinfun_apply Gd (0,h))) (at \<omega> within \<Omega>)"
+    using partial_omega_deriv[OF Gd] has_derivative_at_withinI by blast
+  thus "\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>"
+    using s by blast
+qed
+
+text \<open>
+  Per bad zero: package the @{thm regular_value_local_chart} output together with a
+  closed ball \<open>cball u0 r \<subseteq> U\<close>. On that ball the chart \<open>\<phi>\<close> is continuous, lands in
+  the zero set \<open>M\<close>, has the exposed derivative \<open>D\<phi>\<close> with \<open>range = ker (DG)\<close>; and
+  \<open>\<phi> ` ball u0 r\<close> is an openin-\<open>M\<close> neighbourhood of \<open>q\<close> (the input to Lindel\<o>f).
+\<close>
+
+lemma bad_zero_chart:
+  fixes G :: "('c::euclidean_space \<times> 'b::euclidean_space) \<Rightarrow> 'b"
+    and G' :: "('c \<times> 'b) \<Rightarrow> (('c \<times> 'b) \<Rightarrow>\<^sub>L 'b)"
+    and W :: "('c \<times> 'b) set"
+  assumes Wopen: "open W"
+    and derG: "\<And>z. z \<in> W \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+    and contG': "continuous_on W G'"
+    and reg: "surj (blinfun_apply (G' q))"
+    and qW: "q \<in> W" and Gq: "G q = 0"
+  shows "\<exists>(u0::'c) (r::real) (\<phi>::'c \<Rightarrow> ('c \<times> 'b))
+            (D\<phi>::'c \<Rightarrow> ('c \<Rightarrow>\<^sub>L ('c \<times> 'b))).
+            0 < r \<and> \<phi> u0 = q \<and>
+            (\<forall>u\<in>cball u0 r. \<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+                (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+                range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}) \<and>
+            continuous_on (cball u0 r) \<phi> \<and>
+            q \<in> \<phi> ` ball u0 r \<and>
+            openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` ball u0 r)"
+proof -
+  obtain U  :: "'c set"
+     and u0 :: "'c"
+     and \<phi>  :: "'c \<Rightarrow> ('c \<times> 'b)"
+     and \<psi>  :: "('c \<times> 'b) \<Rightarrow> 'c"
+     and D\<phi> :: "'c \<Rightarrow> ('c \<Rightarrow>\<^sub>L ('c \<times> 'b))"
+    where openU: "open U"
+      and u0U: "u0 \<in> U"
+      and \<phi>u0: "\<phi> u0 = q"
+      and diff\<phi>: "\<phi> differentiable_on U"
+      and \<phi>M: "\<phi> ` U \<subseteq> {z \<in> W. G z = 0}"
+      and openinM: "openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` U)"
+      and homeo: "homeomorphism U (\<phi> ` U) \<phi> \<psi>"
+      and der\<phi>: "\<forall>u\<in>U. (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)"
+      and rng\<phi>: "\<forall>u\<in>U. range (blinfun_apply (D\<phi> u))
+                    = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+    using regular_value_local_chart[OF Wopen qW Gq derG contG' reg]
+    by auto
+
+  obtain \<epsilon> :: real where \<epsilon>pos: "\<epsilon> > 0" and ball\<epsilon>: "ball u0 \<epsilon> \<subseteq> U"
+    using openU u0U
+    by (meson openE)
+
+  define r :: real where "r = \<epsilon> / 2"
+
+  have rpos: "0 < r"
+    using \<epsilon>pos
+    by (simp add: r_def)
+
+  have rlt\<epsilon>: "r < \<epsilon>"
+    using \<epsilon>pos
+    by (simp add: r_def)
+
+  have cball_sub_U: "cball u0 r \<subseteq> U"
+  proof
+    fix u
+    assume u: "u \<in> cball u0 r"
+    then have "dist u0 u \<le> r"
+      by simp
+    also have "r < \<epsilon>"
+      by (rule rlt\<epsilon>)
+    finally have "dist u0 u < \<epsilon>" .
+    then have "u \<in> ball u0 \<epsilon>"
+      by simp
+    then show "u \<in> U"
+      using ball\<epsilon>
+      by blast
+  qed
+
+  have ball_sub_U: "ball u0 r \<subseteq> U"
+    using cball_sub_U
+    by auto
+
+  have cball_props:
+    "\<forall>u\<in>cball u0 r. \<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+        (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+        range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+  proof
+    fix u
+    assume u: "u \<in> cball u0 r"
+    then have uU: "u \<in> U"
+      using cball_sub_U
+      by blast
+
+    have \<phi>uM: "\<phi> u \<in> {z \<in> W. G z = 0}"
+      using \<phi>M uU
+      by blast
+
+    have \<phi>uW: "\<phi> u \<in> W"
+      using \<phi>uM
+      by simp
+
+    have G\<phi>u: "G (\<phi> u) = 0"
+      using \<phi>uM
+      by simp
+
+    have deru: "(\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)"
+      using der\<phi> uU
+      by blast
+
+    have rngu:
+      "range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+      using rng\<phi> uU
+      by blast
+
+    show "\<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+          (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+          range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+      using \<phi>uW G\<phi>u deru rngu
+      by blast
+  qed
+
+  have cont\<phi>U: "continuous_on U \<phi>"
+    using diff\<phi>
+    by (simp add: differentiable_imp_continuous_on)
+
+  have cont_cball: "continuous_on (cball u0 r) \<phi>"
+    using cont\<phi>U cball_sub_U
+    by (rule continuous_on_subset)
+
+  have q_in_image: "q \<in> \<phi> ` ball u0 r"
+  proof -
+    have "u0 \<in> ball u0 r"
+      using rpos
+      by simp
+    then show ?thesis
+      using \<phi>u0
+      by force
+  qed
+
+  have open_ball_U: "openin (top_of_set U) (ball u0 r)"
+  proof -
+    have "open (ball u0 r)"
+      by simp
+    moreover have "ball u0 r = U \<inter> ball u0 r"
+      using ball_sub_U
+      by auto
+    ultimately show ?thesis
+      by (metis openin_open_Int)
+  qed
+
+  have open_image_U:
+    "openin (top_of_set (\<phi> ` U)) (\<phi> ` ball u0 r)"
+    using homeo open_ball_U
+    by (rule homeomorphism_imp_open_map)
+
+  have open_final:
+    "openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` ball u0 r)"
+    using open_image_U openinM
+    by (rule openin_trans)
+
+  show ?thesis
+  proof (intro exI[where x = u0] exI[where x = r] exI[where x = \<phi>] exI[where x = D\<phi>] conjI)
+    show "0 < r" by (rule rpos)
+    show "\<phi> u0 = q" by (rule \<phi>u0)
+    show "\<forall>u\<in>cball u0 r. \<phi> u \<in> W \<and> G (\<phi> u) = 0 \<and>
+            (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+            range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}"
+      by (rule cball_props)
+    show "continuous_on (cball u0 r) \<phi>" by (rule cont_cball)
+    show "q \<in> \<phi> ` ball u0 r" by (rule q_in_image)
+    show "openin (top_of_set {z \<in> W. G z = 0}) (\<phi> ` ball u0 r)" by (rule open_final)
+  qed
+qed
+
+text \<open>
+  Compactness of a critical piece. On a closed ball where \<open>\<phi>\<close> is continuous and lands
+  in \<open>W\<close> (where \<open>G'\<close> is continuous), the set of points whose \<open>\<omega>\<close>-partial \<open>b \<mapsto> DG(0,b)\<close>
+  (a self-map of \<open>real^2\<close>) is \<^emph>\<open>not\<close> surjective is the zero set of \<open>x \<mapsto> det\<close> of a
+  continuous matrix field, hence closed in the ball, hence compact.
+\<close>
+
+lemma crit_piece_compact:
+  fixes \<phi> :: "'c::euclidean_space \<Rightarrow> ('c \<times> (real^2))"
+    and G' :: "('c \<times> (real^2)) \<Rightarrow> (('c \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
+    and W :: "('c \<times> (real^2)) set"
+  assumes contG': "continuous_on W G'"
+    and cont\<phi>: "continuous_on (cball u0 r) \<phi>"
+    and \<phi>W: "\<And>x. x \<in> cball u0 r \<Longrightarrow> \<phi> x \<in> W"
+  shows "compact {x \<in> cball u0 r. \<not> surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))}"
+proof -
+  define M :: "'c \<Rightarrow> (real^2^2)"
+    where "M x = matrix (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))" for x
+
+  have lin: "linear (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))" for x
+  proof -
+    have e: "linear (\<lambda>b::real^2. ((0::'c), b))"
+      by (rule linearI) (auto simp: zero_prod_def)
+    show ?thesis
+      using linear_compose[OF e blinfun.bounded_linear_right[THEN bounded_linear.linear]]
+      by (simp add: o_def)
+  qed
+  have mvm: "(\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) = (*v) (M x)" for x
+    using lin[of x] by (simp only: M_def matrix_vector_mul(2))
+
+  have surj_iff: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> det (M x) \<noteq> 0" for x
+  proof -
+    have s1: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> rank (M x) = CARD(2)"
+      by (metis mvm full_rank_surjective)
+    have s2: "rank (M x) = CARD(2) \<longleftrightarrow> det (M x) \<noteq> 0"
+      by (metis det_eq_0_rank min.idem nat_less_le rank_bound)
+    show ?thesis using s1 s2 by blast
+  qed
+
+  have contGphi: "continuous_on (cball u0 r) (\<lambda>x. G' (\<phi> x))"
+    by (rule continuous_on_compose2[OF contG' cont\<phi>]) (use \<phi>W in auto)
+  have entry_cont:
+      "continuous_on (cball u0 r) (\<lambda>x. (blinfun_apply (G' (\<phi> x)) (0, c)) $ i)" for c i
+    by (rule bounded_linear.continuous_on[OF bounded_linear_vec_nth
+          bounded_bilinear.continuous_on
+            [OF bounded_bilinear_blinfun_apply contGphi continuous_on_const]])
+
+  have detM: "det (M x) =
+        blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 1 * blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 2
+      - blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 1 * blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 2"
+    for x
+    by (simp add: det_2 M_def matrix_def)
+  have det_cont: "continuous_on (cball u0 r) (\<lambda>x. det (M x))"
+  proof -
+    have "continuous_on (cball u0 r)
+            (\<lambda>x. blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 1
+                   * blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 2
+               - blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 1
+                   * blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 2)"
+      by (intro continuous_intros entry_cont)
+    thus ?thesis by (simp add: detM)
+  qed
+
+  have setEq: "{x \<in> cball u0 r. \<not> surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))}
+               = {x \<in> cball u0 r. det (M x) = 0}"
+    using surj_iff by auto
+  have "closedin (top_of_set (cball u0 r)) {x \<in> cball u0 r. det (M x) = 0}"
+    by (rule continuous_closedin_preimage_constant[OF det_cont])
+  hence cl: "closed {x \<in> cball u0 r. det (M x) = 0}"
+    using closedin_closed_trans closed_cball by blast
+  have sub: "{x \<in> cball u0 r. det (M x) = 0} \<subseteq> cball u0 r" by blast
+  have bd: "bounded {x \<in> cball u0 r. det (M x) = 0}"
+    using bounded_subset[OF bounded_cball sub] .
+  have cmp: "compact {x \<in> cball u0 r. det (M x) = 0}"
+    using cl bd by (simp add: compact_eq_bounded_closed)
+  show ?thesis unfolding setEq by (rule cmp)
+qed
+
+lemma charts_core_Nn:
+  fixes V :: "((real^2)^'n) set" and \<Omega> :: "(real^2) set"
+    and G :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)"
+  assumes "open V" "V \<noteq> {}" "open \<Omega>"
+    and "regular_value_on G (V\<times>\<Omega>) 0"
+    and C1: "\<exists>G'. (\<forall>z\<in>V\<times>\<Omega>. (G has_derivative blinfun_apply (G' z)) (at z))
+                  \<and> continuous_on (V\<times>\<Omega>) G'"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+             (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
+           \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+proof -
+  have Wopen: "open (V\<times>\<Omega>)" using assms(1,3) open_Times by blast
+  from C1 obtain G'
+    where derG': "\<And>z. z \<in> V\<times>\<Omega> \<Longrightarrow> (G has_derivative blinfun_apply (G' z)) (at z)"
+      and contG': "continuous_on (V\<times>\<Omega>) G'" by blast
+
+  text \<open>At a zero in the open parameter set, the (unique) derivative is the
+        regular-value one, hence surjective.\<close>
+  have surjG': "surj (blinfun_apply (G' q))" if qW: "q \<in> V\<times>\<Omega>" and Gq: "G q = 0" for q
+  proof -
+    from assms(4) qW Gq obtain f'
+      where f': "(G has_derivative f') (at q within V\<times>\<Omega>)" and sf: "surj f'"
+      by (metis regular_value_on_def)
+    have "(G has_derivative f') (at q)" using f' by (simp add: at_within_open[OF qW Wopen])
+    moreover have "(G has_derivative blinfun_apply (G' q)) (at q)" using derG'[OF qW] .
+    ultimately have "f' = blinfun_apply (G' q)" by (rule has_derivative_unique)
+    thus ?thesis using sf by simp
+  qed
+
+  define BZ where
+    "BZ = {q \<in> V\<times>\<Omega>. G q = 0 \<and> \<not> surj (\<lambda>b. blinfun_apply (G' q) (0,b))}"
+
+  text \<open>The abstract bad set is the \<open>x\<close>-projection of the bad zeros.\<close>
+  have Bad_eq:
+    "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
+     = fst ` BZ"
+  proof (intro equalityI subsetI)
+    fix x
+    assume "x \<in> {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}"
+    then obtain \<omega> where xV: "x \<in> V" and w\<Omega>: "\<omega> \<in> \<Omega>" and Gxw: "G (x,\<omega>) = 0"
+      and nbad: "\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>)"
+      by blast
+    have xwW: "(x,\<omega>) \<in> V\<times>\<Omega>" using xV w\<Omega> by simp
+    have "\<not> surj (\<lambda>b. blinfun_apply (G' (x,\<omega>)) (0,b))"
+      using exists_surj_deriv_iff_partial[OF assms(3) w\<Omega> derG'[OF xwW]] nbad by blast
+    hence "(x,\<omega>) \<in> BZ" using xwW Gxw by (simp add: BZ_def)
+    thus "x \<in> fst ` BZ" by (metis fst_conv image_eqI)
+  next
+    fix x assume "x \<in> fst ` BZ"
+    then obtain q where qBZ: "q \<in> BZ" and xq: "x = fst q" by auto
+    have qW: "q \<in> V\<times>\<Omega>" and Gq: "G q = 0"
+      and np: "\<not> surj (\<lambda>b. blinfun_apply (G' q) (0,b))" using qBZ by (auto simp: BZ_def)
+    obtain a w where q: "q = (a,w)" by (cases q)
+    have aV: "a \<in> V" and w\<Omega>: "w \<in> \<Omega>" using qW q by auto
+    have "\<not> (\<exists>D\<omega>. ((\<lambda>u. G (a,u)) has_derivative D\<omega>) (at w within \<Omega>) \<and> surj D\<omega>)"
+      using exists_surj_deriv_iff_partial[OF assms(3) w\<Omega> derG'[OF qW[unfolded q]]] np q by simp
+    moreover have "G (a,w) = 0" using Gq q by simp
+    ultimately show "x \<in> {x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}"
+      using aV w\<Omega> xq q by auto
+  qed
+
+  text \<open>A chart bundle at every bad zero.\<close>
+  define BodyP :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)^'n \<Rightarrow> real \<Rightarrow>
+        ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2))) \<Rightarrow>
+        ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2)))) \<Rightarrow> bool"
+    where "BodyP = (\<lambda>q u0 r \<phi> D\<phi>.
+        0 < r \<and> \<phi> u0 = q \<and>
+        (\<forall>u\<in>cball u0 r. \<phi> u \<in> V\<times>\<Omega> \<and> G (\<phi> u) = 0 \<and>
+            (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u) \<and>
+            range (blinfun_apply (D\<phi> u)) = {w. blinfun_apply (G' (\<phi> u)) w = 0}) \<and>
+        continuous_on (cball u0 r) \<phi> \<and> q \<in> \<phi> ` ball u0 r \<and>
+        openin (top_of_set {z \<in> V\<times>\<Omega>. G z = 0}) (\<phi> ` ball u0 r))"
+
+  have exch: "\<exists>(u0::(real^2)^'n) (r::real) (\<phi>::(real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+                (D\<phi>::(real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2)))).
+        BodyP q u0 r \<phi> D\<phi>"
+    if "q \<in> BZ" for q
+  proof -
+    have qW: "q \<in> V\<times>\<Omega>" and Gq: "G q = 0" using that by (auto simp: BZ_def)
+    show ?thesis
+      unfolding BodyP_def
+      using bad_zero_chart[OF Wopen derG' contG' surjG'[OF qW Gq] qW Gq] .
+  qed
+
+  text \<open>Skolemise the four chart-data functions through a single tuple-valued
+        choice function (\<open>blast\<close>/\<open>metis\<close> cannot do this multi-function choice).\<close>
+  define sk :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow>
+        ((((real^2)^'n) \<times> real \<times> ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+          \<times> ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2))))))"
+    where "sk = (\<lambda>q. SOME t.
+              BodyP q (fst t) (fst (snd t)) (fst (snd (snd t))) (snd (snd (snd t))))"
+  define u0f :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (real^2)^'n"
+    where "u0f = (\<lambda>q. fst (sk q))"
+  define rf :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> real"
+    where "rf = (\<lambda>q. fst (snd (sk q)))"
+  define \<phi>f :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2)))"
+    where "\<phi>f = (\<lambda>q. fst (snd (snd (sk q))))"
+  define D\<phi>f :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow>
+        ((real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2))))"
+    where "D\<phi>f = (\<lambda>q. snd (snd (snd (sk q))))"
+
+  have bun:
+    "0 < rf q \<and> \<phi>f q (u0f q) = q \<and>
+        (\<forall>u\<in>cball (u0f q) (rf q). \<phi>f q u \<in> V\<times>\<Omega> \<and> G (\<phi>f q u) = 0 \<and>
+            (\<phi>f q has_derivative blinfun_apply (D\<phi>f q u)) (at u) \<and>
+            range (blinfun_apply (D\<phi>f q u)) = {w. blinfun_apply (G' (\<phi>f q u)) w = 0}) \<and>
+        continuous_on (cball (u0f q) (rf q)) (\<phi>f q) \<and> q \<in> \<phi>f q ` ball (u0f q) (rf q) \<and>
+        openin (top_of_set {z \<in> V\<times>\<Omega>. G z = 0}) (\<phi>f q ` ball (u0f q) (rf q))"
+    if "q \<in> BZ" for q
+  proof -
+    have ex: "\<exists>t. BodyP q (fst t) (fst (snd t)) (fst (snd (snd t))) (snd (snd (snd t)))"
+    proof -
+      from exch[OF that] obtain u0 :: "(real^2)^'n" and r :: real
+        and \<phi> :: "(real^2)^'n \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+        and D\<phi> :: "(real^2)^'n \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L (((real^2)^'n) \<times> (real^2)))"
+        where "BodyP q u0 r \<phi> D\<phi>" by blast
+      thus ?thesis by (intro exI[where x = "(u0, r, \<phi>, D\<phi>)"]) simp
+    qed
+    have "BodyP q (fst (sk q)) (fst (snd (sk q)))
+              (fst (snd (snd (sk q)))) (snd (snd (snd (sk q))))"
+      unfolding sk_def by (rule someI_ex[OF ex])
+    thus ?thesis
+      by (simp add: BodyP_def u0f_def rf_def \<phi>f_def D\<phi>f_def)
+  qed
+
+  define Ob where "Ob q = \<phi>f q ` ball (u0f q) (rf q)" for q
+  have q_in_Ob: "q \<in> Ob q" if "q \<in> BZ" for q using bun[OF that] by (simp add: Ob_def)
+  have Ob_open: "openin (top_of_set {z \<in> V\<times>\<Omega>. G z = 0}) (Ob q)" if "q \<in> BZ" for q
+    using bun[OF that] by (simp add: Ob_def)
+
+  obtain \<V> where Vsub: "\<V> \<subseteq> Ob ` BZ" and Vcount: "countable \<V>"
+    and Vun: "\<Union>\<V> = \<Union>(Ob ` BZ)"
+    using Ob_open by (subst Lindelof_openin[where \<F> = "Ob ` BZ" and U = "{z \<in> V\<times>\<Omega>. G z = 0}"],
+                      auto, meson Top1_Ch3.countable_def inj_on_to_nat_on)
+  have BZ_cover: "BZ \<subseteq> \<Union>\<V>"
+    using q_in_Ob Vun by auto
+
+  show ?thesis
+  proof (cases "\<V> = {}")
+    case True
+    have "BZ = {}" using BZ_cover True by simp
+    hence emptyBad: "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+        (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))} = {}"
+      using Bad_eq by simp
+    show ?thesis
+      using emptyBad by (intro exI[where x = "\<lambda>i x. (x, 0)"] exI[where x = "\<lambda>i. {}"]
+                exI[where x = "\<lambda>i x. 0"], fastforce)       
+  next
+    case False
+    define rep where "rep V = (SOME q. q \<in> BZ \<and> Ob q = V)" for V
+    have rep: "rep V \<in> BZ \<and> Ob (rep V) = V" if "V \<in> \<V>" for V
+    proof -
+      from that Vsub obtain q where "q \<in> BZ" "Ob q = V" by auto
+      thus ?thesis unfolding rep_def by (metis (mono_tags, lifting) someI)
+    qed
+    define e where "e = from_nat_into \<V>"
+    have e\<V>: "e i \<in> \<V>" for i using False unfolding e_def by (simp add: from_nat_into)
+    have e_surj: "\<exists>i. e i = V" if "V \<in> \<V>" for V
+      using that False Vcount unfolding e_def
+      by (metis from_nat_into_surj top1_countable_nonempty_eq_image_nat uncountable_def) 
+    define qi where "qi i = rep (e i)" for i
+    have qiBZ: "qi i \<in> BZ" for i using rep[OF e\<V>] by (simp add: qi_def)
+    have Ob_qi: "Ob (qi i) = e i" for i using rep[OF e\<V>] by (simp add: qi_def)
+
+    define fstL :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L ((real^2)^'n)"
+      where "fstL = Blinfun fst"
+    have fstL_apply: "blinfun_apply fstL = fst"
+      unfolding fstL_def by (rule bounded_linear_Blinfun_apply[OF bounded_linear_fst])
+
+    define charts where "charts i = \<phi>f (qi i)" for i
+    define Crit where
+      "Crit i = {u \<in> cball (u0f (qi i)) (rf (qi i)).
+                   \<not> surj (\<lambda>b. blinfun_apply (G' (\<phi>f (qi i) u)) (0,b))}" for i
+    define Dmap where "Dmap i x = fstL o\<^sub>L (D\<phi>f (qi i) x)" for i x
+    have Dmap_apply:
+      "blinfun_apply (Dmap i x) = (\<lambda>h. fst (blinfun_apply (D\<phi>f (qi i) x) h))" for i x
+      by (simp add: Dmap_def fstL_apply blinfun_compose.rep_eq o_def)
+
+    show ?thesis
+    proof (intro exI[where x = charts] exI[where x = Crit] exI[where x = Dmap] conjI)
+      show "{x\<in>V. \<exists>\<omega>\<in>\<Omega>. G (x,\<omega>) = 0 \<and>
+              (\<not> (\<exists>D\<omega>. ((\<lambda>u. G (x,u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>))}
+            \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      proof -
+        have "fst ` BZ \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+        proof
+          fix x assume "x \<in> fst ` BZ"
+          then obtain q where qBZ: "q \<in> BZ" and xq: "x = fst q" by auto
+          have "q \<in> \<Union>\<V>" using BZ_cover qBZ by auto
+          then obtain V where "V \<in> \<V>" and "q \<in> V" by auto
+          then obtain i where ei: "e i = V" using e_surj by blast
+          have "q \<in> Ob (qi i)" using Ob_qi ei \<open>q \<in> V\<close> by simp
+          then obtain u where uball: "u \<in> ball (u0f (qi i)) (rf (qi i))"
+            and qu: "q = \<phi>f (qi i) u" by (auto simp: Ob_def)
+          have ucball: "u \<in> cball (u0f (qi i)) (rf (qi i))" using uball by auto
+          have "\<not> surj (\<lambda>b. blinfun_apply (G' q) (0,b))" using qBZ by (simp add: BZ_def)
+          hence "u \<in> Crit i" using ucball qu by (simp add: Crit_def)
+          moreover have "fst (charts i u) = x" using qu xq by (simp add: charts_def)
+          ultimately show "x \<in> (\<Union>i. (fst \<circ> charts i) ` (Crit i))" by (auto simp: o_def)
+        qed
+        thus ?thesis using Bad_eq by simp
+      qed
+    next
+      show "\<forall>i x. x \<in> Crit i \<longrightarrow>
+              ((fst \<circ> charts i) has_derivative blinfun_apply (Dmap i x)) (at x within Crit i)"
+      proof (intro allI impI)
+        fix i x assume xC: "x \<in> Crit i"
+        hence xcball: "x \<in> cball (u0f (qi i)) (rf (qi i))" by (simp add: Crit_def)
+        have der\<phi>: "(\<phi>f (qi i) has_derivative blinfun_apply (D\<phi>f (qi i) x)) (at x)"
+          using bun[OF qiBZ] xcball by blast
+        have "((\<lambda>y. fst (\<phi>f (qi i) y)) has_derivative
+                 (\<lambda>h. fst (blinfun_apply (D\<phi>f (qi i) x) h))) (at x)"
+          using bounded_linear.has_derivative[OF bounded_linear_fst der\<phi>] .
+        hence "((fst \<circ> charts i) has_derivative blinfun_apply (Dmap i x)) (at x)"
+          by (simp add: charts_def o_def Dmap_apply)
+        thus "((fst \<circ> charts i) has_derivative blinfun_apply (Dmap i x)) (at x within Crit i)"
+          by (rule has_derivative_at_withinI)
+      qed
+    next
+      show "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (Dmap i x))"
+      proof (intro allI impI)
+        fix i x assume xC: "x \<in> Crit i"
+        hence xcball: "x \<in> cball (u0f (qi i)) (rf (qi i))" by (simp add: Crit_def)
+        have npart: "\<not> surj (\<lambda>b. blinfun_apply (G' (\<phi>f (qi i) x)) (0,b))"
+          using xC by (simp add: Crit_def)
+        have \<phi>W: "\<phi>f (qi i) x \<in> V\<times>\<Omega>" and G\<phi>: "G (\<phi>f (qi i) x) = 0"
+          using bun[OF qiBZ] xcball by blast+
+        have linL: "linear (blinfun_apply (G' (\<phi>f (qi i) x)))"
+          by (simp add: blinfun.bounded_linear_right bounded_linear.linear)
+        have rng: "range (blinfun_apply (D\<phi>f (qi i) x))
+                     = {w. blinfun_apply (G' (\<phi>f (qi i) x)) w = 0}"
+          using bun[OF qiBZ] xcball by blast
+        have "surj (\<lambda>h. fst (blinfun_apply (D\<phi>f (qi i) x) h))
+                \<longleftrightarrow> surj (\<lambda>b. blinfun_apply (G' (\<phi>f (qi i) x)) (0,b))"
+          by (rule chart_proj_surj_iff[OF linL surjG'[OF \<phi>W G\<phi>] rng])
+        thus "\<not> surj (blinfun_apply (Dmap i x))"
+          using npart by (simp add: Dmap_apply)
+      qed
+    next
+      show "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+      proof
+        fix i
+        have cont: "continuous_on (cball (u0f (qi i)) (rf (qi i))) (\<phi>f (qi i))"
+          using bun[OF qiBZ] by blast
+        have \<phi>W: "\<And>u. u \<in> cball (u0f (qi i)) (rf (qi i)) \<Longrightarrow> \<phi>f (qi i) u \<in> V\<times>\<Omega>"
+          using bun[OF qiBZ] by blast
+        have cptCrit: "compact (Crit i)"
+          unfolding Crit_def by (rule crit_piece_compact[OF contG' cont \<phi>W])
+        have "Crit i \<subseteq> cball (u0f (qi i)) (rf (qi i))" by (auto simp: Crit_def)
+        hence "continuous_on (Crit i) (fst \<circ> charts i)"
+          unfolding charts_def o_def
+          using continuous_on_subset[OF continuous_on_fst[OF cont]] by blast
+        hence "compact ((fst \<circ> charts i) ` (Crit i))"
+          using cptCrit compact_continuous_image by blast
+        thus "closed ((fst \<circ> charts i) ` (Crit i))" by (rule compact_imp_closed)
+      qed
+    qed
+  qed
+qed
+
+text \<open>
+  Sard for the antenna parameter space. \<open>baby_Sard\<close> is hard-typed to
+  \<open>real^'m \<Rightarrow> real^'n\<close> (it uses \<^const>\<open>matrix\<close>/\<^const>\<open>rank\<close>), but our parameter
+  space is the \<^emph>\<open>nested\<close> vector \<open>(real^2)^'n\<close>. Since \<open>(real^2)^'n\<close> has dimension
+  \<open>2 * CARD('n)\<close>, the flat vector type of equal cardinality and the required
+  \<^class>\<open>wellorder\<close> sort is \<open>real^('n bit0)\<close>. We build a linear isomorphism
+  \<open>\<Phi> : (real^2)^'n \<cong> real^('n bit0)\<close> (from some index bijection, which exists by
+  equal cardinality), transport the map through it, apply \<open>baby_Sard\<close>, and
+  push negligibility back with \<open>negligible_locally_Lipschitz_image\<close>.
+\<close>
+
+lemma card_n2_bit0:
+  "card (UNIV :: ('n::finite \<times> 2) set) = card (UNIV :: ('n bit0) set)"
+  by simp
+
+lemma exists_index_bij:
+  "\<exists>\<beta> :: 'n::finite bit0 \<Rightarrow> ('n \<times> 2). bij \<beta>"
+proof -
+  have "card (UNIV :: ('n bit0) set) = card (UNIV :: ('n \<times> 2) set)"
+    by (simp add: card_n2_bit0)
+  then show ?thesis
+    by (metis finite_same_card_bij finite_class.finite_UNIV)
+qed
+
+lemma negligible_singular_image_2n:
+  fixes f :: "(real^2)^'n \<Rightarrow> (real^2)^'n"
+    and f' :: "(real^2)^'n \<Rightarrow> ((real^2)^'n \<Rightarrow> (real^2)^'n)"
+  assumes der: "\<And>x. x \<in> S \<Longrightarrow> (f has_derivative f' x) (at x within S)"
+      and ns:  "\<And>x. x \<in> S \<Longrightarrow> \<not> surj (f' x)"
+  shows "negligible (f ` S)"
+proof -
+  obtain \<beta> :: "'n bit0 \<Rightarrow> ('n \<times> 2)" where b: "bij \<beta>"
+    using exists_index_bij by blast
+  define \<gamma> :: "('n \<times> 2) \<Rightarrow> 'n bit0" where "\<gamma> = Hilbert_Choice.inv \<beta>"
+  have g\<beta>: "\<gamma> (\<beta> k) = k" for k unfolding \<gamma>_def
+    by (metis b bij_inv_eq_iff)
+  have \<beta>g: "\<beta> (\<gamma> p) = p" for p unfolding \<gamma>_def by (meson b bij_inv_eq_iff)
+
+  define \<Phi> :: "(real^2)^'n \<Rightarrow> real^('n bit0)"
+    where "\<Phi> v = (\<chi> k. (v $ fst (\<beta> k)) $ snd (\<beta> k))" for v
+  define \<Psi> :: "real^('n bit0) \<Rightarrow> (real^2)^'n"
+    where "\<Psi> w = (\<chi> i. \<chi> j. w $ \<gamma> (i,j))" for w
+
+  have lin\<Phi>: "linear \<Phi>"
+    using vec_lambda_unique by (subst linearI, 
+        auto simp: \<Phi>_def vec_eq_iff Finite_Cartesian_Product.plus_vec_def, fastforce)
+     
+  have lin\<Psi>: "linear \<Psi>"
+    by (rule linearI,
+        simp add: Finite_Cartesian_Product.plus_vec_def \<Psi>_def,
+        metis (no_types, lifting) Cart_lambda_cong \<Psi>_def scaleR_vec_def vec_lambda_beta) 
+
+  have \<Psi>\<Phi>: "\<Psi> (\<Phi> v) = v" for v
+    by (simp add: \<Phi>_def \<Psi>_def vec_eq_iff \<beta>g)
+  have \<Phi>\<Psi>: "\<Phi> (\<Psi> w) = w" for w
+    by (simp add: \<Phi>_def \<Psi>_def vec_eq_iff g\<beta>)
+
+  define h :: "real^('n bit0) \<Rightarrow> real^('n bit0)"
+    where "h = (\<lambda>y. \<Phi> (f (\<Psi> y)))"
+
+  have der_h: "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow> (h has_derivative (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) (at y within \<Phi> ` S)"
+  proof -
+    fix y assume yS: "y \<in> \<Phi> ` S"
+    have \<Psi>yS: "\<Psi> y \<in> S" using yS \<Psi>\<Phi> by auto
+    have d\<Psi>: "(\<Psi> has_derivative \<Psi>) (at y within \<Phi> ` S)"
+      using lin\<Psi> by (simp add: linear_imp_has_derivative)
+    have df: "(f has_derivative f' (\<Psi> y)) (at (\<Psi> y) within \<Psi> ` (\<Phi> ` S))"
+      by (metis (mono_tags, lifting) \<Psi>\<Phi> \<Psi>yS der has_derivative_subset image_iff image_subsetI)
+    have d_f\<Psi>:
+      "((\<lambda>y. f (\<Psi> y)) has_derivative (\<lambda>z. f' (\<Psi> y) (\<Psi> z))) (at y within \<Phi> ` S)"
+      by (simp add: df has_derivative_in_compose lin\<Psi> linear_imp_has_derivative)
+    have d\<Phi>: "(\<Phi> has_derivative \<Phi>) (at (f (\<Psi> y)) within (\<lambda>y. f (\<Psi> y)) ` (\<Phi> ` S))"
+      using lin\<Phi> by (simp add: linear_imp_has_derivative)
+    show "(h has_derivative (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) (at y within \<Phi> ` S)"
+      unfolding h_def
+      using has_derivative_in_compose[OF d_f\<Psi> d\<Phi>] by simp
+  qed
+
+  have ns_h: "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow> \<not> surj (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))"
+  proof
+    fix y assume yS: "y \<in> \<Phi> ` S"
+    assume sur: "surj (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))"
+    have \<Psi>yS: "\<Psi> y \<in> S" using yS \<Psi>\<Phi> by auto
+    have "surj (f' (\<Psi> y))"
+      unfolding surj_def
+    proof clarify
+      fix u :: "(real^2)^'n"
+      from sur obtain z where z: "\<Phi> (f' (\<Psi> y) (\<Psi> z)) = \<Phi> u"
+        by (metis (mono_tags, lifting) surj_def)
+      show "\<exists>x. u = f' (\<Psi> y) x"
+      proof (intro exI[where x = "\<Psi> z"])
+        have "\<Psi> (\<Phi> (f' (\<Psi> y) (\<Psi> z))) = \<Psi> (\<Phi> u)" using z by simp
+        then show "u = f' (\<Psi> y) (\<Psi> z)" by (simp add: \<Psi>\<Phi>)
+      qed
+    qed
+    then show False using ns[OF \<Psi>yS] by contradiction
+  qed
+
+  have neg_h: "negligible (h ` (\<Phi> ` S))"
+  proof (rule baby_Sard[where f = h and S = "\<Phi> ` S"
+            and f' = "\<lambda>y z. \<Phi> (f' (\<Psi> y) (\<Psi> z))"])
+    show "CARD('n bit0) \<le> CARD('n bit0)" by simp
+    show "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow>
+        (h has_derivative (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) (at y within \<Phi> ` S)"
+      using der_h by blast
+  next
+    fix y assume yS: "y \<in> \<Phi> ` S"
+    have \<Psi>yS: "\<Psi> y \<in> S" using yS \<Psi>\<Phi> by auto
+    have linf': "linear (f' (\<Psi> y))" using der[OF \<Psi>yS] has_derivative_linear by blast
+    have ling: "linear (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))"
+      using linear_compose[OF linear_compose[OF lin\<Psi> linf'] lin\<Phi>] by (simp add: o_def)
+    have "rank (matrix (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) \<noteq> CARD('n bit0)"
+      by (metis full_rank_surjective ling matrix_vector_mul(2) ns_h yS)
+    moreover have "rank (matrix (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) \<le> CARD('n bit0)"
+      by (metis min.idem rank_bound)
+    ultimately show "rank (matrix (\<lambda>z. \<Phi> (f' (\<Psi> y) (\<Psi> z)))) < CARD('n bit0)" by simp
+  qed
+
+  have image_eq: "f ` S = \<Psi> ` (h ` (\<Phi> ` S))"
+    unfolding h_def using \<Psi>\<Phi> by (smt (verit, best) image_cong image_image)
+
+  show ?thesis
+    unfolding image_eq
+  proof (rule negligible_locally_Lipschitz_image[OF _ neg_h])
+    show "DIM(real^('n bit0)) \<le> DIM((real^2)^'n)" by simp
+  next
+    fix x :: "real^('n bit0)" assume "x \<in> h ` (\<Phi> ` S)"
+    obtain K where K: "\<And>z. norm (\<Psi> z) \<le> K * norm z"
+      using lin\<Psi> linear_conv_bounded_linear bounded_linear.bounded linear_bounded by blast
+    show "\<exists>T B. open T \<and> x \<in> T \<and>
+            (\<forall>y\<in>(h ` (\<Phi> ` S)) \<inter> T. norm (\<Psi> y - \<Psi> x) \<le> B * norm (y - x))"
+      by (rule exI[of _ UNIV], rule exI[of _ K], auto simp: linear_diff[OF lin\<Psi>, symmetric] K)
+  qed
+qed
+
+lemma negligible_proj_charts_Nn:
+  fixes charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+    and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+    and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+  assumes "\<And>i x. x \<in> Crit i \<Longrightarrow>
+            ((fst \<circ> charts i) has_derivative blinfun_apply (D i x)) (at x within Crit i)"
+    and "\<And>i x. x \<in> Crit i \<Longrightarrow> \<not> surj (blinfun_apply (D i x))"
+  shows "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+proof -
+  have "negligible ((fst \<circ> charts i) ` (Crit i))" for i
+    by (rule negligible_singular_image_2n
+          [where f = "fst \<circ> charts i" and S = "Crit i"
+             and f' = "\<lambda>x. blinfun_apply (D i x)"])
+       (use assms in blast)+
+  then show ?thesis by (rule negligible_Union_nat)
+qed
+
+lemma parametric_transversality_negligible_complex:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  assumes "open V" and "V \<noteq> {}"
+    and "open \<Omega>reg"
+    and joint_trans:
+      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
+        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+    and A_C1: "\<exists>A'. (\<forall>z\<in>V\<times>\<Omega>reg. (A has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>\<Omega>reg) A'"
+  shows "negligible {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
+proof -
+  have reg0: "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V \<times> \<Omega>reg) 0"
+    using regular_value_on_cplx_r2_comp[OF joint_trans] .
+  have eq_bad:
+      "{x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}
+       =
+       {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D) (at \<omega> within \<Omega>reg) \<and> surj D))}"
+    unfolding transverse0_on_def by auto
+  have bad_negligible:
+    "negligible {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D)
+                       (at \<omega> within \<Omega>reg) \<and> surj D))}"
+  proof -
+    let ?G = "\<lambda>z. cplx_r2 (A z)"
+
+    obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+       and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+       and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+      where cover:
+      "{x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. ?G (x,\<omega>) = 0 \<and>
+          (\<not> (\<exists>D\<omega>. ((\<lambda>u. ?G (x,u)) has_derivative D\<omega>)
+                    (at \<omega> within \<Omega>reg) \<and> surj D\<omega>))}
+       \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow>
+          ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x)))
+            (at x within Crit i)"
+      and rank:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0
+              C1_cplx_r2_comp[OF A_C1]]
+      by blast
+
+    have negligible_cover:
+      "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+    proof (rule negligible_proj_charts_Nn)
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow>
+        ((fst \<circ> charts i) has_derivative blinfun_apply (D i x))
+          (at x within Crit i)"
+        using der by blast
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow> \<not> surj (blinfun_apply (D i x))"
+        using rank by blast
+    qed
+
+    show ?thesis
+      using negligible_cover cover negligible_subset by blast
+  qed
+  then have "negligible {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}"
+    by (simp add: eq_bad)
+  then show ?thesis
+    by (simp only: transverse0_on_cplx_r2_iff)
+qed
+
+
+section \<open>Negligible Sets Are Meager (meagerness engine for the bad-set branches)\<close>
+
+text \<open>
+  All four bad-set branches reduce, via parametric transversality, to: the bad set is
+  contained in a countable union of \<^emph>\<open>lower-dimensional\<close> smooth images, which are
+  Lebesgue-negligible (\<^const>\<open>negligible\<close>). This module is the reusable bridge from
+  \<^const>\<open>negligible\<close> to the paper's \<^const>\<open>meager\<close>: a closed negligible subset of a
+  Euclidean space is nowhere dense, and a set covered by countably many such pieces is
+  meager. It is exactly the topological half of \<open>lem:smooth-chart-meager\<close>.
+\<close>
+
+lemma meager_nowhere_dense:
+  fixes A :: "'a::topological_space set"
+  assumes "nowhere_dense A"
+  shows "meager A"
+  using assms unfolding meager_def by (intro exI[of _ "\<lambda>_. A"]) auto
+
+lemma nowhere_dense_closed_negligible:
+  fixes A :: "'a::euclidean_space set"
+  assumes "closed A" and "negligible A"
+  shows "nowhere_dense A"
+proof -
+  have "interior A = {}"
+  proof (rule ccontr)
+    assume ne: "interior A \<noteq> {}"
+    have "\<not> negligible (interior A)"
+      by (rule open_not_negligible[OF open_interior ne])
+    moreover have "negligible (interior A)"
+      by (rule negligible_subset[OF assms(2) interior_subset])
+    ultimately show False by blast
+  qed
+  with assms(1) show ?thesis
+    by (simp only: nowhere_dense_def closure_closed)
+qed
+
+lemma meager_negligible_closed_cover:
+  fixes A :: "'a::euclidean_space set"
+  assumes "A \<subseteq> (\<Union>n::nat. K n)"
+    and "\<And>n. closed (K n)" and "\<And>n. negligible (K n)"
+  shows "meager A"
+proof -
+  have "meager (\<Union>n. K n)"
+  proof (rule meager_Union_nat)
+    fix n
+    show "meager (K n)"
+      by (rule meager_nowhere_dense[OF nowhere_dense_closed_negligible[OF assms(2) assms(3)]])
+  qed
+  then show ?thesis
+    using assms(1) by (rule meager_subset[rotated])
+qed
+
+lemma nowhere_dense_mono:
+  fixes A B :: "'a::topological_space set"
+  assumes "B \<subseteq> A" and "nowhere_dense A"
+  shows "nowhere_dense B"
+proof -
+  have "interior (closure B) \<subseteq> interior (closure A)"
+    by (intro interior_mono closure_mono assms(1))
+  with assms(2) show ?thesis
+    by (simp only: nowhere_dense_def subset_empty)
+qed
+
+text \<open>
+  The real-analytic nowhere-density engine. A continuous real function whose
+  zero set has the \<^emph>\<open>identity property\<close> (vanishing on any nonempty open set forces
+  it to vanish everywhere) and that is not identically zero has a nowhere-dense
+  zero set: the level set \<open>{x. f x = 0}\<close> is closed, and an open subset of it would
+  force \<open>f \<equiv> 0\<close>, so its interior is empty. The identity hypothesis is precisely
+  the real-analytic identity theorem; for a finite exponential sum (the array
+  factor, a trigonometric polynomial in \<open>x\<close>) it holds because vanishing on an
+  open set kills all Taylor coefficients. This is the engine that discharges the
+  \<open>slice_nowhere_dense\<close> input of \<open>prop_foldnonzero\<close>.
+\<close>
+
+lemma continuous_identity_zero_nowhere_dense:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real"
+  assumes cont: "continuous_on UNIV f"
+    and identity: "\<And>U. \<lbrakk>open U; U \<noteq> {}; \<forall>x\<in>U. f x = 0\<rbrakk> \<Longrightarrow> (\<forall>x. f x = 0)"
+    and nontriv: "\<exists>x. f x \<noteq> 0"
+  shows "nowhere_dense {x. f x = 0}"
+proof -
+  have clo: "closed {x. f x = 0}"
+    using closed_Collect_eq[OF cont continuous_on_const] by simp
+  have "interior {x. f x = 0} = {}"
+  proof (rule ccontr)
+    assume ne: "interior {x. f x = 0} \<noteq> {}"
+    have "\<forall>x\<in>interior {x. f x = 0}. f x = 0"
+      using interior_subset by auto
+    from identity[OF open_interior ne this] nontriv show False by blast
+  qed
+  with clo show ?thesis
+    by (simp only: nowhere_dense_def closure_closed)
+qed
+
+text \<open>
+  Relative form used at the call site: the slice-zero set inside an open working
+  set \<open>V\<close> is a subset of the global zero set, hence nowhere dense by
+  \<open>nowhere_dense_mono\<close>. This produces exactly the \<open>slice_nowhere_dense\<close> hypothesis
+  shape of \<open>prop_foldnonzero\<close>.
+\<close>
+
+lemma slice_zero_nowhere_dense:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real" and V :: "'a set"
+  assumes cont: "continuous_on UNIV f"
+    and identity: "\<And>U. \<lbrakk>open U; U \<noteq> {}; \<forall>x\<in>U. f x = 0\<rbrakk> \<Longrightarrow> (\<forall>x. f x = 0)"
+    and nontriv: "\<exists>x. f x \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. f x = 0}"
+  by (rule nowhere_dense_mono[OF _ continuous_identity_zero_nowhere_dense[OF cont identity nontriv]])
+     auto
+
+text \<open>
+  The real-analytic identity theorem, supplied by \<^emph>\<open>1-D line restriction\<close>. If
+  every line restriction \<open>t \<mapsto> f (a + t \<cdot> v)\<close> of a real function extends to an
+  entire function of a complex variable, then \<open>f\<close> vanishing on a nonempty open
+  set forces \<open>f \<equiv> 0\<close>: connect any target \<open>y\<close> to a base point \<open>a\<close> in the open set
+  by a line; the entire restriction \<open>F\<close> vanishes on a real neighbourhood of \<open>0\<close>
+  (the part of the line still inside the open set), so by \<open>analytic_continuation\<close>
+  \<open>F \<equiv> 0\<close>, whence \<open>f y = F(1) = 0\<close>. For the array factor (a finite exponential
+  sum) the line restrictions are \<open>cis\<close> of affine arguments, manifestly entire, so
+  this discharges the \<open>identity\<close> hypothesis of the nowhere-density engine.
+\<close>
+
+lemma lines_entire_identity:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real"
+  assumes lines: "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v)))"
+    and Uopen: "open U" and Une: "U \<noteq> {}" and Uzero: "\<forall>x\<in>U. f x = 0"
+  shows "\<forall>y. f y = 0"
+proof
+  fix y
+  obtain a where aU: "a \<in> U" using Une by blast
+  show "f y = 0"
+  proof (cases "y = a")
+    case True thus ?thesis using aU Uzero by blast
+  next
+    case False
+    define v where "v = y - a"
+    have v0: "v \<noteq> 0" using False by (simp add: v_def)
+    obtain F where Fhol: "F holomorphic_on UNIV"
+      and Fval: "\<And>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v))"
+      using lines by blast
+    obtain e where e0: "e > 0" and eball: "ball a e \<subseteq> U"
+      using Uopen aU open_contains_ball by blast
+    define d where "d = e / norm v"
+    have nv0: "norm v > 0" using v0 by simp
+    have d0: "d > 0" using e0 nv0 by (simp add: d_def)
+    have van: "F (complex_of_real t) = 0" if t: "\<bar>t\<bar> < d" for t
+    proof -
+      have "norm (t *\<^sub>R v) = \<bar>t\<bar> * norm v" by simp
+      also have "\<dots> < d * norm v"
+        using t nv0 by (simp add: mult_strict_right_mono)
+      also have "\<dots> = e" using nv0 by (simp add: d_def)
+      finally have "a + t *\<^sub>R v \<in> ball a e" by (simp add: dist_norm)
+      hence "f (a + t *\<^sub>R v) = 0" using eball Uzero by blast
+      thus ?thesis using Fval by simp
+    qed
+    define Z where "Z = complex_of_real ` {t. \<bar>t\<bar> < d}"
+    have lim: "(0::complex) islimpt Z"
+      unfolding islimpt_approachable
+    proof (intro allI impI)
+      fix \<epsilon>::real assume "\<epsilon> > 0"
+      define t where "t = min d \<epsilon> / 2"
+      have tpos: "t > 0" using d0 \<open>\<epsilon> > 0\<close> by (simp add: t_def)
+      have "t < d" using d0 \<open>\<epsilon> > 0\<close> by (simp add: t_def)
+      hence "complex_of_real t \<in> Z" using tpos by (auto simp: Z_def)
+      moreover have "complex_of_real t \<noteq> 0" using tpos by simp
+      moreover have "dist (complex_of_real t) 0 < \<epsilon>"
+        using tpos \<open>\<epsilon> > 0\<close> by (simp add: t_def dist_norm)
+      ultimately show "\<exists>x'\<in>Z. x' \<noteq> 0 \<and> dist x' 0 < \<epsilon>" by blast
+    qed
+    have F1: "F (complex_of_real 1) = 0"
+    proof (rule analytic_continuation[OF Fhol open_UNIV connected_UNIV
+              subset_UNIV UNIV_I lim _ UNIV_I])
+      fix z assume "z \<in> Z"
+      then obtain t where "z = complex_of_real t" "\<bar>t\<bar> < d" by (auto simp: Z_def)
+      thus "F z = 0" using van by simp
+    qed
+    have "complex_of_real (f (a + 1 *\<^sub>R v)) = F (complex_of_real 1)"
+      using Fval[of 1] by simp
+    also have "\<dots> = 0" using F1 by simp
+    finally have "f (a + v) = 0" by simp
+    thus ?thesis by (simp add: v_def)
+  qed
+qed
+
+text \<open>
+  Combining the line-restriction identity theorem with the nowhere-density
+  engine: a continuous, nontrivial \<open>f\<close> with entire line restrictions has a
+  nowhere-dense zero set (relative to any working set \<open>V\<close>). This is the
+  array-factor-shaped discharge of \<open>slice_nowhere_dense\<close>.
+\<close>
+
+lemma lines_entire_slice_nowhere_dense:
+  fixes f :: "'a::euclidean_space \<Rightarrow> real" and V :: "'a set"
+  assumes cont: "continuous_on UNIV f"
+    and lines: "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v)))"
+    and nontriv: "\<exists>x. f x \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. f x = 0}"
+  by (rule slice_zero_nowhere_dense[OF cont _ nontriv])
+     (rule lines_entire_identity[OF lines])
+
+
+text \<open>
+  Schwarz reflection holomorphicity: if \<open>G\<close> is entire then so is
+  \<open>z \<mapsto> cnj (G (cnj z))\<close>. Real chain rule: \<open>cnj\<close> is \<^const>\<open>bounded_linear\<close>, so
+  composing the field-derivative of \<open>G\<close> at \<open>cnj z\<close> on both sides conjugates
+  it, giving the field derivative \<open>cnj D\<close> at \<open>z\<close>.
+\<close>
+
+lemma holomorphic_cnj_reflect:
+  assumes "G holomorphic_on UNIV"
+  shows "(\<lambda>z. cnj (G (cnj z))) holomorphic_on UNIV"
+proof -
+  have bl: "bounded_linear cnj" by (rule bounded_linear_cnj)
+  have "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)" for z :: complex
+  proof -
+    have "G field_differentiable (at (cnj z))"
+      using assms by (simp add: holomorphic_on_def)
+    then obtain D where D: "(G has_field_derivative D) (at (cnj z))"
+      unfolding field_differentiable_def by blast
+    have cnjd: "(cnj has_derivative cnj) (at z)"
+      using bounded_linear.has_derivative[OF bl has_derivative_ident] by simp
+    have Gd: "(G has_derivative (*) D) (at (cnj z))"
+      by (rule has_field_derivative_imp_has_derivative[OF D])
+    have comp1: "((\<lambda>w. G (cnj w)) has_derivative (\<lambda>x. D * cnj x)) (at z)"
+      using diff_chain_at[OF cnjd Gd] by (simp add: o_def)
+    have comp2: "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj (D * cnj x))) (at z)"
+      using bounded_linear.has_derivative[OF bl comp1] by (simp add: o_def)
+    have "(\<lambda>x. cnj (D * cnj x)) = (\<lambda>x. cnj D * x)"
+      by simp
+    with comp2 have "((\<lambda>w. cnj (G (cnj w))) has_derivative (\<lambda>x. cnj D * x)) (at z)" by simp
+    then show "(\<lambda>z. cnj (G (cnj z))) field_differentiable (at z)"
+      unfolding field_differentiable_def has_field_derivative_def by blast
+  qed
+  thus ?thesis
+    by (auto simp: holomorphic_on_def intro: field_differentiable_at_within)
+qed
+
+subsection \<open>Concrete Modeling: the Array Factor has Entire Line Restrictions\<close>
+
+text \<open>
+  An algebra of functions whose line restrictions extend to entire functions of
+  one complex variable. \<open>cline_entire\<close> is the complex-valued predicate,
+  \<open>rline_entire\<close> the real-valued one (matching the \<open>lines\<close> hypothesis of
+  \<open>lines_entire_identity\<close>). The array factor \<open>A_cart\<close> lands in \<open>cline_entire\<close>
+  (a finite sum of \<open>cis\<close> of linear forms), and the power pattern \<open>U_cart\<close>
+  (\<open>= g\<cdot>|A|\<^sup>2\<close>) lands in \<open>rline_entire\<close>, so its slice-zero set is nowhere dense
+  once nontrivial. This turns the analytic \<open>identity\<close> hypothesis into the purely
+  structural fact that each summand is \<open>cis\<close> of an affine function of the line
+  parameter.
+\<close>
+
+definition cline_entire :: "('a::euclidean_space \<Rightarrow> complex) \<Rightarrow> bool" where
+  "cline_entire g \<longleftrightarrow>
+     (\<forall>a v. \<exists>G. G holomorphic_on UNIV
+              \<and> (\<forall>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)))"
+
+definition rline_entire :: "('a::euclidean_space \<Rightarrow> real) \<Rightarrow> bool" where
+  "rline_entire f \<longleftrightarrow>
+     (\<forall>a v. \<exists>F. F holomorphic_on UNIV
+              \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (f (a + t *\<^sub>R v))))"
+
+lemma cline_entire_const: "cline_entire (\<lambda>x. c)"
+  unfolding cline_entire_def by (intro allI exI[of _ "\<lambda>_. c"]) simp
+
+lemma cline_entire_add:
+  assumes "cline_entire g1" and "cline_entire g2"
+  shows "cline_entire (\<lambda>x. g1 x + g2 x)"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G1 where G1: "G1 holomorphic_on UNIV"
+      "\<And>t::real. G1 (complex_of_real t) = g1 (a + t *\<^sub>R v)"
+    using assms(1) unfolding cline_entire_def by blast
+  obtain G2 where G2: "G2 holomorphic_on UNIV"
+      "\<And>t::real. G2 (complex_of_real t) = g2 (a + t *\<^sub>R v)"
+    using assms(2) unfolding cline_entire_def by blast
+  show "\<exists>G. G holomorphic_on UNIV
+            \<and> (\<forall>t::real. G (complex_of_real t) = g1 (a + t *\<^sub>R v) + g2 (a + t *\<^sub>R v))"
+    by (intro exI[of _ "\<lambda>z. G1 z + G2 z"])
+       (auto simp: G1 G2 intro!: holomorphic_intros)
+qed
+
+lemma cline_entire_mult:
+  assumes "cline_entire g1" and "cline_entire g2"
+  shows "cline_entire (\<lambda>x. g1 x * g2 x)"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G1 where G1: "G1 holomorphic_on UNIV"
+      "\<And>t::real. G1 (complex_of_real t) = g1 (a + t *\<^sub>R v)"
+    using assms(1) unfolding cline_entire_def by blast
+  obtain G2 where G2: "G2 holomorphic_on UNIV"
+      "\<And>t::real. G2 (complex_of_real t) = g2 (a + t *\<^sub>R v)"
+    using assms(2) unfolding cline_entire_def by blast
+  show "\<exists>G. G holomorphic_on UNIV
+            \<and> (\<forall>t::real. G (complex_of_real t) = g1 (a + t *\<^sub>R v) * g2 (a + t *\<^sub>R v))"
+    by (intro exI[of _ "\<lambda>z. G1 z * G2 z"])
+       (auto simp: G1 G2 intro!: holomorphic_intros)
+qed
+
+lemma cline_entire_sum:
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> cline_entire (g i)"
+  shows "cline_entire (\<lambda>x. \<Sum>i\<in>I. g i x)"
+  using assms
+proof (induction I rule: finite_induct)
+  case empty
+  show ?case using cline_entire_const[of 0] by simp
+next
+  case (insert i I)
+  have "cline_entire (\<lambda>x. g i x + (\<Sum>j\<in>I. g j x))"
+    by (rule cline_entire_add) (use insert in auto)
+  thus ?case using insert.hyps by simp
+qed
+
+lemma cline_entire_cis_linear:
+  fixes lf :: "'a::euclidean_space \<Rightarrow> real"
+  assumes "bounded_linear lf"
+  shows "cline_entire (\<lambda>x. cis (lf x))"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  have aff: "lf (a + t *\<^sub>R v) = lf a + t * lf v" for t::real
+    by (simp add: assms linear_simps(1,5))
+  let ?G = "\<lambda>z. exp (\<i> * (complex_of_real (lf a) + z * complex_of_real (lf v)))"
+  have "?G holomorphic_on UNIV" by (intro holomorphic_intros)
+  moreover have "?G (complex_of_real t) = cis (lf (a + t *\<^sub>R v))" for t::real
+    by (simp add: aff cis_conv_exp algebra_simps flip: of_real_mult of_real_add)
+  ultimately show "\<exists>G. G holomorphic_on UNIV
+                       \<and> (\<forall>t::real. G (complex_of_real t) = cis (lf (a + t *\<^sub>R v)))"
+    by blast
+qed
+
+lemma rline_entire_Re:
+  assumes "cline_entire g"
+  shows "rline_entire (\<lambda>x. Re (g x))"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G where G: "G holomorphic_on UNIV"
+      "\<And>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)"
+    using assms unfolding cline_entire_def by blast
+  let ?F = "\<lambda>z. (G z + cnj (G (cnj z))) / 2"
+  have "?F holomorphic_on UNIV"
+    using G(1) holomorphic_cnj_reflect[OF G(1)] by (intro holomorphic_intros) auto
+  moreover have "?F (complex_of_real t) = complex_of_real (Re (g (a + t *\<^sub>R v)))" for t::real
+    by (simp add: G(2) complex_add_cnj)
+  ultimately show "\<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (Re (g (a + t *\<^sub>R v))))"
+    by blast
+qed
+
+lemma rline_entire_Im:
+  assumes "cline_entire g"
+  shows "rline_entire (\<lambda>x. Im (g x))"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G where G: "G holomorphic_on UNIV"
+      "\<And>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)"
+    using assms unfolding cline_entire_def by blast
+  let ?F = "\<lambda>z. (G z - cnj (G (cnj z))) / (2 * \<i>)"
+  have "?F holomorphic_on UNIV"
+    using G(1) holomorphic_cnj_reflect[OF G(1)] by (intro holomorphic_intros) auto
+  moreover have "?F (complex_of_real t) = complex_of_real (Im (g (a + t *\<^sub>R v)))" for t::real
+    by (simp add: G(2) complex_diff_cnj, simp add: mult.commute)
+  ultimately show "\<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (Im (g (a + t *\<^sub>R v))))"
+    by blast
+qed
+
+lemma rline_entire_add:
+  assumes "rline_entire f1" and "rline_entire f2"
+  shows "rline_entire (\<lambda>x. f1 x + f2 x)"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain F1 where F1: "F1 holomorphic_on UNIV"
+      "\<And>t::real. F1 (complex_of_real t) = complex_of_real (f1 (a + t *\<^sub>R v))"
+    using assms(1) unfolding rline_entire_def by blast
+  obtain F2 where F2: "F2 holomorphic_on UNIV"
+      "\<And>t::real. F2 (complex_of_real t) = complex_of_real (f2 (a + t *\<^sub>R v))"
+    using assms(2) unfolding rline_entire_def by blast
+  show "\<exists>F. F holomorphic_on UNIV
+            \<and> (\<forall>t::real. F (complex_of_real t)
+                        = complex_of_real (f1 (a + t *\<^sub>R v) + f2 (a + t *\<^sub>R v)))"
+    by (intro exI[of _ "\<lambda>z. F1 z + F2 z"])
+       (auto simp: F1 F2 intro!: holomorphic_intros)
+qed
+
+lemma rline_entire_mult:
+  assumes "rline_entire f1" and "rline_entire f2"
+  shows "rline_entire (\<lambda>x. f1 x * f2 x)"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v
+  obtain F1 where F1: "F1 holomorphic_on UNIV"
+      "\<And>t::real. F1 (complex_of_real t) = complex_of_real (f1 (a + t *\<^sub>R v))"
+    using assms(1) unfolding rline_entire_def by blast
+  obtain F2 where F2: "F2 holomorphic_on UNIV"
+      "\<And>t::real. F2 (complex_of_real t) = complex_of_real (f2 (a + t *\<^sub>R v))"
+    using assms(2) unfolding rline_entire_def by blast
+  show "\<exists>F. F holomorphic_on UNIV
+            \<and> (\<forall>t::real. F (complex_of_real t)
+                        = complex_of_real (f1 (a + t *\<^sub>R v) * f2 (a + t *\<^sub>R v)))"
+    by (intro exI[of _ "\<lambda>z. F1 z * F2 z"])
+       (auto simp: F1 F2 intro!: holomorphic_intros)
+qed
+
+lemma rline_entire_scale:
+  assumes "rline_entire f"
+  shows "rline_entire (\<lambda>x. c * f x)"
+  using rline_entire_mult[OF rline_entire_Re[OF cline_entire_const[of "complex_of_real c"]] assms]
+  by simp
+
+lemma rline_entire_cmod_sq:
+  assumes "cline_entire g"
+  shows "rline_entire (\<lambda>x. (cmod (g x))\<^sup>2)"
+proof -
+  have eq: "(\<lambda>x. (cmod (g x))\<^sup>2) = (\<lambda>x. Re (g x) * Re (g x) + Im (g x) * Im (g x))"
+    by (rule ext, subst cmod_power2, simp add: power2_eq_square)
+  show ?thesis
+    unfolding eq by (intro rline_entire_add rline_entire_mult rline_entire_Re rline_entire_Im assms)
+qed
+
+text \<open>Closure under constants, finite sums/products, and hence the determinant of a
+  matrix whose entries are \<open>rline_entire\<close> --- the route to \<open>m\<^sup>*\<close> being \<open>rline_entire\<close>.\<close>
+
+lemma rline_entire_const: "rline_entire (\<lambda>x. c)"
+  using rline_entire_Re[OF cline_entire_const[of "complex_of_real c"]] by simp
+
+lemma rline_entire_sum:
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> rline_entire (g i)"
+  shows "rline_entire (\<lambda>x. \<Sum>i\<in>I. g i x)"
+  using assms by (induction I rule: finite_induct) (auto intro: rline_entire_const rline_entire_add)
+
+lemma rline_entire_prod:
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> rline_entire (g i)"
+  shows "rline_entire (\<lambda>x. \<Prod>i\<in>I. g i x)"
+  using assms by (induction I rule: finite_induct) (auto intro: rline_entire_const rline_entire_mult)
+
+lemma rline_entire_det_fun:
+  fixes A :: "'a::euclidean_space \<Rightarrow> real^'n^'n"
+  assumes "\<And>i j. rline_entire (\<lambda>x. A x $ i $ j)"
+  shows "rline_entire (\<lambda>x. det (A x))"
+  unfolding det_def
+  by (auto intro!: rline_entire_sum rline_entire_scale rline_entire_prod assms finite_permutations)
+
+text \<open>
+  Two further base cases needed for the \<^emph>\<open>moment-map\<close> Jacobian minor (as opposed
+  to the array factor): a single Cartesian coordinate \<open>(x $ n) $ k\<close> is affine in
+  the line parameter, hence has entire line restrictions; and the real
+  \<open>cos\<close>/\<open>sin\<close> of the steering form \<open>c \<bullet> (x $ n)\<close> are the real/imaginary parts of
+  the \<open>cis\<close>-phase, hence \<open>rline_entire\<close>. The minor's entries are sums of products
+  of these (polynomial weight times \<open>cos\<close>/\<open>sin\<close>), so the determinant --- a sum of
+  products of entries --- is \<open>rline_entire\<close> by the closure lemmas above.
+\<close>
+
+lemma rline_entire_coord:
+  fixes n :: "'n::finite" and k :: 2
+  shows "rline_entire (\<lambda>x::planar^'n. (x $ n) $ k)"
+  unfolding rline_entire_def
+proof (intro allI)
+  fix a v :: "planar^'n"
+  let ?F = "\<lambda>z. complex_of_real ((a $ n) $ k) + z * complex_of_real ((v $ n) $ k)"
+  have "?F holomorphic_on UNIV" by (intro holomorphic_intros)
+  moreover have "?F (complex_of_real t) = complex_of_real (((a + t *\<^sub>R v) $ n) $ k)" for t::real
+    by (simp flip: of_real_mult of_real_add)
+  ultimately show "\<exists>F. F holomorphic_on UNIV
+                       \<and> (\<forall>t::real. F (complex_of_real t)
+                                   = complex_of_real (((a + t *\<^sub>R v) $ n) $ k))"
+    by blast
+qed
+
+lemma cline_entire_phase:
+  fixes c :: planar and n :: "'n::finite"
+  shows "cline_entire (\<lambda>x::planar^'n. cis (c \<bullet> (x $ n)))"
+proof (rule cline_entire_cis_linear)
+  show "bounded_linear (\<lambda>x::planar^'n. c \<bullet> (x $ n))"
+    by (rule bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth])
+qed
+
+lemma rline_entire_cos_inner:
+  fixes c :: planar and n :: "'n::finite"
+  shows "rline_entire (\<lambda>x::planar^'n. cos (c \<bullet> (x $ n)))"
+proof -
+  have "rline_entire (\<lambda>x::planar^'n. Re (cis (c \<bullet> (x $ n))))"
+    by (rule rline_entire_Re[OF cline_entire_phase])
+  thus ?thesis by simp
+qed
+
+lemma rline_entire_sin_inner:
+  fixes c :: planar and n :: "'n::finite"
+  shows "rline_entire (\<lambda>x::planar^'n. sin (c \<bullet> (x $ n)))"
+proof -
+  have "rline_entire (\<lambda>x::planar^'n. Im (cis (c \<bullet> (x $ n))))"
+    by (rule rline_entire_Im[OF cline_entire_phase])
+  thus ?thesis by simp
+qed
+
+text \<open>
+  The array factor is a finite sum of \<open>cis\<close> of linear forms in \<open>x\<close>, hence has
+  entire line restrictions; the power pattern \<open>U = g\<cdot>|A|\<^sup>2\<close> inherits this.
+\<close>
+
+lemma cline_entire_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and \<omega> :: angle
+  shows "cline_entire (\<lambda>x::planar^'n. A_cart cvec x \<omega>)"
+  unfolding A_cart_def
+proof (rule cline_entire_sum)
+  show "finite (UNIV :: 'n set)" by simp
+next
+  fix n :: 'n
+  have "bounded_linear (\<lambda>x::planar^'n. - (cvec \<omega> \<bullet> (x $ n)))"
+    by (rule bounded_linear_minus
+              [OF bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth]])
+  thus "cline_entire (\<lambda>x::planar^'n. cis (- (cvec \<omega> \<bullet> (x $ n))))"
+    by (rule cline_entire_cis_linear)
+qed
+
+lemma rline_entire_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real" and \<omega> :: angle
+  shows "rline_entire (\<lambda>x::planar^'n. U_cart cvec g x \<omega>)"
+  unfolding U_cart_def
+  by (rule rline_entire_scale[OF rline_entire_cmod_sq[OF cline_entire_A_cart]])
+
+text \<open>
+  Continuity of the array factor and the power pattern as functions of \<open>x\<close>
+  (the \<open>lines_entire_slice_nowhere_dense\<close> engine also needs global continuity).
+\<close>
+
+lemma continuous_on_A_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and \<omega> :: angle
+  shows "continuous_on UNIV (\<lambda>x::planar^'n. A_cart cvec x \<omega>)"
+  unfolding A_cart_def
+  by (intro continuous_intros)
+
+lemma continuous_on_U_cart:
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real" and \<omega> :: angle
+  shows "continuous_on UNIV (\<lambda>x::planar^'n. U_cart cvec g x \<omega>)"
+  unfolding U_cart_def
+  by (intro continuous_intros continuous_on_A_cart)
+
+text \<open>
+  Concrete discharge of \<open>slice_nowhere_dense\<close> for the power pattern: whenever the
+  pattern is not identically zero (the nontriviality input), its zero set inside
+  any working set \<open>V\<close> is nowhere dense.
+\<close>
+
+lemma U_cart_zero_nowhere_dense:
+  fixes cvec :: "angle \<Rightarrow> planar" and g :: "angle \<Rightarrow> real"
+    and \<omega> :: angle and V :: "(planar^'n) set"
+  assumes nontriv: "\<exists>x::planar^'n. U_cart cvec g x \<omega> \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. U_cart cvec g x \<omega> = 0}"
+proof (rule lines_entire_slice_nowhere_dense[OF continuous_on_U_cart _ nontriv])
+  show "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                  \<and> (\<forall>t::real. F (complex_of_real t)
+                              = complex_of_real (U_cart cvec g (a + t *\<^sub>R v) \<omega>))"
+    using rline_entire_U_cart unfolding rline_entire_def by blast
+qed
+
+
+subsection \<open>The Fold-Slice Derivative \<open>\<partial>\<^sub>s U\<close> has Entire Line Restrictions\<close>
+
+text \<open>
+  Two more closure lemmas needed for the slice derivative: complex-of-real
+  \<^emph>\<open>linear forms\<close> (entire line restrictions because the restriction is affine in
+  the line parameter) and complex \<^emph>\<open>conjugation\<close> (entire via Schwarz reflection).
+\<close>
+
+lemma cline_entire_of_real_linear:
+  fixes lf :: "'a::euclidean_space \<Rightarrow> real"
+  assumes "bounded_linear lf"
+  shows "cline_entire (\<lambda>x. complex_of_real (lf x))"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  have aff: "lf (a + t *\<^sub>R v) = lf a + t * lf v" for t::real
+    by (simp add: assms linear_simps(1,5))
+  let ?G = "\<lambda>z. complex_of_real (lf a) + z * complex_of_real (lf v)"
+  have "?G holomorphic_on UNIV" by (intro holomorphic_intros)
+  moreover have "?G (complex_of_real t) = complex_of_real (lf (a + t *\<^sub>R v))" for t::real
+    by (simp add: aff)
+  ultimately show "\<exists>G. G holomorphic_on UNIV
+                       \<and> (\<forall>t::real. G (complex_of_real t) = complex_of_real (lf (a + t *\<^sub>R v)))"
+    by blast
+qed
+
+lemma cline_entire_cnj:
+  assumes "cline_entire g"
+  shows "cline_entire (\<lambda>x. cnj (g x))"
+  unfolding cline_entire_def
+proof (intro allI)
+  fix a v
+  obtain G where G: "G holomorphic_on UNIV"
+      "\<And>t::real. G (complex_of_real t) = g (a + t *\<^sub>R v)"
+    using assms unfolding cline_entire_def by blast
+  let ?H = "\<lambda>z. cnj (G (cnj z))"
+  have "?H holomorphic_on UNIV" by (rule holomorphic_cnj_reflect[OF G(1)])
+  moreover have "?H (complex_of_real t) = cnj (g (a + t *\<^sub>R v))" for t::real
+    by (simp add: G(2))
+  ultimately show "\<exists>H. H holomorphic_on UNIV
+                       \<and> (\<forall>t::real. H (complex_of_real t) = cnj (g (a + t *\<^sub>R v)))"
+    by blast
+qed
+
+text \<open>
+  The bare array factor and its fold-slice derivative for a fixed wavevector
+  \<open>c = cvec \<omega>\<close> and its tangent-direction derivative \<open>c' = \<partial>\<^sub>s (cvec \<omega>)\<close>. The
+  derivative array factor \<open>\<partial>\<^sub>s A = \<Sum>\<^sub>n (-\<i>)(c'\<bullet>x\<^sub>n) cis(-(c\<bullet>x\<^sub>n))\<close> is a finite sum
+  of (linear form)\<open>\<cdot>\<close>(\<open>cis\<close> of a linear form), hence \<open>cline_entire\<close>.
+\<close>
+
+lemma cline_entire_af:
+  fixes c :: planar
+  shows "cline_entire (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))"
+proof (rule cline_entire_sum)
+  show "finite (UNIV :: 'n set)" by simp
+next
+  fix n :: 'n
+  have "bounded_linear (\<lambda>x::planar^'n. - (c \<bullet> (x $ n)))"
+    by (rule bounded_linear_minus
+              [OF bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth]])
+  thus "cline_entire (\<lambda>x::planar^'n. cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_cis_linear)
+qed
+
+lemma cline_entire_dsA:
+  fixes c c' :: planar
+  shows "cline_entire
+           (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV.
+              (- \<i>) * complex_of_real (c' \<bullet> (x $ n)) * cis (- (c \<bullet> (x $ n))))"
+proof (rule cline_entire_sum)
+  show "finite (UNIV :: 'n set)" by simp
+next
+  fix n :: 'n
+  have lin1: "bounded_linear (\<lambda>x::planar^'n. c' \<bullet> (x $ n))"
+    by (rule bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth])
+  have lin2: "bounded_linear (\<lambda>x::planar^'n. - (c \<bullet> (x $ n)))"
+    by (rule bounded_linear_minus
+              [OF bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth]])
+  show "cline_entire
+          (\<lambda>x::planar^'n. (- \<i>) * complex_of_real (c' \<bullet> (x $ n)) * cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_mult
+              [OF cline_entire_mult[OF cline_entire_const cline_entire_of_real_linear[OF lin1]]
+                  cline_entire_cis_linear[OF lin2]])
+qed
+
+text \<open>
+  The fold-slice derivative \<open>\<partial>\<^sub>s U\<close> in closed form (chain rule for
+  \<open>U = g\<cdot>|A|\<^sup>2\<close> along the fold curve): with \<open>gv = g \<omega>\<close>, \<open>gv' = \<partial>\<^sub>s (g \<omega>)\<close>,
+  \<open>\<partial>\<^sub>s U = gv'\<cdot>|A|\<^sup>2 + gv\<cdot>2\<real>(\<^bold>\<bar>A\<cdot>\<partial>\<^sub>s A)\<close>. As a function of \<open>x\<close> it is a real
+  combination of the entire-line-restriction building blocks, hence
+  \<open>rline_entire\<close> and globally continuous; its slice-zero set is therefore nowhere
+  dense whenever the slice is nontrivial. This is the array-factor-shaped
+  discharge of the \<open>slice_nowhere_dense\<close> hypothesis of \<open>prop_foldnonzero\<close> for the
+  actual fold-critical slice function.
+\<close>
+
+definition dsU_cart :: "planar \<Rightarrow> planar \<Rightarrow> real \<Rightarrow> real \<Rightarrow> (planar^'n) \<Rightarrow> real" where
+  "dsU_cart c c' gv gv' x =
+     gv' * (cmod (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n)))))\<^sup>2
+   + gv * (2 * Re (cnj (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))
+                   * (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (c' \<bullet> (x $ n))
+                                * cis (- (c \<bullet> (x $ n))))))"
+
+lemma rline_entire_dsU_cart:
+  shows "rline_entire (\<lambda>x::planar^'n. dsU_cart c c' gv gv' x)"
+proof -
+  have A: "cline_entire (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_af)
+  have dsA: "cline_entire
+               (\<lambda>x::planar^'n. \<Sum>n\<in>UNIV.
+                  (- \<i>) * complex_of_real (c' \<bullet> (x $ n)) * cis (- (c \<bullet> (x $ n))))"
+    by (rule cline_entire_dsA)
+  have P: "rline_entire (\<lambda>x::planar^'n. (cmod (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n)))))\<^sup>2)"
+    by (rule rline_entire_cmod_sq[OF A])
+  have Q: "rline_entire
+             (\<lambda>x::planar^'n. Re (cnj (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))
+                   * (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (c' \<bullet> (x $ n))
+                                * cis (- (c \<bullet> (x $ n))))))"
+    by (rule rline_entire_Re[OF cline_entire_mult[OF cline_entire_cnj[OF A] dsA]])
+  have "rline_entire
+          (\<lambda>x::planar^'n.
+             gv' * (cmod (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n)))))\<^sup>2
+           + gv * (2 * Re (cnj (\<Sum>n\<in>UNIV. cis (- (c \<bullet> (x $ n))))
+                   * (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (c' \<bullet> (x $ n))
+                                * cis (- (c \<bullet> (x $ n)))))))"
+    by (intro rline_entire_add rline_entire_scale P Q)
+  thus ?thesis unfolding dsU_cart_def .
+qed
+
+lemma continuous_on_dsU_cart:
+  shows "continuous_on UNIV (\<lambda>x::planar^'n. dsU_cart c c' gv gv' x)"
+  unfolding dsU_cart_def
+  by (intro continuous_intros)
+
+lemma dsU_cart_zero_nowhere_dense:
+  fixes c c' :: planar and gv gv' :: real and V :: "(planar^'n) set"
+  assumes nontriv: "\<exists>x::planar^'n. dsU_cart c c' gv gv' x \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. dsU_cart c c' gv gv' x = 0}"
+proof (rule lines_entire_slice_nowhere_dense[OF continuous_on_dsU_cart _ nontriv])
+  show "\<And>a v. \<exists>F. F holomorphic_on UNIV
+                  \<and> (\<forall>t::real. F (complex_of_real t)
+                              = complex_of_real (dsU_cart c c' gv gv' (a + t *\<^sub>R v)))"
+    using rline_entire_dsU_cart unfolding rline_entire_def by blast
+qed
+
+text \<open>
+  Bridge to the rigorous Fréchet derivative \<^const>\<open>dU_cart\<close>: for a fixed steering
+  angle \<open>\<omega>\<close> and fold-tangent direction \<open>h\<close>, the directional derivative
+  \<open>\<partial>\<^sub>s U = dU_cart cvec dc gain dgain x \<omega> h\<close> is, as a function of \<open>x\<close>, exactly the
+  closed form \<^const>\<open>dsU_cart\<close> with the wavevector \<open>c = cvec \<omega>\<close>, its steered
+  derivative \<open>c' = dc h\<close>, the gain \<open>gv = gain \<omega>\<close>, and \<open>gv' = dgain h\<close>. Hence the
+  genuine derivative inherits the entire-line-restriction structure, so its
+  slice-zero set is nowhere dense whenever nontrivial --- the fully concrete
+  discharge of \<open>slice_nowhere_dense\<close> for \<open>prop_foldnonzero\<close>.
+\<close>
+
+lemma dU_cart_eq_dsU_cart:
+  "dU_cart cvec dc gain dgain x \<omega> h
+     = dsU_cart (cvec \<omega>) (dc h) (gain \<omega>) (dgain h) x"
+  unfolding dU_cart_def dsU_cart_def A_cart_def dA_cart_def
+  by simp
+
+lemma rline_entire_dU_cart:
+  "rline_entire (\<lambda>x::planar^'n. dU_cart cvec dc gain dgain x \<omega> h)"
+  unfolding dU_cart_eq_dsU_cart by (rule rline_entire_dsU_cart)
+
+lemma dU_cart_zero_nowhere_dense:
+  fixes cvec dc :: "angle \<Rightarrow> planar" and gain dgain :: "angle \<Rightarrow> real"
+    and \<omega> h :: angle and V :: "(planar^'n) set"
+  assumes nontriv: "\<exists>x::planar^'n. dU_cart cvec dc gain dgain x \<omega> h \<noteq> 0"
+  shows "nowhere_dense {x \<in> V. dU_cart cvec dc gain dgain x \<omega> h = 0}"
+  unfolding dU_cart_eq_dsU_cart
+  using nontriv unfolding dU_cart_eq_dsU_cart
+  by (rule dsU_cart_zero_nowhere_dense)
+
+text \<open>
+  Meager version of the regular-stratum transversality bad set (the rung that
+  \<open>prop_regzero\<close> consumes). The chart cover from @{thm charts_core_Nn} is a
+  countable union of \<^emph>\<open>closed\<close> Lebesgue-negligible pieces, so the bad set is
+  meager by @{thm meager_negligible_closed_cover}.
+\<close>
+
+lemma parametric_transversality_meager_complex:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  assumes "open V" and "V \<noteq> {}"
+    and "open \<Omega>reg"
+    and joint_trans:
+      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
+        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+    and A_C1: "\<exists>A'. (\<forall>z\<in>V\<times>\<Omega>reg. (A has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>\<Omega>reg) A'"
+  shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
+proof -
+  have reg0: "regular_value_on (\<lambda>z. cplx_r2 (A z)) (V \<times> \<Omega>reg) 0"
+    using regular_value_on_cplx_r2_comp[OF joint_trans] .
+  have eq_bad:
+      "{x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}
+       =
+       {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D) (at \<omega> within \<Omega>reg) \<and> surj D))}"
+    unfolding transverse0_on_def by auto
+  have bad_meager:
+    "meager {x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. cplx_r2 (A (x,\<omega>)) = 0 \<and>
+             (\<not> (\<exists>D. ((\<lambda>u. cplx_r2 (A (x,u))) has_derivative D)
+                       (at \<omega> within \<Omega>reg) \<and> surj D))}"
+  proof -
+    let ?G = "\<lambda>z. cplx_r2 (A z)"
+
+    obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+       and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+       and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+      where cover:
+      "{x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. ?G (x,\<omega>) = 0 \<and>
+          (\<not> (\<exists>D\<omega>. ((\<lambda>u. ?G (x,u)) has_derivative D\<omega>)
+                    (at \<omega> within \<Omega>reg) \<and> surj D\<omega>))}
+       \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow>
+          ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x)))
+            (at x within Crit i)"
+      and rank:
+      "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      and clsd:
+      "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+      using charts_core_Nn[OF assms(1) assms(2) assms(3) reg0
+              C1_cplx_r2_comp[OF A_C1]]
+      by blast
+
+    have negligible_cover:
+      "negligible (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+    proof (rule negligible_proj_charts_Nn)
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow>
+        ((fst \<circ> charts i) has_derivative blinfun_apply (D i x))
+          (at x within Crit i)"
+        using der by blast
+      show "\<And>i x. x \<in> Crit i \<Longrightarrow> \<not> surj (blinfun_apply (D i x))"
+        using rank by blast
+    qed
+
+    show ?thesis
+    proof (rule meager_negligible_closed_cover
+                  [where K = "\<lambda>i. (fst \<circ> charts i) ` (Crit i)"])
+      show "{x\<in>V. \<exists>\<omega>\<in>\<Omega>reg. ?G (x,\<omega>) = 0 \<and>
+              (\<not> (\<exists>D\<omega>. ((\<lambda>u. ?G (x,u)) has_derivative D\<omega>)
+                        (at \<omega> within \<Omega>reg) \<and> surj D\<omega>))}
+            \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+        by (rule cover)
+      show "\<And>i. closed ((fst \<circ> charts i) ` (Crit i))"
+        using clsd by blast
+      show "\<And>i. negligible ((fst \<circ> charts i) ` (Crit i))"
+        using negligible_cover by (auto intro: negligible_subset)
+    qed
+  qed
+  then have "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. cplx_r2 (A (x,\<omega>))) \<Omega>reg}"
+    by (simp add: eq_bad)
+  then show ?thesis
+    by (simp only: transverse0_on_cplx_r2_iff)
+qed
+
+theorem prop_regzero:
+  fixes V :: "((real^2)^'n) set" and \<Omega>reg :: "(real^2) set"
+    and A :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+  assumes "open V" and "V \<noteq> {}" and "open \<Omega>reg"
+    and joint_trans:
+      "\<forall>(x,\<omega>)\<in>V\<times>\<Omega>reg. A (x,\<omega>) = 0 \<longrightarrow>
+        (\<exists>F. ((\<lambda>z. A z) has_derivative F) (at (x,\<omega>) within V\<times>\<Omega>reg) \<and> surj F)"
+    and A_C1: "\<exists>A'. (\<forall>z\<in>V\<times>\<Omega>reg. (A has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>\<Omega>reg) A'"
+  shows "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. A (x,\<omega>)) \<Omega>reg}"
+  by (rule parametric_transversality_meager_complex[OF assms(1-3) joint_trans A_C1])
+
+
+section \<open>The Singular Curve Is a Fold\<close>
+
+text \<open>
+  The explicit fold fields. With the moving frame \<open>e_r(\<phi>) = (\<cos>\<phi>, \<sin>\<phi>)\<close>,
+  \<open>e_\<phi>(\<phi>) = (-\<sin>\<phi>, \<cos>\<phi>)\<close> and (ignoring the additive \<open>\<omega>\<^sub>s\<close> constant)
+  \<open>cvec(\<theta>,\<phi>) = \<sin>\<theta> e_r(\<phi>) + \<cos>\<theta> D + c\<^sub>0\<close>, the partials are
+  \<open>\<partial>\<^sub>\<phi> cvec = \<sin>\<theta> e_\<phi>\<close>, \<open>\<partial>\<^sub>\<theta> cvec = \<cos>\<theta> e_r - \<sin>\<theta> D\<close>, and the Jacobian determinant is
+  \<open>\<det> D\<^sub>\<omega> cvec = h(\<theta>,\<phi>) \<sin>\<theta>\<close> with \<open>h = \<cos>\<theta> - \<sin>\<theta> (D \<cdot> e_r)\<close>. The singular curve
+  \<open>\<Sigma> = {h \<sin>\<theta> = 0}\<close> is where the differential drops rank.
+\<close>
+
+definition e_r :: "real \<Rightarrow> real \<times> real" where "e_r \<phi> = (cos \<phi>, sin \<phi>)"
+definition e_p :: "real \<Rightarrow> real \<times> real" where "e_p \<phi> = (- sin \<phi>, cos \<phi>)"
+
+definition cvecf :: "real \<times> real \<Rightarrow> real \<times> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<times> real" where
+  "cvecf D c0 \<theta> \<phi> = sin \<theta> *\<^sub>R e_r \<phi> + cos \<theta> *\<^sub>R D + c0"
+
+text \<open>
+  The \<open>2 \<times> 2\<close> Jacobian \<open>D\<^sub>\<omega> cvec\<close> as a Cartesian matrix \<^typ>\<open>real^2^2\<close>, with columns
+  the partials \<open>\<partial>\<^sub>\<theta> cvec\<close> (column 1) and \<open>\<partial>\<^sub>\<phi> cvec\<close> (column 2). Its determinant is the
+  standard HOL-Analysis \<^const>\<open>det\<close> (evaluated via @{thm [source] det_2}).
+\<close>
+
+definition Jcvec :: "real \<times> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real^2^2" where
+  "Jcvec D \<theta> \<phi> =
+     (\<chi> i j. if j = 1
+              then (if i = 1 then cos \<theta> * cos \<phi> - sin \<theta> * fst D
+                             else cos \<theta> * sin \<phi> - sin \<theta> * snd D)
+              else (if i = 1 then - (sin \<theta> * sin \<phi>) else sin \<theta> * cos \<phi>))"
+
+lemma e_r_vector_deriv: "(e_r has_vector_derivative e_p \<phi>) (at \<phi>)"
+proof -
+  have c: "((\<lambda>\<phi>. cos \<phi>) has_vector_derivative - sin \<phi>) (at \<phi>)"
+    by (simp add: has_vector_derivative_def) (auto intro!: derivative_eq_intros)
+  have s: "((\<lambda>\<phi>. sin \<phi>) has_vector_derivative cos \<phi>) (at \<phi>)"
+    by (simp add: has_vector_derivative_def) (auto intro!: derivative_eq_intros)
+  show ?thesis
+    unfolding e_r_def e_p_def
+    by (auto intro!: has_vector_derivative_Pair c s)
+qed
+
+lemma cvecf_phi_deriv:
+  "((\<lambda>\<phi>. cvecf D c0 \<theta> \<phi>) has_vector_derivative (sin \<theta> *\<^sub>R e_p \<phi>)) (at \<phi>)"
+  unfolding cvecf_def
+  by (auto intro!: derivative_eq_intros e_r_vector_deriv)
+
+lemma cvecf_theta_deriv:
+  "((\<lambda>\<theta>. cvecf D c0 \<theta> \<phi>) has_vector_derivative (cos \<theta> *\<^sub>R e_r \<phi> - sin \<theta> *\<^sub>R D)) (at \<theta>)"
+  unfolding cvecf_def
+  by (auto intro!: derivative_eq_intros)
+
+lemma det_Jcvec:
+  "det (Jcvec D \<theta> \<phi>) = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
+proof -
+  have "det (Jcvec D \<theta> \<phi>)
+      = (cos \<theta> * cos \<phi> - sin \<theta> * fst D) * (sin \<theta> * cos \<phi>)
+        - (- (sin \<theta> * sin \<phi>)) * (cos \<theta> * sin \<phi> - sin \<theta> * snd D)"
+    by (simp add: det_2 Jcvec_def) 
+  also have "... =
+      sin \<theta> *
+        (cos \<theta> * (cos \<phi> * cos \<phi> + sin \<phi> * sin \<phi>)
+         - sin \<theta> * (fst D * cos \<phi> + snd D * sin \<phi>))"
+    by argo        
+  also have "... =
+      sin \<theta> *
+        (cos \<theta> * 1
+         - sin \<theta> * (fst D * cos \<phi> + snd D * sin \<phi>))"
+    using sin_cos_squared_add[of \<phi>]
+    by (simp add: power2_eq_square)
+  also have "... =
+      sin \<theta> *
+        (cos \<theta> * 1
+         - sin \<theta> * (D \<bullet> e_r \<phi>))"
+    by (simp add: e_r_def inner_prod_def)
+  also have "... =  sin \<theta> * (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>))"
+    by simp
+  also have "... = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
+    by (simp add: algebra_simps)
+  finally show ?thesis.
+qed
+
+theorem lem_foldfields:
+  fixes D c0 :: "real \<times> real" and \<theta> \<phi> :: real
+  shows "((\<lambda>\<phi>. cvecf D c0 \<theta> \<phi>) has_vector_derivative (sin \<theta> *\<^sub>R e_p \<phi>)) (at \<phi>)"
+    and "((\<lambda>\<theta>. cvecf D c0 \<theta> \<phi>) has_vector_derivative (cos \<theta> *\<^sub>R e_r \<phi> - sin \<theta> *\<^sub>R D)) (at \<theta>)"
+    and "det (Jcvec D \<theta> \<phi>) = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
+  using cvecf_phi_deriv cvecf_theta_deriv det_Jcvec by blast+
+
+
+section \<open>Fold Zeros of the Array Factor\<close>
+
+text \<open>
+  TeX Proposition~(Fold zeros are nongeneric) is the same pattern as the regular
+  stratum, but with a 1-dimensional parameter (a chart on the fold curve) instead of
+  an open 2D domain. Each chart yields a smooth map \<open>V \<times> I \<to> \<complex>\<close> transverse to 0,
+  hence its zero set projects meagerly to \<open>V\<close>; a finite union stays meager.
+\<close>
+
+text \<open>
+  Fold-zero branch, unconditionally. The trick: \<open>F\<close> has a 1-dimensional parameter
+  \<open>t\<in>I\<close>, but @{thm parametric_transversality_meager_complex} (our regular-branch
+  engine) is stated for a 2-dimensional parameter \<open>\<omega>\<in>\<Omega>reg \<subseteq> real^2\<close>. We
+  \<^emph>\<open>pad\<close>: lift \<open>F(x,t)\<close> to \<open>Fpad(x,(t,s)) = F(x,t)\<close> (ignoring \<open>s\<close>), and take
+  \<open>\<Omega>reg = {\<omega>::real^2. \<omega>$1 \<in> I}\<close>. Because the \<open>\<omega>\<close>-slice derivative of \<open>Fpad\<close> only
+  depends on \<open>h$1\<close>, its image is at most a real line in \<open>\<complex>\<close> --- so it can
+  \<^emph>\<open>never\<close> be surjective. Hence at any zero of \<open>Fpad\<close>, the regular-branch ``bad''
+  condition \<open>\<not> transverse0_on\<close> automatically holds, and the regular-branch
+  conclusion is exactly \<open>meager \<lbrace>x \<in> V. \<exists>t\<in>I. F(x,t) = 0\<rbrace>\<close>. The hypotheses
+  natural for the antenna application (\<open>open I\<close>, \<open>F\<close> is \<open>C\<^sup>1\<close>) replace the original
+  stub's weaker \<open>F_smooth\<close>.
+\<close>
+
+lemma chart_zero_projection_meager_stub:
+  fixes V :: "((real^2)^'n) set" and I :: "real set"
+    and F :: "(((real^2)^'n) \<times> real) \<Rightarrow> complex"
+  assumes V_open: "open V" and V_ne: "V \<noteq> {}"
+    and I_open: "open I"
+    and F_C1: "\<exists>F'. (\<forall>z\<in>V\<times>I. (F has_derivative blinfun_apply (F' z)) (at z))
+                    \<and> continuous_on (V\<times>I) F'"
+    and Dx_surj:
+      "\<forall>(x,t)\<in>V\<times>I. F (x,t) = 0 \<longrightarrow>
+        (\<exists>D. ((\<lambda>y. F (y,t)) has_derivative D) (at x within V) \<and> surj D)"
+  shows "meager {x\<in>V. \<exists>t\<in>I. F (x,t) = 0}"
+proof -
+  define Omg :: "(real^2) set" where "Omg = {\<omega>. \<omega>$1 \<in> I}"
+  define P :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> (((real^2)^'n) \<times> real)"
+    where "P = (\<lambda>z. (fst z, snd z $ 1))"
+  define Fpad :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> complex"
+    where "Fpad = F \<circ> P"
+
+  text \<open>\<open>Omg\<close> is open (preimage of open \<open>I\<close> under the continuous projection \<open>\<omega>$1\<close>).\<close>
+  have Omg_open: "open Omg"
+  proof -
+    have "Omg = (\<lambda>\<omega>::real^2. \<omega>$1) -` I" by (auto simp: Omg_def vimage_def)
+    moreover have "continuous_on UNIV (\<lambda>\<omega>::real^2. \<omega>$1)"
+      by (intro continuous_intros)
+    ultimately show ?thesis using I_open
+      by (metis open_vimage)
+  qed
+
+  text \<open>\<open>P\<close> is bounded-linear; \<open>P(V\<times>Omg) \<subseteq> V\<times>I\<close>.\<close>
+  have bl_P: "bounded_linear P"
+    unfolding P_def
+    by (intro bounded_linear_Pair bounded_linear_fst
+              bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_snd])
+  have P_image: "P z \<in> V \<times> I" if z: "z \<in> V \<times> Omg" for z
+    using z by (auto simp: P_def Omg_def)
+
+  obtain F' where derF: "\<And>z. z \<in> V\<times>I \<Longrightarrow> (F has_derivative blinfun_apply (F' z)) (at z)"
+              and contF': "continuous_on (V\<times>I) F'"
+    using F_C1 by blast
+
+  text \<open>Lifted derivative of \<open>Fpad\<close>: post-compose by \<open>F'\<close>, pre-compose by \<open>P\<close>.\<close>
+  define Fpad' :: "(((real^2)^'n) \<times> (real^2))
+                  \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L complex)"
+    where "Fpad' = (\<lambda>z. (F' (P z)) o\<^sub>L (Blinfun P))"
+  have BP_apply: "blinfun_apply (Blinfun P) = P"
+    by (rule bounded_linear_Blinfun_apply[OF bl_P])
+
+  have derFpad: "(Fpad has_derivative blinfun_apply (Fpad' z)) (at z)"
+    if z: "z \<in> V \<times> Omg" for z
+  proof -
+    have dP: "(P has_derivative P) (at z)"
+      using bl_P bounded_linear_imp_has_derivative by blast
+    have dF: "(F has_derivative blinfun_apply (F' (P z))) (at (P z))"
+      using derF[OF P_image[OF z]] .
+    have "((\<lambda>x. F (P x)) has_derivative (\<lambda>h. blinfun_apply (F' (P z)) (P h))) (at z)"
+      using has_derivative_compose[OF dP dF] .
+    moreover have "blinfun_apply (Fpad' z) = (\<lambda>h. blinfun_apply (F' (P z)) (P h))"
+      by (simp add: Fpad'_def blinfun_compose.rep_eq BP_apply o_def)
+    ultimately show ?thesis
+      unfolding Fpad_def by (simp add: o_def)
+  qed
+
+  have contFpad': "continuous_on (V \<times> Omg) Fpad'"
+  proof -
+    have contP_on: "continuous_on (V \<times> Omg) P"
+      using bl_P bounded_linear.continuous_on continuous_on_id by blast
+    have P_sub: "P ` (V \<times> Omg) \<subseteq> V \<times> I"
+      using P_image by blast
+    have "continuous_on (V \<times> Omg) (\<lambda>z. F' (P z))"
+      by (rule continuous_on_compose2[OF contF' contP_on P_sub])
+    moreover have "bounded_linear (\<lambda>b. b o\<^sub>L Blinfun P)"
+      using bounded_bilinear.bounded_linear_left[OF bounded_bilinear_blinfun_compose] .
+    ultimately show ?thesis
+      unfolding Fpad'_def
+      using bounded_linear.continuous_on by blast
+  qed
+
+  text \<open>Joint transversality of \<open>Fpad\<close> at zeros (inherited from \<open>Dx_surj\<close>).\<close>
+  have joint_trans:
+    "\<forall>(x,\<omega>)\<in>V\<times>Omg. Fpad (x,\<omega>) = 0 \<longrightarrow>
+      (\<exists>F''. ((\<lambda>z. Fpad z) has_derivative F'') (at (x,\<omega>) within V\<times>Omg) \<and> surj F'')"
+  proof (clarify)
+    fix x \<omega>
+    assume x_type: "x \<in> V" and \<omega>_type: "\<omega> \<in> Omg" and zero: "Fpad (x,\<omega>) = 0"
+    have tI: "\<omega>$1 \<in> I"
+      using Omg_def \<omega>_type by blast
+    have F0: "F (x, \<omega>$1) = 0" using zero by (simp add: Fpad_def P_def)
+    have mem: "(x, \<omega>) \<in> V \<times> Omg" using x_type \<omega>_type by simp
+
+    have derFpad_at: "(Fpad has_derivative blinfun_apply (Fpad' (x,\<omega>))) (at (x,\<omega>))"
+      using derFpad[OF mem] .
+
+    text \<open>Surjectivity: the joint derivative dominates the \<open>x\<close>-partial.\<close>
+    from Dx_surj x_type tI F0 obtain D
+      where dD: "((\<lambda>y. F (y, \<omega>$1)) has_derivative D) (at x within V)"
+        and surD: "surj D" by blast
+    have "at x within V = at x" by (rule at_within_open[OF x_type V_open])
+    with dD have dD_at: "((\<lambda>y. F (y, \<omega>$1)) has_derivative D) (at x)" by simp
+
+    text \<open>The \<open>x\<close>-slice derivative of \<open>F\<close> equals \<open>D\<close>, which equals the \<open>x\<close>-block of \<open>F'\<close>.\<close>
+    have slice_eq: "D = (\<lambda>h. blinfun_apply (F' (x, \<omega>$1)) (h, 0))"
+    proof -
+      have pxw: "(x, \<omega>$1) \<in> V \<times> I" using x_type tI by simp
+      have "((\<lambda>y. F (y, \<omega>$1)) has_derivative
+                (\<lambda>h. blinfun_apply (F' (x, \<omega>$1)) (h, 0))) (at x)"
+        using partial_omega_deriv[where G = "\<lambda>z. F (snd z, fst z)"] derF[OF pxw]
+        \<comment> \<open>Direct computation; instead, derive via chain rule on the slice embedding.\<close>
+      proof -
+        have embed: "((\<lambda>y. (y, \<omega>$1)) has_derivative (\<lambda>h. (h, 0))) (at x)"
+          by (auto intro!: derivative_eq_intros)
+        from has_derivative_compose[OF embed derF[OF pxw]]
+        show "((\<lambda>y. F (y, \<omega>$1)) has_derivative
+                  (\<lambda>h. blinfun_apply (F' (x, \<omega>$1)) (h, 0))) (at x)"
+          by (simp add: o_def)
+      qed
+      from has_derivative_unique[OF dD_at this] show ?thesis .
+    qed
+
+    text \<open>Lift \<open>D\<close>'s surjectivity to the joint derivative of \<open>Fpad\<close>.\<close>
+    have surj_joint: "surj (blinfun_apply (Fpad' (x,\<omega>)))"
+    proof -
+      have "range D \<subseteq> range (blinfun_apply (Fpad' (x,\<omega>)))"
+      proof
+        fix c assume "c \<in> range D"
+        then obtain h where ch: "c = D h" by auto
+        have "blinfun_apply (Fpad' (x,\<omega>)) (h, 0)
+                = blinfun_apply (F' (x, \<omega>$1)) (P (h, 0))"
+          by (simp add: Fpad'_def blinfun_compose.rep_eq BP_apply, simp add: P_def)
+        also have "\<dots> = blinfun_apply (F' (x, \<omega>$1)) (h, 0)"
+          by (simp add: P_def)
+        also have "\<dots> = D h" using slice_eq by simp
+        finally have "c = blinfun_apply (Fpad' (x,\<omega>)) (h, 0)" using ch by simp
+        thus "c \<in> range (blinfun_apply (Fpad' (x,\<omega>)))" by (rule range_eqI)
+      qed
+      with surD show ?thesis by auto
+    qed
+
+    show "\<exists>F''. (Fpad has_derivative F'') (at (x,\<omega>) within V\<times>Omg) \<and> surj F''"
+      using has_derivative_at_withinI[OF derFpad_at] surj_joint by blast
+  qed
+
+  text \<open>Apply the regular-branch parametric-transversality theorem.\<close>
+  have Fpad_C1: "\<exists>A'. (\<forall>z\<in>V\<times>Omg. (Fpad has_derivative blinfun_apply (A' z)) (at z))
+                    \<and> continuous_on (V\<times>Omg) A'"
+    using derFpad contFpad' by blast
+  have main: "meager {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg}"
+    by (rule parametric_transversality_meager_complex
+              [OF V_open V_ne Omg_open joint_trans Fpad_C1])
+
+  text \<open>The bad set lies in the regular-branch bad set: at any zero, the
+        \<open>\<omega>\<close>-slice derivative of \<open>Fpad\<close> only depends on \<open>h$1\<close>, hence its image is
+        at most a real line in \<open>\<complex>\<close> --- never surjective.\<close>
+  have subset_incl:
+    "{x\<in>V. \<exists>t\<in>I. F (x,t) = 0} \<subseteq> {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg}"
+  proof
+    fix x assume "x \<in> {x\<in>V. \<exists>t\<in>I. F (x,t) = 0}"
+    then obtain t where xV: "x \<in> V" and tI: "t \<in> I" and Fxt: "F (x,t) = 0" by blast
+
+    define \<omega>0 :: "real^2" where "\<omega>0 = vector [t, 0]"
+    have w0_1: "\<omega>0 $ 1 = t" by (simp add: \<omega>0_def vector_def)
+    have w0_Omg: "\<omega>0 \<in> Omg" using tI w0_1 by (simp add: Omg_def)
+    have Fpadx_w0: "Fpad (x,\<omega>0) = 0"
+      using Fxt w0_1 by (simp add: Fpad_def P_def)
+
+    show "x \<in> {x\<in>V. \<not> transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg}"
+    proof (simp only: mem_Collect_eq, intro conjI xV notI)
+      assume tv: "transverse0_on (\<lambda>\<omega>. Fpad (x,\<omega>)) Omg"
+      from tv[unfolded transverse0_on_def, rule_format, OF w0_Omg Fpadx_w0]
+      obtain f' where df': "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative f') (at \<omega>0 within Omg)"
+                  and sf': "surj f'" by blast
+
+      text \<open>The unique slice derivative \<open>(\<lambda>h. \<partial>F/\<partial>t \<cdot> h$1)\<close>.\<close>
+      define deriv_t :: complex
+        where "deriv_t = blinfun_apply (F' (x, t)) (0, 1)"
+      have pxt: "(x, t) \<in> V \<times> I" using xV tI by simp
+      have dF_xt: "(F has_derivative blinfun_apply (F' (x, t))) (at (x, t))"
+        using derF[OF pxt] .
+      have embed: "((\<lambda>u::real^2. (x, u$1)) has_derivative (\<lambda>h. (0, h$1))) (at \<omega>0)"
+        by (auto intro!: derivative_eq_intros
+                bounded_linear_imp_has_derivative[OF bounded_linear_vec_nth])
+      have d_slice_at:
+        "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative
+           (\<lambda>h. blinfun_apply (F' (x, t)) (0, h$1))) (at \<omega>0)"
+      proof -
+        have eq: "(\<lambda>\<omega>::real^2. Fpad (x, \<omega>)) = (\<lambda>u. F (x, u$1))"
+          by (auto simp: Fpad_def P_def)
+        \<comment> \<open>Substitute \<open>t = \<omega>0$1\<close> in \<open>dF_xt\<close> so the compose lines up at \<open>(x, \<omega>0$1)\<close>.\<close>
+        have dF_xtw: "(F has_derivative blinfun_apply (F' (x, \<omega>0$1))) (at (x, \<omega>0$1))"
+          using dF_xt by (simp add: w0_1)
+        have "((F \<circ> (\<lambda>u::real^2. (x, u$1))) has_derivative
+                  (\<lambda>h. blinfun_apply (F' (x, \<omega>0$1)) (0, h$1))) (at \<omega>0)"
+          using has_derivative_compose[OF embed dF_xtw]
+          by (simp add: has_derivative_transform) 
+        hence "((\<lambda>u::real^2. F (x, u$1)) has_derivative
+                  (\<lambda>h. blinfun_apply (F' (x, \<omega>0$1)) (0, h$1))) (at \<omega>0)"
+          by (simp add: o_def)
+        thus ?thesis unfolding eq by (simp add: w0_1)
+      qed
+      have d_slice_within:
+        "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative
+           (\<lambda>h. blinfun_apply (F' (x, t)) (0, h$1))) (at \<omega>0 within Omg)"
+        using d_slice_at has_derivative_at_withinI by blast
+
+      have "at \<omega>0 within Omg = at \<omega>0" by (rule at_within_open[OF w0_Omg Omg_open])
+      with df' have df'_at: "((\<lambda>\<omega>. Fpad (x,\<omega>)) has_derivative f') (at \<omega>0)" by simp
+      have f'_eq: "f' = (\<lambda>h. blinfun_apply (F' (x, t)) (0, h$1))"
+        using has_derivative_unique[OF df'_at d_slice_at] .
+
+      text \<open>The slice derivative factors through \<open>h$1\<close>, so its image lies in
+            \<open>\<real> \<cdot> deriv_t\<close>, a proper subset of \<open>\<complex>\<close>.\<close>
+      have im_eq: "range f' = (\<lambda>r. deriv_t * of_real r) ` UNIV"
+      proof safe
+        fix h :: "real^2"
+        have "blinfun_apply (F' (x, t)) (0, h$1)
+                = blinfun_apply (F' (x, t)) (h$1 *\<^sub>R (0, 1))"
+          by (simp add: scaleR_prod_def)
+        also have "\<dots> = h$1 *\<^sub>R blinfun_apply (F' (x, t)) (0, 1)"
+          by (simp add: blinfun.scaleR_right, metis blinfun.scaleR_right calculation)
+        also have "\<dots> = of_real (h$1) * deriv_t"
+          by (simp add: deriv_t_def scaleR_conv_of_real)
+        finally show "f' h \<in> (\<lambda>r. deriv_t * of_real r) ` UNIV"
+          using f'_eq by auto
+      next
+        fix r :: real
+        have "(\<lambda>h::real^2. blinfun_apply (F' (x, t)) (0, h$1)) (vector [r, 0])
+                = blinfun_apply (F' (x, t)) (0, r)"
+          by (simp add: vector_def)
+        also have "\<dots> = r *\<^sub>R blinfun_apply (F' (x, t)) (0, 1)"
+          using blinfun.scaleR_right[where r=r and b="(0::(real^2)^'n,1::real)"]
+          by (simp add: scaleR_prod_def)
+        also have "\<dots> = of_real r * deriv_t"
+          by (simp add: deriv_t_def scaleR_conv_of_real)
+        finally show "deriv_t * of_real r \<in> range f'"
+          by (simp add: sf')
+      qed
+
+      have not_surj_real_line: "\<not> surj (\<lambda>r::real. deriv_t * of_real r)"
+      proof
+        assume surj1: "surj (\<lambda>r::real. deriv_t * of_real r)"
+        show False
+        proof (cases "deriv_t = 0")
+          case True
+          from surj1 obtain r where "(1::complex) = deriv_t * of_real r"
+            unfolding surj_def by metis
+          with True show False by simp
+        next
+          case False
+          from surj1 obtain r where "\<i> * deriv_t = deriv_t * of_real r"
+            unfolding surj_def by metis
+          hence "(\<i> - of_real r) * deriv_t = 0" by (simp add: ring_distribs)
+          with False have "\<i> = of_real r"
+            by (metis eq_iff_diff_eq_0 mult_eq_0_iff)
+          hence "Im \<i> = Im (of_real r)" by simp
+          thus False by simp
+        qed
+      qed
+      with sf' im_eq show False by simp
+    qed
+  qed
+
+  text \<open>Subset of meager is meager. (Note: \<open>meager_def\<close> uses a \<^emph>\<open>nat-indexed\<close>
+        family \<open>E :: nat \<Rightarrow> _\<close> with \<open>A \<subseteq> \<Union>n. E n\<close>, not a countable set with equality.)\<close>
+  have meager_subset: "\<And>S T :: ((real^2)^'n) set. meager S \<Longrightarrow> T \<subseteq> S \<Longrightarrow> meager T"
+  proof -
+    fix S T :: "((real^2)^'n) set"
+    assume mS: "meager S" and TS: "T \<subseteq> S"
+    from mS obtain E :: "nat \<Rightarrow> ((real^2)^'n) set"
+      where ES: "S \<subseteq> (\<Union>n. E n)" and Enwd: "\<forall>n. nowhere_dense (E n)"
+      unfolding meager_def by blast
+    define E' :: "nat \<Rightarrow> ((real^2)^'n) set" where "E' = (\<lambda>n. T \<inter> E n)"
+    have "T \<subseteq> (\<Union>n. E' n)"
+      using TS ES by (auto simp: E'_def)
+    moreover have "\<forall>n. nowhere_dense (E' n)"
+      using Enwd nowhere_dense_mono by (auto simp: E'_def, blast)       
+    ultimately show "meager T"
+      unfolding meager_def by blast
+  qed
+  show ?thesis using meager_subset[OF main subset_incl].
+qed
+
+lemma meager_Union_finite:
+  fixes A :: "'i \<Rightarrow> 'a::topological_space set"
+  assumes "finite I" and "\<And>i. i \<in> I \<Longrightarrow> meager (A i)"
+  shows "meager (\<Union>i\<in>I. A i)"
+  using assms
+proof (induction I rule: finite_induct)
+  case empty
+  show ?case by simp
+next
+  case (insert i I)
+  have "meager ((\<Union>j\<in>insert i I. A j)) \<longleftrightarrow> meager (A i \<union> (\<Union>j\<in>I. A j))"
+    by auto
+  moreover have "meager (A i \<union> (\<Union>j\<in>I. A j))"
+    using insert by (intro meager_Un) auto
+  ultimately show ?case
+    by simp
+qed
+
+theorem prop_foldzero:
+  fixes V :: "((real^2)^'n) set"
+    and L :: nat
+    and I :: "nat \<Rightarrow> real set"
+    and F :: "nat \<Rightarrow> ((((real^2)^'n) \<times> real) \<Rightarrow> complex)"
+  assumes V: "open V" "V \<noteq> {}"
+    and charts:
+      "\<And>l. l < L \<Longrightarrow> meager {x\<in>V. \<exists>t\<in>I l. F l (x,t) = 0}"
+  shows "meager {x\<in>V. \<exists>l<L. \<exists>t\<in>I l. F l (x,t) = 0}"
+proof -
+  define S where "S l = {x\<in>V. \<exists>t\<in>I l. F l (x,t) = 0}" for l
+  have hS: "\<And>l. l \<in> {..<L} \<Longrightarrow> meager (S l)"
+    using charts by (simp add: S_def)
+  have "meager (\<Union>l\<in>{..<L}. S l)"
+    by (rule meager_Union_finite) (use hS in auto)
+  moreover have "{x\<in>V. \<exists>l<L. \<exists>t\<in>I l. F l (x,t) = 0} = (\<Union>l\<in>{..<L}. S l)"
+    by (auto simp: S_def)
+  ultimately show ?thesis
+    by simp
+qed
+
+
+section \<open>Fold Critical Points with @{term "A \<noteq> 0"}\<close>
+
+text \<open>
+  TeX Lemma~\<open>lem:Efinite\<close>: \<open>E = {\<omega>\<in>\<Sigma> : g\<^sub>\<theta>(\<omega>) = 0}\<close> is finite. We model the
+  element-gain \<open>\<theta>\<close>-derivative \<open>g\<^sub>\<theta>\<close> as real-analytic (the real restriction of an
+  entire function \<open>G\<close>) and not identically zero on the compact \<open>\<theta>\<close>-interval \<open>\<Theta>\<close>;
+  the fold curve \<open>\<Sigma>\<close> has a finite \<open>\<phi>\<close>-fibre over each \<open>\<theta>\<close> (at most two solutions).
+  The remaining obligation is the real-analytic isolated-zeros fact (zeros of a
+  nontrivial real-analytic function on a compact interval are finite).
+\<close>
+
+theorem lem_Efinite:
+  fixes g\<theta> :: "real \<Rightarrow> real" and G :: "complex \<Rightarrow> complex"
+    and \<Theta> :: "real set" and \<Sigma> :: "(real \<times> real) set"
+  assumes \<Theta>_compact: "compact \<Theta>" and \<Theta>_interval: "is_interval \<Theta>"
+    and \<Sigma>_\<theta>range: "\<And>\<theta> \<phi>. (\<theta>, \<phi>) \<in> \<Sigma> \<Longrightarrow> \<theta> \<in> \<Theta>"
+    and \<phi>_fibre_finite: "\<And>\<theta>. finite {\<phi>. (\<theta>, \<phi>) \<in> \<Sigma>}"
+    and g\<theta>_restriction: "\<And>t. g\<theta> t = Re (G (complex_of_real t))"
+    and G_entire: "G holomorphic_on UNIV"
+    and g\<theta>_not_identically_zero: "\<exists>t\<in>\<Theta>. g\<theta> t \<noteq> 0"
+  shows "finite {\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}"
+proof -
+  \<comment> \<open>The analytic kernel: zeros of the nontrivial real-analytic
+      \<open>g\<^sub>\<theta> = \<real> \<circ> G\<close> on the compact \<open>\<Theta>\<close> are finite. Build the entire reflection
+      \<open>H z = (G z + cnj (G (cnj z)))/2\<close>, which is \<^emph>\<open>real on the reals\<close> and equals
+      \<open>g\<^sub>\<theta>\<close> there; by \<open>isolated_zeros\<close> its zero set has no limit point, and a
+      no-limit-point subset of the compact \<open>cor ` \<Theta>\<close> is finite.\<close>
+  have theta_zeros_finite: "finite {t \<in> \<Theta>. g\<theta> t = 0}"
+  proof -
+    define H where "H = (\<lambda>z. (G z + cnj (G (cnj z))) / 2)"
+    have Href: "(\<lambda>z. cnj (G (cnj z))) holomorphic_on UNIV"
+      by (rule holomorphic_cnj_reflect[OF G_entire])
+    have Hhol: "H holomorphic_on UNIV"
+      unfolding H_def using G_entire Href by (intro holomorphic_intros) auto
+    have Hreal: "H (complex_of_real t) = complex_of_real (g\<theta> t)" for t
+    proof -
+      have "H (complex_of_real t)
+              = (G (complex_of_real t) + cnj (G (complex_of_real t))) / 2"
+        by (simp add: H_def)
+      also have "\<dots> = complex_of_real (Re (G (complex_of_real t)))"
+        by (simp add: complex_add_cnj)
+      finally show ?thesis by (simp add: g\<theta>_restriction)
+    qed
+    obtain t0 where t0: "t0 \<in> \<Theta>" "g\<theta> t0 \<noteq> 0"
+      using g\<theta>_not_identically_zero by blast
+    have Hnz: "H (complex_of_real t0) \<noteq> 0"
+      using t0(2) by (simp add: Hreal)
+    have nolim: "\<not> z islimpt {w. H w = 0}" for z
+    proof (cases "H z = 0")
+      case True
+      obtain r where r: "0 < r"
+          and rz: "\<And>w. w \<in> ball z r - {z} \<Longrightarrow> H w \<noteq> 0"
+        using isolated_zeros[OF Hhol open_UNIV connected_UNIV UNIV_I True UNIV_I Hnz]
+        by metis
+      show ?thesis
+        using Hhol Hnz analytic_continuation by blast       
+    next
+      case False
+      have "continuous (at z) H"
+        using Hhol holomorphic_on_imp_continuous_on[of H UNIV]
+        by (simp add: continuous_on_eq_continuous_at)
+      then obtain e where e: "0 < e" "\<And>y. dist z y < e \<Longrightarrow> H y \<noteq> 0"
+        using continuous_at_avoid[of z H 0] False by blast
+      show ?thesis
+        using False Hhol analytic_continuation by blast       
+    qed
+    have compactK: "compact (complex_of_real ` \<Theta>)"
+      by (intro compact_continuous_image \<Theta>_compact continuous_intros)
+    have "finite ((complex_of_real ` \<Theta>) \<inter> {w. H w = 0})"
+      by (rule finite_not_islimpt_in_compact[OF compactK]) (use nolim in blast)
+    moreover have "complex_of_real ` {t \<in> \<Theta>. g\<theta> t = 0}
+                     \<subseteq> (complex_of_real ` \<Theta>) \<inter> {w. H w = 0}"
+      using Hreal by auto
+    ultimately have "finite (complex_of_real ` {t \<in> \<Theta>. g\<theta> t = 0})"
+      by (rule rev_finite_subset)
+    then show "finite {t \<in> \<Theta>. g\<theta> t = 0}"
+      by (rule finite_imageD) (simp add: inj_on_def)
+  qed
+  \<comment> \<open>Each bad \<open>\<omega> = (\<theta>,\<phi>)\<close> has \<open>\<theta> \<in> \<Theta>\<close> with \<open>g\<^sub>\<theta>(\<theta>) = 0\<close>, so it lies in the
+      \<open>\<phi>\<close>-fibre over one of finitely many \<open>\<theta>\<close>.\<close>
+  have "{\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}
+          \<subseteq> (\<Union>t \<in> {t \<in> \<Theta>. g\<theta> t = 0}. (\<lambda>\<phi>. (t, \<phi>)) ` {\<phi>. (t, \<phi>) \<in> \<Sigma>})"
+  proof
+    fix \<omega> assume "\<omega> \<in> {\<omega> \<in> \<Sigma>. g\<theta> (fst \<omega>) = 0}"
+    then have \<omega>\<Sigma>: "\<omega> \<in> \<Sigma>" and g0: "g\<theta> (fst \<omega>) = 0" by auto
+    obtain t \<phi> where \<omega>eq: "\<omega> = (t, \<phi>)" by (cases \<omega>)
+    from \<omega>\<Sigma> \<omega>eq have "\<phi> \<in> {\<phi>. (t, \<phi>) \<in> \<Sigma>}" by simp
+    moreover from \<omega>\<Sigma> \<omega>eq \<Sigma>_\<theta>range have "t \<in> \<Theta>" by simp
+    moreover from g0 \<omega>eq have "g\<theta> t = 0" by simp
+    ultimately show "\<omega> \<in> (\<Union>t \<in> {t \<in> \<Theta>. g\<theta> t = 0}. (\<lambda>\<phi>. (t, \<phi>)) ` {\<phi>. (t, \<phi>) \<in> \<Sigma>})"
+      using \<omega>eq by blast
+  qed
+  moreover have "finite (\<Union>t \<in> {t \<in> \<Theta>. g\<theta> t = 0}. (\<lambda>\<phi>. (t, \<phi>)) ` {\<phi>. (t, \<phi>) \<in> \<Sigma>})"
+    by (rule finite_UN_I[OF theta_zeros_finite])
+       (simp add: \<phi>_fibre_finite)
+  ultimately show ?thesis
+    by (rule finite_subset)
+qed
+
+text \<open>
+  TeX Proposition~\<open>prop:foldnonzero\<close>: the nonzero-\<open>A\<close> fold-critical bad set is
+  meager in \<open>V\<close>. As in the TeX proof, every such critical point lies over the
+  finite exceptional set \<open>E\<close> (Lemma~\<open>lem:Efinite\<close>), and for each \<open>\<omega>\<in>E\<close> the slice
+  function \<open>F\<^sub>\<omega>(x) = \<partial>\<^sub>s U(x,\<omega>)\<close> is a nontrivial real-analytic function of \<open>x\<close>,
+  so its zero set in the connected open \<open>V\<close> is nowhere dense. The bad set is
+  contained in their finite union, hence meager. The nowhere-density of each
+  slice-zero set is the real-analytic input, recorded here as a hypothesis; this
+  theorem is the (proved) reduction assembling the finite union.
+\<close>
+
+theorem prop_foldnonzero:
+  fixes V Bad :: "((real^2)^'n) set" and E :: "(real^2) set"
+    and Fcrit :: "(real^2) \<Rightarrow> ((real^2)^'n) \<Rightarrow> real"
+  assumes E_finite: "finite E"
+    and reduce_to_E: "Bad \<subseteq> (\<Union>\<omega>\<in>E. {x \<in> V. Fcrit \<omega> x = 0})"
+    and slice_nowhere_dense:
+      "\<And>\<omega>. \<omega> \<in> E \<Longrightarrow> nowhere_dense {x \<in> V. Fcrit \<omega> x = 0}"
+  shows "meager Bad"
+proof -
+  have "meager (\<Union>\<omega>\<in>E. {x \<in> V. Fcrit \<omega> x = 0})"
+    by (rule meager_Union_finite[OF E_finite])
+       (rule meager_nowhere_dense[OF slice_nowhere_dense])
+  then show ?thesis
+    by (rule meager_subset[OF reduce_to_E])
+qed
+
+
+section \<open>Regular-Stratum Nonzero-A Degenerate Critical Points\<close>
+
+text \<open>
+  TeX Proposition~\<open>prop:regnonzero\<close>: the regular-stratum nonzero-\<open>A\<close> bad set
+  \<open>B\<^sub>reg,\<noteq>0\<close> is meager in \<open>V\<close>. The TeX proof partitions the bad locus \<open>Z\<close> by the
+  surjective set \<open>W\<^sub>surj\<close> and by \<open>H\<equiv>0\<close> into four pieces: the regular codim-3
+  piece \<open>\<pi>\<^sub>V(Z\<^sub>reg)\<close> and the codim-5 Hessian-zero stratum (both meager by
+  \<open>prop:dimZ\<close> + \<open>lem:smooth-chart-meager\<close>), the Case-B set (meager by
+  \<open>cor:caseBmeager\<close>, Appendix~\<open>app:caseB\<close>), and the residual \<open>H\<equiv>0\<close> set
+  (meager by \<open>prop:h0res-meager\<close>, Appendix~\<open>app:H0res\<close>). Those four meagerness
+  facts are the deep appendix results, recorded here as hypotheses; this theorem
+  is the (proved) reduction that assembles them.
+\<close>
+
+
+text \<open>Block-matrix determinant infrastructure (\<open>det_A\<close>, \<open>det_D\<close>, \<open>UNIV_12\<close>, etc.) lives in the
+  separate \<open>Block_Determinants\<close> theory (session \<open>Applied_Math_BlockDet\<close>) so it can be baked into the
+  heap; the 6x6 matrices are renamed to \<open>Ablk\<close>, \<open>Bblk\<close>, \<open>Dblk\<close>, \<open>Eblk\<close> there to avoid clashes with
+  local-variable names in this file.\<close>
+
+
+
+text \<open>The full bigJ determinant chain (\<open>bigJ\<close>, \<open>Jperm\<close>, \<open>det_Jperm\<close>, \<open>bigJ_det = -5\<pi>\<^sup>8/3\<close>,
+    \<open>bigJ_full_rank\<close>, \<open>bigJ_surj\<close>) lives in \<open>Block_Determinants_BigJ\<close> in the
+    \<open>Applied_Math_BlockDet\<close> heap.\<close>
+
+text \<open>The phase factor \<^const>\<open>phase\<close>, the six moment functions
+  \<^const>\<open>A_moment\<close>, \<^const>\<open>M1_moment\<close>, <dots>, \<^const>\<open>M22_moment\<close>,
+  the bundled \<^const>\<open>M_paper\<close>, and all of Layers 1--4 of the Fréchet
+  derivative infrastructure (per-term and per-moment derivative lemmas)
+  now live in @{theory Applied_Math_BlockDet.Moment_Map}, which is
+  baked into the \<open>Applied_Math_BlockDet\<close> heap.\<close>
+
+
+
+text \<open>\<^bold>\<open>Layer 5.\<close> Assemble the six components into the vector-valued
+  derivative \<open>D\<^sub>x M_paper\<close>.\<close>
+
+definition DA_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DA_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV. d_phase c x h i)"
+
+definition DM1_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM1_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real ((h $ i) $ 1) * phase c x i
+        + of_real ((x $ i) $ 1) * d_phase c x h i)"
+
+definition DM2_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM2_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real ((h $ i) $ 2) * phase c x i
+        + of_real ((x $ i) $ 2) * d_phase c x h i)"
+
+definition DM11_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM11_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real (2 * ((x $ i) $ 1) * ((h $ i) $ 1)) * phase c x i
+        + of_real (((x $ i) $ 1)\<^sup>2) * d_phase c x h i)"
+
+definition DM12_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM12_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real (dw_M12 (x $ i) (h $ i)) * phase c x i
+        + of_real (w_M12 (x $ i)) * d_phase c x h i)"
+
+definition DM22_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> (planar^'n \<Rightarrow> complex)"
+where
+  "DM22_paper_x x c =
+     (\<lambda>h. \<Sum>i\<in>UNIV.
+        of_real (2 * ((x $ i) $ 2) * ((h $ i) $ 2)) * phase c x i
+        + of_real (((x $ i) $ 2)\<^sup>2) * d_phase c x h i)"
+
+definition DM_paper_x ::
+  "(planar^'n) \<Rightarrow> planar \<Rightarrow> ((planar^'n) \<Rightarrow> complex^6)"
+where
+  "DM_paper_x x c =
+     (\<lambda>h. \<chi> k.
+        if k = 1 then DA_paper_x x c h
+        else if k = 2 then DM1_paper_x x c h
+        else if k = 3 then DM2_paper_x x c h
+        else if k = 4 then DM11_paper_x x c h
+        else if k = 5 then DM12_paper_x x c h
+        else DM22_paper_x x c h)"
+
+lemma has_derivative_M_paper_x:
+  fixes c :: planar and x :: "planar^'n"
+  shows "((\<lambda>y. M_paper y c) has_derivative DM_paper_x x c) (at x within V)"
+proof -
+  have comps:
+    "\<forall>k :: 6. ((\<lambda>y. M_paper y c $ k) has_derivative (\<lambda>h. DM_paper_x x c h $ k))
+              (at x within V)"
+  proof (intro allI)
+    fix k :: 6
+    consider "k = 1" | "k = 2" | "k = 3" | "k = 4" | "k = 5" | "k = 6"
+      using exhaust_6 by metis
+    thus "((\<lambda>y. M_paper y c $ k) has_derivative (\<lambda>h. DM_paper_x x c h $ k))
+            (at x within V)"
+    proof cases
+      case 1 thus ?thesis
+        using has_derivative_A_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DA_paper_x_def d_A_moment_x_def)
+    next
+      case 2 thus ?thesis
+        using has_derivative_M1_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM1_paper_x_def d_M1_moment_x_def)
+    next
+      case 3 thus ?thesis
+        using has_derivative_M2_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM2_paper_x_def d_M2_moment_x_def)
+    next
+      case 4 thus ?thesis
+        using has_derivative_M11_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM11_paper_x_def d_M11_moment_x_def)
+    next
+      case 5 thus ?thesis
+        using has_derivative_M12_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM12_paper_x_def d_M12_moment_x_def)
+    next
+      case 6 thus ?thesis
+        using has_derivative_M22_moment_x[where c=c and x=x and V=V]
+        by (simp add: DM_paper_x_def, simp add: DM22_paper_x_def d_M22_moment_x_def)
+    qed
+  qed
+  have vec_der:
+    "((\<lambda>y. \<chi> k. M_paper y c $ k) has_derivative (\<lambda>h. \<chi> k. DM_paper_x x c h $ k))
+     (at x within V)"
+  proof (subst has_derivative_componentwise_within, intro ballI)
+    fix b :: "complex^6" assume bB: "b \<in> Basis"
+    from bB obtain k :: 6 and e :: complex
+      where b_eq: "b = axis k e" and e_basis: "e \<in> Basis"
+      unfolding Basis_vec_def by auto
+    have indiv:
+      "((\<lambda>y. M_paper y c $ k) has_derivative (\<lambda>h. DM_paper_x x c h $ k))
+       (at x within V)"
+      using comps by blast
+    have inner_d:
+      "((\<lambda>z :: complex. z \<bullet> e) has_derivative (\<lambda>z. z \<bullet> e))
+         (at (M_paper x c $ k) within (\<lambda>y. M_paper y c $ k) ` V)"
+      using bounded_linear_inner_left[of e] has_derivative_ident
+      by (rule bounded_linear.has_derivative)       
+    have d_compose:
+      "((\<lambda>y. (M_paper y c $ k) \<bullet> e) has_derivative
+          (\<lambda>h. (DM_paper_x x c h $ k) \<bullet> e))
+       (at x within V)"
+      using has_derivative_in_compose[OF indiv inner_d]
+      by (simp add: o_def)
+    show "((\<lambda>y. (\<chi> k. M_paper y c $ k) \<bullet> b) has_derivative
+           (\<lambda>y. (\<chi> k. DM_paper_x x c y $ k) \<bullet> b))
+          (at x within V)"
+      using d_compose by (simp add: b_eq inner_axis)
+  qed
+
+  have lhs: "(\<lambda>y. \<chi> k. M_paper y c $ k) = (\<lambda>y. M_paper y c)"
+    by (simp add: fun_eq_iff vec_eq_iff)
+  have rhs: "(\<lambda>h. \<chi> k. DM_paper_x x c h $ k) = DM_paper_x x c"
+    by (simp add: fun_eq_iff vec_eq_iff)
+
+  show ?thesis
+    using vec_der by (simp only: lhs rhs)
+qed
+
+lemma DM_paper_x_components:
+  shows "DM_paper_x x c h $ 1 = DA_paper_x x c h"
+    and "DM_paper_x x c h $ 2 = DM1_paper_x x c h"
+    and "DM_paper_x x c h $ 3 = DM2_paper_x x c h"
+    and "DM_paper_x x c h $ 4 = DM11_paper_x x c h"
+    and "DM_paper_x x c h $ 5 = DM12_paper_x x c h"
+    and "DM_paper_x x c h $ 6 = DM22_paper_x x c h"
+  unfolding DM_paper_x_def
+  by simp_all
+
+
+subsection \<open>P1.6 (density): the moment-map Jacobian minor \<open>m\<^sup>*\<close> is real-analytic\<close>
+
+text \<open>
+  Each entry of the moment-map derivative is a finite sum of products of
+  \<open>of_real\<close>-lifted coordinate polynomials and the phase \<open>cis(-(c0 \<bullet> x$n))\<close> --- all
+  \<open>cline_entire\<close>. Hence each transported real Jacobian entry (a \<open>Re\<close>/\<open>Im\<close>) is
+  \<open>rline_entire\<close>, and the determinant \<open>m\<^sup>*\<close> is \<open>rline_entire\<close>. Being nontrivial
+  (\<open>m\<^sup>*(x0) = det bigJ \<noteq> 0\<close>), its zero set is nowhere dense, so the surjective
+  stratum is dense.
+\<close>
+
+lemma bl_neg_inner_c0_nth: "bounded_linear (\<lambda>x::(real^2)^6. - (c0_paper \<bullet> (x $ n)))"
+  by (intro bounded_linear_minus
+            bounded_linear_compose[OF bounded_linear_inner_right bounded_linear_vec_nth])
+
+lemma cline_entire_of_real_rline:
+  "rline_entire f \<Longrightarrow> cline_entire (\<lambda>x. complex_of_real (f x))"
+  unfolding rline_entire_def cline_entire_def by simp
+
+lemma cline_entire_phase0: "cline_entire (\<lambda>x::(real^2)^6. phase c0_paper x n)"
+  unfolding phase_def by (rule cline_entire_cis_linear[OF bl_neg_inner_c0_nth])
+
+lemma cline_entire_dphase0: "cline_entire (\<lambda>x::(real^2)^6. d_phase c0_paper x h n)"
+proof -
+  have "cline_entire (\<lambda>x::(real^2)^6.
+          complex_of_real (- (c0_paper \<bullet> (h $ n))) * (\<i> * cis (- (c0_paper \<bullet> (x $ n)))))"
+    by (intro cline_entire_mult cline_entire_const cline_entire_cis_linear[OF bl_neg_inner_c0_nth])
+  thus ?thesis
+    unfolding d_phase_def by (simp add: scaleR_conv_of_real)
+qed
+
+lemmas moment_cline_intros =
+  cline_entire_sum cline_entire_add cline_entire_mult cline_entire_const
+  cline_entire_phase0 cline_entire_dphase0 cline_entire_of_real_rline
+  rline_entire_coord rline_entire_const rline_entire_add rline_entire_mult rline_entire_scale
+
+lemma cline_entire_dA: "cline_entire (\<lambda>x::(real^2)^6. d_A_moment_x x c0_paper h)"
+  unfolding d_A_moment_x_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM1: "cline_entire (\<lambda>x::(real^2)^6. d_M1_moment_x x c0_paper h)"
+  unfolding d_M1_moment_x_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM2: "cline_entire (\<lambda>x::(real^2)^6. d_M2_moment_x x c0_paper h)"
+  unfolding d_M2_moment_x_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM11: "cline_entire (\<lambda>x::(real^2)^6. d_M11_moment_x x c0_paper h)"
+  unfolding d_M11_moment_x_def power2_eq_square by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM12: "cline_entire (\<lambda>x::(real^2)^6. d_M12_moment_x x c0_paper h)"
+  unfolding d_M12_moment_x_def w_M12_def dw_M12_def by (intro moment_cline_intros) simp
+
+lemma cline_entire_dM22: "cline_entire (\<lambda>x::(real^2)^6. d_M22_moment_x x c0_paper h)"
+  unfolding d_M22_moment_x_def power2_eq_square by (intro moment_cline_intros) simp
+
+lemma cline_entire_DM_comp:
+  "cline_entire (\<lambda>x::(real^2)^6. DM_paper_x x c0_paper h $ m)"
+proof -
+  from exhaust_6[of m] consider
+      (m1) "m = (1::6)"
+    | (m2) "m = (2::6)"
+    | (m3) "m = (3::6)"
+    | (m4) "m = (4::6)"
+    | (m5) "m = (5::6)"
+    | (m6) "m = (6::6)"
+    by blast
+
+  then show ?thesis
+  proof cases
+    case m1
+    then show ?thesis
+      by (metis (no_types, lifting) 
+          ext DA_paper_x_def Nonemptiness_Paper.DM_paper_x_components(1)
+          cline_entire_dA d_A_moment_x_def)
+  next
+    case m2
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM1_paper_x_def Nonemptiness_Paper.DM_paper_x_components(2)
+          cline_entire_dM1 d_M1_moment_x_def)
+  next
+    case m3
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM2_paper_x_def Nonemptiness_Paper.DM_paper_x_components(3)
+          cline_entire_dM2 d_M2_moment_x_def)
+  next
+    case m4
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM11_paper_x_def Nonemptiness_Paper.DM_paper_x_components(4)
+          cline_entire_dM11 d_M11_moment_x_def)
+  next
+    case m5
+    then show ?thesis
+      by (metis (no_types, lifting) DM12_paper_x_def Nonemptiness_Paper.DM_paper_x_components(5)
+          cline_entire_dM12 cline_entire_def d_M12_moment_x_def)
+  next
+    case m6
+    then show ?thesis
+      by (metis (no_types, lifting) ext DM22_paper_x_def Nonemptiness_Paper.DM_paper_x_components(6)
+          cline_entire_dM22 d_M22_moment_x_def)
+  qed
+qed
+    
+text \<open>The \<^const>\<open>Moment_Map.DM_paper_x\<close>-qualified component analyticity (this is the
+  one \<^const>\<open>MJx\<close>/\<^const>\<open>m_star\<close> are built from), then \<open>m\<^sup>*\<close> itself is \<open>rline_entire\<close>,
+  so its zero set is nowhere dense.\<close>
+
+lemma cline_entire_DM_comp_MM:
+  "cline_entire (\<lambda>x::(real^2)^6. Moment_Map.DM_paper_x x c0_paper h $ m)"
+  using exhaust_6[of m]
+  by (elim disjE)
+     (simp_all add: Moment_Map.DM_paper_x_components cline_entire_dA cline_entire_dM1
+        cline_entire_dM2 cline_entire_dM11 cline_entire_dM12 cline_entire_dM22)
+
+lemma rline_entire_transC_comp:
+  fixes w :: "(real^2)^6 \<Rightarrow> complex^6" and i :: 12
+  assumes "\<And>m. cline_entire (\<lambda>x. w x $ m)"
+  shows "rline_entire (\<lambda>x. transC (w x) $ i)"
+  using exhaust_12[of i]
+  by (elim disjE)
+     (simp_all add: transC_def rline_entire_Re[OF assms] rline_entire_Im[OF assms])
+
+lemma rline_entire_matrix_MJx_entry:
+  "rline_entire (\<lambda>x::(real^2)^6. matrix (MJx x) $ i $ j)"
+proof -
+  have eq: "(\<lambda>x::(real^2)^6. matrix (MJx x) $ i $ j)
+            = (\<lambda>x. transC (Moment_Map.DM_paper_x x c0_paper (transD (axis j 1))) $ i)"
+    by (rule ext) (simp add: matrix_def MJx_def)
+  show ?thesis
+    unfolding eq by (rule rline_entire_transC_comp[OF cline_entire_DM_comp_MM])
+qed
+
+lemma rline_entire_m_star: "rline_entire m_star"
+proof -
+  have "rline_entire (\<lambda>x::(real^2)^6. m_star x)"
+    unfolding m_star_def
+    by (rule rline_entire_det_fun) (rule rline_entire_matrix_MJx_entry)
+  thus ?thesis by simp
+qed
+
+lemma nowhere_dense_m_star_zeros:
+  "nowhere_dense {x::(real^2)^6. m_star x = 0}"
+proof -
+  have lines: "\<exists>F. F holomorphic_on UNIV
+                  \<and> (\<forall>t::real. F (complex_of_real t) = complex_of_real (m_star (a + t *\<^sub>R v)))"
+    for a v :: "(real^2)^6"
+    using rline_entire_m_star unfolding rline_entire_def by blast
+  have "nowhere_dense {x::(real^2)^6 \<in> UNIV. m_star x = 0}"
+    by (rule lines_entire_slice_nowhere_dense[OF continuous_m_star lines])
+       (use m_star_x0_nonzero in blast)
+  thus ?thesis by simp
+qed
+
+text \<open>
+  \<^bold>\<open>P1.6 conclusion.\<close> On any open working set \<open>V\<close>, the regular (surjective)
+  stratum of the moment-map derivative is open \<^emph>\<open>and dense\<close>: take
+  \<open>U = V \<inter> {x. m\<^sup>*(x) \<noteq> 0}\<close>. Openness is \<open>C\<^sup>1\<close>; density is real-analytic
+  (\<open>{m\<^sup>*=0}\<close> nowhere dense, so its complement is dense and meets every open
+  subset of \<open>V\<close>). This makes the open-dense regular stratum unconditional
+  for the concrete moment map (no C¹-only false claim).
+\<close>
+
+lemma DM_paper_open_dense_surjective:
+  fixes V :: "((real^2)^6) set"
+  assumes V: "open V"
+  shows "\<exists>U. open U \<and> U \<subseteq> V \<and> V \<subseteq> closure U
+            \<and> (\<forall>x\<in>U. surj (Moment_Map.DM_paper_x x c0_paper))"
+proof (intro exI[of _ "V \<inter> {x::(real^2)^6. m_star x \<noteq> 0}"] conjI)
+  show "open (V \<inter> {x::(real^2)^6. m_star x \<noteq> 0})"
+    using V open_Collect_neq[OF continuous_m_star continuous_on_const] by blast
+next
+  show "V \<inter> {x::(real^2)^6. m_star x \<noteq> 0} \<subseteq> V" by blast
+next
+  have cl0: "closed {x::(real^2)^6. m_star x = 0}"
+    by (rule closed_Collect_eq[OF continuous_m_star continuous_on_const])
+  have int0: "interior {x::(real^2)^6. m_star x = 0} = {}"
+    using nowhere_dense_m_star_zeros cl0 by (simp only: nowhere_dense_def closure_closed)
+  have dense: "closure {x::(real^2)^6. m_star x \<noteq> 0} = UNIV"
+    by (simp add: Collect_neg_eq closure_complement int0)
+  show "V \<subseteq> closure (V \<inter> {x::(real^2)^6. m_star x \<noteq> 0})"
+    using open_Int_closure_subset[OF V, of "{x::(real^2)^6. m_star x \<noteq> 0}"] dense by simp
+next
+  show "\<forall>x\<in>V \<inter> {x::(real^2)^6. m_star x \<noteq> 0}. surj (Moment_Map.DM_paper_x x c0_paper)"
+    by (auto simp: surj_iff_m_star)
+qed
+
+theorem prop_regnonzero:
+  fixes V Breg_nonzero Zreg ZH0surj BcaseB BH0res :: "((real^2)^'n) set"
+  assumes decompose:
+      "Breg_nonzero \<inter> V
+         \<subseteq> (Zreg \<inter> V) \<union> (ZH0surj \<inter> V) \<union> (BcaseB \<inter> V) \<union> (BH0res \<inter> V)"
+    and meager_Zreg:    "meager (Zreg \<inter> V)"
+    and meager_ZH0surj: "meager (ZH0surj \<inter> V)"
+    and meager_BcaseB:  "meager (BcaseB \<inter> V)"
+    and meager_BH0res:  "meager (BH0res \<inter> V)"
+  shows "meager (Breg_nonzero \<inter> V)"
+proof -
+  have "meager ((Zreg \<inter> V) \<union> (ZH0surj \<inter> V) \<union> (BcaseB \<inter> V) \<union> (BH0res \<inter> V))"
+    by (intro meager_Un meager_Zreg meager_ZH0surj meager_BcaseB meager_BH0res)
+  then show ?thesis
+    by (rule meager_subset[OF decompose])
+qed
+
+
+section \<open>Closeout\<close>
+
+text \<open>
+  TeX Theorem~(Odd-\<open>N\<close> nonemptiness), \<open>thm:final\<close>. The Baire closeout: given a
+  nonempty open feasible working set \<open>V \<subseteq> Fset\<close> and the four branch meagerness
+  facts (Props \<open>prop:regzero\<close>, \<open>prop:foldzero\<close>, \<open>prop:foldnonzero\<close>,
+  \<open>prop:regnonzero\<close>) plus soundness of \<open>X0\<close>, the robust feasible set is nonempty.
+
+  This is the genuine closeout, discharged by the fully-proved combinator
+  \<open>nonemptiness_from_meager_branches\<close> (\<open>Nonemptiness_Spine\<close>). The four
+  meagerness facts remain explicit hypotheses here: they are the deep branch
+  results, still to be established for the concrete array-factor bad sets (Props
+  \<open>prop_regzero\<close>/\<open>prop_foldzero\<close> are proved modulo the transversality stubs;
+  \<open>prop_foldnonzero\<close>/\<open>prop_regnonzero\<close> remain). Once all four are proved
+  unconditionally for the concrete sets, instantiating this theorem yields the
+  odd-\<open>N\<close> nonemptiness theorem with no remaining hypotheses.
+\<close>
+
+theorem thm_final:
+  fixes Fset V :: "((real^2)^'n) set"
+    and X0 :: "real \<Rightarrow> ((real^2)^'n) set"
+    and Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero :: "((real^2)^'n) set"
+  assumes V_open: "open V" and V_nonempty: "V \<noteq> {}" and V_subset_Fset: "V \<subseteq> Fset"
+    and meager_reg_nonzero:  "meager (Breg_nonzero \<inter> V)"
+    and meager_reg_zero:     "meager (Breg_zero \<inter> V)"
+    and meager_fold_zero:    "meager (Bfold_zero \<inter> V)"
+    and meager_fold_nonzero: "meager (Bfold_nonzero \<inter> V)"
+    and X0_sound:
+      "\<And>x. x \<in> V - bad_union Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero
+            \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
+  shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
+  by (rule nonemptiness_from_meager_branches[OF assms])
+
+text \<open>
+  Existence-only alternative closeout: if each bad branch is Lebesgue-negligible
+  in the nonempty open working set \<open>V\<close>, then the good set is nonempty (no Baire
+  category needed).  This is weaker than the intended meager/genericity story,
+  but it is often sufficient to obtain nonemptiness of the robust feasible set.
+\<close>
+
+theorem thm_final_negligible:
+  fixes Fset V :: "((real^2)^'n) set"
+    and X0 :: "real \<Rightarrow> ((real^2)^'n) set"
+    and Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero :: "((real^2)^'n) set"
+  assumes V_open: "open V" and V_nonempty: "V \<noteq> {}" and V_subset_Fset: "V \<subseteq> Fset"
+    and neg_reg_nonzero:  "negligible (Breg_nonzero \<inter> V)"
+    and neg_reg_zero:     "negligible (Breg_zero \<inter> V)"
+    and neg_fold_zero:    "negligible (Bfold_zero \<inter> V)"
+    and neg_fold_nonzero: "negligible (Bfold_nonzero \<inter> V)"
+    and X0_sound:
+      "\<And>x. x \<in> V - bad_union Breg_nonzero Breg_zero Bfold_zero Bfold_nonzero
+            \<Longrightarrow> \<exists>\<xi>>0. x \<in> X0 \<xi>"
+  shows "\<exists>\<xi>>0. Fzero Fset X0 \<xi> \<noteq> {}"
+  by (rule nonemptiness_from_negligible_branches[OF assms])
+
+end
