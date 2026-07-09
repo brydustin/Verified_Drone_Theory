@@ -2379,6 +2379,12 @@ lemma m5_D34_subset_mstarg_residual:
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
   by blast
 
+text \<open>The lemma above is the legacy loose enlargement.  The D34 assembly below
+  no longer uses it: the two scoped D34 obligations retain the Case-B
+  conjuncts \<open>det HessU = 0\<close>, \<open>A_cart \<noteq> 0\<close>, and failure of the
+  configuration derivative of \<open>gradU\<close> to be surjective.  This is the shape
+  needed for the analytic branch certificates to connect to Robust3.\<close>
+
 
 subsection \<open>Proven building block: the fixed-angle slice is nowhere dense\<close>
 
@@ -2417,9 +2423,12 @@ lemma m5_D34_D3_collinear:
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)
           \<and> phase_collinear \<omega>0 \<omega>s \<omega>}"
   sorry
 
@@ -2441,9 +2450,12 @@ text \<open>The Branch-P residual: the complementary (non phase-collinear) part.
 definition BadXGW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
   "BadXGW \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
         gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+      \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+      \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
       \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
       \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+      \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
 
 
 subsection \<open>The rank-drop dichotomy predicate \<open>\<gamma> \<parallel> c\<close> (copied verbatim)\<close>
@@ -2477,9 +2489,12 @@ lemma BadXGW_point:
   shows "BadXGW \<omega>0 \<omega>s {\<omega>}
           = {x :: (real^2)^'n.
                 gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+              \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+              \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
               \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-              \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+              \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+              \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
   unfolding BadXGW_def by blast
 
 
@@ -2630,9 +2645,12 @@ lemma m5_D34_D4_branchP:
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)
           \<and> \<not> phase_collinear \<omega>0 \<omega>s \<omega>}"
   \<comment> \<open>Stage-B D4 reduction: the residual = \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> over the
       \<open>\<gamma>\<not>\<parallel>c\<close> region \<open>\<Gamma>\<close>, closed by the grafted D4 chart-route \<open>branchP_indep_core\<close>
@@ -2641,9 +2659,12 @@ proof -
   let ?Gam = "{\<omega>\<in>OmegaPF ctr \<delta>. \<not> phase_collinear \<omega>0 \<omega>s \<omega>}"
   have eq: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)
           \<and> \<not> phase_collinear \<omega>0 \<omega>s \<omega>}
           = (V \<inter> BadXGW \<omega>0 \<omega>s ?Gam :: ((real^2)^'n) set)"
     unfolding BadXGW_def by blast
@@ -2656,9 +2677,8 @@ qed
 
 subsection \<open>Assembly: \<open>m5_D34_residual\<close> from the reduction + D3 + D4\<close>
 
-text \<open>The exact target statement (verbatim from the M5 skeleton), closed by:
-  the structural reduction @{thm m5_D34_subset_mstarg_residual}, the
-  excluded-middle split of the residual on the proof-internal predicate
+text \<open>The exact target statement (verbatim from the M5 skeleton), closed by a
+  direct excluded-middle split of the retained Case-B residual on
   @{const phase_collinear} into D3 \<union> D4, the two inner meagerness lemmas, and
   @{thm meager_subset} / @{thm meager_Un}.  Sorry-free at this assembly layer.\<close>
 
@@ -2679,24 +2699,32 @@ proof -
   have nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
     by (rule fixed_c_nonsurj_nowhere_dense[OF _ c6])
-  \<comment> \<open>The residual the excess engine consumes (gradU = 0, det Dcvec \<noteq> 0,
-       cvec \<noteq> 0, DM not surjective).\<close>
+  \<comment> \<open>The retained D34 residual after D1/D2/D5 have been removed.\<close>
   let ?R = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
-          \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
-  let ?D3 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
-            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
+  let ?D3 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)
           \<and> phase_collinear \<omega>0 \<omega>s \<omega>}"
   let ?D4 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)
           \<and> \<not> phase_collinear \<omega>0 \<omega>s \<omega>}"
   \<comment> \<open>The residual is the D3/D4 union (excluded middle on \<open>phase_collinear\<close>).\<close>
   have RsubD: "?R \<subseteq> ?D3 \<union> ?D4" by blast
@@ -2705,9 +2733,8 @@ proof -
   have mD4: "meager ?D4" by (rule m5_D34_D4_branchP[OF openV Vne c6 d0 pf nd])
   have mR: "meager ?R"
     by (rule meager_subset[OF RsubD meager_Un[OF mD3 mD4]])
-  \<comment> \<open>The full D34 bad set injects into the residual (structural reduction).\<close>
   show ?thesis
-    by (rule meager_subset[OF m5_D34_subset_mstarg_residual mR])
+    by (rule meager_subset[OF _ mR]) blast
 qed
 
 (* ---- D1: joint-regular part (subset of heap meager_grad_x_regular_part) ---- *)

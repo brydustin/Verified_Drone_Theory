@@ -4022,3 +4022,24 @@ det3/Jac3 block arguments built for H11/H22/H12=0 but for a three-fold codimensi
 not a single 3x3 determinant. The paper's other four H0res pieces (residue-control for
 (a1,a2), the S=0 branch, two/three-vanishing-cosine branches) are read/scoped but
 untouched.
+
+### Layer-5 wiring correction: D34 sorries now state the retained Case-B residual (Codex, 2026-07-08)
+Responding to the handoff warning that the two real remaining Robust3 sorries did not mention
+the Case-B analytic machinery, revised the D34 residual layer in
+`Appendix/Robust3/Nonemptiness_Robust3.thy`.
+
+The old structural lemma `m5_D34_subset_mstarg_residual` remains in the file as a documented
+legacy loose enlargement, but `m5_D34_residual` no longer uses it.  Instead the D34 proof now
+splits the actual retained residual directly on `phase_collinear`.
+
+Changed statement shapes:
+- `m5_D34_D3_collinear` now carries `det HessU = 0`, `A_cart != 0`, `not surj(DM_paper_x ...)`,
+  `det Dcvec != 0`, `cvec != 0`, and failure of the `x`-derivative of `gradU` to be surjective.
+- `BadXGW` was strengthened with the same retained Case-B conjuncts, so the D4 chart core
+  `branchP_indep_charts_Nn` and downstream D4 lemmas no longer target the loose `not-surj-DM`
+  superset.
+- `m5_D34_residual` is still sorry-free assembly, but now from the tightened D3/D4 obligations.
+
+This does not close the two sorries; it corrects their targets so future Case-B analytic branch
+certificates can actually be wired into `F0_dip_nonempty`.  Verified with
+`Applied_Math_Appendix_Full` BUILD_EXIT=0.

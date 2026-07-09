@@ -471,3 +471,15 @@ covering splice into Robust3).
   three-cut codimension->=3 argument (needs a det3/Jac3-style but three-fold
   rank argument, not attempted); the other four H0res pieces (residue-control,
   S=0 branch, two/three-cosine branches) scoped but untouched.
+
+- 2026-07-08 (Codex, layer-5 wiring correction): **D34 residual obligations
+  restated to the tight Case-B target** in `Appendix/Robust3/Nonemptiness_Robust3.thy`.
+  The legacy `m5_D34_subset_mstarg_residual` loose enlargement is still present
+  for reference but no longer used by `m5_D34_residual`.  The two remaining
+  D34 obligations now retain the important conjuncts:
+  `det HessU = 0`, `A_cart != 0`, `not surj(DM_paper_x ...)`, `det Dcvec != 0`,
+  `cvec != 0`, and failure of the `x`-derivative of `gradU` to be surjective.
+  Concretely, `m5_D34_D3_collinear`, `BadXGW`, `branchP_indep_charts_Nn`
+  through `m5_D34_D4_branchP`, and the D34 assembly split now target the actual
+  retained residual rather than the older `gradU + detDc + cvec + not-surj-DM`
+  superset.  `Applied_Math_Appendix_Full` rebuilt with `BUILD_EXIT=0`.
