@@ -3974,3 +3974,51 @@ warning note was the false alarm I suspect it is.
 Not machine-verified on my end (unlike my own h_par_vslot_zero finding above, which I did
 verify exactly) -- this is a considered hypothesis about where your informal check likely
 went wrong, not a proof. Please re-check before trusting my read over your own.
+
+### app:H0res: B_dip transversality landed, plus an architectural finding (2026-07-08, fork)
+Delegated to a background fork ("pick a direction and start proving... use multiple agents").
+Assigned: app:H0res's B1=B2=B3=0 branch (paper lines ~3086-3578).
+
+MAJOR FINDING (before writing anything, per this project's "check first" discipline): a
+fully-proven (zero sorry) H0res scaffold ALREADY EXISTS in
+Appendix/Nonemptiness_Regnonzero_Appendix.thy -- lem_h0res_Bcuts, lem_h0res_a1a2,
+prop_h0res_meager, etc. But it is DISCONNECTED from the actual proof: that file (and
+Nonemptiness_Capstone.thy, which imports it) is NOT imported by
+Appendix/Robust3/Nonemptiness_Robust3.thy (owner of F0_dip_nonempty) -- the SAME situation
+as the earlier m5_D34_subset_mstarg_residual enlargement. Its lemmas are also GENERIC
+wrappers over an abstract `cert :: 'w => real`, never instantiated with a concrete D34
+object (no B_j defined via cvec_dip anywhere in that file), and prop_h0res_meager TAKES
+`meager (Bbranch \<inter> Vset)` etc. as HYPOTHESES rather than deriving them -- the file's own
+comment flags that one codim-1 cut being nowhere-dense does NOT by itself give meager
+projection (needs a genuine codim->=3 argument), and that bridging step is not completed
+there for this branch. So "app:H0res is done" would significantly overclaim the state.
+
+Landed instead (Appendix/AnalyticBridge/D34_H0res_Branch.thy, registered in ROOT alongside
+D34_UPhi_Branch; BUILD_EXIT=0, independently re-verified by me, not just trusted from the
+fork's self-report): `beta_h0` (:= cos t - t sin t, the paper's B_j scalar, re-derived
+fresh rather than cross-imported to avoid coupling to the disconnected file) +
+`beta_h0_deriv_nonzero_at_zero` (beta_h0(t)=0 => its derivative -(2 sin t+t cos t) != 0,
+via a clean sin^2+cos^2=1 contradiction argument) + `has_derivative_beta_h0`;
+`ucoord_h0`/`has_derivative_ucoord_h0_x`/`ucoord_h0_slot_self`/`ucoord_h0_uslot_deriv` (the
+c-projected parallel coordinate and its u-slot derivative = norm c, matching Codex's
+`ucoord` convention but kept LOCAL rather than importing D34_UPhi_Branch.thy, to avoid
+coupling this branch's build to Codex's actively-changing file); `B_dip`
+(:= beta_h0(norm(cvec_dip...) * ucoord_h0(cvec_dip...,x$j)), the D34-connected version of
+B_j) + `has_derivative_B_dip_x` (chain rule) + `B_dip_uslot_transversal` (THE actual
+transversality result: B_dip=0 and cvec_dip!=0 => B_dip's u-slot derivative != 0) -- this
+IS lem:h0res-Bcuts's conclusion, genuinely tied to the real configuration type, unlike the
+disconnected generic scaffold.
+Independently re-verified the mathematical content by hand (not just trusting the fork):
+beta_h0_deriv_nonzero_at_zero's contradiction argument checks out (sin t*(2+t^2) = 2 sin
+t+t cos t via substituting cos t = t sin t from beta_h0(t)=0, forcing sin t=0 hence cos
+t=0, contradicting sin^2+cos^2=1); B_dip's identification with the paper's B_j = cos(kappa
+u_j)-kappa u_j sin(kappa u_j) checks out via norm(c)*ucoord_h0(c,x_j) = c.x_j = kappa u_j
+exactly matching the phase/moment convention used throughout this project.
+REMAINING (not attempted, genuinely separate work): lifting B_dip_uslot_transversal (ONE
+cut, ONE triple element j) to the full prop:h0res-Bbranch conclusion (THREE independent
+cuts j=1,2,3 jointly giving codimension >=3, hence meager projection) -- needs a genuine
+rank/dimension argument across all three u-slots jointly, analogous in SPIRIT to the
+det3/Jac3 block arguments built for H11/H22/H12=0 but for a three-fold codimension count,
+not a single 3x3 determinant. The paper's other four H0res pieces (residue-control for
+(a1,a2), the S=0 branch, two/three-vanishing-cosine branches) are read/scoped but
+untouched.

@@ -455,3 +455,19 @@ covering splice into Robust3).
   this project).
   cor:Lambda-closed is ON HOLD pending either that new infrastructure or a
   different invariant characterization of H11 entirely.
+
+- 2026-07-08 (Claude fork, cont. 3): **app:H0res B_dip transversality landed** +
+  an architectural finding: a fully-proven H0res scaffold already exists in
+  Appendix/Nonemptiness_Regnonzero_Appendix.thy but is disconnected from
+  Nonemptiness_Robust3.thy (same situation as the earlier
+  m5_D34_subset_mstarg_residual enlargement) and its lemmas are generic/
+  uninstantiated, with prop_h0res_meager taking the meager conclusion as a
+  HYPOTHESIS rather than deriving it (a codim-1-to-meager-projection gap the
+  file itself flags but doesn't close). Landed the D34-connected version
+  instead: beta_h0/B_dip/B_dip_uslot_transversal in
+  Appendix/AnalyticBridge/D34_H0res_Branch.thy (registered in ROOT alongside
+  D34_UPhi_Branch), BUILD_EXIT=0, independently re-verified.
+  REMAINING: lift the one-cut transversality (single j) to the joint
+  three-cut codimension->=3 argument (needs a det3/Jac3-style but three-fold
+  rank argument, not attempted); the other four H0res pieces (residue-control,
+  S=0 branch, two/three-cosine branches) scoped but untouched.

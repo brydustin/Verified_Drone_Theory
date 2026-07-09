@@ -135,3 +135,4 @@ session Applied_Math_D34_Analytic in "Appendix/AnalyticBridge" = Applied_Math_Ap
   theories
     D34_Analytic_Bridge
     D34_UPhi_Branch
+    D34_H0res_Branch

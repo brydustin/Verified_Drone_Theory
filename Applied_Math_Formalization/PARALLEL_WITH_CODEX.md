@@ -374,12 +374,38 @@ increasing via a manifestly-positive derivative, `prop:double-param` around
 line 5755) — that's real, separate work for a later session, not something
 to improvise mid-flight.
 
-**`cor:vpair22-full` and `app:H0res` are lower priority than both of the
-above** — larger, more novel (IFT-lifting with auxiliary variables; a wholly
-separate coordinate chart, respectively), and neither is blocking anything
-else. I'll scope each to this level of precision in its own turn, when I get
-to it, rather than commit to an implementation plan now based on a
-structural skim.
+**Update (2026-07-08, cont. 3): `app:H0res` — started, one piece landed, one
+important finding.** Before writing anything: a fully-proven (zero `sorry`)
+H0res scaffold already exists in
+`Appendix/Nonemptiness_Regnonzero_Appendix.thy` (`lem_h0res_Bcuts`,
+`prop_h0res_meager`, etc.) — but it's disconnected from the actual proof
+chain (not imported by `Nonemptiness_Robust3.thy`, same situation as the
+earlier `m5_D34_subset_mstarg_residual` enlargement), its lemmas are generic
+over an abstract `cert :: 'w ⇒ real` never instantiated with a concrete D34
+object, and its `prop_h0res_meager` *takes* the meager conclusion as a
+hypothesis rather than deriving it (the file's own comment flags the
+codim-1-to-meager-projection gap as unclosed). So don't treat that file as
+"H0res is basically done" — it isn't wired in and has a real gap of its own.
+
+Landed instead, connected to the actual D34 configuration type:
+`beta_h0`/`B_dip`/`B_dip_uslot_transversal` in
+`Appendix/AnalyticBridge/D34_H0res_Branch.thy` (registered in `ROOT`
+alongside `D34_UPhi_Branch`, same pattern) — `lem:h0res-Bcuts`'s
+transversality conclusion for one cut (one triple element `j`), genuinely
+verified (`BUILD_EXIT=0`, independently re-checked). **Remaining**: lifting
+this one-cut result to the joint three-cut (`j=1,2,3`) codimension-≥3
+argument needed for `prop:h0res-Bbranch`'s actual meager-projection
+conclusion — not attempted, needs a `det3`/`Jac3`-style but three-fold rank
+argument. The other four `app:H0res` pieces (residue-control for `(a1,a2)`,
+the `S=0` branch, two/three-vanishing-cosine branches) are read and scoped
+but untouched.
+
+**`cor:vpair22-full` is lower priority, in progress** — larger, more novel
+(IFT-lifting with auxiliary variables `δ,μ,ρ`), not blocking anything else.
+Early scaffolding (`Ttau`,`Vtau`,`Dtau`,`AT3`,`Lcof`,`Mcof`,`Kcof` and a few
+`_eq` lemmas) exists in `M5_Dev_VPair22Full/` as of this writing but hasn't
+reached a landed/spliced state yet — check the diary for current status
+before assuming this is further along than it is.
 
 ## 6. Communication
 
