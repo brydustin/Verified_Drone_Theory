@@ -558,3 +558,150 @@ Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 ```text
 no proof holes found
 ```
+
+## 2026-07-09 Codex update: prose cleanup and remaining proof-command audit
+
+Codex performed a repository-wide text cleanup after the user requested that
+ordinary prose/commentary no longer contain the Isabelle proof-admission word.
+The cleanup changed tracked documentation and theory comments only; actual proof
+commands were left intact and audited separately.
+
+Recent committed work:
+
+- Commit `f77c9d5 Remove proof-hole wording from prose`.
+- Pushed to `main`.
+- Rebuilt the heap chain with:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b \
+  -d ../../Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  -D . Applied_Math_Appendix_Frontier
+```
+
+Build result: exit code `0`.
+
+Important audit result:
+
+- Remaining text hits for the proof-admission word are all actual Isabelle
+  proof commands.
+- No prose/commentary hits remain from the repository-root scan.
+- Current total: 102 proof-command occurrences.
+- Tracked files: 57 occurrences.
+- Untracked development files: 45 occurrences.
+
+Tracked proof-command locations:
+
+```text
+M5_Dev_Excess/Scratch_m5_excess.thy:63
+M5_Dev_Excess/Scratch_m5_excess.thy:242
+M5_Dev_Excess/Scratch_m5_excess.thy:280
+M5_Dev_D4charts/Scratch_m5_d4charts.thy:164
+M5_Dev_D4Core/Scratch_m5_d4core.thy:171
+M5_Dev_BeamHess/Scratch_m5_beamhess.thy:564
+M5_Dev_CurveEngine/Scratch_m5_curveengine.thy:66
+M5_Dev_CurveEngine/Scratch_m5_curveengine.thy:253
+M5_Dev_CurveEngine/Scratch_m5_curveengine.thy:277
+M5_Dev_D3Sound/Scratch_m5_d3sound.thy:223
+M5_Dev_D4fix/Scratch_m5_d4fix.thy:66
+M5_Dev_D4fix/Scratch_m5_d4fix.thy:70
+M5_Dev_D4fix/Scratch_m5_d4fix.thy:75
+M5_Dev_D4fix/Scratch_m5_d4fix.thy:80
+M5_Dev_D4fix/Scratch_m5_d4fix.thy:255
+M5_Dev_D3fix/Scratch_m5_d3fix.thy:104
+M5_Dev_D3fix/Scratch_m5_d3fix.thy:112
+M5_Dev_D3fix/Scratch_m5_d3fix.thy:119
+M5_Dev_D3fix/Scratch_m5_d3fix.thy:325
+M5_Dev_ArcCover2/Scratch_m5_arccover.thy:169
+M5_Dev_Engine/Scratch_m5_engine.thy:77
+M5_Dev_Engine/Scratch_m5_engine.thy:199
+M5_Dev_D3charts/Scratch_m5_d3charts.thy:286
+M5_Dev_ArcProj/Scratch_m5_arcproj.thy:245
+M5_Dev/Scratch_m5_skeleton.thy:82
+M5_Dev/Scratch_m5_skeleton.thy:102
+M5_Dev/Scratch_m5_skeleton.thy:125
+M5_Dev_D5/Scratch_m5_D5.thy:48
+M5_Dev_D5/Scratch_m5_D5.thy:58
+M5_Dev_D5/Scratch_m5_D5.thy:74
+M5_Dev_IndepCore/Scratch_m5_indepcore.thy:223
+M5_Dev_D3/Scratch_m5_D3.thy:71
+M5_Dev_D3/Scratch_m5_D3.thy:176
+M5_Dev_BranchP/Scratch_m5_branchp.thy:84
+M5_Dev_BranchP/Scratch_m5_branchp.thy:259
+M5_Dev_D34/Scratch_m5_D34.thy:79
+M5_Dev_D34/Scratch_m5_D34.thy:150
+M5_Dev_D34/Scratch_m5_D34.thy:173
+M5_Dev_UPhi/Scratch_UPhi.thy:175
+Appendix/Scratch_gram.thy:211
+Appendix/Scratch_chk3.thy:6
+Appendix/Nonemptiness_Capstone.thy:69
+Appendix/Nonemptiness_Capstone.thy:83
+Appendix/Nonemptiness_Capstone.thy:92
+Appendix/Nonemptiness_Capstone.thy:104
+Appendix/Nonemptiness_Capstone.thy:117
+Appendix/Nonemptiness_Capstone.thy:132
+Appendix/AnalyticBridge/D34_UPhi_Branch.thy:186
+Appendix/Scratch_chk2.thy:7
+Appendix/Scratch_inv.thy:15
+Appendix/Scratch_g3_asm.thy:16
+Appendix/Scratch_g3_asm.thy:26
+Appendix/Scratch_m6.thy:137
+Appendix/Scratch_m6.thy:149
+Appendix/Scratch_m6.thy:164
+Appendix/Scratch_nodeg.thy:39
+Appendix/Nonemptiness_Robust1.thy:4476
+```
+
+Untracked development-file proof-command locations:
+
+```text
+M5_Dev_ArcNeg/Scratch_m5_arcneg.thy:138
+M5_Dev_D3proof/Scratch_m5_d3sound_detHess.thy:101
+M5_Dev_D3proof/Scratch_m5_d3sound_detHess.thy:108
+M5_Dev_D3proof/Scratch_m5_d3sound_detHess.thy:258
+M5_Dev_D3proof/Scratch_m5_d3sound_detHess.thy:302
+M5_Dev_D4proof/Scratch_m5_d4proof.thy:68
+M5_Dev_D4proof/Scratch_m5_d4proof.thy:72
+M5_Dev_D4proof/Scratch_m5_d4proof.thy:76
+M5_Dev_D4proof/Scratch_m5_d4proof.thy:81
+M5_Dev_D4proof/Scratch_m5_d4proof.thy:86
+M5_Dev_D4proof/Scratch_m5_d4proof.thy:220
+M5_Dev_D4proof/Scratch_m5_d4proof.thy:297
+M5_Dev_D3proof/Scratch_m5_d3proof.thy:30
+M5_Dev_D3proof/Scratch_m5_d3proof.thy:34
+M5_Dev_D3proof/Scratch_m5_d3proof.thy:39
+M5_Dev_D3proof/Scratch_m5_d3proof.thy:44
+M5_Dev_D3proof/Scratch_m5_d3proof.thy:259
+M5_Dev_D3eng/Scratch_m5_d3eng.thy:95
+M5_Dev_D3eng/Scratch_m5_d3eng.thy:101
+M5_Dev_D3eng/Scratch_m5_d3eng.thy:107
+M5_Dev_D3eng/Scratch_m5_d3eng.thy:125
+M5_Dev_D3eng/Scratch_m5_d3eng.thy:400
+M5_Dev_D4/Scratch_m5_D4.thy:61
+M5_Dev_D4/Scratch_m5_D4.thy:107
+M5_Dev_D4/Scratch_m5_D4.thy:150
+Analytic/Real_Analytic_Complex.thy:63
+Analytic/Real_Analytic_Complex.thy:79
+Analytic/Real_Analytic_Complex.thy:110
+Analytic/Real_Analytic_Complex.thy:134
+Analytic/Real_Analytic_Complex.thy:147
+Analytic/Real_Analytic_Complex.thy:183
+Analytic/Real_Analytic_Complex.thy:199
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:74
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:78
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:83
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:88
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:272
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:308
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:318
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:343
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:357
+M5_Dev_D4eng/Scratch_m5_d4eng.thy:455
+M5_Dev_Morse/Morse_base.thy:265
+M5_Dev_Morse/Morse_base.thy:284
+M5_Dev_Morse/main_scratch.thy:265
+```
+
+Note on `Appendix/Nonemptiness_Robust1.thy:4476`: Codex opened this in jEdit
+for the user using the source file and parent heap, because the theory header is
+`Nonemptiness_Robust1`.
