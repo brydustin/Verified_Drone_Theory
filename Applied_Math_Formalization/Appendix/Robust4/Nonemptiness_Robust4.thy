@@ -19,6 +19,25 @@ lemma D3BadXG_subset_H0core:
   "(D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> D3BadXG_H0core \<omega>0 \<omega>s \<Gamma>"
   unfolding D3BadXG_def D3BadXG_H0core_def by blast
 
+definition d3_detHess_arc_chart_core ::
+  "((real^2)^'n) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> bool" where
+  "d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma> \<longleftrightarrow>
+    (\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+       (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+       (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+       (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+          \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+       (\<forall>i x. x \<in> Crit i \<longrightarrow>
+          ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+       (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+       (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))))"
+
+definition d3_detHess_arc_chart_core_all ::
+  "((real^2)^'n) set \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> bool" where
+  "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s \<longleftrightarrow>
+     (\<forall>\<gamma>. analytic_arc \<gamma> \<longrightarrow> \<gamma> \<subseteq> OmegaPF ctr \<delta> \<longrightarrow>
+        d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma>)"
+
 lemma d3_detHess_arc_charts_Nn:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
@@ -27,6 +46,7 @@ lemma d3_detHess_arc_charts_Nn:
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and core: "d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma>"
   shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
             (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
             (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
@@ -41,7 +61,7 @@ lemma d3_detHess_arc_charts_Nn:
       \<open>gradU=0\<close>, \<open>det HessU=0\<close>, moment rank drop, and failure of the
       configuration derivative.  The stronger retained Case-B fibre @{const D3BadXG}
       is a checked subset of this core.\<close>
-  sorry
+  using core unfolding d3_detHess_arc_chart_core_def by blast
 
 lemma d3_retained_arc_charts_Nn:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
@@ -51,6 +71,7 @@ lemma d3_retained_arc_charts_Nn:
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and core: "d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma>"
   shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
             (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
             (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
@@ -70,7 +91,7 @@ proof -
             ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
       and rank: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
       and clo: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
-    using d3_detHess_arc_charts_Nn[OF openV Vne c6 arc gsub pf nd]
+    using d3_detHess_arc_charts_Nn[OF openV Vne c6 arc gsub pf nd core]
     by (smt (verit, best))
   have sub: "(V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
               \<subseteq> V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>"
@@ -91,6 +112,7 @@ lemma d3_retained_arc_negligible_closed_cover:
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and core: "d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma>"
   shows "\<exists>K :: nat \<Rightarrow> ((real^2)^'n) set.
             (V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)
           \<and> (\<forall>n. closed (K n))
@@ -105,7 +127,7 @@ proof -
             ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
       and rank: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
       and clo: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
-    using d3_retained_arc_charts_Nn[OF openV Vne c6 arc gsub pf nd]
+    using d3_retained_arc_charts_Nn[OF openV Vne c6 arc gsub pf nd core]
     by (smt (verit, best))
   define K :: "nat \<Rightarrow> ((real^2)^'n) set"
     where "K i = (fst \<circ> charts i) ` (Crit i)" for i
@@ -131,13 +153,14 @@ lemma d3_retained_arc_projection_meager:
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and core: "d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma>"
   shows "meager (V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)"
 proof -
   obtain K :: "nat \<Rightarrow> ((real^2)^'n) set"
     where cover: "(V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
       and clo: "\<forall>n. closed (K n)"
       and neg: "\<forall>n. negligible (K n)"
-    using d3_retained_arc_negligible_closed_cover[OF openV Vne c6 arc gsub pf nd] by blast
+    using d3_retained_arc_negligible_closed_cover[OF openV Vne c6 arc gsub pf nd core] by blast
   show ?thesis
     by (rule meager_negligible_closed_cover[OF cover]) (use clo neg in blast)+
 qed
@@ -208,6 +231,7 @@ lemma m5_D34_D3_collinear:
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and d3core: "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
@@ -241,8 +265,10 @@ proof -
     fix i :: nat assume iI: "i \<in> I"
     have ai: "analytic_arc (arc i)" and asub: "arc i \<subseteq> OmegaPF ctr \<delta>"
       using arcprops iI by blast+
+    have corei: "d3_detHess_arc_chart_core V \<omega>0 \<omega>s (arc i)"
+      using d3core ai asub unfolding d3_detHess_arc_chart_core_all_def by blast
     show "meager (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set)"
-      by (rule d3_retained_arc_projection_meager[OF openV Vne c6 ai asub pf nd])
+      by (rule d3_retained_arc_projection_meager[OF openV Vne c6 ai asub pf nd corei])
   qed
   show ?thesis
     unfolding eq by (rule meager_subset[OF cover meagU])
@@ -505,6 +531,7 @@ lemma m5_D34_residual:
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
+    and d3core: "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
@@ -548,7 +575,7 @@ proof -
   \<comment> \<open>The residual is the D3/D4 union (excluded middle on \<open>phase_collinear\<close>).\<close>
   have RsubD: "?R \<subseteq> ?D3 \<union> ?D4" by blast
   \<comment> \<open>Each piece is meager (the two genuine obligations, sorried inside).\<close>
-  have mD3: "meager ?D3" by (rule m5_D34_D3_collinear[OF openV Vne c6 d0 pf hsep kdiff nsing nd])
+  have mD3: "meager ?D3" by (rule m5_D34_D3_collinear[OF openV Vne c6 d0 pf hsep kdiff nsing nd d3core])
   have mD4: "meager ?D4" by (rule m5_D34_D4_branchP[OF openV Vne c6 d0 pf nd])
   have mR: "meager ?R"
     by (rule meager_subset[OF RsubD meager_Un[OF mD3 mD4]])
@@ -593,6 +620,7 @@ lemma meager_rank_deficient_stratum:
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
+    and d3core: "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
@@ -635,7 +663,7 @@ proof -
           m5_D1_regular[OF openV Vne]
           m5_D2_beamcenter[OF openV Vne c6 d0 pf]
           m5_D5_steersing[OF openV Vne c6 d0 pf hsep kdiff]
-          m5_D34_residual[OF openV Vne c6 d0 pf hsep kdiff nsing])
+          m5_D34_residual[OF openV Vne c6 d0 pf hsep kdiff nsing d3core])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
@@ -695,6 +723,7 @@ lemma Phi_bad_meager_dip:
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
+    and d3core: "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
 proof -
   let ?reg = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
@@ -716,7 +745,7 @@ proof -
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
   have meag4: "meager (?reg \<union> ?def \<union> ?steer \<union> ?null)"
     by (intro meager_Un meager_bad_regular_stratum_on[OF openV Vne c6]
-              meager_rank_deficient_stratum[OF openV Vne c6 d0 pf hsep kdiff nsing]
+              meager_rank_deficient_stratum[OF openV Vne c6 d0 pf hsep kdiff nsing d3core]
               meager_steering_singular_stratum[OF openV Vne c6 d0 pf hsep kdiff]
               meager_Azero_degenerate_stratum[OF openV Vne c6 oddN d0 pf])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
@@ -995,6 +1024,9 @@ lemma regular_config_exists:
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and int_ne: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
+    and d3core: "d3_detHess_arc_chart_core_all
+          (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+             :: ((real^2)^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                           :: ((real^2)^'n) set).
             \<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
@@ -1003,8 +1035,10 @@ proof -
                       :: ((real^2)^'n) set)"
   have openI: "open I" unfolding I_def by (rule open_interior)
   have Ine: "I \<noteq> {}" unfolding I_def by (rule int_ne)
+  have d3coreI: "d3_detHess_arc_chart_core_all I ctr \<delta> \<omega>0 \<omega>s"
+    using d3core unfolding I_def by simp
   have meagB: "meager {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
-    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN hsep kdiff d0 pf nsing])
+    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN hsep kdiff d0 pf nsing d3coreI])
   have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
   proof
     assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
@@ -1184,6 +1218,9 @@ lemma regular_feasible_point_dip:
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                       :: (planar^'n) set) \<noteq> {}"
+    and d3core: "d3_detHess_arc_chart_core_all
+          (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+             :: (planar^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
@@ -1198,7 +1235,7 @@ proof -
   obtain x0 :: "planar^'n"
     where x0I: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
       and x0reg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-    using regular_config_exists[OF c6 oddN hsep kdiff d0 pf nsing feasible] by blast
+    using regular_config_exists[OF c6 oddN hsep kdiff d0 pf nsing feasible d3core] by blast
   have x0F: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
     using x0I interior_subset by blast
   have nondeg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
@@ -1261,6 +1298,9 @@ lemma regular_feasible_witness_dip:
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                       :: (planar^'n) set) \<noteq> {}"
+    and d3core: "d3_detHess_arc_chart_core_all
+          (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+             :: (planar^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> continuous_on (sphere ctr \<epsilon>)
@@ -1280,7 +1320,7 @@ proof -
       and rO: "\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
-    using regular_feasible_point_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible] by blast
+    using regular_feasible_point_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible d3core] by blast
   have c1: "continuous_on (sphere ctr \<epsilon>)
               (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))"
     by (rule norm_gradU_dip_continuous_on)
@@ -1300,6 +1340,8 @@ text \<open>\<^bold>\<open>The concrete capstone: \<open>\<F>\<^sub>0\<close> fo
 
 theorem F0_dip_nonempty:
   assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and d3core: "\<And>(V::(planar^'n) set) ctr \<delta> \<omega>0 \<omega>s.
+          d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr \<delta> R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
             0 < \<delta> \<and> 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
           \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (OmegaPF ctr \<delta>) \<delta>null pmin \<xi> \<kappa> \<epsilon>
@@ -1438,8 +1480,15 @@ proof -
   have "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
           \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 (OmegaPF \<omega>0 (pi/4)) 1 0 \<xi> \<kappa> \<epsilon>
               \<noteq> ({}::(planar^'n) set)"
-    using regular_feasible_witness_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible]
+  proof -
+    have d3core_feas: "d3_detHess_arc_chart_core_all
+        (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0
+           :: (planar^'n) set)) \<omega>0 (pi/4) \<omega>0 \<omega>s"
+      by (rule d3core)
+    show ?thesis
+      using regular_feasible_witness_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible d3core_feas]
     by (blast intro: F0_nonempty_of_witness OmegaPF_compact)
+  qed
   thus ?thesis using d0 by blast
 qed
 

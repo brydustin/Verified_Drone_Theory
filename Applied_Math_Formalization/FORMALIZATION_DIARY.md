@@ -4185,6 +4185,28 @@ the downstream retained Case-B D3 assembly proved.
 Verified with `Applied_Math_Appendix_Frontier`; build result:
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
+### Robust4 D3 det-Hess sorry converted to explicit chart-core premise (Codex, 2026-07-09)
+
+Removed the explicit `sorry` from `d3_detHess_arc_charts_Nn` without claiming an
+unavailable unconditional proof.
+
+Added named predicates in `Appendix/Robust4/Nonemptiness_Robust4.thy`:
+
+- `d3_detHess_arc_chart_core`
+- `d3_detHess_arc_chart_core_all`
+
+`d3_detHess_arc_charts_Nn` is now a checked wrapper from
+`d3_detHess_arc_chart_core`.  The downstream D3/M5/Baire/F0 lemmas now carry the
+appropriate D3 chart-core premise explicitly.  This keeps the reduction layers
+sound: the remaining analytic D3 theorem is an assumption at the boundary, not an
+Isabelle oracle hidden behind `sorry`.
+
+Verified with `Applied_Math_Appendix_Frontier`; build result:
+`Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+`desorry` on Robust4 now reports only `branchP_indep_charts_Nn`; the former D3
+explicit `sorry` is gone.
+
 ### Robust4 D3 det-Hess target narrowed to NSx (Codex, 2026-07-09)
 
 Tightened `D3BadXG_H0core` in `Appendix/Robust4/Nonemptiness_Robust4.thy` to

@@ -436,3 +436,61 @@ Remaining explicit `sorry` tactics in Robust4 are still exactly:
 
 - `d3_detHess_arc_charts_Nn`
 - `branchP_indep_charts_Nn`
+
+## Robust4 D3 det-Hess sorry removed as an explicit hypothesis
+
+Codex work on 2026-07-09 revisited the user-requested
+`d3_detHess_arc_charts_Nn` frontier in
+`Appendix/Robust4/Nonemptiness_Robust4.thy`.
+
+Important correction: there is still no sound unconditional proof of the D3
+det-Hess/NSx chart theorem in the current repo.  The dev files
+`M5_Dev_D3proof/Scratch_m5_d3sound_detHess.thy` and
+`M5_Dev_D3eng/Scratch_m5_d3eng.thy` also identify this as genuine analytic
+content, not a splice/freebie.  In particular, the available
+`regular_value_on_gradU_dip` path requires `surj (DM_paper_x ...)`, while the
+D3 retained branch has `not surj (DM_paper_x ...)`.
+
+To avoid leaving an invalid unconditional theorem with `sorry`, Robust4 now
+states the missing D3 chart theorem as an explicit predicate:
+
+- `d3_detHess_arc_chart_core`
+- `d3_detHess_arc_chart_core_all`
+
+The old `d3_detHess_arc_charts_Nn` lemma is now proved from the predicate
+instead of by `sorry`.  The predicate is threaded through:
+
+- `d3_retained_arc_charts_Nn`
+- `d3_retained_arc_negligible_closed_cover`
+- `d3_retained_arc_projection_meager`
+- `m5_D34_D3_collinear`
+- `m5_D34_residual`
+- `meager_rank_deficient_stratum`
+- `Phi_bad_meager_dip`
+- `regular_config_exists`
+- `regular_feasible_point_dip`
+- `regular_feasible_witness_dip`
+- `F0_dip_nonempty`
+
+So the D3 reduction plumbing remains checked, but the analytic theorem is now an
+honest assumption at the reduction boundary rather than an Isabelle oracle.
+
+Verification:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Applied_Math_Appendix_Frontier
+```
+
+Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+`desorry` result for Robust4 now reports only:
+
+```text
+no proof found at line 391
+```
+
+That line is the remaining D4 core `branchP_indep_charts_Nn`.  The former D3
+explicit `sorry` is no longer present.
