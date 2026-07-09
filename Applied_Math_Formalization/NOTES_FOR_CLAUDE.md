@@ -276,3 +276,63 @@ Verified after the split with:
 
 Build result: `Finished Applied_Math_Appendix_Full`, then
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+## Robust4 D3 curve-cover obligation closed
+
+Codex work on 2026-07-09 closed the Robust4 finite C1 arc-cover obligation
+`d3_collinear_locus_finite_arc_cover`.
+
+New file:
+
+- `Appendix/Robust4/D3_Curve_Cover.thy`
+
+This is a polished frontier-local port of the completed
+`M5_Dev_curvecover/Scratch_m5_curvecover.thy` proof.  It deliberately does
+not import the scratch theory or the `Applied_Math_M5_curvecover` session.
+Instead it reuses the Robust3 definitions:
+
+- `analytic_arc`
+- `phase_collinear`
+- `d3_crossTheta`
+- `d3_crossA`
+- `d3_crossB`
+- `d3_finitely_arc_coverable`
+
+It introduces only the remaining local coefficient/proof infrastructure,
+notably `d3_crossG`, and proves the imported-cover endpoint
+`collinear_locus_finite_arc_cover` in the D3 namespace.
+
+`Appendix/Robust4/Nonemptiness_Robust4.thy` now imports `D3_Curve_Cover`.
+Its former sorry at `d3_collinear_locus_finite_arc_cover` is replaced by a
+small bridge:
+
+- unfold `d3_collinear_nsing_all_def`;
+- unfold `d3_collinear_d2_def` and `d3_collinear_d1_def`;
+- feed the resulting nonsingularity condition to
+  `collinear_locus_finite_arc_cover`.
+
+`ROOT` now defines the existing `Applied_Math_Morse` session from
+`M5_Dev_Morse`, then lists `D3_Curve_Cover` before `Nonemptiness_Robust4` in
+`Applied_Math_Appendix_Frontier` and adds a dependency on that session.  This
+keeps the normal `-d .` build path working while letting the port use the
+existing Morse helper theories (`Trig_SMOOTH3`, `Saddle_Cover`, `Disc_Pos`,
+`Arc_Clip`).
+
+Build command used:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Applied_Math_Appendix_Frontier
+```
+
+Build result: `BUILD_EXIT=0`.  First build after adding the port finished
+`Applied_Math_Appendix_Frontier` in `0:01:15`; after adding the main ROOT
+session definition for `Applied_Math_Morse`, the normal `-d .` command exited
+cleanly as up to date.
+
+Remaining explicit `sorry` tactics in Robust4 are now exactly:
+
+- `d3_retained_arc_charts_Nn`
+- `branchP_indep_charts_Nn`

@@ -1,5 +1,5 @@
 theory Nonemptiness_Robust4
-  imports "Applied_Math_Appendix_Full.Nonemptiness_Robust3"
+  imports D3_Curve_Cover
 begin
 
 text \<open>The D3 branch is now reduced to two explicit obligations: a finite C1-arc
@@ -101,7 +101,20 @@ lemma d3_collinear_locus_finite_arc_cover:
       phase-collinear locus and carrying the same nonsingular-level-set side
       condition as the C1 curve-cover development.  The x-fibre bookkeeping is
       discharged separately by @{thm d3_active_cover_from_angle_cover}.\<close>
-  sorry
+proof -
+  have nsing_all: "\<forall>\<omega>\<in>{\<omega> \<in> OmegaPF ctr \<delta>. d3_crossTheta \<omega>0 \<omega>s \<omega> = 0}.
+        (- d3_crossA ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * sin (\<omega>$2)
+          + d3_crossB ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) \<omega>s (\<omega>$1) * cos (\<omega>$2) \<noteq> 0)
+        \<or> ((((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + ky \<omega>s) * sin (\<omega>$1) * cos (\<omega>$2)
+          - (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kz \<omega>s + kx \<omega>s) * sin (\<omega>$1) * sin (\<omega>$2)
+          + (((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * ky \<omega>s
+             - ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * kx \<omega>s) * cos (\<omega>$1) \<noteq> 0)"
+    using nsing
+    unfolding d3_collinear_nsing_all_def d3_collinear_d2_def d3_collinear_d1_def
+    by simp
+  show ?thesis
+    by (rule collinear_locus_finite_arc_cover[OF d0 pf hsep kdiff nsing_all])
+qed
 
 lemma d3_active_collinear_finite_arc_cover:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
