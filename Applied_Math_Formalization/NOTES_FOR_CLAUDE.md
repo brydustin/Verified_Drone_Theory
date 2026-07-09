@@ -173,3 +173,32 @@ core and an active phase-collinear finite-arc cover.  `m5_D34_residual` now
 threads `hsep`/`kdiff` into D3; downstream callers already have those hypotheses.
 
 Verified with `Applied_Math_Appendix_Full` build, `BUILD_EXIT=0`.
+
+## Robust3 D3 cover factoring
+
+Codex follow-up work on 2026-07-08 factored the D3 finite-cover obligation.
+
+`d3_active_collinear_finite_arc_cover` is now proved by set algebra from a new
+pure steering-angle statement:
+
+- `d3_finitely_arc_coverable` packages a finite C1 arc cover of a subset of
+  `OmegaPF`;
+- `d3_active_cover_from_angle_cover` proves that such an angle cover induces
+  the active x-fibre cover of `V ∩ D3BadXG ...`;
+- the remaining open cover theorem is now
+  `d3_collinear_locus_finite_arc_cover`, whose statement is only about
+  `{ω ∈ OmegaPF ctr δ. phase_collinear ω0 ωs ω}`.
+
+Current Robust3 on-path sorries are therefore:
+
+- `d3_retained_arc_charts_Nn`
+- `d3_collinear_locus_finite_arc_cover`
+- `branchP_indep_charts_Nn`
+
+This aligns the Robust3 target with the existing `M5_Dev_curvecover`
+development: the next D3-cover reintegration step should graft/prove the pure
+C1 phase-collinear angle-locus cover, not the already-checked x-fibre
+bookkeeping.
+
+Verified with `Applied_Math_Appendix_Full` build, `BUILD_EXIT=0`
+(`Finished Applied_Math_Appendix_Full`, session elapsed `0:04:22`).

@@ -2428,10 +2428,52 @@ lemma D3BadXG_UN:
           = (\<Union>i\<in>I. (D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
   unfolding D3BadXG_def by blast
 
-text \<open>The D3 branch is now reduced to two explicit active-arc obligations:
-  a finite C1-arc cover of the active phase-collinear witness set, and the
-  per-arc chart bundle for the retained Case-B fibre.  The assembly below is
-  sorry-free and keeps all retained residual conjuncts.\<close>
+lemma D3BadXG_mono:
+  assumes "\<Gamma> \<subseteq> \<Gamma>'"
+  shows "(D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+          \<subseteq> D3BadXG \<omega>0 \<omega>s \<Gamma>'"
+  using assms unfolding D3BadXG_def by blast
+
+definition d3_finitely_arc_coverable :: "(real^2) set \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> bool" where
+  "d3_finitely_arc_coverable \<Gamma> ctr \<delta> \<longleftrightarrow>
+    (\<exists>(I::nat set) arc. finite I
+      \<and> \<Gamma> \<subseteq> (\<Union>i\<in>I. arc i)
+      \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>))"
+
+lemma d3_active_cover_from_angle_cover:
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes Lcov: "d3_finitely_arc_coverable \<Gamma> ctr \<delta>"
+  shows "\<exists>(I::nat set) arc. finite I
+            \<and> (V \<inter> D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+                \<subseteq> (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))
+            \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>)"
+proof -
+  obtain I :: "nat set" and arc :: "nat \<Rightarrow> (real^2) set"
+    where finI: "finite I"
+      and coverL: "\<Gamma> \<subseteq> (\<Union>i\<in>I. arc i)"
+      and arcprops: "\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>"
+    using Lcov unfolding d3_finitely_arc_coverable_def by blast
+  have coverD3: "(D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+      \<subseteq> (\<Union>i\<in>I. D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set)"
+  proof -
+    have "(D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+        \<subseteq> D3BadXG \<omega>0 \<omega>s (\<Union>i\<in>I. arc i)"
+      by (rule D3BadXG_mono[OF coverL])
+    also have "... = (\<Union>i\<in>I. D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set)"
+      by (rule D3BadXG_UN)
+    finally show ?thesis .
+  qed
+  have coverX: "(V \<inter> D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+      \<subseteq> (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
+    using coverD3 by blast
+  show ?thesis
+    using finI coverX arcprops by blast
+qed
+
+text \<open>The D3 branch is now reduced to two explicit obligations: a finite C1-arc
+  cover of the phase-collinear steering-angle locus, and the per-arc chart
+  bundle for the retained Case-B fibre.  The active x-fibre cover is checked
+  set algebra from the angle-locus cover.\<close>
 
 lemma d3_retained_arc_charts_Nn:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
@@ -2515,6 +2557,18 @@ proof -
     by (rule meager_negligible_closed_cover[OF cover]) (use clo neg in blast)+
 qed
 
+lemma d3_collinear_locus_finite_arc_cover:
+  fixes ctr :: "real^2" and \<delta> :: real
+  assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+  shows "d3_finitely_arc_coverable
+           {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
+  \<comment> \<open>GENUINE D3 curve-cover obligation, now scoped only to the steering-angle
+      phase-collinear locus.  The x-fibre bookkeeping is discharged separately
+      by @{thm d3_active_cover_from_angle_cover}.\<close>
+  sorry
+
 lemma d3_active_collinear_finite_arc_cover:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
@@ -2525,21 +2579,24 @@ lemma d3_active_collinear_finite_arc_cover:
                   :: ((real^2)^'n) set)
                 \<subseteq> (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))
             \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>)"
-  \<comment> \<open>GENUINE D3 curve-cover obligation, scoped to the active retained D3 fibre.
-      Existing curve-cover development covers the phase-collinear equation under
-      dipole separation/nontriviality hypotheses; this statement is the exact
-      witness-cover form consumed by the checked D3 assembly below.\<close>
-  sorry
+proof -
+  have Lcov: "d3_finitely_arc_coverable
+           {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
+    by (rule d3_collinear_locus_finite_arc_cover[OF d0 pf hsep kdiff])
+  show ?thesis
+    by (rule d3_active_cover_from_angle_cover[OF Lcov])
+qed
 
 
-subsection \<open>D3 --- the phase-collinear branch (one scoped sorry)\<close>
+subsection \<open>D3 --- the phase-collinear branch (checked assembly from two scoped obligations)\<close>
 
 text \<open>The phase-collinear branch of the residual.  Internally: the 3-equation /
   2-parameter excess engine produces \<open>(2N-1)\<close>-dim IFT graphs whose \<open>x\<close>-projections
   are negligible, unioned over the \<open>\<int>\<^sup>3\<close> phase-period lattice (window-finite by
-  @{thm finite_affine_int_zeros}).  No Sard.  Here we carry the resulting
-  meagerness as a single scoped \<open>sorry\<close> and feed it the abstract
-  @{thm fixed_c_nonsurj_nowhere_dense} input.\<close>
+  @{thm finite_affine_int_zeros}).  No Sard.  Here the meagerness assembly is
+  checked from the pure steering-angle cover obligation and the retained
+  per-arc chart core, feeding it the abstract @{thm fixed_c_nonsurj_nowhere_dense}
+  input.\<close>
 
 lemma m5_D34_D3_collinear:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real

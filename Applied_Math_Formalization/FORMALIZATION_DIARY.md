@@ -4079,3 +4079,30 @@ the retained Case-B residual.  Verified with:
 
 Build result: `Finished Applied_Math_Appendix_Full`, `BUILD_EXIT=0`
 (`0:04:27` elapsed reported for the session).
+
+### D3 active-cover factoring (Codex, 2026-07-08)
+
+Factored the D3 finite-cover residual in
+`Appendix/Robust3/Nonemptiness_Robust3.thy`.
+
+The theorem `d3_active_collinear_finite_arc_cover` is now proved, not sorried.
+It follows from a new pure angle-locus cover package:
+
+- `d3_finitely_arc_coverable` records a finite C1 arc cover inside `OmegaPF`;
+- `d3_active_cover_from_angle_cover` is checked set algebra from an angle cover
+  to the active retained x-fibre cover over `D3BadXG`;
+- the remaining curve-cover obligation is the narrower
+  `d3_collinear_locus_finite_arc_cover`, stated only for
+  `{ω ∈ OmegaPF ctr δ. phase_collinear ω0 ωs ω}`.
+
+The Robust3 D3 ledger is now:
+
+1. `d3_retained_arc_charts_Nn` — per-C1-arc retained D3 chart core.
+2. `d3_collinear_locus_finite_arc_cover` — pure phase-collinear angle-locus
+   finite C1 arc cover.
+3. `branchP_indep_charts_Nn` — retained D4 chart core.
+
+This removes x-fibre bookkeeping from the cover sorry and lines the open D3
+cover target up with the `M5_Dev_curvecover` theorem shape.  Verified with the
+same full appendix command; build result: `Finished Applied_Math_Appendix_Full`,
+`BUILD_EXIT=0` (`0:04:22` elapsed reported for the session).

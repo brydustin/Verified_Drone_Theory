@@ -495,3 +495,13 @@ covering splice into Robust3).
   on-path sorries are exactly the two new D3 residuals plus the existing D4
   `branchP_indep_charts_Nn`.  Verified `Applied_Math_Appendix_Full`
   `BUILD_EXIT=0`.
+
+- 2026-07-08 (Codex, D3 cover factoring): **the active D3 cover theorem is now
+  checked glue, not an open mathematical obligation**.  Added
+  `d3_finitely_arc_coverable` and proved `d3_active_cover_from_angle_cover`,
+  then changed the open cover theorem to the pure angle-locus statement
+  `d3_collinear_locus_finite_arc_cover`.  The on-path Robust3 sorries are now:
+  `d3_retained_arc_charts_Nn`, `d3_collinear_locus_finite_arc_cover`, and
+  `branchP_indep_charts_Nn`.  This is the intended shape for grafting the
+  `M5_Dev_curvecover` C1 phase-collinear cover.  Verified
+  `Applied_Math_Appendix_Full` with `BUILD_EXIT=0`.
