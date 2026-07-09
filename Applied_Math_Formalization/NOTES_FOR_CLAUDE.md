@@ -284,7 +284,7 @@ Codex work on 2026-07-09 closed the Robust4 finite C1 arc-cover obligation
 
 New file:
 
-- `Appendix/Robust4/D3_Curve_Cover.thy`
+- `Appendix/Robust4Cover/D3_Curve_Cover.thy`
 
 This is a polished frontier-local port of the completed
 `M5_Dev_curvecover/Scratch_m5_curvecover.thy` proof.  It deliberately does
@@ -302,7 +302,8 @@ It introduces only the remaining local coefficient/proof infrastructure,
 notably `d3_crossG`, and proves the imported-cover endpoint
 `collinear_locus_finite_arc_cover` in the D3 namespace.
 
-`Appendix/Robust4/Nonemptiness_Robust4.thy` now imports `D3_Curve_Cover`.
+`Appendix/Robust4/Nonemptiness_Robust4.thy` now imports
+`Applied_Math_D3_Curve_Cover.D3_Curve_Cover`.
 Its former sorry at `d3_collinear_locus_finite_arc_cover` is replaced by a
 small bridge:
 
@@ -312,11 +313,12 @@ small bridge:
   `collinear_locus_finite_arc_cover`.
 
 `ROOT` now defines the existing `Applied_Math_Morse` session from
-`M5_Dev_Morse`, then lists `D3_Curve_Cover` before `Nonemptiness_Robust4` in
-`Applied_Math_Appendix_Frontier` and adds a dependency on that session.  This
-keeps the normal `-d .` build path working while letting the port use the
-existing Morse helper theories (`Trig_SMOOTH3`, `Saddle_Cover`, `Disc_Pos`,
-`Arc_Clip`).
+`M5_Dev_Morse`, then builds the curve-cover port in its own stable
+`Applied_Math_D3_Curve_Cover` heap rooted at `Appendix/Robust4Cover`.
+`Applied_Math_Appendix_Frontier` is parented on that heap and contains only
+`Nonemptiness_Robust4`.  This keeps the active Robust4 frontier out of the heap
+while preventing jEdit from trying to parse the Morse helper imports in the live
+frontier buffer.
 
 Build command used:
 
@@ -324,13 +326,21 @@ Build command used:
 ../../Isabelle2025-2/bin/isabelle build -b -d . \
   -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
   -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
-  Applied_Math_Appendix_Frontier
+  Applied_Math_D3_Curve_Cover Applied_Math_Appendix_Frontier
 ```
 
-Build result: `BUILD_EXIT=0`.  First build after adding the port finished
-`Applied_Math_Appendix_Frontier` in `0:01:15`; after adding the main ROOT
-session definition for `Applied_Math_Morse`, the normal `-d .` command exited
-cleanly as up to date.
+Build result: `BUILD_EXIT=0`.  After the heap split,
+`Applied_Math_D3_Curve_Cover` finished in `0:01:09` and
+`Applied_Math_Appendix_Frontier` finished in `0:00:19`.
+
+For interactive Robust4 work, load the frontier against the curve-cover heap:
+
+```text
+../../Isabelle2025-2/bin/isabelle jedit -l Applied_Math_D3_Curve_Cover -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Appendix/Robust4/Nonemptiness_Robust4.thy
+```
 
 Remaining explicit `sorry` tactics in Robust4 are now exactly:
 

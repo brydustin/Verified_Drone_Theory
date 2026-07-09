@@ -1,5 +1,5 @@
 theory Nonemptiness_Robust4
-  imports D3_Curve_Cover
+  imports "Applied_Math_D3_Curve_Cover.D3_Curve_Cover"
 begin
 
 text \<open>The D3 branch is now reduced to two explicit obligations: a finite C1-arc

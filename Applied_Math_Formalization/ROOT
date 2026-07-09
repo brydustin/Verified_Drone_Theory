@@ -99,15 +99,19 @@ session Applied_Math_Morse in "M5_Dev_Morse" = "HOL-Analysis" +
     Saddle_Cover
     Disc_Pos
 
-(* Live frontier for the M5/F0 capstone.  This theory imports the stable
-   Applied_Math_Appendix_Full heap and contains the remaining D3/D4 chart
-   obligations plus the downstream F0_dip_nonempty target. *)
-session Applied_Math_Appendix_Frontier in "Appendix/Robust4" = Applied_Math_Appendix_Full +
+session Applied_Math_D3_Curve_Cover in "Appendix/Robust4Cover" = Applied_Math_Appendix_Full +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   sessions
     Applied_Math_Morse
   theories
     D3_Curve_Cover
+
+(* Live frontier for the M5/F0 capstone.  This theory imports the stable
+   D3 curve-cover heap and contains the remaining D3/D4 chart obligations plus
+   the downstream F0_dip_nonempty target. *)
+session Applied_Math_Appendix_Frontier in "Appendix/Robust4" = Applied_Math_D3_Curve_Cover +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
     Nonemptiness_Robust4
 
 (* Standalone real-analytic (C^omega) function theory + analytic IFT.  Foundational
