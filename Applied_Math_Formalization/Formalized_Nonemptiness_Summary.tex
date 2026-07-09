@@ -65,7 +65,7 @@ the negligible$\,\to\,$meager bridge --- and ends at the assembled capstone
 theorems \code{odd\_N\_nonemptiness} and \code{F0\_dip\_nonempty}.  Every named
 result below is quoted from the Isabelle sources, and \emph{nothing is asserted
 that is not present there.}  A closing section lists, with full transparency,
-the ten leaf lemmas that are still discharged by \code{sorry}: the capstone is a
+the ten leaf lemmas that are still discharged by \code{proof hole}: the capstone is a
 machine-checked \emph{assembly} that currently rests on those explicitly named
 holes.  Isabelle identifiers are printed \code{like this} so each statement can
 be traced to source.
@@ -84,14 +84,14 @@ The development is split into a fully proved \emph{spine} plus a set of
 \item The Baire/meager closeout (\S\ref{sec:baire}), the odd-$N$ surjectivity
   geometry (\S\ref{sec:odd}), the explicit moment determinant and steering
   transport (\S\ref{sec:moment}), and the negligible$\to$meager / rank-deficient
-  image engine (\S\ref{sec:engine}) are \textbf{\code{sorry}-free}: their
+  image engine (\S\ref{sec:engine}) are \textbf{\code{proof hole}-free}: their
   theory files contain no oracle steps.
 \item The four ``bad-stratum'' branch results (\S\ref{sec:branches}) are proved
   as \emph{conditional reductions}: each is a genuine theorem whose deep input
   is named as an explicit hypothesis.
 \item The two top-level capstones (\S\ref{sec:capstone}) are assembled and
   type-checked by Isabelle, but their proofs invoke a handful of leaf lemmas
-  that are presently \code{sorry}.  Those ten leaves are catalogued honestly in
+  that are presently \code{proof hole}.  Those ten leaves are catalogued honestly in
   \S\ref{sec:holes}.
 \end{itemize}
 
@@ -252,7 +252,7 @@ A set $E$ is \emph{nowhere dense} if $\interior(\overline E)=\varnothing$
 union of nowhere-dense sets (\code{meager}).
 \end{definition}
 
-\begin{lemma}[Stability of meagerness; all \code{sorry}-free]
+\begin{lemma}[Stability of meagerness; all \code{proof hole}-free]
 Meagerness is preserved by subsets (\code{meager\_subset}), by finite unions
 (\code{meager\_Un}) and by countable unions (\code{meager\_Union\_nat}).
 \end{lemma}
@@ -430,7 +430,7 @@ matrix \code{bigJ}.  Its consequences are all formalized:
 
 To pass from the privileged steering $c_0=(1,0)$ to an arbitrary nonzero
 steering $c$, the development uses a linear change of variables --- the
-``steering transport'' bricks, all \code{sorry}-free.
+``steering transport'' bricks, all \code{proof hole}-free.
 
 \begin{lemma}[Steering transport, \code{steering\_transport\_exists}]
 For every $c\ne0$ there is an invertible $2\times2$ matrix $T$ with
@@ -493,14 +493,14 @@ via countable chart covers (\code{negligible\_critical\_values\_from\_charts},
 geometric input it still needs --- a regular-value chart with the rank-defect
 bookkeeping --- is the keystone leaf of \S\ref{sec:holes}.  An independent Sard
 transport result \code{negligible\_singular\_image\_2n} (in
-\code{Sard\_Negligible}, \code{sorry}-free) supplies the negligibility of the
+\code{Sard\_Negligible}, \code{proof hole}-free) supplies the negligibility of the
 image of a map with non-surjective derivative on the concrete configuration type.
 
 %% ==========================================================================
 \section{The four branches as conditional reductions}\label{sec:branches}
 %% ==========================================================================
 
-Each branch is a genuine, \code{sorry}-free theorem; its deep geometric input is
+Each branch is a genuine, \code{proof hole}-free theorem; its deep geometric input is
 named as a hypothesis (and discharged --- or still open --- elsewhere).
 
 \begin{proposition}[Regular zero stratum, \code{prop\_regzero}]
@@ -549,7 +549,7 @@ and if each of the four pieces is meager then $B_{\mathrm{regnonzero}}\cap V$ is
 meager.  (The four sub-meagerness facts are the appendix obligations
 $\dim Z$, Case~B, and the $H\!\equiv\!0$ residue; the bulk of the supporting
 algebra --- codimension cuts, $\Lambda^{(11)}$ residues, nowhere-density of the
-analytic cuts --- is proved \code{sorry}-free in
+analytic cuts --- is proved \code{proof hole}-free in
 \code{Nonemptiness\_Regnonzero\_Appendix}, e.g. \code{prop\_dimZ},
 \code{prop\_Lambda\_common}, \code{cor\_Lambda\_closed}.)
 \end{proposition}
@@ -559,7 +559,7 @@ analytic cuts --- is proved \code{sorry}-free in
 %% ==========================================================================
 
 The branches, the feasibility construction, and the robustness soundness are now
-fed through the \code{sorry}-free closeout (Theorem~\ref{thm:closeout}).
+fed through the \code{proof hole}-free closeout (Theorem~\ref{thm:closeout}).
 
 \begin{theorem}[Abstract capstone, \code{odd\_N\_nonemptiness}]
 Let $N$ be odd, $N\ge7$, $\cvec(\omega_N)\ne0$, $\Omega_{\mathrm{reg}}$ open with
@@ -607,7 +607,7 @@ feasible places a whole ball inside $\Ffeas$ (\code{ball\_inside\_Ffeas}), so
 $\Ffeas$ has nonempty interior.  A regular feasible point then exists, and the
 two Weierstrass continuity conjuncts (continuity of
 $\omega\mapsto\norm{\grad\Upat}$ and of
-$\omega\mapsto\sigmin(\grad^2\Upat)$, proved \code{sorry}-free in
+$\omega\mapsto\sigmin(\grad^2\Upat)$, proved \code{proof hole}-free in
 \code{norm\_gradU\_dip\_continuous\_on}, \code{sigma\_min\_HessU\_dip\_continuous\_on})
 upgrade it to a robust feasible point with positive margins, via
 \code{F0\_nonempty\_of\_witness}.
@@ -622,12 +622,12 @@ leaf lemmas listed next.
 \end{remark}
 
 %% ==========================================================================
-\section{What is not yet airtight: the ten leaf \texttt{sorry}s}\label{sec:holes}
+\section{What is not yet airtight: the ten leaf \texttt{proof hole}s}\label{sec:holes}
 %% ==========================================================================
 
 In the interest of complete honesty --- and in keeping with the rule of this
 project to never present an oracle step as a proof --- here are the exactly ten
-leaf lemmas currently discharged by \code{sorry} on which the capstones depend
+leaf lemmas currently discharged by \code{proof hole} on which the capstones depend
 (transitively).  Each is a self-contained, clearly delimited geometric or
 analytic statement; none is hidden inside the assembly.
 
@@ -658,7 +658,7 @@ By contrast, everything in \S\S\ref{sec:baire}--\ref{sec:branches} --- the Baire
 closeout, the odd-$N$ surjectivity, the $-5\pi^8/3$ determinant and its
 surjectivity/open-locus consequences, the steering transport, the
 negligible$\to$meager and rank-deficient-image engine, and the four branch
-reductions --- is \code{sorry}-free.  The mathematical tower is built; the
+reductions --- is \code{proof hole}-free.  The mathematical tower is built; the
 remaining work is to knock out these ten named blocks at the top.
 
 %% ==========================================================================

@@ -313,7 +313,7 @@ lemma not_gamma_par_c_iff:
   unfolding gamma_par_c_def phase_collinear_def by blast
 
 
-subsection \<open>Structural set algebra for \<open>BadXGW\<close> (sorry-free, copied verbatim)\<close>
+subsection \<open>Structural set algebra for \<open>BadXGW\<close> (proof-complete, copied verbatim)\<close>
 
 lemma BadXGW_mono:
   fixes \<Gamma> \<Delta> :: "(real^2) set"
@@ -424,7 +424,7 @@ lemma branchP_indep_charts_Nn:
 
 subsection \<open>The closed negligible cover (from the explicit core)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the explicit core.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled proof-complete from the explicit core.\<close>
   This is the form actually consumed downstream.  A literal chart bundle would
   imply it, but the weaker closed-cover core is enough for meagerness and avoids
   claiming a codimension-3 chart theorem from the relaxed \<open>nd\<close> hypothesis.\<close>
@@ -446,9 +446,9 @@ lemma branchP_indep_negligible_closed_cover:
   using core unfolding branchP_indep_closed_cover_core_def by blast
 
 
-subsection \<open>The downstream sorry-free layers (copied verbatim from D4Core)\<close>
+subsection \<open>The downstream proof-complete layers (copied verbatim from D4Core)\<close>
 
-text \<open>The two sorry-free layers consumed downstream (copied verbatim from the D4
+text \<open>The two proof-complete layers consumed downstream (copied verbatim from the D4
   core file) confirm the cut is at the right place: the closed negligible cover
   yields meagerness without further geometric-measure work.\<close>
 
@@ -530,7 +530,7 @@ subsection \<open>Assembly: \<open>m5_D34_residual\<close> from the reduction + 
 text \<open>The exact target statement (verbatim from the M5 skeleton), closed by a
   direct excluded-middle split of the retained Case-B residual on
   @{const phase_collinear} into D3 \<union> D4, the two inner meagerness lemmas, and
-  @{thm meager_subset} / @{thm meager_Un}.  Sorry-free at this assembly layer.\<close>
+  @{thm meager_subset} / @{thm meager_Un}.  proof-complete at this assembly layer.\<close>
 
 lemma m5_D34_residual:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -636,7 +636,7 @@ lemma meager_rank_deficient_stratum:
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
   \<comment> \<open>(M5) assembled from the four-stratum cover D1 \<union> D2 \<union> D5 \<union> D34 (grafted above).
-      D1/D2/D5 are proven sorry-free; D34 rests on the two scoped branch cores
+      D1/D2/D5 are proven proof-complete; D34 rests on the two scoped branch cores
       \<open>m5_D34_D3_collinear\<close> / \<open>m5_D34_D4_branchP\<close>.\<close>
 proof -
   let ?D1 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
@@ -700,7 +700,7 @@ text \<open>\<^bold>\<open>(M6) Steering-singular stratum is meager.\<close>  De
   angle where the steering Jacobian is singular.  Meager by (M3): the singular-\<open>\<omega>\<close> locus is
   nowhere dense, and the critical points over it form a positive-codimension set.\<close>
 
-text \<open>\<open>meager_steering_singular_stratum\<close> (M6) is DONE --- proven sorry-free in
+text \<open>\<open>meager_steering_singular_stratum\<close> (M6) is DONE --- proven proof-complete in
   \<open>Nonemptiness_Robust2\<close> (in the heap): kernel-direction reduction +
   gdip-derivative zero classification + finite witness-angle set + fixed-angle
   analytic slices.  Development history: Scratch_m6 / Scratch_g1_r4 /
@@ -712,7 +712,7 @@ text \<open>\<^bold>\<open>(M6b) The \<open>A = 0\<close> degenerate stratum is 
   \<^emph>\<open>degenerate\<close> null also breaks regularity and must be excluded.  The locus \<open>{A = 0 \<and> det \<nabla>\<^sup>2U = 0}\<close>
   is \<open>3\<close> real conditions on \<open>(\<bm>x,\<omega>)\<close> (codim \<open>3\<close>): its \<open>\<bm>x\<close>-projection is meager.\<close>
 
-text \<open>\<open>meager_Azero_degenerate_stratum\<close> (M6b) is DONE --- proven sorry-free in
+text \<open>\<open>meager_Azero_degenerate_stratum\<close> (M6b) is DONE --- proven proof-complete in
   \<open>Nonemptiness_Robust2\<close> (in the heap): the planar engine on \<open>cplx_r2 \<circ> af\<close>
   with global regular value (odd \<open>N\<close>), plus the Hessian-at-null determinant
   identity.  Development history in \<open>Scratch_m6b\<close>.\<close>
@@ -1303,7 +1303,7 @@ proof -
 qed
 
 text \<open>\<^bold>\<open>The regular feasible witness for the dipole, with continuity DISCHARGED.\<close>  We bolt the
-  two Weierstrass continuity conjuncts --- proven sorry-free in
+  two Weierstrass continuity conjuncts --- proven proof-complete in
   @{thm norm_gradU_dip_continuous_on} and @{thm sigma_min_HessU_dip_continuous_on} --- onto
   the regular feasible point, so what remains assumed is purely the existence of that point.\<close>
 

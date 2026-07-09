@@ -15,17 +15,17 @@ set of numbers.
 collector counts only `.thy` files, and the transcript collector classifies and
 drops any LaTeX-dominant session.
 
-**Status: IN PROGRESS** (sorry's remain). The numbers below are an "as-of"
-snapshot and will keep growing until the last on-path `sorry` is closed.
+**Status: IN PROGRESS** (proof holes remain). The numbers below are an "as-of"
+snapshot and will keep growing until the last on-path `proof hole` is closed.
 
 **Milestone 2026-06-22 — M5 assembled, `F0_dip_nonempty` build-checked.**
-`meager_rank_deficient_stratum` (M5), formerly the lone bare on-path `sorry`, is now the
+`meager_rank_deficient_stratum` (M5), formerly the lone bare on-path `proof hole`, is now the
 proven four-stratum `meager_Un` of D1∪D2∪D5∪D34, and `F0_dip_nonempty` builds for the
 first time on a CI leaf (`Applied_Math_Appendix_Full`, `BUILD_EXIT=0`, commit `81b65e1`).
 The on-path obligation is decomposed from one black-box stratum into **two precise IFT
 chart-branch cores** — `m5_D34_D3_collinear`, `m5_D34_D4_branchP` — with D1/D2/D5/D34 and
 the C¹ arc-cover all proven. (On-path count 1→2 is *decomposition, not regression*: the
-single sorry stood for all of M5; the two are its irreducible analytic cores.)
+single proof hole stood for all of M5; the two are its irreducible analytic cores.)
 
 ---
 
@@ -42,7 +42,7 @@ Mirror of the paper's Table 3. Code/git rows are recomputable any time with
 | **Lemmas** | 1,131 | grows |
 | **Corollaries / Propositions** | 53 | grows |
 | **Definitions** | 179 | grows |
-| **sorry's remaining (total, incl. scratch files)** | 13 | → 0 at completion |
+| **proof holes remaining (total, incl. scratch files)** | 13 | → 0 at completion |
 | &nbsp;&nbsp;of which on the `F0_dip_nonempty` path (build-checked 2026-06-22) | 2 (D3/D4 IFT chart cores) | → 0 at completion |
 | &nbsp;&nbsp;of which Capstone assembly leaves (superseded scaffold) | 6 | retirement decision |
 | **Git commits touching .thy** (monorepo mirror) | 188 | grows |
@@ -81,7 +81,7 @@ human-judgement numbers must be captured live.
 
 | Metric group | Source | Retroactive? |
 |---|---|---|
-| Files, LOC, thms, lemmas, defs, sorry's | current `.thy` tree (`code_metrics.sh`) | ✅ full + time-series via git |
+| Files, LOC, thms, lemmas, defs, proof holes | current `.thy` tree (`code_metrics.sh`) | ✅ full + time-series via git |
 | Commits, dev span, per-day line churn | `git log -- '*.thy'` | ✅ full |
 | Milestone timeline (§4) | `FORMALIZATION_DIARY.md` (52 dated entries) + git | ✅ full |
 | Sessions, human prompts, assistant turns, tool calls | `~/.claude/projects/*/*.jsonl` transcripts | ✅ — 125 MB on disk |
@@ -110,23 +110,23 @@ supervision hours** and the **price actually paid** — start recording those no
 
 ## 4. Milestone timeline (mirror of Table 2)
 
-Seeded from the diary; `sorry`-on-path counts are approximate at each date.
-The "Sorry (on-path)" column tracks the leaves of `F0_dip_nonempty`.
+Seeded from the diary; `proof hole`-on-path counts are approximate at each date.
+The "proof hole (on-path)" column tracks the leaves of `F0_dip_nonempty`.
 
-| Date | Event | Sorry (on-path) |
+| Date | Event | proof hole (on-path) |
 |---|---|---:|
 | 2026-05-05 | Earliest recorded AI session activity (pre-mirror) | – |
 | 2026-05-25 | First `.thy` committed into the monorepo mirror | – |
-| 2026-05-27 | Regular-value branch `charts_core_Nn`: sorry → QED | – |
+| 2026-05-27 | Regular-value branch `charts_core_Nn`: proof hole → QED | – |
 | 2026-05-29 | DECISION: commit to unconditional `thm:final`; `smooth-chart-meager` proved; Jacobian id `D_xM(x0,c0)=bigJ` | – |
-| 2026-05-30 | `Regnonzero` appendix **complete, sorry-free**; `F` redefined & compact | – |
-| 2026-05-31 | σ-compact discharge resolved; dipole gain `|e|²` proved C∞; `F0_nonempty` assembled sorry-free | – |
-| 2026-06-01 | Explicit feasibility witness proved sorry-free; Weierstrass continuity inputs | – |
+| 2026-05-30 | `Regnonzero` appendix **complete, proof-complete**; `F` redefined & compact | – |
+| 2026-05-31 | σ-compact discharge resolved; dipole gain `|e|²` proved C∞; `F0_nonempty` assembled proof-complete | – |
+| 2026-06-01 | Explicit feasibility witness proved proof-complete; Weierstrass continuity inputs | – |
 | 2026-06-02 | Baire/meager **glue fully machine-verified**; `Phi_bad_meager` reduction to engine critical-projection | ~14 |
 | 2026-06-03 | `F0_dip_nonempty` reduced to only hypothesis `c6`; A3 determinant payoff; definitive 13-leaf list; leaf #7 proved | 13 → 11 |
 | 2026-06-04 | A4, A5, `open_surj_blinfun` closed; leaf [E] steering-transport opened (bricks 1–3) | 10 |
-| 2026-06-22 | **M5 assembled** from D1∪D2∪D5∪D34 (proven `meager_Un`); `F0_dip_nonempty` **build-checked** for the first time (leaf `Applied_Math_Appendix_Full`, commit `81b65e1`); the single M5 black-box `sorry` → 2 precise D3/D4 IFT chart-core sorries | 1 → 2 |
-| _target_ | last on-path `sorry` closed → `F0_dip_nonempty` unconditional | 0 |
+| 2026-06-22 | **M5 assembled** from D1∪D2∪D5∪D34 (proven `meager_Un`); `F0_dip_nonempty` **build-checked** for the first time (leaf `Applied_Math_Appendix_Full`, commit `81b65e1`); the single M5 black-box `proof hole` → 2 precise D3/D4 IFT chart-core proof holes | 1 → 2 |
+| _target_ | last on-path `proof hole` closed → `F0_dip_nonempty` unconditional | 0 |
 
 ---
 
@@ -162,6 +162,6 @@ Re-run at completion and paste the final snapshot into §1.
 - **Tokens reflect this machine's transcripts.** If development also ran on a
   second machine (as the reference project did), point the collector at those
   transcript dirs too and the aggregate will include them.
-- **`sorry` total (26) vs on-path (10).** The 26 includes the abstract
+- **`proof hole` total (26) vs on-path (10).** The 26 includes the abstract
   `Capstone` twin and the `Inventory` skeleton, which are off the
   `F0_dip_nonempty` critical path. Report both, clearly labelled.

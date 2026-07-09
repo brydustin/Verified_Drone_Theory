@@ -527,7 +527,7 @@ proof -
 
   text \<open>Step 3: the bijection between block-preserving 12-perms and
     pairs of 6-perms, and sign multiplicativity. These remaining algebraic
-    steps are left as helper sorries; combined they close the determinant.\<close>
+    steps are left as helper proof holes; combined they close the determinant.\<close>
 
   have sign_lift: "sign (lift pT pB) = sign pT * sign pB"
     if pT_perm: "pT permutes (UNIV::6 set)"

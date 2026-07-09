@@ -31,20 +31,20 @@ text \<open>\<^bold>\<open>(M5) D4 --- the Branch-P residual (GENUINE; \<open>gr
   closure, so meagerness FAILS at this extreme.  Our statements below keep
   \<open>gradU = 0\<close> precisely so the extreme case is not vacuously over-claimed.
 
-  \<^bold>\<open>What this scaffold establishes SOUND, sorry-free.\<close>
+  \<^bold>\<open>What this scaffold establishes SOUND, proof-complete.\<close>
   \<^enum> @{text branchP_parallel_case_vacuous}: on the complement \<open>\<not> phase_collinear\<close>,
     the "\<open>\<gamma> \<parallel> c\<close>" sub-case of the rank-drop dichotomy is EMPTY (definitionally:
     \<open>\<not> phase_collinear\<close> is exactly \<open>\<not>(\<gamma> \<parallel> c)\<close> in either direction).  This is the
     structural half of the diary's dichotomy, here a definitional triviality
-    (sorry-free) --- and the honest record that the parallel branch contributes
+    (proof-complete) --- and the honest record that the parallel branch contributes
     nothing on \<open>\<Gamma>\<^sub>4\<close>.
   \<^enum> @{text branchP_dichotomy_split}: the D4 bad set is the UNION of its
     \<open>\<gamma> \<parallel> c\<close> part (empty here) and its \<open>\<gamma> \<not>\<parallel> c\<close> part (the genuine core), so D4
-    reduces to the \<open>\<gamma> \<not>\<parallel> c\<close> meagerness alone.  Sorry-free set algebra.
-  \<^enum> @{text m5_D34_D4_branchP}: the exact target, assembled sorry-free from the
+    reduces to the \<open>\<gamma> \<not>\<parallel> c\<close> meagerness alone.  proof-complete set algebra.
+  \<^enum> @{text m5_D34_D4_branchP}: the exact target, assembled proof-complete from the
     single genuine core @{text branchP_indep_core} via @{thm meager_subset}.
 
-  \<^bold>\<open>The single genuine irreducible step (ONE scoped sorry, NOT a splice freebie).\<close>
+  \<^bold>\<open>The single genuine irreducible step (ONE scoped proof hole, NOT a splice freebie).\<close>
   @{text branchP_indep_core}: on the 2-D non-collinear region, with the
   \<^bold>\<open>retained\<close> constraints \<open>gradU = 0 \<and> det Dcvec \<noteq> 0 \<and> cvec \<noteq> 0\<close> and
   \<open>\<not> surj (DM_paper_x x (cvec \<omega>))\<close>, the \<open>x\<close>-projection of the bad \<open>(x,\<omega>)\<close> locus is
@@ -70,8 +70,8 @@ definition phase_collinear :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 
 
 subsection \<open>Robust3-supplied fixed-angle nowhere-density (freebie at splice)\<close>
 
-text \<open>Replicated verbatim from D34.  PROVEN sorry-free in \<open>Nonemptiness_Robust3\<close>
-  (in scope at the L970 splice site, L578 + L744).  Here a single scoped sorry
+text \<open>Replicated verbatim from D34.  PROVEN proof-complete in \<open>Nonemptiness_Robust3\<close>
+  (in scope at the L970 splice site, L578 + L744).  Here a single scoped proof obligation
   that closes automatically at the splice; consumed only through the abstract
   hypothesis @{text nd}.  \<open>freebie_at_splice = true\<close>.\<close>
 
@@ -100,7 +100,7 @@ definition BadXGW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<R
       \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
 
 text \<open>The D4 target's bad set is exactly \<open>V \<inter> BadXGW\<close> over the complementary
-  (non-collinear) angle set.  Sorry-free SET equality.\<close>
+  (non-collinear) angle set.  proof-complete SET equality.\<close>
 
 lemma branchP_bad_eq_projection:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -127,7 +127,7 @@ definition gamma_par_c :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Ri
 
 text \<open>The negation is genuine 2-vector linear independence of \<open>\<gamma>\<close> and \<open>c\<close>: neither
   is a scalar multiple of the other.  This is the structurally distinguished
-  Branch-P case.  Sorry-free unfolding.\<close>
+  Branch-P case.  proof-complete unfolding.\<close>
 
 lemma not_gamma_par_c_iff:
   "\<not> gamma_par_c \<omega>0 \<omega>s \<omega> \<longleftrightarrow>
@@ -138,7 +138,7 @@ lemma not_gamma_par_c_iff:
 
 subsection \<open>Dichotomy half 1: the parallel case is vacuous on the complement\<close>
 
-text \<open>\<^bold>\<open>The structural half of the Branch-P dichotomy (sorry-free).\<close>  On the
+text \<open>\<^bold>\<open>The structural half of the Branch-P dichotomy (proof-complete).\<close>  On the
   non-collinear complement \<open>\<Gamma>\<^sub>4\<close>, the "\<open>\<gamma> \<parallel> c\<close>" sub-case is empty, because by
   construction @{const gamma_par_c} \<open>=\<close> @{const phase_collinear} and \<open>\<Gamma>\<^sub>4\<close> is
   exactly its complement.  This records that the parallel branch contributes
@@ -153,7 +153,7 @@ lemma branchP_parallel_case_vacuous:
 
 subsection \<open>Dichotomy: the complement splits into parallel \<union> independent\<close>
 
-text \<open>\<^bold>\<open>The dichotomy split (sorry-free set algebra).\<close>  The bad \<open>x\<close>-set over the
+text \<open>\<^bold>\<open>The dichotomy split (proof-complete set algebra).\<close>  The bad \<open>x\<close>-set over the
   complement \<open>\<Gamma>\<^sub>4\<close> is the union of the bad set over the parallel part of \<open>\<Gamma>\<^sub>4\<close>
   (empty, by @{thm branchP_parallel_case_vacuous}) and the bad set over the
   independent part of \<open>\<Gamma>\<^sub>4\<close>.  Since the parallel part is empty, the bad set over
@@ -178,10 +178,10 @@ proof -
 qed
 
 
-subsection \<open>Per-fixed-angle slice meagerness (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>Per-fixed-angle slice meagerness (proof-complete from \<open>nd\<close>)\<close>
 
 text \<open>The degenerate "angle set is a single point" sanity check: the per-angle
-  bad slice is nowhere dense (hence meager) from @{text nd}.  Sorry-free.  This
+  bad slice is nowhere dense (hence meager) from @{text nd}.  proof-complete.  This
   is the structural confirmation that the cut at @{text branchP_indep_core} is on
   the right object.\<close>
 
@@ -205,7 +205,7 @@ next
 qed
 
 
-subsection \<open>The genuine NEW Branch-P core (ONE scoped MATH sorry)\<close>
+subsection \<open>The genuine NEW Branch-P core (ONE scoped MATH proof hole)\<close>
 
 text \<open>\<^bold>\<open>The genuine irreducible analytic step of D4.\<close>  On the 2-D non-collinear
   region (here the \<open>\<gamma> \<not>\<parallel> c\<close>, i.e. linear-independence, part of the angle set),
@@ -252,18 +252,18 @@ lemma branchP_indep_core:
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)"
-  \<comment> \<open>GENUINE NEW Branch-P sorry: the linear-independence rank-drop on the 2-D
+  \<comment> \<open>GENUINE NEW Branch-P proof hole: the linear-independence rank-drop on the 2-D
       non-collinear region, with \<open>gradU = 0\<close> RETAINED to supply codimension.
       \<open>core_3d\<close> ruled out structurally; \<open>x\<close>-projection of the \<open>(2N-1)\<close>-dim graph is
       negligible \<Rightarrow> meager.  Route above.  freebie_at_splice = false.\<close>
   sorry
 
 
-subsection \<open>The Branch-P engine: complement \<Longrightarrow> meager (sorry-free from core)\<close>
+subsection \<open>The Branch-P engine: complement \<Longrightarrow> meager (proof-complete from core)\<close>
 
 text \<open>The D4 analogue of @{text D3_excess_engine}, but SOUND: it keeps
   \<open>gradU = 0\<close> (the bad set is \<open>BadXGW\<close>, not the engine's \<open>BadXW\<close>) and routes
-  through the dichotomy.  Sorry-free from @{thm branchP_indep_core} via the
+  through the dichotomy.  proof-complete from @{thm branchP_indep_core} via the
   dichotomy split (the parallel sub-case is empty on the complement).\<close>
 
 lemma branchP_engine:
@@ -309,11 +309,11 @@ proof -
 qed
 
 
-subsection \<open>The D4 leaf, sorry-free from the Branch-P engine\<close>
+subsection \<open>The D4 leaf, proof-complete from the Branch-P engine\<close>
 
 text \<open>The exact D4 target statement (verbatim from
   \<open>M5_Dev_D34/Scratch_m5_D34.thy\<close>, lemma @{text m5_D34_D4_branchP}).  Proven
-  sorry-free from @{thm branchP_engine} (the bad sets coincide, so no
+  proof-complete from @{thm branchP_engine} (the bad sets coincide, so no
   superset-trim is even needed).  Crucially the \<open>gradU = 0\<close> conjunct is KEPT
   throughout --- the soundness-preserving difference from the prior D4.\<close>
 

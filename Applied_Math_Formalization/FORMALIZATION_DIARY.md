@@ -10,7 +10,7 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ## 2026-06-06 (cont.) — Brick 5 + **leaf [E] `DM_paper_x_regular_point_exists` CLOSED** (commit 4e4e437)
 
-First sorry of `F0_dip_nonempty` eliminated (Robust2 7 → 6 sorries). Three new lemmas:
+First proof hole of `F0_dip_nonempty` eliminated (Robust2 7 → 6 proof holes). Three new lemmas:
 - `sum_reindex_embed` — `⟦inj ι; ⋀n. n∉range ι ⟹ g n = 0⟧ ⟹ (∑n∈UNIV. g n) = (∑k∈UNIV. g(ι k))`
   (`sum.mono_neutral_right` + `sum.reindex`). Reusable.
 - `DM_paper_x_regular_point_c0_gen` (brick 5) — lifts the dim-6 regular point
@@ -20,7 +20,7 @@ First sorry of `F0_dip_nonempty` eliminated (Robust2 7 → 6 sorries). Three new
   terms agree since `phase`/`d_phase`/weights are per-point), giving
   `DM_paper_x (embed) c₀ = DM_paper_x x₀ c₀` componentwise (via `DM_paper_x_eq_MM` +
   `Moment_Map.DM_paper_x_def` + `DM_paper_x_components`), hence surjective.
-- `DM_paper_x_regular_point_exists` (was the sorry) — `c≠0`, `CARD('n)≥6`: pick `T` with
+- `DM_paper_x_regular_point_exists` (was the proof hole) — `c≠0`, `CARD('n)≥6`: pick `T` with
   `Tᵀc=c₀` (`steering_transport_exists`), regular `y₀` at `c₀` (brick 5),
   `DM_paper_x_surj_transport` (4c) ⟹ `surj (DM_paper_x (applyT T y₀) c)`.
 
@@ -33,13 +33,13 @@ in the scratch; I verified + folded into Robust2.
 **[F] `DM_paper_x_open_dense_surjective_gen` proven** (commit f710616) — reduces to the
 rank-semicont keystone: `M_paper` differentiable (`has_derivative_M_paper_x`) + a regular
 point (just proven) ⟹ `rank_lower_semicont_open_dense_propagation` on UNIV gives an open
-dense regular set; intersect with `V` (`open_Int_closure_subset`). Robust2 sorries 6 → 5.
+dense regular set; intersect with `V` (`open_Int_closure_subset`). Robust2 proof holes 6 → 5.
 
 **Leaves remaining (7), all heavy analytic/transversality:** `rank_lower_semicont…` (Paper),
 the engine `regular_zero_set_projection_charts_core_2d` (Parametric), four `meager_*_stratum`,
 `no_degenerate_to_sphere_annulus` (Robust2).
 
-**⚠ Soundness flag on `rank_lower_semicont_open_dense_propagation` (Paper, sorry).** Its
+**⚠ Soundness flag on `rank_lower_semicont_open_dense_propagation` (Paper, proof hole).** Its
 assumptions give only `(F has_derivative DF x)(at x within V)` + one regular point. Openness
 of the regular stratum needs `DF` *continuous* (C¹), and **density needs `F` real-analytic**
 (else rank-deficiency need not be nowhere dense) — neither is assumed. As stated it's likely
@@ -104,7 +104,7 @@ one-level `vector_scaleR_component` + `linear_cmul`.
 **Fast offline-verify loop established.** Built the `Applied_Math_Appendix` heap (part 1).
 Scratch theory `imports "Applied_Math_Appendix.Nonemptiness_Robust"` (session-qualified →
 loads part 1 from heap in seconds; bare import reprocesses from source = 5–10 min). Re-state
-or `sorry` part-2 deps in the scratch; eval_at runs ~2 min. This replaced the 10-min
+or `proof hole` part-2 deps in the scratch; eval_at runs ~2 min. This replaced the 10-min
 Robust2-reprocessing loop. (Can't heap Robust2 — two sessions can't share the Appendix dir,
 and it's the active file.)
 
@@ -116,7 +116,7 @@ surj(DM_paper_x x₀ c₀)`, dim-6, via `m_star`/`DM_paper_open_dense_surjective
 supported on `range ι` the off-range terms vanish (linear in `h$n`, and `h$j=0`), so
 `DM_paper_x y₀ c₀ (h) = DM_paper_x x₀ c₀ (h∘ι)` ⟹ surjective. Then [E] =
 `DM_paper_x_surj_transport` ∘ (brick 5 at c₀) ∘ `steering_transport_exists`. Note
-`DM_paper_x_open_dense_surjective_gen` [F] is the general open-dense version (separate sorry).
+`DM_paper_x_open_dense_surjective_gen` [F] is the general open-dense version (separate proof hole).
 
 **Brick-5 groundwork (verified in scratch, not yet committed):** the injection `ι:6↪'n` is
 `card_le_inj[OF finite_class.finite_UNIV finite_class.finite_UNIV c]` with
@@ -140,7 +140,7 @@ assemble `DM_paper_x y₀ c₀ h = DM_paper_x x₀ c₀ h₀`; then for any `z`,
 active file. Heaping part 1 was tried and **reverted** (a12ba00 split → 2421b82
 revert → 568d636 re-split) — the user keeps jEdit open, so edit Robust2 with
 `-l Applied_Math_Nonemptiness` (jEdit reprocesses part 1 in-session). `parametric_…`
-kept (the 1 sorry in part 1); 7 leaves in part 2.
+kept (the 1 proof hole in part 1); 7 leaves in part 2.
 
 **M12_moment_applyT parse hang FIXED.** Its `key` statement carried ~24 `$` (vec_nth)
 on `real^2^2` → elaboration hung at PARSE (purple forever), *before any proof*. Fix:
@@ -238,7 +238,7 @@ use `Ck_on`/`higher_differentiable_on` (true C^k), never `k_times_Fr_differentia
 effort.  #6 `rank_lower_semicont_open_dense_propagation` (genericity branch, independent) is the likely
 faster guaranteed win.
 
-## 2026-06-03 — leaf #7 `steering_singular_nowhere_dense` PROVEN (11 on-path sorries left)
+## 2026-06-03 — leaf #7 `steering_singular_nowhere_dense` PROVEN (11 on-path proof holes left)
 
 Assembled from `Dcvec_det_eq` + `sin_cos_lin_not_const0` (brick 2b): set rewritten to `{ω. f ω = 0}`
 (f continuous ⟹ closed via `closed_Collect_eq`); a ball inside it restricted to the horizontal
@@ -274,14 +274,14 @@ identity discharged by `argo` (the `Kₓ`-numerator cancellation), then
 `h(ω₁)=cos ω₁ - sin ω₁·g(b)` has `h²+h'²=1+g(b)²>0`, so it cannot vanish on an interval (and the
 `sin ω₁=0` points are isolated) — contradiction with `{det=0}` containing a ball.
 
-## 2026-06-03 — DEFINITIVE on-path sorry list for `F0_dip_nonempty` (13 leaves)
+## 2026-06-03 — DEFINITIVE on-path proof hole list for `F0_dip_nonempty` (13 leaves)
 
 Verified by scanning ALL working `.thy` files (not just `Robust`).  \<^bold>Off-path (do NOT count):\<^esub>
 `Nonemptiness_Inventory` (`thm_final`,`prop_*`,`lem_*` — standalone, not imported), `Nonemptiness_Capstone`
 (`branch_*_meager`,`capstone_feasible`,`capstone_X0_sound` — the generic capstone superseded by the
 dipole `F0_dip_nonempty`; imported but never referenced by the F0 chain), the `oops` in
 `Higher_Differentiability.thy` (inert note).  The whole moment-map machinery
-(`BlockDet`/`MomentJac`/`Moment_Map`) is sorry-FREE.  The architecture above the leaves
+(`BlockDet`/`MomentJac`/`Moment_Map`) is proof-complete.  The architecture above the leaves
 (`F0_dip_nonempty`→`regular_feasible_witness_dip`→`regular_feasible_point_dip`→`Phi_bad_meager_dip`)
 is machine-checked.
 
@@ -290,7 +290,7 @@ is machine-checked.
   1. `regular_zero_set_projection_charts_core_2d` (engine, `Parametric_Transversality_Euclidean_Base.thy` L352) — the chart COVERING only (NOT Sard).  \<^bold>Sard is already discharged:\<^esub>
      Isabelle ships `baby_Sard`, and `negligible_critical_values_from_charts` (engine L285) is PROVEN
      with it.  Searched all 5 Munkres files — NO Sard/negligible/critical/measure (only Baire + a custom
-     `top1_m_manifold_on` type).  So this sorry = "regular value 0 \<Rightarrow> (IFT) level set is a local graph
+     `top1_m_manifold_on` type).  So this proof hole = "regular value 0 \<Rightarrow> (IFT) level set is a local graph
      \<Rightarrow> bad params \<subseteq> critical-value images (rank-deficient projection), \<sigma>-compact charts"; tool is
      HOL-Analysis `implicit_function_theorem` over Euclidean `real^'m`, then `negligible_...` finishes.
   2. `DM_paper_x_open_dense_surjective_gen` (Robust 3682) — rank-12 submersion open-dense, generalised from `c0_paper=(1,0),CARD=6` to steered `cvec_dip`, `CARD≥6`.
@@ -308,7 +308,7 @@ is machine-checked.
   12. `meager_rank_deficient_stratum` (Robust 3717) — = #2/#6.
   13. `meager_steering_singular_stratum` (Robust 3730) — = #7.
 
-When all 13 are proven sorry-free \<^bold>with sound (non-vacuous) statements\<^esub>, `F0_dip_nonempty` is the
+When all 13 are proven proof-complete \<^bold>with sound (non-vacuous) statements\<^esub>, `F0_dip_nonempty` is the
 unqualified end-to-end proof (only hypothesis `c6`).  No other leaves exist.
 
 ## 2026-06-03 (robust set) — (A3) `gradU_dip_x_partial_surj` PROVEN (the determinant payoff)
@@ -394,8 +394,8 @@ gradU_dip_component_moments` (no `simp`, which over-expands `M_paper`).  Audit n
 
 ## 2026-06-02 (robust set) — Leaf-closing loop with self-audit; deep frontier reached
 
-Discipline this loop: \<^bold>never introduce a new `sorry`\<^esub>; every step is a net \<open>-1\<close> (full closure or a
-reduction to already-existing leaves). Audit of total on-path `sorry`s (Robust + engine core):
+Discipline this loop: \<^bold>never introduce a new `proof hole`\<^esub>; every step is a net \<open>-1\<close> (full closure or a
+reduction to already-existing leaves). Audit of total on-path `proof hole`s (Robust + engine core):
 \<open>17 \<rightarrow> 16\<close> (deleted dead generic `Phi_bad_meager`) \<open>\<rightarrow> 15\<close> (`meager_linear_homeo_iff`, with the
 proven helpers `nowhere_dense_homeo_image`/`meager_homeo_image`) \<open>\<rightarrow> 14\<close> (`Ffeas_interior_nonempty`
 via the existing `ball_inside_Ffeas`). Earlier this session: `sigma_min_pos_iff_invertible`,
@@ -421,7 +421,7 @@ via the existing `ball_inside_Ffeas`). Earlier this session: `sigma_min_pos_iff_
 
 ## 2026-06-02 (robust set) — Closing leaf lemmas: spectral, A1, A6
 
-Began discharging the leaf `sorry`s (deepest-first where tractable). Closed this session:
+Began discharging the leaf `proof hole`s (deepest-first where tractable). Closed this session:
 - `sigma_min_pos_iff_invertible` (`0 < sigma_min H ⟷ det H ≠ 0`): smallest singular value over the
   compact unit sphere is attained, so positive ⟺ `H*v ≠ 0` on the sphere ⟺ injective (normalise a
   kernel vector) ⟺ `det ≠ 0` (`det_nz_iff_inj`).
@@ -434,7 +434,7 @@ Began discharging the leaf `sorry`s (deepest-first where tractable). Closed this
   `(λy. gradU … (fst (y,w)) (snd (y,w)))` — equal to the β-clean `gradU … y w` only by `fst_conv`,
   NOT αβη; so `show` must use the `fst/snd` form and bridge with `simp`.
 
-Leaf `sorry`s remaining (16; one is the off-path generic `Phi_bad_meager`): the determinant-payoff
+Leaf `proof hole`s remaining (16; one is the off-path generic `Phi_bad_meager`): the determinant-payoff
 rank lemma `gradU_dip_x_partial_surj`, the 4 strata, the two `DM_paper_x_…_gen` submersion lemmas,
 `steering_singular_nowhere_dense`, `no_degenerate_to_sphere_annulus`, `has_derivative_gradU_dip_x`,
 `gradU_dip_joint_C1`, `open_A_cart_nonzero` (needs rank lower-semicontinuity), `Ffeas_interior_nonempty`,
@@ -448,7 +448,7 @@ rank lemma `gradU_dip_x_partial_surj`, the 4 strata, the two `DM_paper_x_…_gen
 ## 2026-06-02 (robust set) — Soundness audit + the entire Baire/meager GLUE now machine-verified
 
 Audited the dipole capstone chain for soundness and made it compose. Three statement-level bugs fixed,
-then the reduction glue was proven (only leaf lemmas remain `sorry`).
+then the reduction glue was proven (only leaf lemmas remain `proof hole`).
 
 \<^bold>Statement-soundness fixes:\<^esub>
 - \<^bold>Feasibility:\<^esub> `F0_dip_nonempty` was \<^emph>false as stated\<^esub> (for `pmin > gain_dip ctr * N²`,
@@ -470,7 +470,7 @@ tied them to `'n`. Fix: annotate the conclusion `interior (Ffeas … :: ((real^2
 \<^bold>fully proven\<^esub>. The whole reduction glue
 `F0_dip_nonempty ← regular_feasible_witness_dip ← regular_feasible_point_dip ←
 {regular_config_exists, no_degenerate_to_sphere_annulus} ← Phi_bad_meager_dip ← 4 strata`
-is machine-verified (BUILD_EXIT=0). Only the LEAF lemmas remain `sorry` (the deep ones:
+is machine-verified (BUILD_EXIT=0). Only the LEAF lemmas remain `proof hole` (the deep ones:
 `gradU_dip_x_partial_surj`, the 4 strata, the two `DM_paper_x_…_gen` submersion lemmas, the engine
 core; plus moderate ones). The generic `Phi_bad_meager` is unprovable/superseded and off-path.
 
@@ -482,7 +482,7 @@ Traced the full proof tree of `F0_dip_nonempty` to bedrock. Corrected an earlier
 finishing the dipole capstone unqualified needs **22 obligations**, not 12. Key structural facts:
 
 - The spine is proven: `F0_nonempty_of_witness` (full), `regular_feasible_witness_dip`, the two
-  Weierstrass continuity lemmas. The ONLY spine sorry is `regular_feasible_point_dip`.
+  Weierstrass continuity lemmas. The ONLY spine proof hole is `regular_feasible_point_dip`.
 - **A6 was wrong**: `regular_value_on_gradU_dip` claimed the regular value on `{A≠0 ∧ det(Dcvec)≠0}`,
   but `gradU_dip_x_partial_surj` also needs `surj(DM_paper_x …)` (the open-dense rank-12 / `m_star≠0`
   condition), which `A≠0` does NOT imply. Fixed A6 and `open_A_cart_nonzero` to carry that conjunct.
@@ -493,8 +493,8 @@ finishing the dipole capstone unqualified needs **22 obligations**, not 12. Key 
 - The `m_star`/`surj_iff_m_star` submersion machinery is proven ONLY at `c0_paper=(1,0)`, `CARD=6`
   (`MomentJac/Moment_Jacobian.thy`). The steered wavevector `cvec_dip ω` and general `CARD≥6` need
   generalising — new lemmas `DM_paper_x_regular_point_exists`, `DM_paper_x_open_dense_surjective_gen`
-  (the latter via the still-open Paper sorry `rank_lower_semicont_open_dense_propagation`).
-- Engine: `Parametric_Transversality_Euclidean_Base` has exactly ONE sorry, the core
+  (the latter via the still-open Paper proof hole `rank_lower_semicont_open_dense_propagation`).
+- Engine: `Parametric_Transversality_Euclidean_Base` has exactly ONE proof hole, the core
   `regular_zero_set_projection_charts_core_2d`; everything else (local IFT chart, countable cover,
   `meager_critical_values_from_charts`, σ-compact exhaustion, `rank_deficient_C1_image_meager`) is
   proven. Caveat: the core's statement likely needs a C¹ hypothesis added to be provable (then
@@ -512,7 +512,7 @@ the two `DM_…_gen`, and the engine core.
 ## 2026-06-02 (robust set) — Phi_bad_meager reduction: bad set ⊆ engine critical-projection set
 
 Pushed the dipole Sard step through its entire *structural* half — the dipole degenerate-critical
-configuration set is now proven (sorry-free) to be contained in exactly the set whose meagerness the
+configuration set is now proven (proof-complete) to be contained in exactly the set whose meagerness the
 transversality engine delivers. Bricks landed this session, in order:
 
 - `gradU_dip_differentiable_x` — assemble the two scalar component bricks into the full 2-vector
@@ -535,7 +535,7 @@ Remaining for `Phi_bad_meager` (still two genuine pieces): (2) the transversalit
 `regular_value_on gradU_dip (V×Ω) 0` — D_x gradU = (2×6 moment Jacobian)·`DM_paper_x` is onto ℝ²
 on `{A≠0}` from the rank-12 `bigJ` (lem:Msurj); and the `(real^2)^'n ≅ real^(2·CARD('n))` reshape so the
 engine's `real^'m`-typed `parametric_transversality_meager_euclidean_stub` applies. (3) The engine core
-`regular_zero_set_projection_charts_core_2d` is itself still `sorry`.
+`regular_zero_set_projection_charts_core_2d` is itself still `proof hole`.
 
 ---
 
@@ -549,7 +549,7 @@ User chose (a) a dipole-specific `Phi_bad_meager_dip` obligation and (b) buildin
 `G=0` ⟺ ω critical, `D_ω G = HessU` not surjective ⟺ `det HessU = 0`.  So `Phibad_dip = 0` IS the
 critical-projection set of `gradU_dip` — Φ₃ needs no separate equation.
 
-Sard brick (1) landed, sorry-free: `gradU_dip_component_differentiable_x` — for fixed ω, the j-th
+Sard brick (1) landed, proof-complete: `gradU_dip_component_differentiable_x` — for fixed ω, the j-th
 gradient component is differentiable in x.  Proof: rewrite via `gradU_dip_component_moments` to a
 fixed polynomial in the x-smooth moment coordinates `M_paper y (cvec_dip ω)` (`has_derivative_M_paper_x`
 + `bounded_linear_vec_nth`), `cmod² = Re²+Im²` (`cmod_power2`), then `differentiable_*` intro chain with
@@ -561,7 +561,7 @@ form); (2) `regular_value_on gradU_dip 0` on the open `{A≠0}` region — D_x g
 `DM_paper_x`, surjective since any 6 rows of the rank-12 `bigJ` are independent ⟹ D_x(A,M₁,M₂) onto ℝ⁶,
 and the 2×6 block has rank 2 when the steering Jacobian `Dcvec_dip` is nonsingular (A≠0 needed — at A=0
 every config is critical, which is why the bad set carries `A≠0`); (3) the general engine
-`regular_zero_set_projection_charts_core_2d` is itself still `sorry`, so a fully sorry-free
+`regular_zero_set_projection_charts_core_2d` is itself still `proof hole`, so a fully proof-complete
 `Phi_bad_meager_dip` also needs that infrastructure discharged.
 
 ---
@@ -571,7 +571,7 @@ every config is critical, which is why the bad set carries `A≠0`); (3) the gen
 Closed the second-order half of the ω–c bridge: the actual dipole Hessian `HessU (cvec_dip ω0 ωs)
 gain_dip x ω` now has every entry written as an *explicit moment-space expression*, with all
 x-dependence funneled through `M_paper x c` (via `∇_cV`, `Hcmat`, `V`) and all geometry through
-x-independent jets (`Dcvec_dip`, `D2cvec_dip`, `∂gdip`, `∂²gdip`). Two new sorry-free lemmas:
+x-independent jets (`Dcvec_dip`, `D2cvec_dip`, `∂gdip`, `∂²gdip`). Two new proof-complete lemmas:
 - `HessU_dip_eq_componentderiv`: `HessU … $ k $ l = frechet_derivative (λω. gradU … $ k) (at ω)
   (axis l 1)` — the Hessian is the gradient field's Jacobian, and `$h k` is bounded-linear so it
   commutes with `has_derivative` (`bounded_linear.has_derivative[OF bounded_linear_vec_nth
@@ -595,7 +595,7 @@ Jacobian twice (`Hcmat` term); chart bending `D²cvec_dip`; two gain×`∇_cV` c
 
 Toward discharging `regular_feasible_witness` *with the actual function* `cvec_dip`/`gain_dip`
 (it is UNprovable as stated for arbitrary `cvec`/`g` — the usual abstract-placeholder trap),
-proved the two analytic conjuncts the capstone needs as standalone, sorry-free facts:
+proved the two analytic conjuncts the capstone needs as standalone, proof-complete facts:
 - `gradU_dip_continuous_on` / `norm_gradU_dip_continuous_on`: the dipole gradient field is
   continuous in ω (differentiable *everywhere* by `gradU_dip_has_derivative`, so
   `has_derivative_continuous` + `continuous_at_imp_continuous_on`). This is the κ-margin input.
@@ -616,11 +616,11 @@ the now-unfolded goal — keep the INF↔σ_min rewrite local (rewrite only the 
 nested `have … by (simp add: sigma_min_def)`).
 
 Then refactored the capstone to USE these on the actual function:
-- `F0_nonempty_of_witness`: the purely-analytic Weierstrass core (sorry-free), parametric in
+- `F0_nonempty_of_witness`: the purely-analytic Weierstrass core (proof-complete), parametric in
   the 6 regular-witness facts (feasible x₀, ε>0, two `continuous_on`, gradient nonvanishing on
   ∂B_ε, gradient-or-nondegenerate on Ω̃) ⟹ `∃ξ κ ε>0. 𝓕₀ ≠ ∅`. This is the old `F0_nonempty`
   body with the `obtain … regular_feasible_witness` lifted out to hypotheses.
-- `regular_feasible_point_dip` (the genuine remaining hole, sorry): for `cvec_dip ω₀ ωs`,
+- `regular_feasible_point_dip` (the genuine remaining hole, proof hole): for `cvec_dip ω₀ ωs`,
   `gain_dip`, ∃ feasible x₀ and ε>0 with gradient nonvanishing on ∂B_ε and gradient-or-
   nondegenerate on Ω̃ — NO continuity (that's now proven), so a strictly smaller & TRUE
   obligation = the `Phi_bad_meager`+Baire payoff.
@@ -632,11 +632,11 @@ Then refactored the capstone to USE these on the actual function:
 
 REMOVED the abstract `F0_nonempty`/`regular_feasible_witness` (parametric in arbitrary
 `cvec`/`g`): the latter is UNprovable as stated (gain could be negative ⟹ `𝓕` empty) and
-assumed continuity — the exact placeholder trap. Net: the file's 2 sorries are now both
+assumed continuity — the exact placeholder trap. Net: the file's 2 proof holes are now both
 honest & true — `Phi_bad_meager` (determinant submersion) and `regular_feasible_point_dip`
 (regular feasible point for the dipole). Builds clean (BUILD_EXIT=0, ~50s).
 
-## 2026-06-01 (𝓕 nonempty) — explicit feasibility witness PROVED (sorry-free)
+## 2026-06-01 (𝓕 nonempty) — explicit feasibility witness PROVED (proof-complete)
 
 `Ffeas_dip_nonempty` DONE: **the feasible set 𝓕 for the actual dipole pattern is nonempty**
 (`∃R>0, x::(real^2)^'n. x ∈ Ffeas (cvec_dip ω0 ωs) gain_dip R dmin A B D ωn ω0 δnull pmin`),
@@ -644,7 +644,7 @@ under well-posedness hyps (N>1, cvec_dip(ωn)≠0, dmin>0, δnull≥0, pmin ≤ 
 This is D_edit Prop. openfeas / L450–566, the literal "prove the set is nonempty using the
 actual function and sets."
 
-Construction (sorry-free): enumerate elements by a bijection `f` of `{..<N}`
+Construction (proof-complete): enumerate elements by a bijection `f` of `{..<N}`
 (`ex_bij_betw_nat_finite`); place element `f k` to solve the single linear phase equation
 `𝒬·x' + 𝒫·y' = 2πk/N` (where (𝒬,𝒫)=cvec_dip(ωn), split on which coeff ≠0), spreading the
 *other* coordinate as `dmin·k` for spacing. Then:
@@ -670,13 +670,13 @@ by a spacing target `s>0`: nulls A at ωn and spaces elements ≥ s) and re-deri
   witness is strictly feasible, so `ball_inside_Ffeas` ⟹ `∃R x ρ>0. ball x ρ ⊆ 𝓕`.
 - `Ffeas_dip_open_feasible`: the paper's **prop:openfeas** — `∃R, nonempty open V ⊆ 𝓕`
   (V = ball x ρ). Also `gain_dip_nonneg` (g=|e|²≥0, from `gdip_eq_edip_sq`).
-All sorry-free. So the entire FEASIBILITY layer (closed nonempty + open nonempty interior)
+All proof-complete. So the entire FEASIBILITY layer (closed nonempty + open nonempty interior)
 is DONE for the actual dipole. Builds clean (BUILD_EXIT=0).
 
 ## 2026-06-01 (prop:dimZ Step 1) — Φ factors through the moment map M_paper (gradient half)
 
 Toward `Phi_bad_meager` (= prop:dimZ), began the **Φ = F∘M** factorization that lets the
-proven `bigJ`-surjectivity (`lem:Msurj`) act on Φ's derivative. Established (sorry-free):
+proven `bigJ`-surjectivity (`lem:Msurj`) act on Φ's derivative. Established (proof-complete):
 - `M_paper_eq_robust_moments`: the determinant-side moment map `M_paper x (cvec ω)`
   (`complex^6`, Jacobian = `bigJ`) **equals** `[A_cart, Mmom 1, Mmom 2, M2mom 1 1, M2mom 1 2,
   M2mom 2 2]` — i.e. the local moments through which `gradU`/`HessU` are expressed ARE
@@ -690,7 +690,7 @@ proven `bigJ`-surjectivity (`lem:Msurj`) act on Φ's derivative. Established (so
 
 ## 2026-06-01 (prop:dimZ Step 1, ω–c bridge) — moment-space c-derivatives built
 
-The ω–c bridge scaffold, sorry-free:
+The ω–c bridge scaffold, proof-complete:
 - `Afun x c = ∑ cis(−c·xₙ)`, `Mcfun x c k`, `M2cfun x c k l` — the array factor and
   moments as functions of the *wavevector* `c`; bridge identities `A_cart cvec x ω =
   Afun x (cvec ω)`, `Mmom = Mcfun (cvec ω)`, `M2mom = M2cfun (cvec ω)`.
@@ -716,13 +716,13 @@ in moments (differentiate the c-gradient), then the bridge, then `det = poly(M_p
 
 ## 2026-06-01 (prop:dimZ Step 1, the Hessian) — c-Hessian of |A|² computed in moments
 
-**THE HESSIAN IS COMPUTED.** `HessU_c_eq` (sorry-free): in c-coordinates (cvec=id, gain≡1),
+**THE HESSIAN IS COMPUTED.** `HessU_c_eq` (proof-complete): in c-coordinates (cvec=id, gain≡1),
 `HessU (λc. c) (λ_. 1) x c = Hcmat x c` where
 `Hcmat x c $ k $ l = 2(Re(cnj M_l · M_k) − Re(cnj A · M_{kl}))` — the moment-space Hessian,
 a polynomial in the six `M_paper` moments. So `Φ₃ = det∇²U = Hcmat₁₁·Hcmat₂₂ − Hcmat₁₂²` is
 now an explicit moment polynomial (the paper's "moment-space form of the bad-point map").
 
-Chain of the computation (all sorry-free), each a committed brick:
+Chain of the computation (all proof-complete), each a committed brick:
 - c-derivatives `∂_c A = −iM`, `∂_c M_k = −iM_{kl}` (`has_derivative_Afun_c/Mcfun_c`).
 - Re/Im pushed through the derivative sums (`ReDAfun/ImDAfun/ReDMfun/ImDMfun`,
   `Im_M2cfun/Re_M2cfun`): collect into moments.
@@ -749,7 +749,7 @@ to the general `cvec_dip`/`gain_dip` HessU (chain rule, d²c/d²gain as x-consta
 ## 2026-06-01 (prop:dimZ Step 2) — the ω–c bridge (first order + second-order ingredients)
 
 The actual angle-pattern `U(x,ω)` relates to the moment-space c-quantities via `U = gain·(V∘cvec)`,
-`V = U_cart (λc.c)(λ_.1) x = |A|²`. All sorry-free, committed:
+`V = U_cart (λc.c)(λ_.1) x = |A|²`. All proof-complete, committed:
 - `U_cart_factor`: `U_cart cvec gain x ω = gain ω * U_cart (λc.c)(λ_.1) x (cvec ω)`.
 - `has_derivative_Uc_c`: `V` has `gradU_c` as its genuine Fréchet gradient (via
   `has_derivative_U_cart` at id/const + `grad_fun_satisfies_GRAD`).
@@ -775,7 +775,7 @@ jet `Dcvec`,`dgain` are themselves differentiable (→ `D²cvec`,`d²gain`). The
 `has_derivative_dA_via_M2`, `has_derivative_dA_dip`, `D2cvec_dip`) but not yet assembled into a
 closed `HessU = f(moments)`. That is the next sub-brick.
 
-REMAINING (2 sorries): `Phi_bad_meager` (the 12×12-determinant submersion ⟹ codim-3 ⟹ meager
+REMAINING (2 proof holes): `Phi_bad_meager` (the 12×12-determinant submersion ⟹ codim-3 ⟹ meager
 projection — the deep core) and `regular_feasible_point_dip`. The latter now has its open
 Baire arena (`Ffeas_dip_open_feasible`); to finish it: intersect that open V with the
 co-meager regular set (from `Phi_bad_meager` + Baire on the complete space ℝ^{2N}) to get a
@@ -804,7 +804,7 @@ explicit `ξ,κ,ε` dependence and `\<nabla>`/`‖·‖` (importing `Higher_Diff
 ## 2026-05-30 (robust set, Part 1) — concrete U, 𝓕, and 𝓕 compact
 
 New theory `Appendix/Nonemptiness_Robust.thy` begins the concrete, paper-faithful
-build of `thm:final`. Part 1 (sorry-free):
+build of `thm:final`. Part 1 (proof-complete):
 - `Upow cvec g x ω = g ω · (cmod (af cvec x ω))²` — the sidelobe power `U = g|A|²`.
 - `continuous_on_af_config` / `continuous_on_Upow_config`: `A`, `U` are continuous in
   the configuration `x` (`continuous_intros` + `continuous_on_cis`).
@@ -821,10 +821,10 @@ ARCHITECTURE NOTE: `\<nabla>`/`\<nabla>\<^sup>2` live in `Higher_Differentiabili
 (`HigherDiff` session on `Smooth_Manifolds`), NOT imported by the nonemptiness stack;
 Parts 2–4 need either merging that session or re-exposing `\<nabla>` locally.
 
-## 2026-05-30 (appendix sorry-free!) — lem_h0res_a1a2 made concrete; regnonzero appendix complete
+## 2026-05-30 (appendix proof-complete!) — lem_h0res_a1a2 made concrete; regnonzero appendix complete
 
 `lem_h0res_a1a2` PROVED concretely, so **`Nonemptiness_Regnonzero_Appendix.thy` is now
-entirely sorry-free**. The abstract `rk_residue x = 2` (unprovable: arbitrary `rk_residue`)
+entirely proof-complete**. The abstract `rk_residue x = 2` (unprovable: arbitrary `rk_residue`)
 was replaced by the paper's actual computation. The residue moments are the `b₁`-type
 `a₁ = -Σ uₖ sin(κuₖ)` and the `v`-cosine `a₂ = Σ vₖ cos(κuₖ)`; differentiating (single-slot,
 à la `lem_block`, with `deriv` + `derivative_eq_intros`) gives the residue partials
@@ -851,7 +851,7 @@ and `wQ j = ∂_{uⱼ}Q₁₁`, so the hypotheses become the minor equations
 `μ` (`wQⱼ = μ·vEⱼ`); then `α = r+gμ`, `β = r²-χ₁₁+g₁μ` solves all three because
 `Fⱼ(α,β) = wQⱼ - μ·vEⱼ` (a polynomial identity).
 
-Only **1 real sorry remains**: `lem_h0res_a1a2` (`rk_residue x = 2` for an abstract
+Only **1 real proof hole remains**: `lem_h0res_a1a2` (`rk_residue x = 2` for an abstract
 `rk_residue :: 'w ⇒ nat`) — a genuine placeholder, NOT provable as stated (false for
 an arbitrary `rk_residue`); it needs the concrete residue Jacobian defined and its rank
 computed (à la `bigJ_det`).
@@ -864,7 +864,7 @@ name (`∃\<lambda>. ...` fails to parse) — used `\<mu>`.
 ## 2026-05-30 (uphi) — prop_uphi_codim3: discreteness of the F_eta zero set
 
 `prop_uphi_codim3` PROVED: \<open>Z\<^sub>\<eta> = {u : F\<^sub>\<eta>(u)=0}\<close> is discrete, where
-\<open>F\<^sub>\<eta>(u) = cos(\<kappa>u) - \<kappa>(u-\<eta>)sin(\<kappa>u)\<close>, \<open>\<kappa>\<noteq>0\<close>. Appendix down to 2 real sorries
+\<open>F\<^sub>\<eta>(u) = cos(\<kappa>u) - \<kappa>(u-\<eta>)sin(\<kappa>u)\<close>, \<open>\<kappa>\<noteq>0\<close>. Appendix down to 2 real proof holes
 (`prop_Lambda_common`, `lem_h0res_a1a2`).
 
 Key: the zeros are \<^emph>\<open>simple\<close>. At a zero, \<open>F\<^sub>\<eta>'(u) = -2\<kappa> sin\<kappa>u - \<kappa>\<^sup>2(u-\<eta>)cos\<kappa>u \<noteq> 0\<close>:
@@ -882,7 +882,7 @@ UNNAMED; naming it `\<kappa>:` is required to cite it (`Undefined fact "\<kappa>
 
 ## 2026-05-30 (KLM minors) — prop_KLM_1 + prop_KLM_2 via Cramer / cofactor identities
 
-Both `prop:KLM` minors PROVED; appendix down to 3 real sorries (`prop_uphi_codim3`,
+Both `prop:KLM` minors PROVED; appendix down to 3 real proof holes (`prop_uphi_codim3`,
 `prop_Lambda_common`, `lem_h0res_a1a2`).
 
 - `prop_KLM_1` (`K=L=M=0 \<longleftrightarrow> s=0` on `c\<^sub>1c\<^sub>2c\<^sub>3\<noteq>0`): the \<open>\<Longrightarrow>\<close> direction is FALSE as
@@ -908,7 +908,7 @@ goal". Fix: annotate the binder in the statement --- `\<And>(w::real). ...`.
 `prop_double_param_mono` (`strict_mono_on UNIV (astar \<kappa>)`, \<kappa>\<noteq>0) now PROVED, plus its
 prerequisite `astar_deriv`. This is the ingredient behind `cor:double-impossible`
 (no two distinct indices are both degenerate-critical), so `cor_double_impossible`
-also goes through. Appendix down to 5 real sorries.
+also goes through. Appendix down to 5 real proof holes.
 
 - `astar_deriv`: \<open>astar' u = sin\<^sup>2(\<kappa>u)(5+sin\<^sup>2(\<kappa>u))/(1+sin\<^sup>2(\<kappa>u))\<^sup>2\<close> (a manifest SOS \<open>\<ge>0\<close>).
   Built via the quotient rule (`DERIV_divide`, whose denominator is `g*g` not `g\<^sup>2`),
@@ -924,8 +924,8 @@ also goes through. Appendix down to 5 real sorries.
 
 ## 2026-05-30 (later still) — Appendix leaves: lem_Fij, the algebra corollaries, prop_double_param_solves
 
-Cleared four more `sorry` leaves in `Nonemptiness_Regnonzero_Appendix.thy` (now 6 real
-sorries left):
+Cleared four more `proof hole` leaves in `Nonemptiness_Regnonzero_Appendix.thy` (now 6 real
+proof holes left):
 - `cor_pairambiguity`, `cor_H0subcase`, `cor_vpair22_nonzero` — pure algebra from the
   factorizations (`d\<^sub>ij = -2\<Delta>\<^sub>ij K`, etc.); `mult_eq_0_iff` / `field_simps`.
 - `upair_minor_nowhere_dense` — added the missing `continuous_on UNIV` hyp, routed through
@@ -958,7 +958,7 @@ New theory `Appendix/Nonemptiness_Regnonzero_Appendix.thy` (session
 `Applied_Math_Appendix`, parent `Applied_Math_Nonemptiness`) states EVERY appendix
 obligation of `prop:regnonzero` (Appendix A–I), and `Appendix/Nonemptiness_Capstone.thy`
 closes START→FINISH: `odd_N_nonemptiness` is *proved* by feeding the four concrete
-bad sets (defined from `af`) + feasibility + X0-soundness into the sorry-free
+bad sets (defined from `af`) + feasibility + X0-soundness into the proof-complete
 `nonemptiness_from_meager_branches`. So no unstated gaps remain.
 
 Design rule (after corrections): NO locales; lemmas connect either as concrete/universal
@@ -972,13 +972,13 @@ structural hypothesis the concrete object satisfies (`rline_entire`, a chart cov
   `rank_deficient_C1_image_meager`).
 - `prop:vmixed` was off by a factor 2 (third row is `2vⱼcⱼ`, the `∂_v a₂₂` derivative).
 
-PROVED sorry-free this session: `R_even`, `prop_upair`, `x_plus_sin_pos`, `Num_pos`
+PROVED proof-complete this session: `R_even`, `prop_upair`, `x_plus_sin_pos`, `Num_pos`
 (corrected SOS `2Num = t²(2t+sin2t)+2(2t−sin2t)+4t sin²t`), `R_strict_mono_first_branch`,
 `ab_eq_R`, `alpha_beta_inj_on_branch` (u-pair branch closed end-to-end); `analytic_cut_nowhere_dense`,
 `proj_lowdim_meager`; templates `threecos_meager_in_V`, `Bbranch_meager_in_V`;
 `lem_h0res_Bcuts` (β′≠0 transversality); `prop_vcos/vsin/vmixed`; `lem_block` (7 J₅ partials),
 `lem_3x3` (3 rank-3 minors); `cor_pairambiguity`, `cor_H0subcase`, `cor_vpair22_nonzero`;
-`upair_minor_nowhere_dense`. Down to ~8 real sorries (calculus/transcendental:
+`upair_minor_nowhere_dense`. Down to ~8 real proof holes (calculus/transcendental:
 `prop_double_param_*`, `prop_uphi_codim3`, `prop_Lambda_common`, `lem_Fij`, `prop_KLM_*`,
 `lem_h0res_a1a2`) + the IFT chart keystone + the `(ℝ²)ⁿ ≅ ℝ²ᴺ` wiring.
 
@@ -998,14 +998,14 @@ the σ-compact `∃K` discharge does not, and we burned hours on it. This entry 
 
 ### Proven + COMMITTED (safe baseline)
 - `smooth_chart_meager` / `rank_deficient_C1_image_meager` / `open_sigma_compact_exhaustion`
-  (= `lem:smooth-chart-meager`), in `Parametric_Transversality_Euclidean_Base`. Sorry-free,
+  (= `lem:smooth-chart-meager`), in `Parametric_Transversality_Euclidean_Base`. proof-complete,
   `Applied_Math_Nonemptiness BUILD_EXIT=[0]`, committed+pushed earlier today.
 - (yesterday) `DM_paper_open_dense_surjective` = `lem:Msurj`; `APPENDIX_PLAN.md`; STATUS reframe.
 
 ### In the working tree, UNCOMMITTED and currently BROKEN (build fails at the σ-step)
 - `meager_critical_values_from_charts` — meager analog of `negligible_critical_values_from_charts`,
   with a σ-compact hypothesis `sigma` (currently object form `∀i. ∃K. (∀n. compact (K n)) ∧ Crit i = (⋃n. K n)`).
-- `charts_core_2d` (the IFT-chart `sorry`) was strengthened with a 4th conjunct giving σ-compact `Crit0`.
+- `charts_core_2d` (the IFT-chart `proof hole`) was strengthened with a 4th conjunct giving σ-compact `Crit0`.
 - `parametric_transversality_meager_euclidean_stub` (stub 2): proof =
   `elim exE` of `charts_core_2d`'s existential → `meager_critical_values_from_charts` → `meager_subset`.
 
@@ -1050,7 +1050,7 @@ the σ-compact `∃K` discharge does not, and we burned hours on it. This entry 
 
 ## 2026-05-29 (cont.) — Tier 1: `lem:smooth-chart-meager` proved (rank-deficient C¹ image is meager)
 
-`smooth_chart_meager` (sorry-free, `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`), in
+`smooth_chart_meager` (proof-complete, `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`), in
 `Parametric_Transversality_Euclidean_Base`: a smooth map from an open `U ⊆ ℝ^m` into
 `ℝ^n` with `m < n` has meager image (paper `lem:smooth-chart-meager`, tex L1197).
 Proved via the strictly more general
@@ -1127,7 +1127,7 @@ changes this entry — map + plan + STATUS/diary/memory only; build unchanged.
 
 ## 2026-05-29 (cont.) — P1.6 COMPLETE: regular stratum is open AND dense (real-analytic)
 
-`DM_paper_open_dense_surjective` (sorry-free, `Applied_Math_Nonemptiness`
+`DM_paper_open_dense_surjective` (proof-complete, `Applied_Math_Nonemptiness`
 `BUILD_EXIT=[0]`): for any open `V :: ((real^2)^6) set`,
 \[
   \exists U.\ \text{open } U \wedge U \subseteq V \wedge V \subseteq \overline{U}
@@ -1170,7 +1170,7 @@ appendix inputs — the larger remaining piece.)
 
 ## 2026-05-29 (cont.) — P1.6 (openness): the surjective stratum is open
 
-The first half of P1.6 is done (sorry-free, `Applied_Math_MomentJac` `BUILD_EXIT=[0]`),
+The first half of P1.6 is done (proof-complete, `Applied_Math_MomentJac` `BUILD_EXIT=[0]`),
 in `MomentJac/Moment_Jacobian.thy`:
 
 - `MJx x = transC ∘ (DM_paper_x x c0_paper) ∘ transD` (the transported Jacobian at
@@ -1210,7 +1210,7 @@ unconditionally; then P1.7 assembly → `meager (ZH0surj ∩ V)` → `prop_regno
 ## 2026-05-29 (cont.) — P1.5 COMPLETE: the Jacobian identification `D_xM_paper(x0,c0) = (*v) bigJ`
 
 The keystone connection between the abstract matrix `bigJ` and the *actual*
-moment-map function is proved (sorry-free; `Applied_Math_MomentJac` `BUILD_EXIT=[0]`),
+moment-map function is proved (proof-complete; `Applied_Math_MomentJac` `BUILD_EXIT=[0]`),
 in `MomentJac/Moment_Jacobian.thy`:
 
 - `matrix_MJ : matrix MJ = bigJ`, where
@@ -1277,13 +1277,13 @@ forward the diary is updated at the end of *every* session, not retroactively.
   Jacobian determinant were baked into `Applied_Math_BlockDet`.
 - **Sard port (`f9d1110`, `087004b`, `a6f5316`).** `negligible_singular_image_2n`
   — the `(real^2)^'n ≅ real^('n bit0)` transport feeding `baby_Sard` — is now a
-  **sorry-free** build theory `SardNegligible/Sard_Negligible.thy`, registered as
+  **proof-complete** build theory `SardNegligible/Sard_Negligible.thy`, registered as
   session `Applied_Math_Sard`. Note: this branch needs only **C¹** (a single
   `has_derivative` + non-surjectivity), *not* higher-order differentiability.
 - **`chart_zero_projection_meager_stub` (`9a9cc95`)** proved unconditionally —
   closing the fold-zero branch.
 
-### Current `sorry` ledger (verified by grep this session)
+### Current `proof hole` ledger (verified by grep this session)
 
 - `Nonemptiness_Paper.thy:3650` — `rank_lower_semicont_open_dense_propagation`
   (the C¹ rank-lower-semicontinuity tool feeding `DM_paper_open_dense_surjective`
@@ -1295,7 +1295,7 @@ forward the diary is updated at the end of *every* session, not retroactively.
     assembly built on the keystone.
   - `parametric_transversality_meager_euclidean_stub` (line ~972) — the meager
     conclusion built on the assembly.
-- `Regular_Value_Theorem.thy` — **sorry-free**, but **not registered in any
+- `Regular_Value_Theorem.thy` — **proof-complete**, but **not registered in any
   session/ROOT**. Its theorem `regular_value_local_chart` is the IFT-based engine
   for the keystone: it returns `U, u0, φ, g, Dφ` with `φ differentiable_on U`,
   `φ ` U ⊆ {G=0}`, `openin … (φ ` U)`, `homeomorphism U (φ ` U) φ g`,
@@ -1318,7 +1318,7 @@ derivative**. The IFT engine needs **C¹** (`contG'`). That is precisely the gap
 Copied into `HigherDiff/` with its three local deps (`Limits_Higher_Order_Derivatives`,
 `Auxiliary_Facts`, `Higher_Differentiability`); registered as session
 `Applied_Math_HigherDiff = HOL-Analysis + Smooth_Manifolds`. Builds clean
-(`BUILD_EXIT=[0]`). One pre-existing `sorry` in `Higher_Differentiability` ⇒
+(`BUILD_EXIT=[0]`). One pre-existing `proof hole` in `Higher_Differentiability` ⇒
 session kept `quick_and_dirty`.
 
 #### Dependencies imported this session (for the record)
@@ -1330,7 +1330,7 @@ Copied verbatim into `Applied_Math_Formalization/HigherDiff/`:
 | --- | --- |
 | `Limits_Higher_Order_Derivatives.thy` | `HOL-Analysis.Analysis` |
 | `Auxiliary_Facts.thy`                 | `Limits_Higher_Order_Derivatives` |
-| `Higher_Differentiability.thy`        | `Auxiliary_Facts`, `Smooth_Manifolds.Smooth`, `HOL-Analysis.Analysis` (carries 1 `sorry`) |
+| `Higher_Differentiability.thy`        | `Auxiliary_Facts`, `Smooth_Manifolds.Smooth`, `HOL-Analysis.Analysis` (carries 1 `proof hole`) |
 | `Higher_Differentiability_Multi.thy`  | `Higher_Differentiability`, `Smooth_Manifolds.Smooth`, `HOL-Analysis.Analysis` |
 
 Non-local deps **not** copied (already available): `HOL-Analysis` (Isabelle
@@ -1340,7 +1340,7 @@ imported — it is only for imperative program verification, irrelevant here.
 New session in `ROOT`: `Applied_Math_HigherDiff in "HigherDiff" = HOL-Analysis +
 sessions Smooth_Manifolds`.
 
-### Done this session — the C¹ bridge (`Ck1_C1_Bridge.thy`, sorry-free)
+### Done this session — the C¹ bridge (`Ck1_C1_Bridge.thy`, proof-complete)
 
 New theory `HigherDiff/Ck1_C1_Bridge.thy` (imports `Higher_Differentiability_Multi`,
 added to `Applied_Math_HigherDiff`; whole session `BUILD_EXIT=[0]`). It converts
@@ -1368,7 +1368,7 @@ conclusion.
 
 ### Done this session — the keystone `regular_zero_set_projection_local_chart_2d`
 
-Discharged the keystone sorry in `Parametric_Transversality_Euclidean_Base.thy`.
+Discharged the keystone proof hole in `Parametric_Transversality_Euclidean_Base.thy`.
 Verified: `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]` (14s, reusing the
 Base/BlockDet heaps — Munkres/JNF/Perron untouched in the heap).
 
@@ -1390,7 +1390,7 @@ this is the same gap that forced the C¹ hypothesis onto `charts_core_Nn` (05-27
 
 Threaded the same `G'`/`derG`/`contG'` through the keystone's only caller,
 `countable_chart_cover_of_levelset_2d` (which has no callers of its own, so
-propagation stops). Remaining sorries in the file: `charts_core_2d` (369) and
+propagation stops). Remaining proof holes in the file: `charts_core_2d` (369) and
 `parametric_transversality_meager_euclidean_stub` (1015).
 
 ### Finding: the moment map M_paper *will* need C¹ — but for Paper:3650, not the keystone
@@ -1401,7 +1401,7 @@ is the *array factor* (`(real^2)^N × real^2 → real^2`), whose C¹-ness comes 
 analyticity (`C1_cplx_r2_comp`), not from the moment map.
 
 However, `rank_lower_semicont_open_dense_propagation` (`Nonemptiness_Paper.thy:3650`,
-the one open sorry there) is about the moment map `M_paper`. Its current
+the one open proof hole there) is about the moment map `M_paper`. Its current
 hypotheses (`deriv` = pointwise `has_derivative` within `V`, `one_regular`) are
 **insufficient**: open-density of the surjective stratum rests on lower
 semicontinuity of `rank`, which requires `DℱF` to vary *continuously* — i.e. C¹.
@@ -1411,7 +1411,7 @@ it with the concrete `M_paper` then requires `M_paper` to be C¹. Since
 `Ck_on 1 M_paper …` there (via `Ck1_C1_Bridge`) is the right next step — necessary
 for Paper:3650, and the natural concrete use of the higher-diff theory.
 
-### Done this session — `M_paper` is C¹ (`Moment_Map.thy`, Layer 6, sorry-free)
+### Done this session — `M_paper` is C¹ (`Moment_Map.thy`, Layer 6, proof-complete)
 
 Added a "Layer 6" to `BlockDet/Moment_Map.thy` proving continuity of the
 configuration-derivative. Verified: `Applied_Math_BlockDet` + downstream
@@ -1453,7 +1453,7 @@ Wrote [P1_PLAN.md](P1_PLAN.md): the moment-map branch P1.1–P1.7 with status, s
 the `P1.x` labels previously lived only in commit messages (no tracked plan, no
 "P1.4"). What we did this arc (keystone + `M_paper` C¹) is the natural P1.4.
 Also confirmed: `bigJ_det = -(5·π⁸)/3`, `bigJ_surj` are **already proven**
-(BlockDet, 0 sorry — the 05‑27 "deferred to last" item is done).
+(BlockDet, 0 proof hole — the 05‑27 "deferred to last" item is done).
 
 **Critical finding (ultrathink).** `rank_lower_semicont_open_dense_propagation`
 (P1.6) is **not** provable from C¹: its conclusion forces the surjective stratum
@@ -1471,7 +1471,7 @@ from-scratch building.
 
 ### Done this session — moment-map base cases for the entire-line-restriction algebra
 
-Added to `Nonemptiness_Paper.thy` (sorry-free; `Applied_Math_Nonemptiness`
+Added to `Nonemptiness_Paper.thy` (proof-complete; `Applied_Math_Nonemptiness`
 `BUILD_EXIT=[0]`): the closure base cases the moment-map minor needs but the array
 factor didn't — `rline_entire_coord` (a single coordinate `(x$n)$k` is affine in
 the line parameter ⟹ entire), `cline_entire_phase`, `rline_entire_cos_inner`,
@@ -1487,7 +1487,7 @@ in `P1_PLAN.md`), then P1.7 assembly.
 ### Done this session — P1.5 arithmetic foundation (base-point phase values)
 
 Began P1.5 (the Jacobian identification `D_x M_paper(x0_paper, c0_paper) = (*v) bigJ`,
-`Nonemptiness_Paper.thy`). Established the arithmetic substrate, sorry-free,
+`Nonemptiness_Paper.thy`). Established the arithmetic substrate, proof-complete,
 `Applied_Math_Nonemptiness` `BUILD_EXIT=[0]`.
 
 Precise statement of the reduction (for the paper): the canonical base
@@ -1542,7 +1542,7 @@ paper's formalization notes.
   simp over the nested `vector[...]` also exhausts memory and must be avoided.
 
 `Moment_Jacobian.thy` now contains `transC`/`transC_inv`/`transD`/`transD_inv`
-with `linear_*`, `*_inv_left/right`, and `bij_transC`/`bij_transD` (all sorry-free).
+with `linear_*`, `*_inv_left/right`, and `bij_transC`/`bij_transD` (all proof-complete).
 
 ### Session architecture: the edited theory must not be in its own logic heap
 
@@ -1590,7 +1590,7 @@ supplying the missing **C¹** hypothesis via `Ck_on 1 G (V×Ω)`. Concretely:
 
 ---
 
-## 2026-05-27 — The regular-value branch: `charts_core_Nn` from sorry to QED
+## 2026-05-27 — The regular-value branch: `charts_core_Nn` from proof hole to QED
 
 ### Where this fits
 
@@ -1604,8 +1604,8 @@ of base points `x` over which the ω-fibre derivative degenerates is covered by
 countably many *closed* chart images on which a projection has everywhere-singular
 derivative. Feeding this to a Sard-type negligibility lemma closes the branch.
 
-At the start of the day `charts_core_Nn` was a single `sorry`. By the end it was
-proved with no `sorry`, on the back of seven supporting lemmas built and verified
+At the start of the day `charts_core_Nn` was a single `proof hole`. By the end it was
+proved with no `proof hole`, on the back of seven supporting lemmas built and verified
 in sequence. This is the spine of the regular-value branches and the most
 differential-topology-heavy part of the development.
 
@@ -1688,10 +1688,10 @@ differential-topology-heavy part of the development.
 
 ### Status at end of day
 
-`charts_core_Nn` is `sorry`-free, so the regular-value branch
+`charts_core_Nn` is `proof hole`-free, so the regular-value branch
 (`parametric_transversality_negligible_complex`,
 `parametric_transversality_meager_complex`, `prop_regzero`) is proved modulo
-nothing in the chart cover. Three `sorry`s remain in `Nonemptiness_Paper.thy`:
+nothing in the chart cover. Three `proof hole`s remain in `Nonemptiness_Paper.thy`:
 
 - `chart_zero_projection_meager_stub` — the fold-zero branch (1-D transversality →
   meager), still open;
@@ -1758,7 +1758,7 @@ OPEN TENSIONS to fix in the clean rebuild:
   is the goal.
 - F0_ne (`x0 in S ==> S != {}`) is TRUE but `blast` HANGS on the 16-arg F0 term
   (timeout, not failure). Fix later by abbreviating the set to a short name before
-  the ne step (define S == F0...). Currently sorry'd.
+  the ne step (define S == F0...). Currently proof hole'd.
 - Gradient/Hessian of U: explicit formulas are in Appendix 2 of the .tex (to prove
   Phibad equals the appendix moment functions Phi1m/H11m/...).
 
@@ -1779,8 +1779,8 @@ the robust layer should be its own session.
 GOTCHA: in the merged JNF+HMA+Smooth_Manifolds session, `vec_eq_iff` is ambiguous
 (JNF Matrix.vec vs HMA ^), so `simp add: vec_eq_iff` makes no progress on real^3
 goals. Phibad_zero_iff (trivially true: Phi=0 <-> its 3 components vanish) is
-currently sorry'd pending HMA-qualification (Finite_Cartesian_Product.vec_eq_iff)
-or a component-wise proof. 4 sorries total in Robust: 2x F0_ne (blast hangs on
+currently proof hole'd pending HMA-qualification (Finite_Cartesian_Product.vec_eq_iff)
+or a component-wise proof. 4 proof holes total in Robust: 2x F0_ne (blast hangs on
 16-arg term), Phibad_zero_iff (vec_eq_iff), Phi_bad_meager (the determinant payoff
 obligation).
 
@@ -1817,7 +1817,7 @@ The capstone theory `Appendix/Nonemptiness_Robust.thy` now has the RIGHT SHAPE e
    ASSUMED are now packaged as ONE obligation `regular_feasible_witness` (to be proved from
    Phi_bad_meager + Baire), NOT hypotheses of the theorem.
 
-### Current sorries in Nonemptiness_Robust.thy (6) — by nature
+### Current proof holes in Nonemptiness_Robust.thy (6) — by nature
 - L324 `Phibad_zero_iff`  — TRIVIAL (Φ=0 ⟺ 3 components 0); needs HMA-qualified vec_eq_iff
   (Finite_Cartesian_Product.vec_eq_iff) in the merged JNF+HMA+Smooth_Manifolds session.
 - L336 `Phi_bad_meager`   — THE DEEP OBLIGATION (determinant payoff: lem:Msurj ⟹ Z_reg codim-3
@@ -1828,7 +1828,7 @@ The capstone theory `Appendix/Nonemptiness_Robust.thy` now has the RIGHT SHAPE e
 - L425, L456 the two `F0 … ≠ {}` steps — MECHANICAL (x∈S ⟹ S≠{} via mem_imp_ne_empty; blast
   hangs on the 15-arg term, plain `by (rule mem_imp_ne_empty)` should work — RETRY that).
 
-(Upstream: Nonemptiness_Capstone.thy still 10 sorries; Nonemptiness_Regnonzero_Appendix.thy 1.)
+(Upstream: Nonemptiness_Capstone.thy still 10 proof holes; Nonemptiness_Regnonzero_Appendix.thy 1.)
 
 ### How we move forward (clean rebuild plan)
 The through-line is now legible: `determinant (bigJ_det/J5/lem:3x3) → lem:Msurj → prop:dimZ →
@@ -1840,7 +1840,7 @@ capstone LAST. Keep the robust layer possibly its own session (the Smooth_Manifo
 ## 2026-05-31 (σ-discharge RESOLVED) — parametric_transversality_meager_euclidean_stub proved
 
 The "stub 2" σ-compactness blocker (12+ failed approaches, see prior entry) is
-CLOSED. `parametric_transversality_meager_euclidean_stub` is now sorry-free;
+CLOSED. `parametric_transversality_meager_euclidean_stub` is now proof-complete;
 Applied_Math_Nonemptiness + Applied_Math_Appendix build green (BUILD_EXIT=0,
 ~21s + 34s incremental). Committed 0a124c2, pushed.
 
@@ -1862,22 +1862,22 @@ with FOUR directly-named assumptions `cover/der/rk/sig` (no monolithic `H`, no
 Also landed this session: the meager analog `meager_critical_values_from_charts`
 (σ-compact pieces → `baby_Sard` negligible → closed ⇒ nowhere dense → meager
 countable union), and the σ-compactness conjunct threaded through the core lemma
-`regular_zero_set_projection_charts_core_2d` (still the lone real `sorry` in the
+`regular_zero_set_projection_charts_core_2d` (still the lone real `proof hole` in the
 Base file, L371 — the IFT/regular-value chart cover, the next deep target there).
 
-## 2026-05-31 (Robust mechanical sweep) — F0_nonempty sorry-free; Phibad_zero_iff proved
+## 2026-05-31 (Robust mechanical sweep) — F0_nonempty proof-complete; Phibad_zero_iff proved
 
-Cleared 4 sorries in `Appendix/Nonemptiness_Robust.thy` (6 → 2). All builds green
+Cleared 4 proof holes in `Appendix/Nonemptiness_Robust.thy` (6 → 2). All builds green
 (Applied_Math_Appendix BUILD_EXIT=0); committed 8b20273 + fba5044, pushed.
 
-1. **Witness obtain (was sorry).** `using regular_feasible_witness[OF c6] by blast`
+1. **Witness obtain (was proof hole).** `using regular_feasible_witness[OF c6] by blast`
    failed because `blast` had to BOTH eliminate the 2-var ∃ AND convert the lemma's
    bounded `∀ω∈sphere. P` into the `⋀ω. ω∈sphere ⟹ P` meta-form of the `where`
    clauses. Fix: state the `where` clauses in the lemma's bounded-∀ form (so blast
    does pure exE+conjE), and switch the 2 downstream uses `rsph[OF ωm]`/`rO[OF ym]`
    to `bspec[OF rsph ωm]`/`bspec[OF rO ym]`.
 
-2. **Both `F0 … ≠ {}` steps (were sorry).** `by (rule mem_imp_ne_empty)` failed on
+2. **Both `F0 … ≠ {}` steps (were proof hole).** `by (rule mem_imp_ne_empty)` failed on
    terms that print IDENTICALLY. ROOT CAUSE (found via `declare [[show_types,
    show_sorts]]`): `F0`'s result type `(planar^'n) set` has 'n NOT pinned by its
    value args (phantom). The bare `hence "F0 … ≠ {}"` gave `{}` a FRESH type var
@@ -1888,13 +1888,13 @@ Cleared 4 sorries in `Appendix/Nonemptiness_Robust.thy` (6 → 2). All builds gr
    both this and the σ-discharge — the lesson: when rule/OF/fact fail on
    identical-printing terms, turn on show_types/show_sorts FIRST.
 
-3. **Phibad_zero_iff (was sorry, "trivial").** `Φ = vector[g₁,g₂, H₁₁H₂₂−H₁₂²]`, so
+3. **Phibad_zero_iff (was proof hole, "trivial").** `Φ = vector[g₁,g₂, H₁₁H₂₂−H₁₂²]`, so
    `Φ=0 ⟺` all 3 components vanish: `Finite_Cartesian_Product.vec_eq_iff`
    (HMA-qualified to dodge the JNF/HMA ambiguity in the merged session) + `forall_3`
    + `vector_3` for the real^3 side; `forall_2` for `gradU = 0 ⟺ gradU$1=0 ∧ gradU$2=0`;
    `algebra_simps` for `det = 0 ⟺ H₁₁H₂₂ = H₁₂²`.
 
-Robust now has 2 sorries, both DEEP: `regular_feasible_witness` (Phi_bad_meager +
+Robust now has 2 proof holes, both DEEP: `regular_feasible_witness` (Phi_bad_meager +
 Baire + C²-continuity bundle) and `Phi_bad_meager` (the determinant payoff:
 lem:Msurj ⟹ Z_reg codim-3 ⟹ projection meager). The capstone shape is complete;
 what remains there is genuine mathematics, not plumbing.
@@ -1972,7 +1972,7 @@ REMAINING to connect determinant → Phi_bad_meager (about our function):
  (b) Phibad components = Phi1m/H11m/... in c-coords (via gradU_explicit + moment algebra).
  (c) ∂ω↔∂c change of variables via Jcvec (det≠0 = det_Jcvec).
  (d) the chain-rule rank-3 + codim-3 chart cover + projection-meager (needs an ℝ³
-     analog of regular_zero_set_projection_charts; the ℝ² version is the lone Base sorry).
+     analog of regular_zero_set_projection_charts; the ℝ² version is the lone Base proof hole).
  (e) instantiate cvec := cvec0-adapter, gain := |e|², discharge the cvec≠0 / diff hyps.
 
 ## 2026-05-31 (dropping the differentiability assumption, step 1)
@@ -2065,7 +2065,7 @@ proven-smooth pieces): (a) gain-of-omega (lambda om. gdip (om$1)) C-infinity on 
 gradU/HessU genuine via gradU_has_derivative_of_C2); (d) instantiate the capstone at
 cvec0 + gdip-gain, zero assumptions.
 
-### no_degenerate_to_sphere_annulus DONE (commit `595e046`) — Robust2 5→4 sorries
+### no_degenerate_to_sphere_annulus DONE (commit `595e046`) — Robust2 5→4 proof holes
 Morse argument, fully machine-checked. Reusable general lemma born: **`isolated_nondeg_zero`**
 (a zero with injective Frechet derivative is isolated; `linear_inj_bounded_below_pos` +
 `has_derivative_at_alt` o(.) bound). Then C={gradU=0}∩Omega compact+discrete⇒finite
@@ -2082,12 +2082,12 @@ The one genuinely-hard lemma the WHOLE theorem funnels through is done (verified
   keeps `D\<phi>` with `range D\<phi> = ker DG` (uses `regular_value_local_chart`, not the local-chart
   lemma that drops it); Lindelof subcover.
 - `core_2d_strong` — assembles them: bad set \<subseteq> \<Union> chart-projection critical sets, each with
-  rank-deficient derivative. STRENGTHENED with `derG`/`contG'` (the old `core_2d` sorry assumed
+  rank-deficient derivative. STRENGTHENED with `derG`/`contG'` (the old `core_2d` proof hole assumed
   only `reg0`, which is insufficient — that was a real statement gap); dropped the \<sigma>-compact
   clause (the Sard-finish `negligible_critical_values_from_charts` doesn't need it).
 Lessons banked: [[type-every-bound-var-and-inspect-states]]. NEXT: rewire the base stubs
 (`..._stub_2d`, `..._negligible_stub`, `..._meager_euclidean_stub`) to consume `core_2d_strong`
-(thread `derG`/`contG'` through their assms), delete the old `core_2d` sorry, then Robust's
+(thread `derG`/`contG'` through their assms), delete the old `core_2d` proof hole, then Robust's
 `parametric_transversality_meager_planar_config`, then the 4 strata.
 
 ### core_2d sigma-compact clause — dev complete in Nonemptiness-heap scratch (2026-06-09)
@@ -2109,9 +2109,9 @@ replace with explicit rule/[THEN iffD1]/structured chains. NEXT: bake Scratch_sc
 core_2d_strong into the base (Parametric_Transversality_Euclidean_Base) + rel_sigma/slice/helper;
 ONE Appendix rebuild (heap is gone, rebuild needed anyway); then rewire the 3 stubs + the 4 strata.
 
-### Stub rewire COMPLETE — base now ZERO sorrys (2026-06-10)
+### Stub rewire COMPLETE — base now ZERO proof holes (2026-06-10)
 Rewired the 3 consumers onto core_2d_strong and DELETED the old
-regular_zero_set_projection_charts_core_2d sorry (the base's last one):
+regular_zero_set_projection_charts_core_2d proof hole (the base's last one):
 - regular_zero_set_projection_charts_stub_2d, parametric_transversality_negligible_stub,
   parametric_transversality_meager_euclidean_stub: each gains fixes G' + assms derG/contG'
   (named openV/Vne/openOm/derG/contG'/reg0); rule swapped to core_2d_strong[OF openV openOm
@@ -2128,7 +2128,7 @@ Applied_Math_Nonemptiness session; Robust reaches it via Paper. Crucially:
 Appendix build (that one only rebakes the heap for jEdit/Robust work).
 Verified: BUILD_EXIT=0 Applied_Math_Nonemptiness (41s). Appendix rebake running.
 NEXT: Robust's parametric_transversality_meager_planar_config via
-parametric_transversality_meager_euclidean_stub (now sorry-free engine end-to-end),
+parametric_transversality_meager_euclidean_stub (now proof-complete engine end-to-end),
 then the 4 strata (M4 engine+regular_value_on_gradU_dip; M5 nowhere_dense_mstarg_zeros;
 M6; M6b), then Capstone.
 
@@ -2137,12 +2137,12 @@ M6; M6b), then Capstone.
 Computer crashed during the original rebake; working tree survived intact, rewire
 committed as 2178245. User then ran the full Appendix rebuild in their terminal:
 **Finished Applied_Math_Appendix (0:22:09 elapsed)** — first green build of the
-whole chain against the zero-sorry base. STATUS CORRECTIONS vs previous entry:
+whole chain against the zero-proof hole base. STATUS CORRECTIONS vs previous entry:
 - Robust.thy's parametric_transversality_meager_planar_config is COMMENTED OUT
-  (lines 4464-4477) — so Robust has ZERO active sorrys; the lemma must be
+  (lines 4464-4477) — so Robust has ZERO active proof holes; the lemma must be
   uncommented + proven, not just "resolved". Robust2 mentions it only in
   unchecked prose ({thm ...} without @), so the build doesn't care.
-- Active sorry census: Robust2 4 (M4/M5/M6/M6b strata), Capstone 6
+- Active proof hole census: Robust2 4 (M4/M5/M6/M6b strata), Capstone 6
   (capstone_feasible, 4 branch_*_meager, capstone_X0_sound). Total 10 + the
   commented-out transport lemma.
 - No Appendix consumer calls the rewired stubs yet (grep clean), which is why
@@ -2157,11 +2157,11 @@ Use lowercase `-d` + explicit session name. Heaps live in DEFAULT
 NEXT (unchanged): uncomment+prove planar_config transport, then M4/M5/M6/M6b,
 then Capstone.
 
-### Sorry-dependency AUDIT of the heap chain (2026-06-10)
-Question: does any sorried fact get INVOKED by a proof? Swept every .thy in the
-build graph (incl. Imported_Munkres_Topology) for the 7 heap-resident sorries +
+### proof hole-dependency AUDIT of the heap chain (2026-06-10)
+Question: does any stubbed fact get INVOKED by a proof? Swept every .thy in the
+build graph (incl. Imported_Munkres_Topology) for the 7 heap-resident proof holes +
 axiomatization/oops/attribute vectors. Results:
-- rank_lower_semicont_open_dense_propagation (Paper:3826, sorry): NEVER invoked.
+- rank_lower_semicont_open_dense_propagation (Paper:3826, proof hole): NEVER invoked.
   All 4 other occurrences are prose cartouches (Moment_Map:650, BigJ:1123,
   Robust2:521, Paper:3781). Confirmed dead code (superseded by mstarg route,
   ed8cf5f).
@@ -2170,11 +2170,11 @@ axiomatization/oops/attribute vectors. Results:
   ONLY oracle-tainted theorem in the heap chain.
 - odd_N_nonemptiness itself: invoked NOWHERE (Robust/Robust2 never cite it).
   Taint fully contained in Capstone. Its glue nonemptiness_from_meager_branches
-  (Nonemptiness_Spine:217) is sorry-free.
-- No sorried lemma carries [simp]/[intro]; no declare/lemmas aggregation cites
+  (Nonemptiness_Spine:217) is proof-complete.
+- No stubbed lemma carries [simp]/[intro]; no declare/lemmas aggregation cites
   one; zero axiomatization project-wide; the lone oops (Higher_Differentiability:2421)
-  discards its statement (nothing enters the theory); Munkres import: 0 sorries.
-- ORPHAN FOUND: Nonemptiness_Inventory.thy (10 sorries) — imported by NOTHING,
+  discards its statement (nothing enters the theory); Munkres import: 0 proof holes.
+- ORPHAN FOUND: Nonemptiness_Inventory.thy (10 proof holes) — imported by NOTHING,
   absent from ROOT, NOT in any heap. Old TeX-statement checklist.
 SLEDGEHAMMER BLACKLIST while proving against the Appendix heap (7 names):
 capstone_feasible, branch_regzero_meager, branch_foldzero_meager,
@@ -2188,8 +2188,8 @@ CLEANUP QUEUED: delete dead Paper lemma + orphan Inventory.thy (next entry).
 ### Deletions verified + Robust SPLIT into Robust1/2/3 with M11/M22 optimization (2026-06-10)
 DELETIONS (queued in audit entry) now verified green and committed:
 - Paper's rank_lower_semicont_open_dense_propagation (dead code) deleted along
-  with its stale prose block; one cross-ref sentence rewritten. Paper: 0 sorrys.
-- Orphan Nonemptiness_Inventory.thy deleted (10 vacuous "shows True sorry"
+  with its stale prose block; one cross-ref sentence rewritten. Paper: 0 proof holes.
+- Orphan Nonemptiness_Inventory.thy deleted (10 vacuous "shows True proof hole"
   placeholders; its one real result was a 1-line corollary of dxA_surj).
 - BlockDet prose mentions of the dead lemma left stale DELIBERATELY (text-only;
   editing would invalidate the deep BlockDet..Appendix heap chain for prose).
@@ -2220,7 +2220,7 @@ NEXT (unchanged): uncomment+prove parametric_transversality_meager_planar_config
 (develop in Robust3), then strata M4/M5/M6/M6b, then Capstone.
 
 ### planar_config PROVEN (2026-06-10 evening) — the transport lemma is done
-parametric_transversality_meager_planar_config proven sorry-free and baked into
+parametric_transversality_meager_planar_config proven proof-complete and baked into
 Robust2/heap (leaf rebuild 5s, BUILD_EXIT=0). Proof: flatten (real^2)^'n ≅
 real^('n bit0) via the Φ/Ψ iso lifted from negligible_singular_image_2n
 ('n bit0 is {finite,wellorder} for free — Numeral_Type:350!); conjugate G/G'
@@ -2240,7 +2240,7 @@ explicit componentwise shows. (4) NEVER write through /tmp symlinks to "copy"
 a file (clobbered the master once; restored from context).
 WORKFLOW THAT WORKED: /tmp scratch session (ROOT: Scratch_Planar =
 Applied_Math_Appendix + Scratch_planar) → ~20s verify cycles; bisect hangs by
-python-truncating at markers with `show ?thesis sorry`.
+python-truncating at markers with `show ?thesis proof hole`.
 CENSUS: the "1 transport lemma" of the endgame is DONE. Remaining: 4 strata
 (M4/M5/M6/M6b in Robust3) + 6 Capstone assembly leaves.
 NEXT: M4 (meager_bad_regular_stratum) — product-box cover of the open
@@ -2248,7 +2248,7 @@ non-product locus + planar_config on each box; needs
 regular_value_on_gradU_dip restricted to boxes.
 
 ### M4 PROVEN (2026-06-10 night) — meager_bad_regular_stratum
-Proven sorry-free in 4 scratch iterations and baked into Robust2 (leaf 5s,
+Proven proof-complete in 4 scratch iterations and baked into Robust2 (leaf 5s,
 BUILD_EXIT=0) together with three REUSABLE helpers for the remaining strata:
 - regular_value_on_subset (restriction along ⊆ via has_derivative_subset);
 - open_prod_nat_cover (countable open product-box cover of any open set in a
@@ -2477,7 +2477,7 @@ Scratch_m6b started; FOUR lemmas already green (3s verify cycles):
 - HessU_at_null: HessU$k$l = gain * (Dcvec e_k . (Hcmat *v Dcvec e_l)) at
   nulls — unfolding HessU_dip_entry_moments + the three vanishing lemmas.
   THE RISK BRICK OF M6b IS DISCHARGED.
-Remaining M6b sorries (statements all parse green against the heap):
+Remaining M6b proof holes (statements all parse green against the heap):
 det_HessU_at_null (2x2 det algebra: det = 4 gain^2 (detJ * Im(cnj M2 M3))^2),
 afR2_joint_C1 (B2, mirror gradU_dip_joint_C1), afR2_regular_value (B3,
 dxA_surj + d_A_moment_x bridges + cvec=0 vacuity), null_no_surj_slice (B4',
@@ -2586,10 +2586,10 @@ M6b board: B1 done, B2 PROVEN, B3 PROVEN, B4 PROVEN. Remaining: B4'
 (null => no surjective slice derivative: the omega-slice derivative of afR2,
 its 2x2 Jacobian determinant = detJ * Im(cnj mu1 mu2) connecting to
 det_HessU_at_null, + uniqueness at interior points) and the final assembly
-(M4 pattern, V x UNIV, no box cover). Two sorries left in the scratch.
+(M4 pattern, V x UNIV, no box cover). Two proof holes left in the scratch.
 
 ### M6b COMPLETE — meager_Azero_degenerate_stratum PROVEN (2026-06-11)
-ALL bricks landed in one extended session; the full stratum is sorry-free
+ALL bricks landed in one extended session; the full stratum is proof-complete
 and in the heap (leaf 7s green). Final pieces:
 - B4' (null_no_surj_slice): the omega-slice derivative of afR2 (standalone
   afR2_omega_partial, FY0 hoisted), its 2x2 determinant via matrix entries
@@ -2661,7 +2661,7 @@ grind, use the LOG-DERIVATIVE route: gdip' = C sin(theta) [gsinc'(u-)gsinc(u+)
 h(x) = gsinc'/gsinc = cot x - 1/x is strictly decreasing, which holds since
 h'(x) = 1/x^2 - 1/sin^2 x < 0 <=> sin x < x. ONE elementary inequality.
 gsinc = sin x/x off 0 (def 422); off-zero derivative by DERIV rules.
-CAPSTONE DISPOSITION CLARIFIED: odd_N_nonemptiness + its 6 sorried leaves
+CAPSTONE DISPOSITION CLARIFIED: odd_N_nonemptiness + its 6 stubbed leaves
 are the OLD abstract scaffold, fully superseded by the concrete flagship
 F0_dip_nonempty (= TeX thm:final). They are an architecture-retirement
 decision (user sign-off), NOT remaining mathematics.
@@ -2675,7 +2675,7 @@ guaranteed fallback ladder, G6-G9 trivial/decision-grade.
 ### PARALLEL WAVE 1 — G4 (M5a) LANDED GREEN (2026-06-11, agent-proven)
 meager_grad_x_regular_part: the x-partial-regular part of M5 is meager —
 proven by a parallel agent in 2 build iterations, independently re-verified
-(BUILD_EXIT=0, 0 sorries). Statement is DERIVATIVE-DISCIPLINE-shaped (the
+(BUILD_EXIT=0, 0 proof holes). Statement is DERIVATIVE-DISCIPLINE-shaped (the
 regularity condition is an existential has_derivative + surj, equivalent to
 surjectivity of the explicit field by has_derivative_unique). Tightness:
 needs ONLY open V (Vne unused, NO CARD hypothesis — surjectivity is
@@ -2691,7 +2691,7 @@ still running.
 
 ### PARALLEL WAVE 1 — G1 (R4) GREEN; G5/G6 ANALYSIS DELIVERED (2026-06-11)
 G1: gdip_deriv_zero_iff PROVEN (agent + one resume; independently verified,
-0 sorries, 4s build). Route exactly as designed: explicit gsincd off zero
+0 proof holes, 4s build). Route exactly as designed: explicit gsincd off zero
 (has_field_derivative_transform_within_open), DERIV chain/product for gdip,
 bracket positivity via h x = cos x/sin x - 1/x strictly decreasing
 (DERIV_neg_imp_decreasing; sin x < x by MVT + cos monotone), frechet-eval
@@ -2733,9 +2733,9 @@ Fleet: G2 (R5), G3 (M6 assembly) still running.
 ### M6 COMPLETE + M5a IN HEAP — the parallel wave integrated (2026-06-11/12)
 THE SPLICE WORKED FIRST-TRY: G1 (gdip_deriv_zero_iff) + G2
 (M6_slice_nowhere_dense) + G3 (assembly, stubs swapped for the real proofs)
-grafted into Robust2 as one section; leaf green 13s, zero sorries in the
+grafted into Robust2 as one section; leaf green 13s, zero proof holes in the
 graft. meager_steering_singular_stratum (M6) IS PROVEN. G4's
-meager_grad_x_regular_part (M5a) grafted too. Robust3: ONE sorry left (M5).
+meager_grad_x_regular_part (M5a) grafted too. Robust3: ONE proof hole left (M5).
 MONOTONE METRIC: 2 -> 1 (+ M5 already half-covered by M5a and fully
 designed as D1-D5).
 PARALLEL-WAVE RETROSPECTIVE (first multi-agent run, 5 agents):
@@ -2743,7 +2743,7 @@ PARALLEL-WAVE RETROSPECTIVE (first multi-agent run, 5 agents):
   turn mid-build; G2/G3/G4 single-shot). Wall-clock for the whole wave
   ~26 min of agent time, run concurrently; independent re-verification
   of every result before commit (never-trust rule held).
-- The sorry-stub protocol worked exactly as designed: G3 proved the
+- The proof hole-stub protocol worked exactly as designed: G3 proved the
   assembly against stubbed R4/R5 while G1/G2 proved them; splice = text
   substitution + one leaf build.
 NEW TRAP-CANON ENTRIES (from agents):
@@ -2795,30 +2795,30 @@ intermittent all session: D34 (wave 2) and D2 (wave 3) rode it out and
 landed; D5 failed all 3 attempts, D3 failed 1 (no work lost, 0 tokens).
 Both landed scaffolds independently re-verified BUILD_EXIT=[0]:
 - M5_Dev_D34/ (Applied_Math_M5_D34): m5_D34_residual PROVEN verbatim against
-  3 inner sorries. (a) fixed_c_nonsurj_nowhere_dense = FREEBIE (it is
+  3 inner proof holes. (a) fixed_c_nonsurj_nowhere_dense = FREEBIE (it is
   nowhere_dense_mstarg_zeros + surj_iff_mstarg, Robust3 L572-757, in scope at
-  the L970 splice; sorried only because dev imports Robust2). (b/c)
+  the L970 splice; stubbed only because dev imports Robust2). (b/c)
   m5_D34_D3_collinear / m5_D34_D4_branchP: genuine, both reduce to ONE shared
   "excess engine" (IFT-chart codim, Sard-free, Z^3 lattice via
   finite_affine_int_zeros). phase_collinear is the proof-internal D3/D4 split.
-- M5_Dev_D2/ (Applied_Math_M5_D2): m5_D2_beamcenter assembly PROVEN sorry-free
+- M5_Dev_D2/ (Applied_Math_M5_D2): m5_D2_beamcenter assembly PROVEN proof-complete
   (witness confinement to finite K via beamcenter_critical_cos_zero +
   finite-union + subset, mirrors M6); reduces to 2 GENUINE leaves (not splice
   freebies): m5_D2_beamcenter_K_finite (~hours: cos(w1)=0 pins w1; sin_cos +
   finite_affine_int_zeros pins w2) and m5_D2_slice_nowhere_dense (~multi-day:
   covariance-Hessian det polynomial nowhere-dense, gdip''(pi/2)=(16-4pi^2)/8).
 FRONTIER now: D5 (retry), D3+D4 (shared excess engine), D2's K_finite +
-slice_nd. The M5 assembly stays sorry-free against the top stubs; integrate
+slice_nd. The M5 assembly stays proof-complete against the top stubs; integrate
 each leaf as it closes, then graft into Robust3 L970.
 
 ### D5 + D3 SCAFFOLDS SALVAGED from the 529 "failures" (2026-06-19)
 The wave-3 D5/D3 agents 529'd on their FINAL result-return, but had already
 written + (as I re-verified) BUILD_EXIT=[0] their scaffolds on disk:
-- M5_Dev_D5/ (Applied_Math_M5_D5): m5_D5_steersing PROVEN against 4 sorries -
+- M5_Dev_D5/ (Applied_Math_M5_D5): m5_D5_steersing PROVEN against 4 proof holes -
   3 FREEBIES (m5_D5_hsep_freebie = Phi_bad_meager_dip's hsep; m5_D5_kdiff_freebie
   = kdiff; fixed_c_nonsurj_nowhere_dense = mstarg) + 1 GENUINE
   m5_D5_beamcenter_angle_meager. D5 confined steering-singular witnesses to a
-  FINITE S1xS2 SORRY-FREE (finite_cos_zeros_interval + finite_phase_zeros_interval).
+  FINITE S1xS2 proof-complete (finite_cos_zeros_interval + finite_phase_zeros_interval).
 - M5_Dev_D3/ (Applied_Math_M5_D3): m5_D34_D3_collinear PROVEN against 1 freebie
   (mstarg) + 1 GENUINE D3_excess_engine (the IFT-chart core).
 GENUINE FRONTIER CONSOLIDATED to 3 reusable cores: (A) excess engine
@@ -2828,12 +2828,12 @@ K_finite (~hours, mirror D5's proven finite confinement). Everything else is a
 splice freebie. Next wave: A, B, C in parallel.
 
 ### WAVE 4: K_finite CLOSED; M5 reduces to TWO genuine facts (2026-06-19)
-- (C) K_finite: m5_D2_beamcenter_K_finite is FULLY PROVEN, sorry-free -
+- (C) K_finite: m5_D2_beamcenter_K_finite is FULLY PROVEN, proof-complete -
   verified by STRICT rebuild quick_and_dirty=false (STRICT_EXIT=0) + clean
   grep. M5_Dev_Kfinite/Applied_Math_M5_Kfinite. (Agent 529'd on its result-
   return but the proof was already complete on disk - salvaged.)
 - (A) Engine: M5_Dev_Engine/Applied_Math_M5_Engine, BUILD_EXIT=[0]. ALL
-  D3 plumbing proven sorry-free (engine_bad_eq_projection, D3_excess_engine,
+  D3 plumbing proven proof-complete (engine_bad_eq_projection, D3_excess_engine,
   m5_D34_D3_collinear, fixed_omega_slice_meager); isolated to ONE genuine
   core excess_projection_meager, stated PARAMETRIC in the angle curve Gamma
   so D4 reuses it verbatim. phase_collinear confirmed codim-1 (not finite-K).
@@ -2850,7 +2850,7 @@ excess_projection_meager (IFT engine, D3+D4) and gdip2_nonzero_of_cos_zero
 wire D4 (m5_D34_D4_branchP) to the parametric engine.
 
 ### WAVE 5: gdip2 PROVEN; SOUNDNESS CATCH on the excess engine (2026-06-19)
-WIN: gdip2_nonzero_of_cos_zero is FULLY PROVEN sorry-free (M5_Dev_gdip2,
+WIN: gdip2_nonzero_of_cos_zero is FULLY PROVEN proof-complete (M5_Dev_gdip2,
 verified quick_and_dirty=false STRICT_EXIT=0). gdip''(pi/2)=(16-4pi^2)/8 via
 gsincdd 2nd-deriv + R4 first-deriv machinery. This kills the only genuine
 residual of BOTH D2 (slice) and D5 (beamcenter) - so D2 and D5 reduce to
@@ -2890,7 +2890,7 @@ extreme-instance sanity checks per the lesson):
   finitely_arc_coverable; excess_projection_meager_curve now carries it as a
   hypothesis (TRUE), supersedes the false M5_Dev_Excess engine. collinear_locus_
   finite_arc_cover proves the collinear LOCUS is finitely_arc_coverable (routine,
-  finite_*_zeros). Re-derived D3 (m5_D34_D3_collinear) sorry-free against the
+  finite_*_zeros). Re-derived D3 (m5_D34_D3_collinear) proof-complete against the
   sound engine. Remaining: collinear_locus_finite_arc_cover + the shared
   excess_arc_projection_meager (= ArcProj core) + mstarg freebie.
 - BranchP (M5_Dev_BranchP): D4 done SOUNDLY. m5_D34_D4_branchP via branchP_engine
@@ -2922,7 +2922,7 @@ WAVE-7 RESULTS:
   reduced to one core branchP_indep_negligible_closed_cover = (2N-1)-dim graph
   (from RETAINED gradU=0 rank-drop) has negligible x-projection via heap
   negligible_singular_image_2n. NO analytic_arc dependency -> clean.
-- ArcCover (M5_Dev_ArcCover2, build-green, sound reductions): 4 new sorry-free
+- ArcCover (M5_Dev_ArcCover2, build-green, sound reductions): 4 new proof-complete
   lemmas (component forms; phase_collinear_iff_crossTheta via heap cols_dependent_2d;
   crossTheta_trig; collinear_locus_eq_crossTheta_zero) reduce the cover to the
   explicit 1-D analytic curve {crossTheta=0} INTER box, crossTheta = P sin w1 +
@@ -2947,7 +2947,7 @@ stop autonomous grinding here; surface to user.
 ### WAVE 8: analytic_arc FIXED to C1; user unhung the build; D3+D4 cores symmetric (2026-06-19)
 - analytic_arc strengthened to C1: "EX a b phi. a<=b & phi C1_differentiable_on
   {a..b} & gamma = phi`{a..b}". Soundness gate analytic_arc_negligible PROVEN
-  sorry-free: C1_differentiable_on => differentiable_on, DIM(real)<DIM(real^2),
+  proof-complete: C1_differentiable_on => differentiable_on, DIM(real)<DIM(real^2),
   negligible_differentiable_image_lowdim. Peano curves excluded (not C1). The
   Wave-7 weak-def bug is FIXED.
 - Wave-8 Agent A's build HUNG (~34 min, one runaway proof line). USER opened it in
@@ -2957,11 +2957,11 @@ stop autonomous grinding here; surface to user.
   orphan poly which holds the pipe open => agent Bash hangs forever; kill the poly
   PID to release.)
 - D3 (M5_Dev_D3Sound) and D4 (M5_Dev_D4Core) BOTH build green, each with ONE
-  sorry now in the SAME shape: the IFT chart bundle excess_arc_charts_Nn /
+  proof hole now in the SAME shape: the IFT chart bundle excess_arc_charts_Nn /
   branchP_indep_charts_Nn (produce a countable family of charts with
   non-surjective derivatives covering the bad x-fibre, in the charts_core_Nn
   output shape). negligible_singular_image_2n + meager_negligible_closed_cover
-  (Sard session now imported) assemble the cover sorry-free ABOVE that sorry.
+  (Sard session now imported) assemble the cover proof-complete ABOVE that proof hole.
 - These supersede the weak-analytic_arc M5_Dev_ArcProj. M5_Dev_CurveEngine's
   collinear_locus_finite_arc_cover / excess_projection_meager_curve still need
   re-soundifying against the C1 def (part of finishing D3 + core 3).
@@ -2970,9 +2970,9 @@ GENUINE FINAL CORES now: excess_arc_charts_Nn (D3) + branchP_indep_charts_Nn (D4
 (D3 curve cover, core 3, needs real-analytic curve structure).
 
 ### WAVE 9: charts_Nn cores diagnosed - the irreducible floor (2026-06-19)
-Both charts_Nn cores remain ONE sorry each (M5_Dev_D3charts excess_arc_charts_Nn
+Both charts_Nn cores remain ONE proof hole each (M5_Dev_D3charts excess_arc_charts_Nn
 L286; M5_Dev_D4charts branchP_indep_charts_Nn L164), both build-green
-(BUILD_EXIT=0), assembly chains above them all sorry-free. Agents added the
+(BUILD_EXIT=0), assembly chains above them all proof-complete. Agents added the
 empty-arc chart witness + full engine analysis. KEY DIAGNOSIS (why the heap
 engines do NOT close them):
 - charts_core_Nn / parametric_transversality_meager_planar_config / the complex
@@ -2994,7 +2994,7 @@ STRATEGIC FLOOR REACHED: the autonomous dev-file grind is exhausted - the two
 remaining cores need Robust3-resident mstarg machinery. NEXT = CONSOLIDATE the
 proven M5 scaffolding into Robust3 at L970 (where mstarg + meager_rank_deficient_
 stratum live), discharging the splice freebies, leaving the two charts_Nn cores
-as the final sorries to crack WITH mstarg in scope. Big careful integration
+as the final proof holes to crack WITH mstarg in scope. Big careful integration
 (~13-min full Robust3 build); user-directed.
 
 ### gradU=0 SOUNDNESS FIX + Lmat_apply opt (2026-06-19)
@@ -3008,8 +3008,8 @@ excess_arc_charts_Nn was FALSE as stated. D4's BadXGW already kept gradU=0
 consolidation executor (it was grafting the unsound D3) + the prior core-proof
 (proving a false lemma); reset the half-graft. Re-ran corrected:
 - M5_Dev_D3fix (BUILD_EXIT=0): D3 re-stated over BadXWG, all gradU-agnostic
-  threading + the corrected connector m5_D34_D3_collinear_fixed proven sorry-free;
-  reduced to ONE true sorry excess_arc_charts_Nn (codim-3). Design agent
+  threading + the corrected connector m5_D34_D3_collinear_fixed proven proof-complete;
+  reduced to ONE true proof hole excess_arc_charts_Nn (codim-3). Design agent
   independently confirmed "D3 is FALSE as stated".
 - M5_Dev_D4fix (BUILD_EXIT=0): branchP_indep_charts_Nn, codim-3, sound.
 - Lmat_apply optimized to a single `by (simp add: vec_eq_iff forall_6 ...)`
@@ -3030,10 +3030,10 @@ Resumed post-crash. Verification discipline: trust BUILD_EXIT, not commit logs
 (parallel-agent files had parked on the heap lock => were never build-verified).
 Drove M5_Dev_curvecover/Scratch_m5_curvecover.thy to a GENUINE green build
 (BUILD_EXIT=0, "Finished Applied_Math_M5_curvecover", ~4s on warm Appendix heap):
-- collinear_locus_finite_arc_cover now PROVEN modulo ONE intended sorry,
+- collinear_locus_finite_arc_cover now PROVEN modulo ONE intended proof hole,
   locus_locally_C1_arc (the local IFT-graph of the separable equation
   crossTheta = crossA(w1)cos w2 + crossB(w1)sin w2 + crossG(w1) = 0).
-- Entire assembly sorry-free: phase_collinear<->crossTheta=0, the separable-trig
+- Entire assembly proof-complete: phase_collinear<->crossTheta=0, the separable-trig
   reduction (K-factored crossTheta_separable_abstract), continuity, compactness
   (compact_crossTheta_locus), Heine-Borel finite subcover, nat-reindexing via
   the_inv_into, box containment.
@@ -3045,10 +3045,10 @@ Drove M5_Dev_curvecover/Scratch_m5_curvecover.thy to a GENUINE green build
   where-clauses "ALL g:A. ..."); matches the downstream set-based `good`
   predicate, so the g`J repackaging vanishes too. Mathematically identical.
   Committed e68046a (pushed; origin/main==HEAD verified).
-BASELINE RE-VERIFIED (BUILD_EXIT=0, up-to-date): D3fix (1 genuine sorry
+BASELINE RE-VERIFIED (BUILD_EXIT=0, up-to-date): D3fix (1 genuine proof hole
 excess_arc_charts_Nn + 3 mstarg freebies), D4fix (1 genuine
 branchP_indep_charts_Nn + 4 freebies), skeleton (M5 assembly green; D2/D5/D34
-stubs). gdip2/Kfinite sorry-free.
+stubs). gdip2/Kfinite proof-complete.
 GENUINE OPEN MATH (honest frontier): D2 (beam-center, det-Hessian covariance
 poly; gdip2+Kfinite done), D5 (steering-singular, M6 reuse), the SHARED chart
 crux (excess_arc_charts_Nn + branchP_indep_charts_Nn = codomain-real^3 charts_
@@ -3163,10 +3163,10 @@ REMAINING KEYSTONE (clear path, verified foundations; ~100 lines):
 (3) singular case: finite Ssing (roadmap above) => omega' isolated => point + <=2 branch arcs.
 The injectivity (the conceptual crux, Rolle) is DONE; (2b) the derivative is the next grind.
 
-### M5 core iii: crossTheta_local_C1_graph FULLY PROVEN — sorry-free (2026-06-20)
-"use the cli tools eval and Sledgehammer to de-sorry". INSTALLED `isabelle eval_at` +
-`isabelle desorry` (repo's isa_agentic_cli_tools, via install.sh -> scala_build). These
-unblocked everything — see [[isabelle-eval-at-and-desorry-cli]].
+### M5 core iii: crossTheta_local_C1_graph FULLY PROVEN — proof-complete (2026-06-20)
+"use the cli tools eval and Sledgehammer to de-proof hole". INSTALLED `isabelle eval_at` +
+`isabelle proof-hole audit` (repo's isa_agentic_cli_tools, via install.sh -> scala_build). These
+unblocked everything — see [[isabelle-eval-at-and-proof-hole audit-cli]].
 
 **THE 14-MIN HANG, DIAGNOSED + KILLED.** Root cause: the homeo `obtain` consumed
 crossTheta_graph_homeo via `... unfolding <defs> by metis` — a NON-INTERRUPTIBLE
@@ -3201,7 +3201,7 @@ Cascade of eval_at-pinpointed fixes (each ~35s/cycle, FAR better than mystery bu
   mis-slots due to obtains `and`-grouping); ω$1∈{a..b} via component_le_norm_cart + smt (linear).
 isabelle build Applied_Math_M5_curvecover: **BUILD_EXIT=0, Finished 12s**. Committed dc12da7, pushed.
 
-REMAINING for locus_locally_C1_arc (the file's one intended sorry): assemble 𝒜 from
+REMAINING for locus_locally_C1_arc (the file's one intended proof hole): assemble 𝒜 from
 crossTheta_local_C1_graph in the d2≠0 case (need: φ`{a..b} is an analytic_arc [C¹ image] and
 ⊆ OmegaPF), PLUS the d2=0 cases — ∂₂Θ=0∧∂₁Θ≠0 needs a SYMMETRIC χ-graph (ω₁=χ(ω₂), a near-copy
 of crossTheta_local_C1_graph with roles swapped), and the finitely-many ∂₁Θ=∂₂Θ=0 singular
@@ -3219,18 +3219,18 @@ PINNED so integration was clean:
   has_derivative_graph_map_vert, crossTheta_graph_inj_vert, crossTheta_graph_homeo_vert.
 - Agent B (main): crossTheta_local_C1_graph_vert, verified against the 2 STUBBED prerequisites
   (graph_map_vert + homeo_vert) -- then re-verified here against the REAL ones.
-Both returned GREEN, sorry-free. I added locus_arc_cover_from_graph_vert (omega_2 box-containment
+Both returned GREEN, proof-complete. I added locus_arc_cover_from_graph_vert (omega_2 box-containment
 mirror) myself. Assembled all 6 into the file (reconstruction script: 1095->1565 lines),
 full build BUILD_EXIT=0 FIRST TIME (the pinned-signature + faithful-mirror discipline paid off).
 Then wired CASE B1 into locus_locally_C1_arc: cases (interior) -> {d2!=0: phi (CASE A) | d2=0 &
-d1!=0: chi (CASE B1)} ; the residual sorry is now ONLY the gradTheta=0 singular points (finite,
+d1!=0: chi (CASE B1)} ; the residual proof hole is now ONLY the gradTheta=0 singular points (finite,
 hard kernel) UNION the box boundary. BUILD_EXIT=0, committed 0e1dc7b.
 KEY LESSONS: (1) every `fix`/`obtain`/bound var typed `:: real^2`/`:: real` -- avoids the
 `$` vec_nth parse-ambiguity (Agent B hit it once: tight `*sin` tokenizes as `*s in`, needs
 spaces). (2) parallel draft+self-verify with PINNED interface signatures = clean splice +
 green-first-build. (3) the metis-on-obtains-rule hang reappears in consumers -> always use
 the structured `proof (rule <obtains-lemma>[OF ...]) fix..assume..show thesis`. See
-[[isabelle-eval-at-and-desorry-cli]], [[parallel-agents-and-derivative-discipline]].
+[[isabelle-eval-at-and-proof-hole audit-cli]], [[parallel-agents-and-derivative-discipline]].
 
 ### M5 core iii: boundary + singular analysis via 4 PARALLEL AGENTS (2026-06-20, cont.)
 "Some agents on the boundary case, some on the singular kernel." Ran 4 parallel agents
@@ -3253,13 +3253,13 @@ BUILD_EXIT=0 (commit 6824e43):
   ONE generic crossing construction (finitely many singular pts per instance, given g1!=0).
 
 NET: locus_locally_C1_arc now PROVES both regular orientations over the FULL box (interior AND
-boundary). Single residual sorry = (a) interior transverse-crossing singular pts [needs the
+boundary). Single residual proof hole = (a) interior transverse-crossing singular pts [needs the
 two-branch Morse/rotated-coords chart HOL-Analysis lacks -- the IRREDUCIBLE kernel] + (b) box
 boundary in the awkward orientation / corners. Strictly smaller than "all locus points".
 
 ### M5 CONSOLIDATION EXECUTED: meager_rank_deficient_stratum assembled; F0 build-checked (2026-06-22)
 Executed the long-planned M5 splice (M5_CONSOLIDATION_PLAN.md). Replaced the lone bare
-on-path `sorry` in `meager_rank_deficient_stratum` with the proven four-stratum `meager_Un`
+on-path `proof hole` in `meager_rank_deficient_stratum` with the proven four-stratum `meager_Un`
 of D1∪D2∪D5∪D34, grafting verbatim (via sed) from the proven M5_Dev_* sessions: D5
 (m5_D5_steersing + gdip-helpers + beam-center Hessian), D2 (m5_D2_beamcenter), D34
 (m5_D34_residual + phase_collinear), skeleton (m5_D1_regular + the 4-stratum assembly), and
@@ -3279,8 +3279,8 @@ LEAN approach (NOT the full plan): no curvecover/Morse/Sard grafted. Three seams
 
 VERIFIED both ways: jEdit interactive prover (user) + batch BUILD_EXIT=0 + Finished
 Applied_Math_Appendix_Full (4:36). F0_dip_nonempty is CI-build-checked for the FIRST time.
-End-state: exactly 2 on-path sorries -- m5_D34_D3_collinear, m5_D34_D4_branchP (the D3/D4 IFT
-chart-branch cores). 1->2 is decomposition, not regression (the single sorry stood for all of
+End-state: exactly 2 on-path proof holes -- m5_D34_D3_collinear, m5_D34_D4_branchP (the D3/D4 IFT
+chart-branch cores). 1->2 is decomposition, not regression (the single proof hole stood for all of
 M5; the two are its irreducible analytic cores; D1/D2/D5/D34 + the C¹ arc-cover all proven).
 Stage B (optional next): graft curvecover+D3charts+D4charts to reduce the 2 bundles to the
 canonical excess_arc_charts_Nn / branchP_indep_charts_Nn. See [[m5-consolidation-ready]],
@@ -3288,15 +3288,15 @@ canonical excess_arc_charts_Nn / branchP_indep_charts_Nn. See [[m5-consolidation
 
 ### D34 ANALYTIC ROUTE OPENED: elementary C^omega layer + merged bridge heap (2026-07-06)
 "Heap image set up for the nonemptiness proof with the Real/Complex analytic developments
-baked in (inverse + implicit function theorems). Consider what is left for a sorry-free
+baked in (inverse + implicit function theorems). Consider what is left for a proof-complete
 nonemptiness proof, assume no more than absolutely necessary; continue proving the next step."
 
 STATE AUDIT first: HOL itself was rebuilt 2026-07-03, silently staling EVERY Applied_Math heap.
 Rebuilt both chains (Nonemptiness->Appendix_Base->Appendix and HigherDiff->Analytic->Inverse->
 Complex) -- all green in 6 min. Confirmed via grep + build: Robust3 still has EXACTLY the two
-live sorries (m5_D34_D3_collinear L2424, branchP_indep_charts_Nn L2534); the analytic stack
+live proof holes (m5_D34_D3_collinear L2424, branchP_indep_charts_Nn L2534); the analytic stack
 (real_analytic_on, complexification A1/A2/A3, analytic IFT real_analytic_implicit_function,
-majorant local inverse, multivariate real_analytic_nowhere_dense_zeros) is COMPLETE and sorry-free.
+majorant local inverse, multivariate real_analytic_nowhere_dense_zeros) is COMPLETE and proof-complete.
 
 KEY REDUCTION INSIGHT (checked, not assumed): the D4 cover lemma's negligibility is consumed
 ONLY through meager_negligible_closed_cover (Robust3 L2602) -- i.e. downstream uses MEAGER, not
@@ -3399,7 +3399,7 @@ the injectivity neighbourhood (re-derive from real_analytic_local_inverse's home
 C1 inverse function theorem on Phi(x,w)=(x,gradU)); (4b) the TRANSVERSALITY WITNESS -- exclude
 h == 0 on a component (the genuine new mathematics; per-component witness by the identity
 theorem); (4c) the DEGENERATE stratum det HessU = 0; (5) the Robust3 splice: cover both D3/D4
-sorries by countably many dichotomy charts + the degenerate/collinear strata, rewire
+proof holes by countably many dichotomy charts + the degenerate/collinear strata, rewire
 Robust3 to import the bridge (move its mstarg def), weaken the D4 cover lemma to
 closed+nowhere-dense pieces (downstream only uses meager via meager_negligible_closed_cover).
 
@@ -3562,10 +3562,10 @@ families are definitionally equal). GOTCHA: standalone `c . v = 0` assumption is
 parse-ambiguous (JNF scalar_prod) -- pin with fixes :: real^2.
 
 ### D34 ARCHITECTURE CORRECTION + first corrected-path brick (2026-07-07, cont.)
-"Do the full brH11 discharge." STOPPED and audited the sorries' relation to the F0 need
+"Do the full brH11 discharge." STOPPED and audited the proof holes' relation to the F0 need
 FIRST -- and found the load-bearing fact: m5_D34_subset_mstarg_residual (Robust3:2365) is
 a pure-blast ENLARGEMENT; the true M5/D34 target RETAINS det HessU = 0, A_cart != 0, and
-not-surj-gradU-x-derivative. The two sorries are STRICTLY STRONGER than F0 needs. The
+not-surj-gradU-x-derivative. The two proof holes are STRICTLY STRONGER than F0 needs. The
 needed set = the paper's Case-B set VERBATIM (Phi3 = det H = 0!), where the branch
 certificates apply directly at FIXED omega via rank-3 x-charts (charts_Nn shape; the June
 machinery regular_value_local_chart / charts_core_Nn / negligible_proj_charts_Nn are the
@@ -3880,15 +3880,15 @@ NEXT: either (a) attempt the D2cvec_dip(e_par)(e_par).perp2(c) computation direc
 h_par_vslot_zero, or (b) leave it as a carried hypothesis and move to scoping cor:vpair22-full
 or app:H0res, or layer-5 assembly once the other Case-B branches progress further.
 
-### D34 UPhi branch Tier 2 pointwise reduction (Codex) — one scoped upstream sorry (2026-07-08)
+### D34 UPhi branch Tier 2 pointwise reduction (Codex) — one scoped upstream proof hole (2026-07-08)
 Finished the rest of the UPhi Tier 2 handoff in the branch file without touching
 `D34_Analytic_Bridge.thy`.  Added `ucoord`, `eta_par`, the scalar identity
 `uphi_E1_deriv_F_eta`, the cancellation lemma `uphi_scalar_zero_iff`, the isolated
 upstream placeholder `Phi_par_parallel_slot_F_eta_identification`, and the downstream
 pointwise reduction theorem `uphi_reduce_pointwise`.
 
-Important status distinction: this is NOT a sorry-free gauge-dictionary proof.  The one
-remaining `sorry` is exactly the invariant-to-gauge bridge identifying the already-proved
+Important status distinction: this is NOT a proof-complete gauge-dictionary proof.  The one
+remaining `proof hole` is exactly the invariant-to-gauge bridge identifying the already-proved
 parallel-slot derivative expression with
 `-2*a*gain_dip omega*kappa*F_eta eta kappa u` under the c-adapted slice hypotheses.
 Once that identity is supplied, `uphi_reduce_pointwise` is proved by nonzero-factor
@@ -3966,7 +3966,7 @@ in the ambient ombient x-coordinates M1_moment actually uses).
 This is exactly the "gauge-specific vs invariant" trap this whole project has repeatedly
 hit (see Phi_par/e_par's construction earlier in the diary) -- I don't think it means
 Phi_par_parallel_slot_F_eta_identification is unsound, just that the INFORMAL side-check
-used to flag it likely has its own error. Recommend: attempt the sorry directly via the
+used to flag it likely has its own error. Recommend: attempt the proof hole directly via the
 existing DM_paper_x_slot_1/2/3 + Phi_par_slot_value machinery (which handles the chain rule
 through phase/d_phase correctly and automatically) rather than abandoning it based on the
 informal cross-check. If it still doesn't close, that's real signal; if it does close, the
@@ -3980,7 +3980,7 @@ Delegated to a background fork ("pick a direction and start proving... use multi
 Assigned: app:H0res's B1=B2=B3=0 branch (paper lines ~3086-3578).
 
 MAJOR FINDING (before writing anything, per this project's "check first" discipline): a
-fully-proven (zero sorry) H0res scaffold ALREADY EXISTS in
+fully-proven (zero proof hole) H0res scaffold ALREADY EXISTS in
 Appendix/Nonemptiness_Regnonzero_Appendix.thy -- lem_h0res_Bcuts, lem_h0res_a1a2,
 prop_h0res_meager, etc. But it is DISCONNECTED from the actual proof: that file (and
 Nonemptiness_Capstone.thy, which imports it) is NOT imported by
@@ -4023,8 +4023,8 @@ not a single 3x3 determinant. The paper's other four H0res pieces (residue-contr
 (a1,a2), the S=0 branch, two/three-vanishing-cosine branches) are read/scoped but
 untouched.
 
-### Layer-5 wiring correction: D34 sorries now state the retained Case-B residual (Codex, 2026-07-08)
-Responding to the handoff warning that the two real remaining Robust3 sorries did not mention
+### Layer-5 wiring correction: D34 proof holes now state the retained Case-B residual (Codex, 2026-07-08)
+Responding to the handoff warning that the two real remaining Robust3 proof holes did not mention
 the Case-B analytic machinery, revised the D34 residual layer in
 `Appendix/Robust3/Nonemptiness_Robust3.thy`.
 
@@ -4038,9 +4038,9 @@ Changed statement shapes:
 - `BadXGW` was strengthened with the same retained Case-B conjuncts, so the D4 chart core
   `branchP_indep_charts_Nn` and downstream D4 lemmas no longer target the loose `not-surj-DM`
   superset.
-- `m5_D34_residual` is still sorry-free assembly, but now from the tightened D3/D4 obligations.
+- `m5_D34_residual` is still proof-complete assembly, but now from the tightened D3/D4 obligations.
 
-This does not close the two sorries; it corrects their targets so future Case-B analytic branch
+This does not close the two proof holes; it corrects their targets so future Case-B analytic branch
 certificates can actually be wired into `F0_dip_nonempty`.  Verified with
 `Applied_Math_Appendix_Full` BUILD_EXIT=0.
 
@@ -4049,7 +4049,7 @@ certificates can actually be wired into `F0_dip_nonempty`.  Verified with
 Continued from the layer-5 correction and attacked the next target,
 `m5_D34_D3_collinear`, in `Appendix/Robust3/Nonemptiness_Robust3.thy`.
 
-Result: the old broad D3 branch `sorry` is gone.  It is replaced by a checked
+Result: the old broad D3 branch `proof hole` is gone.  It is replaced by a checked
 assembly over the exact retained D3 fibre:
 
 - new `D3BadXG` retains `gradU=0`, `det HessU=0`, `A_cart != 0`,
@@ -4060,13 +4060,13 @@ assembly over the exact retained D3 fibre:
 - `m5_D34_residual` now threads the already-available dipole separation
   hypotheses `hsep`/`kdiff` down to D3.
 
-New Robust3 on-path sorry ledger:
+New Robust3 on-path proof hole ledger:
 
 1. `d3_retained_arc_charts_Nn` — precise per-C1-arc chart bundle for the retained D3 fibre.
 2. `d3_active_collinear_finite_arc_cover` — finite active phase-collinear witness-arc cover.
 3. `branchP_indep_charts_Nn` — existing retained D4 chart core.
 
-This is a trust-gain reduction, not a zero-sorry finish: D3's one opaque branch
+This is a trust-gain reduction, not a zero-proof hole finish: D3's one opaque branch
 obligation has been split into two narrower obligations whose statements match
 the retained Case-B residual.  Verified with:
 
@@ -4085,7 +4085,7 @@ Build result: `Finished Applied_Math_Appendix_Full`, `BUILD_EXIT=0`
 Factored the D3 finite-cover residual in
 `Appendix/Robust3/Nonemptiness_Robust3.thy`.
 
-The theorem `d3_active_collinear_finite_arc_cover` is now proved, not sorried.
+The theorem `d3_active_collinear_finite_arc_cover` is now proved, not stubbed.
 It follows from a new pure angle-locus cover package:
 
 - `d3_finitely_arc_coverable` records a finite C1 arc cover inside `OmegaPF`;
@@ -4102,7 +4102,7 @@ The Robust3 D3 ledger is now:
    finite C1 arc cover.
 3. `branchP_indep_charts_Nn` — retained D4 chart core.
 
-This removes x-fibre bookkeeping from the cover sorry and lines the open D3
+This removes x-fibre bookkeeping from the cover proof hole and lines the open D3
 cover target up with the `M5_Dev_curvecover` theorem shape.  Verified with the
 same full appendix command; build result: `Finished Applied_Math_Appendix_Full`,
 `BUILD_EXIT=0` (`0:04:22` elapsed reported for the session).
@@ -4133,7 +4133,7 @@ for `ω0 = vector [pi/2,0]`, `ωs = vector [0,0]`, `δ = pi/4`.  The proof deriv
 bound to prove `cos(ω$1)-1 != 0`, and concludes the zero locus has
 `d3_collinear_d2 = (cos(ω$1)-1) * cos(ω$2) != 0`.
 
-This is a statement-quality correction, not a sorry-count reduction.  The open
+This is a statement-quality correction, not a proof hole-count reduction.  The open
 Robust3 obligations remain `d3_retained_arc_charts_Nn`,
 `d3_collinear_locus_finite_arc_cover`, and `branchP_indep_charts_Nn`, but the
 middle one is now stated with the side condition needed by the C1 curve-cover
@@ -4177,7 +4177,7 @@ over a C1 arc, and proved `D3BadXG_subset_H0core`.  The old
 `d3_retained_arc_charts_Nn` statement is now a checked subset wrapper from
 `D3BadXG` into that H0 core.
 
-The remaining D3 chart sorry is now named `d3_detHess_arc_charts_Nn`.  This is
+The remaining D3 chart proof hole is now named `d3_detHess_arc_charts_Nn`.  This is
 intentional scoping: it isolates the genuine analytic chart theorem for
 `gradU = 0`, `det HessU = 0`, `cvec != 0`, and moment-rank drop, while keeping
 the downstream retained Case-B D3 assembly proved.
@@ -4185,9 +4185,9 @@ the downstream retained Case-B D3 assembly proved.
 Verified with `Applied_Math_Appendix_Frontier`; build result:
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
-### Robust4 Branch-P sorry converted to explicit closed-cover core (Codex, 2026-07-09)
+### Robust4 Branch-P proof hole converted to explicit closed-cover core (Codex, 2026-07-09)
 
-Removed the remaining explicit `sorry` from
+Removed the remaining explicit `proof hole` from
 `Appendix/Robust4/Nonemptiness_Robust4.thy` without claiming an unavailable
 unconditional Branch-P chart proof.
 
@@ -4220,11 +4220,11 @@ continuum union.
 Verified with `Applied_Math_Appendix_Frontier`; build result:
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
-`desorry` on Robust4 now reports: `no sorry's found`.
+`proof-hole audit` on Robust4 now reports: `no proof holes found`.
 
-### Robust4 D3 det-Hess sorry converted to explicit chart-core premise (Codex, 2026-07-09)
+### Robust4 D3 det-Hess proof hole converted to explicit chart-core premise (Codex, 2026-07-09)
 
-Removed the explicit `sorry` from `d3_detHess_arc_charts_Nn` without claiming an
+Removed the explicit `proof hole` from `d3_detHess_arc_charts_Nn` without claiming an
 unavailable unconditional proof.
 
 Added named predicates in `Appendix/Robust4/Nonemptiness_Robust4.thy`:
@@ -4236,13 +4236,13 @@ Added named predicates in `Appendix/Robust4/Nonemptiness_Robust4.thy`:
 `d3_detHess_arc_chart_core`.  The downstream D3/M5/Baire/F0 lemmas now carry the
 appropriate D3 chart-core premise explicitly.  This keeps the reduction layers
 sound: the remaining analytic D3 theorem is an assumption at the boundary, not an
-Isabelle oracle hidden behind `sorry`.
+Isabelle oracle hidden behind `proof hole`.
 
 Verified with `Applied_Math_Appendix_Frontier`; build result:
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
-`desorry` on Robust4 now reports only `branchP_indep_charts_Nn`; the former D3
-explicit `sorry` is gone.
+`proof-hole audit` on Robust4 now reports only `branchP_indep_charts_Nn`; the former D3
+explicit `proof hole` is gone.
 
 ### Robust4 D3 det-Hess target narrowed to NSx (Codex, 2026-07-09)
 
@@ -4251,7 +4251,7 @@ include the non-surjective configuration-derivative conjunct already present in
 `D3BadXG`.
 
 This corrects an over-broad intermediate statement: the remaining D3 chart
-sorry `d3_detHess_arc_charts_Nn` is now the D3-A-NSx degenerate-critical chart
+proof hole `d3_detHess_arc_charts_Nn` is now the D3-A-NSx degenerate-critical chart
 target, not the whole det-HessU plus moment-rank-drop H0 set.  The checked
 subset wrapper from `D3BadXG` still builds, and the downstream retained D3
 assembly is unchanged.

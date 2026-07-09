@@ -23,12 +23,12 @@ text \<open>\<^bold>\<open>(M5) Core D3 (SOUND) --- fixing the \<open>analytic_a
 
   \<^bold>\<open>The D3 chain, re-proved against the SOUND def.\<close>  Strengthening the hypothesis
   \<open>analytic_arc \<gamma>\<close> only MAKES THE LEMMAS EASIER (the conclusions are unchanged);
-  every structural / reduction / assembly layer is reproduced sorry-free.  The
+  every structural / reduction / assembly layer is reproduced proof-complete.  The
   single isolated genuine analytic core (the IFT chart bundle) is carried as the
-  one precisely-scoped \<open>sorry\<close> @{text excess_arc_charts_Nn}, exactly as the
+  one precisely-scoped \<open>proof hole\<close> @{text excess_arc_charts_Nn}, exactly as the
   reduction files do, and the closed-negligible cover
   @{text excess_arc_negligible_closed_cover} and the meagerness
-  @{text excess_arc_projection_meager} are assembled sorry-free from it.\<close>
+  @{text excess_arc_projection_meager} are assembled proof-complete from it.\<close>
 
 
 subsection \<open>The STRENGTHENED analytic-arc predicate (Wave-7 fix: \<open>C\<^sup>1\<close>, not continuous)\<close>
@@ -40,7 +40,7 @@ definition analytic_arc :: "(real^2) set \<Rightarrow> bool" where
 
 subsection \<open>STEP 1 --- the soundness gate: a \<open>C\<^sup>1\<close> arc in the plane is negligible\<close>
 
-text \<open>\<^bold>\<open>Soundness gate (sorry-free).\<close>  The strengthened @{const analytic_arc} is
+text \<open>\<^bold>\<open>Soundness gate (proof-complete).\<close>  The strengthened @{const analytic_arc} is
   genuinely 1-dimensional: the underlying \<open>C\<^sup>1\<close> map \<open>\<phi> :: real \<Rightarrow> real^2\<close> is
   differentiable on the compact interval \<open>{a..b}\<close>, and a differentiable image of a
   set of strictly lower Euclidean dimension is negligible.  Since
@@ -77,7 +77,7 @@ definition BadXW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Ri
         cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0 \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
 
 
-subsection \<open>Structural set algebra for \<open>BadXW\<close> (sorry-free)\<close>
+subsection \<open>Structural set algebra for \<open>BadXW\<close> (proof-complete)\<close>
 
 lemma BadXW_empty:
   "BadXW \<omega>0 \<omega>s {} = ({} :: ((real^2)^'n) set)"
@@ -103,7 +103,7 @@ lemma BadXW_point:
   unfolding BadXW_def by blast
 
 
-subsection \<open>The per-fixed-angle slice is nowhere dense / meager (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>The per-fixed-angle slice is nowhere dense / meager (proof-complete from \<open>nd\<close>)\<close>
 
 lemma fixed_omega_slice_nowhere_dense:
   fixes \<omega> :: "real^2"
@@ -171,7 +171,7 @@ proof -
 qed
 
 
-subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>sorry\<close>)\<close>
+subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>proof hole\<close>)\<close>
 
 text \<open>\<^bold>\<open>The genuine analytic content, isolated as one precisely-scoped statement.\<close>
   Over the (now \<open>C\<^sup>1\<close>) analytic arc \<open>\<gamma> = \<phi> ` {a..b}\<close> the curve-confined
@@ -218,14 +218,14 @@ lemma excess_arc_charts_Nn:
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
   \<comment> \<open>GENUINE analytic core: the IFT chart of the per-arc moment-Jacobian bad
       fibre in the @{thm charts_core_Nn} output shape (route above).  The single
-      irreducible \<open>sorry\<close> of this file; it does NOT follow from @{text nd} alone.
+      irreducible \<open>proof hole\<close> of this file; it does NOT follow from @{text nd} alone.
       NOT a splice freebie.\<close>
   sorry
 
 
-subsection \<open>The analytic core: the closed negligible cover (sorry-free from the chart bundle)\<close>
+subsection \<open>The analytic core: the closed negligible cover (proof-complete from the chart bundle)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled proof-complete from the chart bundle.\<close>
   From the chart bundle @{thm excess_arc_charts_Nn} the pieces
   \<open>K i = (fst \<circ> charts i) ` (Crit i)\<close> are CLOSED (chart output) and NEGLIGIBLE
   (@{thm negligible_singular_image_2n}: the projection has non-surjective
@@ -272,7 +272,7 @@ proof -
 qed
 
 
-subsection \<open>Assembly bridge + the verbatim per-arc target (sorry-free from the core)\<close>
+subsection \<open>Assembly bridge + the verbatim per-arc target (proof-complete from the core)\<close>
 
 lemma excess_arc_projection_of_negligible_closed_cover:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"

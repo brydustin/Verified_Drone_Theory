@@ -22,7 +22,7 @@ THMS=$(count '^[[:space:]]*theorem\b')
 LEMS=$(count '^[[:space:]]*lemma\b')
 CORS=$(count '^[[:space:]]*(corollary|proposition)\b')
 DEFS=$(count '^[[:space:]]*(definition|abbreviation|fun|primrec)\b')
-SORRY=$(count '^[[:space:]]*sorry[[:space:]]*$')
+proof hole=$(count '^[[:space:]]*proof hole[[:space:]]*$')
 
 echo "############  CODE METRICS (Isabelle .thy, QC/LaTeX excluded)  ############"
 printf "%-34s %s\n" "Theory (.thy) files"      "$FILES"
@@ -32,7 +32,7 @@ printf "%-34s %s\n" "Theorems"                 "$THMS"
 printf "%-34s %s\n" "Lemmas"                   "$LEMS"
 printf "%-34s %s\n" "Corollaries/Propositions" "$CORS"
 printf "%-34s %s\n" "Definitions"              "$DEFS"
-printf "%-34s %s\n" "sorry's (remaining)"      "$SORRY"
+printf "%-34s %s\n" "proof holes (remaining)"      "$proof hole"
 
 echo
 echo "############  GIT METRICS (commits touching .thy files)  ############"

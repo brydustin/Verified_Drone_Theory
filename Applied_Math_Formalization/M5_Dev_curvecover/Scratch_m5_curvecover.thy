@@ -8,7 +8,7 @@ begin
 
 text \<open>\<^bold>\<open>(M5) Core "3" --- the COLLINEAR LOCUS has a finite \<open>C\<^sup>1\<close>-arc cover.\<close>
 
-  This file discharges (or precisely scopes) the terminal Robust3 sorry
+  This file discharges (or precisely scopes) the terminal Robust3 proof obligation
   @{text collinear_locus_finite_arc_cover}: the phase-collinear locus
   \<open>{\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>}\<close> is @{text finitely_arc_coverable}
   --- covered by finitely many @{text analytic_arc}'s, each a genuine \<open>C\<^sup>1\<close>
@@ -32,7 +32,7 @@ definition finitely_arc_coverable :: "(real^2) set \<Rightarrow> real^2 \<Righta
      (\<exists>(I::nat set) arc. finite I \<and> \<Gamma> \<subseteq> (\<Union>i\<in>I. arc i)
          \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>))"
 
-text \<open>\<^bold>\<open>Soundness wiring check\<close> (sorry-free): a single point is a (degenerate) \<open>C\<^sup>1\<close>
+text \<open>\<^bold>\<open>Soundness wiring check\<close> (proof-complete): a single point is a (degenerate) \<open>C\<^sup>1\<close>
   arc --- the constant map on \<open>{0..0}\<close> is @{const C1_differentiable_on}.  This is the
   degenerate-arc case the curve-structure design uses for the finitely many singular
   points, and it confirms the \<open>C\<^sup>1\<close> @{const analytic_arc} plumbing is correctly wired.\<close>
@@ -55,7 +55,7 @@ definition phase_collinear :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 
    \<or> (\<exists>t. cvec_dip \<omega>0 \<omega>s \<omega> = t *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))"
 
 
-subsection \<open>GENUINE REDUCTION 1: component forms (copied from ArcCover2, sorry-free)\<close>
+subsection \<open>GENUINE REDUCTION 1: component forms (copied from ArcCover2, proof-complete)\<close>
 
 lemma c1_eq:
   "cvec_dip \<omega>0 \<omega>s \<omega> $ 1
@@ -78,7 +78,7 @@ lemma Dc2_eq:
   by (simp add: Dcvec_dip_def axis_def)
 
 
-subsection \<open>GENUINE REDUCTION 2: phase_collinear = crossTheta vanishes (sorry-free)\<close>
+subsection \<open>GENUINE REDUCTION 2: phase_collinear = crossTheta vanishes (proof-complete)\<close>
 
 definition crossTheta :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
   "crossTheta \<omega>0 \<omega>s \<omega> =
@@ -134,7 +134,7 @@ lemma collinear_locus_eq_crossTheta_zero:
 
 subsection \<open>GENUINE REDUCTION 3: separable trig form \<open>\<Theta> = \<alpha>(\<omega>\<^sub>1)cos\<omega>\<^sub>2 + \<beta>(\<omega>\<^sub>1)sin\<omega>\<^sub>2 + \<gamma>(\<omega>\<^sub>1)\<close>\<close>
 
-text \<open>\<^bold>\<open>The decisive structural simplification (sorry-free).\<close>  Clearing the explicit trig
+text \<open>\<^bold>\<open>The decisive structural simplification (proof-complete).\<close>  Clearing the explicit trig
   forms and using the Pythagorean identity, the cross determinant collapses to a
   function that is AFFINE-TRIGONOMETRIC in the second angle:
   \<open>crossTheta = crossA * cos(w2) + crossB * sin(w2) + crossG\<close>, where the three
@@ -219,7 +219,7 @@ proof -
 qed
 
 
-subsection \<open>Continuity of \<open>crossTheta\<close> and compactness of the locus (sorry-free)\<close>
+subsection \<open>Continuity of \<open>crossTheta\<close> and compactness of the locus (proof-complete)\<close>
 
 text \<open>From the separable form @{thm crossTheta_separable}, \<open>crossTheta\<close> is a continuous
   function of \<open>\<omega>\<close> (a polynomial in \<open>cos/sin\<close> of the two continuous components \<open>\<omega>$1\<close>,
@@ -2928,9 +2928,9 @@ qed
 
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
-text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
+text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>proof hole\<close>.\<close>
 
-  By the sorry-free reductions above, the collinear locus is the bounded-box zero set
+  By the proof-complete reductions above, the collinear locus is the bounded-box zero set
   of the SINGLE separable-trigonometric equation
   \<open>crossA(\<omega>\<^sub>1)cos\<omega>\<^sub>2 + crossB(\<omega>\<^sub>1)sin\<omega>\<^sub>2 + crossG(\<omega>\<^sub>1) = 0\<close> (@{thm crossTheta_separable}),
   a genuine 1-dimensional real-analytic curve.  The only remaining content is the
@@ -2971,7 +2971,7 @@ lemma locus_locally_C1_arc:
       "{\<omega> \<in> OmegaPF ctr \<delta>. crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
   \<comment> \<open>REGULAR interior case (\<open>\<partial>\<^sub>2\<Theta>\<noteq>0\<close>, \<open>\<omega>'\<close> interior) is now PROVEN via
       @{thm crossTheta_local_C1_graph} + @{thm locus_arc_cover_from_graph}.  The residual
-      \<open>sorry\<close> is confined to the \<open>\<partial>\<^sub>2\<Theta>=0\<close> / boundary case (the symmetric
+      \<open>proof hole\<close> is confined to the \<open>\<partial>\<^sub>2\<Theta>=0\<close> / boundary case (the symmetric
       \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> \<open>\<chi>\<close>-graph and the finitely many \<open>\<nabla>\<Theta>=0\<close> singular points).\<close>
 proof -
   have z0: "crossTheta \<omega>0 \<omega>s \<omega>' = 0" using win by simp
@@ -3069,7 +3069,7 @@ proof -
         \<comment> \<open>BOUNDARY case: \<omega>' on \<partial>(OmegaPF) (awkward orientation / corner).  Split on
             \<open>R = Ac\<cdot>ky\<omega>s - Bc\<cdot>kx\<omega>s\<close>.  \<open>R \<noteq> 0\<close> rules out every flat box edge, so the
             \<open>\<phi>\<close>-graph (B1), \<open>\<chi>\<close>-graph (B2', robust) and singular (B3) clips all go through;
-            the residual \<open>sorry\<close> is the collinear-wavevector degeneracy \<open>R = 0\<close>.\<close>
+            the residual \<open>proof hole\<close> is the collinear-wavevector degeneracy \<open>R = 0\<close>.\<close>
         show ?thesis
         proof (cases "?Ac * ky \<omega>s - ?Bc * kx \<omega>s \<noteq> 0")
           case True
@@ -3538,7 +3538,7 @@ proof -
                 qed
               next
                 case False
-                \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL (the ONLY remaining \<open>sorry\<close>): \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and>
+                \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL (the ONLY remaining \<open>proof hole\<close>): \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and>
                     \<partial>\<^sub>1\<Theta> = 0\<close> with at least one FLAT box-edge line.\<close>  A super-degenerate
                     codim-2 sub-case: \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> at the collinear-wavevector
                     degeneracy \<open>R = 0\<close>, at a saddle (\<open>\<nabla>\<Theta> = 0\<close>, \<open>det H < 0\<close>), AND some box
@@ -3563,7 +3563,7 @@ proof -
 qed
 
 
-subsection \<open>ASSEMBLY (sorry-free from the local-arc residual + compactness)\<close>
+subsection \<open>ASSEMBLY (proof-complete from the local-arc residual + compactness)\<close>
 
 text \<open>Heine--Borel: the compact locus is covered by the per-point balls of
   @{thm locus_locally_C1_arc}; a finite subcover yields finitely many \<open>C\<^sup>1\<close> arcs whose

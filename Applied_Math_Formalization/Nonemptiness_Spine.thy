@@ -197,7 +197,7 @@ section \<open>Closeout Lemma (Baire + Meager Branches)\<close>
 text \<open>
   This is the Isabelle counterpart of Theorem \<open>thm:final\<close> (odd-\<open>N\<close> nonemptiness),
   assembled over the concrete configuration type. It is \<^emph>\<open>fully proved\<close> (no
-  \<^theory_text>\<open>sorry\<close>): it derives nonemptiness of the robust feasible set
+  \<^theory_text>\<open>proof hole\<close>): it derives nonemptiness of the robust feasible set
   \<open>Fzero Fset X0 = Fset \<inter> X0 \<xi>\<close> from the four meagerness facts and the soundness of
   \<open>X0\<close>, exactly as the paper's closeout does. Those hypotheses are the deep
   branch results of the paper; they are stated here as explicit assumptions, not

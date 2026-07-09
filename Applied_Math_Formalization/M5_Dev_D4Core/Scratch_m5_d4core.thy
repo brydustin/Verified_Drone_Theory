@@ -8,7 +8,7 @@ text \<open>\<^bold>\<open>(M5) D4 core --- the linear-independence rank-drop cl
 
   This file proves the GENUINE geometric-measure core that the D4 reduction file
   @{file \<open>../M5_Dev_IndepCore/Scratch_m5_indepcore.thy\<close>} carries as its single
-  irreducible \<open>sorry\<close>: over the 2-D linear-independence (\<open>\<gamma> \<not>\<parallel> c\<close>) region, the
+  irreducible \<open>proof hole\<close>: over the 2-D linear-independence (\<open>\<gamma> \<not>\<parallel> c\<close>) region, the
   retained-constraint bad \<open>x\<close>-projection \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> --- where the bad set
   RETAINS the codimension-giving constraints \<open>gradU = 0 \<and> det (Dcvec) \<noteq> 0\<close> beyond the
   moment rank-drop \<open>\<not> surj (DM_paper_x \<dots>)\<close> --- is contained in a COUNTABLE union of
@@ -28,20 +28,20 @@ text \<open>\<^bold>\<open>(M5) D4 core --- the linear-independence rank-drop cl
   @{thm charts_core_Nn} (the bad-zero IFT chart construction), augmented with the
   closedness of each \<open>x\<close>-projection piece (as in the ArcNeg sibling's
   @{text excess_arc_charts_Nn}).  From that bundle the closed negligible cover
-  @{text branchP_indep_negligible_closed_cover} is assembled \<^bold>\<open>sorry-free\<close> via
+  @{text branchP_indep_negligible_closed_cover} is assembled \<^bold>\<open>proof-complete\<close> via
   @{thm negligible_singular_image_2n} (each \<open>x\<close>-projection piece has a non-surjective
   derivative on its critical set, hence is negligible) and the bundle's closedness.
 
-  \<^bold>\<open>What is proven SOUND, sorry-free here.\<close>
+  \<^bold>\<open>What is proven SOUND, proof-complete here.\<close>
   \<^enum> @{text BadXGW_point} / @{text BadXGW_mono} / @{text BadXGW_UN} --- structural set
     algebra for the retained bad \<open>x\<close>-set (copied verbatim from the reduction file).
   \<^enum> @{text branchP_indep_negligible_closed_cover} --- the VERBATIM target, assembled
-    \<^bold>\<open>sorry-free\<close> from the chart bundle via @{thm negligible_singular_image_2n}.
+    \<^bold>\<open>proof-complete\<close> from the chart bundle via @{thm negligible_singular_image_2n}.
   \<^enum> @{text branchP_indep_of_negligible_closed_cover} / @{text branchP_indep_core} ---
-    the downstream sorry-free layers (copied verbatim), confirming the cut is at the
+    the downstream proof-complete layers (copied verbatim), confirming the cut is at the
     right place: the closed negligible cover yields meagerness with no further work.
 
-  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH sorry).\<close>
+  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH proof hole).\<close>
   @{text branchP_indep_charts_Nn}: the IFT chart of the retained-constraint bad
   \<open>(x,\<omega>)\<close> locus.  On \<open>\<gamma> \<not>\<parallel> c\<close> (@{text not_gamma_par_c_iff}) the pair
   \<open>\<gamma> = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)\<close>, \<open>c = cvec_dip \<omega>0 \<omega>s \<omega>\<close> is linearly independent;
@@ -86,7 +86,7 @@ lemma not_gamma_par_c_iff:
   unfolding gamma_par_c_def phase_collinear_def by blast
 
 
-subsection \<open>Structural set algebra for \<open>BadXGW\<close> (sorry-free, copied verbatim)\<close>
+subsection \<open>Structural set algebra for \<open>BadXGW\<close> (proof-complete, copied verbatim)\<close>
 
 lemma BadXGW_mono:
   fixes \<Gamma> \<Delta> :: "(real^2) set"
@@ -111,7 +111,7 @@ lemma BadXGW_point:
   unfolding BadXGW_def by blast
 
 
-subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>sorry\<close>)\<close>
+subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>proof hole\<close>)\<close>
 
 text \<open>\<^bold>\<open>The genuine geometric-measure content, isolated as one precisely-scoped
   statement.\<close>  Over the linear-independence (\<open>\<gamma> \<not>\<parallel> c\<close>) region \<open>\<Gamma> \<subseteq> OmegaPF ctr \<delta>\<close>,
@@ -144,7 +144,7 @@ text \<open>\<^bold>\<open>The genuine geometric-measure content, isolated as on
   @{text nd} alone.  This is the EXACT analogue of the ArcNeg sibling's
   @{text excess_arc_charts_Nn} (same chart machinery; the codimension source is
   RETAINED \<open>gradU = 0\<close> on a 2-D region here, a 1-D analytic arc there), and the
-  single isolated \<open>sorry\<close> of this file.  NOT a splice freebie.\<close>
+  single isolated \<open>proof hole\<close> of this file.  NOT a splice freebie.\<close>
 
 lemma branchP_indep_charts_Nn:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -166,14 +166,14 @@ lemma branchP_indep_charts_Nn:
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
   \<comment> \<open>GENUINE geometric-measure core: the IFT chart of the retained-constraint bad
       \<open>(x,\<omega>)\<close> locus in the @{thm charts_core_Nn} output shape (route above).  The
-      single irreducible \<open>sorry\<close> of this file; it does NOT follow from @{text nd}
+      single irreducible \<open>proof hole\<close> of this file; it does NOT follow from @{text nd}
       alone.  NOT a splice freebie.\<close>
   sorry
 
 
-subsection \<open>The verbatim target: the closed negligible cover (sorry-free from the bundle)\<close>
+subsection \<open>The verbatim target: the closed negligible cover (proof-complete from the bundle)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled proof-complete from the chart bundle.\<close>
   From the chart bundle @{thm branchP_indep_charts_Nn} the pieces
   \<open>K i = (fst \<circ> charts i) ` (Crit i)\<close> are CLOSED (chart output) and NEGLIGIBLE
   (@{thm negligible_singular_image_2n}: the projection has non-surjective derivative
@@ -223,9 +223,9 @@ proof -
 qed
 
 
-subsection \<open>The downstream sorry-free layers (copied verbatim from IndepCore)\<close>
+subsection \<open>The downstream proof-complete layers (copied verbatim from IndepCore)\<close>
 
-text \<open>The two sorry-free layers consumed downstream (copied verbatim from the
+text \<open>The two proof-complete layers consumed downstream (copied verbatim from the
   reduction file) confirm the cut is at the right place: the closed negligible cover
   yields meagerness without further geometric-measure work.\<close>
 

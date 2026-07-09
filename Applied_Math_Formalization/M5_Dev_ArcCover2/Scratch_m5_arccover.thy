@@ -21,7 +21,7 @@ definition finitely_arc_coverable :: "(real^2) set \<Rightarrow> real^2 \<Righta
          \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>))"
 
 
-subsection \<open>GENUINE REDUCTION 1: component forms of \<open>cvec_dip\<close> / \<open>Dcvec_dip\<close> (sorry-free)\<close>
+subsection \<open>GENUINE REDUCTION 1: component forms of \<open>cvec_dip\<close> / \<open>Dcvec_dip\<close> (proof-complete)\<close>
 
 text \<open>The two components of the steered wavevector and of its \<open>\<omega>\<^sub>1\<close>-partial, read off the
   explicit definitions.  Abbreviations: \<open>Ac = (kx\<omega>0-kx\<omega>s)/(kz\<omega>s-kz\<omega>0)\<close>,
@@ -48,12 +48,12 @@ lemma Dc2_eq:
   by (simp add: Dcvec_dip_def axis_def)
 
 
-subsection \<open>GENUINE REDUCTION 2: \<open>phase_collinear\<close> = the cross-determinant vanishes (sorry-free)\<close>
+subsection \<open>GENUINE REDUCTION 2: \<open>phase_collinear\<close> = the cross-determinant vanishes (proof-complete)\<close>
 
 text \<open>\<open>phase_collinear\<close> is exactly linear dependence of \<open>Dcvec_dip \<omega> (axis 1 1)\<close> and
   \<open>cvec_dip \<omega>\<close>, which for plane vectors is the vanishing of their \<open>2\<times>2\<close> cross
   determinant.  This converts the two existential scaling clauses into one polynomial
-  (in \<open>sin/cos\<close>) equation \<open>\<Theta>(\<omega>\<^sub>1,\<omega>\<^sub>2)=0\<close>.  Proven sorry-free from @{thm cols_dependent_2d}.\<close>
+  (in \<open>sin/cos\<close>) equation \<open>\<Theta>(\<omega>\<^sub>1,\<omega>\<^sub>2)=0\<close>.  Proven proof-complete from @{thm cols_dependent_2d}.\<close>
 
 definition crossTheta :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
   "crossTheta \<omega>0 \<omega>s \<omega> =
@@ -102,7 +102,7 @@ next
 qed
 
 
-subsection \<open>GENUINE REDUCTION 3: explicit trigonometric form of \<open>\<Theta>\<close> (sorry-free)\<close>
+subsection \<open>GENUINE REDUCTION 3: explicit trigonometric form of \<open>\<Theta>\<close> (proof-complete)\<close>
 
 text \<open>Clearing \<open>cvec_dip\<close>/\<open>Dcvec_dip\<close> by their explicit trig forms, the cross
   determinant is the single analytic equation
@@ -137,7 +137,7 @@ subsection \<open>Deliverable 1: the phase-collinear LOCUS has a finite analytic
 
 text \<open>\<^bold>\<open>GENUINE analytic obligation (precisely scoped to the collinear LOCUS).\<close>
 
-  By the three sorry-free reductions above, the locus is exactly the bounded-box zero
+  By the three proof-complete reductions above, the locus is exactly the bounded-box zero
   set of the single analytic function @{const crossTheta}, whose explicit trig form
   (@{thm crossTheta_trig}) is \<open>P\<cdot>sin(\<omega>\<^sub>1) + cos(\<omega>\<^sub>1)\<cdot>Q(\<omega>\<^sub>2) + R(\<omega>\<^sub>2)\<close> --- a genuine
   one-dimensional real-analytic curve (NOT a 2-cell, NOT a finite point set).  The
@@ -159,7 +159,7 @@ lemma collinear_locus_finite_arc_cover:
   fixes ctr :: "real^2" and \<delta> :: real
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "finitely_arc_coverable {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
-  \<comment> \<open>GENUINE analytic sorry (1/2), SOUNDLY scoped: by the sorry-free reductions
+  \<comment> \<open>GENUINE analytic proof hole (1/2), SOUNDLY scoped: by the proof-complete reductions
       @{thm collinear_locus_eq_crossTheta_zero} and @{thm crossTheta_trig} the locus is
       the bounded-box zero set of the single analytic equation \<open>\<Theta>(\<omega>\<^sub>1,\<omega>\<^sub>2)=0\<close>; the
       remaining real-analytic curve-structure step covers this 1-dim zero set by

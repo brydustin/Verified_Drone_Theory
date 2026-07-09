@@ -15,17 +15,17 @@ text \<open>\<^bold>\<open>(M5) D4 charts --- the isolated IFT chart-bundle obli
   \<^bold>\<open>verbatim\<close> from
   @{file \<open>../M5_Dev_D4Core/Scratch_m5_d4core.thy\<close>} (the D4 core file).
 
-  \<^bold>\<open>What is proven SOUND, sorry-free here.\<close>
+  \<^bold>\<open>What is proven SOUND, proof-complete here.\<close>
   \<^enum> @{text BadXGW_point} / @{text BadXGW_mono} / @{text BadXGW_UN} --- structural set
     algebra for the retained bad \<open>x\<close>-set (copied verbatim).
   \<^enum> @{text not_gamma_par_c_iff} --- the linear-independence dichotomy unfolding.
   \<^enum> @{text branchP_indep_negligible_closed_cover} / @{text
     branchP_indep_of_negligible_closed_cover} / @{text branchP_indep_core} --- the
-    downstream layers assembled \<^bold>\<open>sorry-free\<close> from the chart bundle via
+    downstream layers assembled \<^bold>\<open>proof-complete\<close> from the chart bundle via
     @{thm negligible_singular_image_2n} and @{thm meager_negligible_closed_cover};
     these confirm the cut is at the right place.
 
-  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH sorry).\<close>
+  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH proof hole).\<close>
   @{text branchP_indep_charts_Nn}.  This is the implicit-function-theorem chart of
   the retained-constraint bad locus, in the EXACT output shape of the heap engine
   @{thm charts_core_Nn} (and consumed by @{thm negligible_singular_image_2n}).
@@ -54,7 +54,7 @@ text \<open>\<^bold>\<open>(M5) D4 charts --- the isolated IFT chart-bundle obli
   per-fixed-\<open>\<omega>\<close> topological input @{text nd} alone (no derivative, no closedness, no
   joint regularity; uncountable unions of nowhere-dense sets need not be meager).
   This is the EXACT analogue of the ArcNeg / D3Sound siblings'
-  @{text excess_arc_charts_Nn}, and is the single isolated \<open>sorry\<close> of this file.
+  @{text excess_arc_charts_Nn}, and is the single isolated \<open>proof hole\<close> of this file.
   \<open>freebie_at_splice = false\<close>.\<close>
 
 
@@ -88,7 +88,7 @@ lemma not_gamma_par_c_iff:
   unfolding gamma_par_c_def phase_collinear_def by blast
 
 
-subsection \<open>Structural set algebra for \<open>BadXGW\<close> (sorry-free, copied verbatim)\<close>
+subsection \<open>Structural set algebra for \<open>BadXGW\<close> (proof-complete, copied verbatim)\<close>
 
 lemma BadXGW_mono:
   fixes \<Gamma> \<Delta> :: "(real^2) set"
@@ -113,7 +113,7 @@ lemma BadXGW_point:
   unfolding BadXGW_def by blast
 
 
-subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>sorry\<close>)\<close>
+subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>proof hole\<close>)\<close>
 
 text \<open>\<^bold>\<open>The genuine geometric-measure content, isolated as one precisely-scoped
   statement.\<close>  Over the linear-independence (\<open>\<gamma> \<not>\<parallel> c\<close>) region \<open>\<Gamma> \<subseteq> OmegaPF ctr \<delta>\<close>,
@@ -159,14 +159,14 @@ lemma branchP_indep_charts_Nn:
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
   \<comment> \<open>GENUINE geometric-measure core: the IFT chart of the retained-constraint bad
       \<open>(x,\<omega>)\<close> locus in the @{thm charts_core_Nn} output shape.  The single irreducible
-      \<open>sorry\<close> of this file; it does NOT follow from @{text nd} alone (see header).
+      \<open>proof hole\<close> of this file; it does NOT follow from @{text nd} alone (see header).
       NOT a splice freebie.\<close>
   sorry
 
 
-subsection \<open>The verbatim target: the closed negligible cover (sorry-free from the bundle)\<close>
+subsection \<open>The verbatim target: the closed negligible cover (proof-complete from the bundle)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled proof-complete from the chart bundle.\<close>
   From the chart bundle @{thm branchP_indep_charts_Nn} the pieces
   \<open>K i = (fst \<circ> charts i) ` (Crit i)\<close> are CLOSED (chart output) and NEGLIGIBLE
   (@{thm negligible_singular_image_2n}: the projection has non-surjective derivative
@@ -216,9 +216,9 @@ proof -
 qed
 
 
-subsection \<open>The downstream sorry-free layers (copied verbatim from D4Core)\<close>
+subsection \<open>The downstream proof-complete layers (copied verbatim from D4Core)\<close>
 
-text \<open>The two sorry-free layers consumed downstream (copied verbatim from the D4
+text \<open>The two proof-complete layers consumed downstream (copied verbatim from the D4
   core file) confirm the cut is at the right place: the closed negligible cover
   yields meagerness without further geometric-measure work.\<close>
 

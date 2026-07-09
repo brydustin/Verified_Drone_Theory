@@ -180,7 +180,7 @@ qed
 
 section \<open>The planar-config transversality engine\<close>
 
-text \<open>Transport of the sorry-free Euclidean engine
+text \<open>Transport of the proof-complete Euclidean engine
   \<open>parametric_transversality_meager_euclidean_stub\<close> from \<open>\<real>\<^sup>m\<close> to the
   configuration type \<open>(\<real>\<^sup>2)^'n\<close>: flatten via the linear homeomorphism
   \<open>(real^2)^'n \<cong> real^('n bit0)\<close> (the \<open>\<Phi>/\<Psi>\<close> iso lifted from
@@ -341,7 +341,7 @@ proof -
       using comp sDpm unfolding Ge_def by blast
   qed
 
-  \<comment> \<open>Run the sorry-free Euclidean engine at \<open>'m = 'n bit0\<close>.\<close>
+  \<comment> \<open>Run the proof-complete Euclidean engine at \<open>'m = 'n bit0\<close>.\<close>
   have core: "meager {w \<in> Ve. \<exists>\<omega>\<in>\<Omega>. Ge (w, \<omega>) = 0 \<and>
         \<not> (\<exists>D\<omega>. ((\<lambda>u. Ge (w, u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>)}"
     using parametric_transversality_meager_euclidean_stub[OF openVe Vene openOm derGe contGe' reg0e]

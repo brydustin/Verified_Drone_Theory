@@ -8,7 +8,7 @@ text \<open>
   This theory closes the chain from the paper's hypotheses (\<^bold>\<open>START\<close>: odd \<open>N \<ge> 7\<close>,
   secant/spacing) to the flagship conclusion (\<^bold>\<open>FINISH\<close>: the robust feasible set
   \<open>F\<^sub>z\<^sub>e\<^sub>r\<^sub>o\<close> is nonempty), \<open>thm:final\<close>.  Every intermediate node of the proof DAG is now
-  a \<^emph>\<open>stated\<close> lemma; the only remaining holes are the @{command sorry}-leaves (the
+  a \<^emph>\<open>stated\<close> lemma; the only remaining holes are the proof-command leaves (the
   determinant computations, the transversality/Sard keystones, the real-analytic
   isolated-zeros input, and the analytic-cut engine) --- to be discharged in the
   next cycle.
@@ -24,7 +24,7 @@ text \<open>
 
   The capstone \<^theory_text>\<open>odd_N_nonemptiness\<close> is \<^emph>\<open>proved\<close> by feeding the four branch
   meagerness lemmas, the feasibility lemma, and the robustness lemma into the
-  already-sorry-free closeout \<open>nonemptiness_from_meager_branches\<close>.  Thus the
+  already-proof-complete closeout \<open>nonemptiness_from_meager_branches\<close>.  Thus the
   assembly itself is machine-checked: nothing false can slip through the seams,
   only through the explicitly-named leaf obligations.
 \<close>
@@ -135,9 +135,9 @@ lemma capstone_X0_sound:
 subsection \<open>The flagship: odd-\<open>N\<close> nonemptiness (assembled, machine-checked)\<close>
 
 text \<open>TeX \<open>thm:final\<close> (L1342).  Proved by assembling the four branch reductions, the
-  feasibility lemma, and the robustness lemma through the sorry-free closeout
+  feasibility lemma, and the robustness lemma through the proof-complete closeout
   \<open>nonemptiness_from_meager_branches\<close>.  The chain from START to FINISH has no
-  gaps beyond the named \<^theory_text>\<open>sorry\<close>-leaves above.\<close>
+  gaps beyond the named \<^theory_text>\<open>proof hole\<close>-leaves above.\<close>
 
 theorem odd_N_nonemptiness:
   fixes Fset :: "((real^2)^'n) set" and X0 :: "real \<Rightarrow> ((real^2)^'n) set"

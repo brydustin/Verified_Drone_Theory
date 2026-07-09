@@ -1,14 +1,14 @@
 # D34 layer 4b: the transversality witness — work plan
 
 _As of 2026-07-06. The single remaining GENUINE-MATHEMATICS obligation of the analytic
-route to a sorry-free `F0_dip_nonempty` (besides the degenerate stratum 4c)._
+route to a proof-complete `F0_dip_nonempty` (besides the degenerate stratum 4c)._
 
 
 ## 0. ARCHITECTURE CORRECTION (2026-07-07) — READ FIRST
 
 `m5_D34_subset_mstarg_residual` (Robust3:2365) is a pure `blast` ENLARGEMENT: the true
 D34 target (`m5_D34_residual`, Robust3:2665) RETAINS `det HessU = 0`, `A_cart != 0`,
-and `not (EX Dx. gradU-x-derivative surjective)`. The two sorries were stated for the
+and `not (EX Dx. gradU-x-derivative surjective)`. The two proof holes were stated for the
 enlarged residual (those conjuncts dropped) — STRICTLY STRONGER than F0 needs.
 
 Consequences:
@@ -23,7 +23,7 @@ Consequences:
   dip_wit_reduction / dip_wit_core_scaffold) remains sound and reusable, but the
   LAYER-5 covering of D34 should NOT route through it; it routes through
   rank-3-in-x charts on the det-H=0 set.
-- Layer-5 restatement: replace the two sorried lemmas by versions RETAINING
+- Layer-5 restatement: replace the two stubbed lemmas by versions RETAINING
   `det HessU = 0 /\ A_cart != 0 /\ ...` (adapt m5_D34_residual to consume them
   directly, dropping the subset step). Then prove them via the paper's Case-B
   branches over the landed substrate.
@@ -50,7 +50,7 @@ under ONE hypothesis:
            ∃x∈B. mstarg (cvec_dip ω0 ωs (g x)) x ≠ 0
 
 `wit` = "no connected critical chart lies wholly inside the moment-rank-drop locus".
-It plays the role for 4b that `nd` plays in the two Robust3 sorries. If the witness
+It plays the role for 4b that `nd` plays in the two Robust3 proof holes. If the witness
 mathematics needs more side conditions along the chart (e.g. `det HessU ≠ 0`, `A ≠ 0`,
 `g x` in the OmegaPF window), they are ALL shrinkable by continuity from the basepoint
 facts — extend the engine's shrink step (the `cvec ≠ 0` shrink in
@@ -397,7 +397,7 @@ covering splice into Robust3).
   rewrite to `F_eta` are still needed.
 
 - 2026-07-08 (Codex, cont.): **u-slice Tier 2 pointwise reduction LANDED with
-  one precise upstream sorry**.  Added `ucoord`, `eta_par`,
+  one precise upstream proof hole**.  Added `ucoord`, `eta_par`,
   `uphi_E1_deriv_F_eta`, `uphi_scalar_zero_iff`,
   `Phi_par_parallel_slot_F_eta_identification`, and `uphi_reduce_pointwise`.
   The new theorem `uphi_reduce_pointwise` proves the branch's pointwise
@@ -405,10 +405,10 @@ covering splice into Robust3).
   the parallel-slot derivative of `Phi_par` vanishes iff
   `F_eta eta kappa u = 0`, assuming `det Dcvec != 0`, `c != 0`, the slice
   equation `Im (M_1)=0`, `Phi_par=0`, `a>0`, and `gain_dip>0`.
-  The sole `sorry` is `Phi_par_parallel_slot_F_eta_identification`, which
+  The sole `proof hole` is `Phi_par_parallel_slot_F_eta_identification`, which
   exactly states the missing c-adapted gauge/algebra bridge from
   `Phi_par_parallel_slot_value` to `-2*a*gain*kappa*F_eta eta kappa u`.
-  This follows the documented sorry-upstream escape hatch: Tier 1 and the
+  This follows the documented proof hole-upstream escape hatch: Tier 1 and the
   downstream Tier 2 scalar cancellation are shipped, while the remaining
   upstream bridge is precision-scoped.
 
@@ -485,14 +485,14 @@ covering splice into Robust3).
   superset.  `Applied_Math_Appendix_Full` rebuilt with `BUILD_EXIT=0`.
 
 - 2026-07-08 (Codex, D3 next target): **`m5_D34_D3_collinear` is no longer an
-  opaque `sorry`**.  Added a retained D3 fibre `D3BadXG` and proved the D3 branch
+  opaque `proof hole`**.  Added a retained D3 fibre `D3BadXG` and proved the D3 branch
   by checked assembly from two precise residuals:
   `d3_retained_arc_charts_Nn` (per-C1-arc chart bundle for the exact retained
   fibre) and `d3_active_collinear_finite_arc_cover` (finite active
   phase-collinear witness-arc cover).  `m5_D34_residual` now passes the existing
   `hsep`/`kdiff` assumptions into D3; `meager_rank_deficient_stratum` already had
   those assumptions, so no capstone API change was needed.  Current Robust3
-  on-path sorries are exactly the two new D3 residuals plus the existing D4
+  on-path proof holes are exactly the two new D3 residuals plus the existing D4
   `branchP_indep_charts_Nn`.  Verified `Applied_Math_Appendix_Full`
   `BUILD_EXIT=0`.
 
@@ -500,7 +500,7 @@ covering splice into Robust3).
   checked glue, not an open mathematical obligation**.  Added
   `d3_finitely_arc_coverable` and proved `d3_active_cover_from_angle_cover`,
   then changed the open cover theorem to the pure angle-locus statement
-  `d3_collinear_locus_finite_arc_cover`.  The on-path Robust3 sorries are now:
+  `d3_collinear_locus_finite_arc_cover`.  The on-path Robust3 proof holes are now:
   `d3_retained_arc_charts_Nn`, `d3_collinear_locus_finite_arc_cover`, and
   `branchP_indep_charts_Nn`.  This is the intended shape for grafting the
   `M5_Dev_curvecover` C1 phase-collinear cover.  Verified

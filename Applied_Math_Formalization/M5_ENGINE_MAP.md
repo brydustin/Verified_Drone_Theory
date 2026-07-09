@@ -7,7 +7,7 @@ current source before composing — these are point-in-time.**
 
 ## Status of the flagship
 
-`F0_dip_nonempty` (`Appendix/Nonemptiness_Robust3.thy`) is sorry-free except the
+`F0_dip_nonempty` (`Appendix/Nonemptiness_Robust3.thy`) is proof-complete except the
 single stub `meager_rank_deficient_stratum` (M5). M5 assembly is proven in
 `M5_Dev/Scratch_m5_skeleton.thy` (green) as an exhaustive excluded-middle cover:
 
@@ -28,13 +28,13 @@ All dev files import `Applied_Math_Appendix.Nonemptiness_Robust2` and build in
 
 ## Verified dev files (BUILD_EXIT=0)
 
-| File | Session | Genuine residual sorry |
+| File | Session | Genuine residual proof hole |
 |------|---------|------------------------|
 | `M5_Dev_curvecover` | `Applied_Math_M5_curvecover` | `locus_locally_C1_arc` (core iii) — committed e68046a |
 | `M5_Dev_D3fix` | `Applied_Math_M5_D3fix` | `excess_arc_charts_Nn` (+3 mstarg freebies) |
 | `M5_Dev_D4fix` | `Applied_Math_M5_D4fix` | `branchP_indep_charts_Nn` (+4 mstarg freebies) |
 | `M5_Dev/skeleton` | (no session) | D2, D5, D34 stubs |
-| `M5_Dev_gdip2`, `M5_Dev_Kfinite` | — | sorry-free (D2 sub-pieces) |
+| `M5_Dev_gdip2`, `M5_Dev_Kfinite` | — | proof-complete (D2 sub-pieces) |
 
 "mstarg freebies" = `surj_iff_mstarg`, `mstarg_nonzero`, `nowhere_dense_mstarg_zeros`,
 `rline_entire_mstarg`: stubbed in dev files (local `mstarg` def), but PROVEN in
@@ -183,13 +183,13 @@ NONE is a one-liner. Build serially (heap lock). Subagents CANNOT run `isabelle 
 ## SOUNDNESS FINDINGS (2026-06-19 parallel audit) — READ BEFORE TOUCHING THE CORES
 
 Two latent over-general stubs caught by parallel read-only audit (the project's recurring
-failure mode — 3 prior bugs from codim miscounts). Both cores' stated sorries had gaps.
+failure mode — 3 prior bugs from codim miscounts). Both cores' stated proof holes had gaps.
 
 ### Core iii (curve-cover) — REGULAR CASES PROVEN (2026-06-20; commits dc12da7, 0e1dc7b)
-`crossTheta_local_C1_graph` (φ-graph over ω₁ where ∂₂Θ≠0) PROVEN sorry-free; the symmetric
+`crossTheta_local_C1_graph` (φ-graph over ω₁ where ∂₂Θ≠0) PROVEN proof-complete; the symmetric
 `crossTheta_local_C1_graph_vert` (χ-graph over ω₂ where ∂₁Θ≠0) + 4 foundation lemmas PROVEN
 (built by 2 parallel agents). `locus_locally_C1_arc` now proves BOTH regular orientations at an
-interior locus point (CASE A φ, CASE B1 χ). Single residual `sorry` = **∇Θ=0 singular points
+interior locus point (CASE A φ, CASE B1 χ). Single residual `proof hole` = **∇Θ=0 singular points
 (finite — see below) ∪ box boundary**. Next: boundary (clipped/component box-containment, tractable)
 + singular local cover. Detail below was the original (e750e1f) plan; the singular analysis is now the live lead.
 

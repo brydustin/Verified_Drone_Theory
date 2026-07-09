@@ -30,19 +30,19 @@ text \<open>\<^bold>\<open>(M5) D3/D4 --- the Sard-free excess engine.\<close>
   excess engine fills.
 
   \<^bold>\<open>Engine architecture (this file).\<close>  We split the obligation into:
-  \<^enum> @{text engine_bad_subset_projection} --- a sorry-free SET-LEVEL reduction:
+  \<^enum> @{text engine_bad_subset_projection} --- a proof-complete SET-LEVEL reduction:
     the bad set injects into the \<open>x\<close>-projection of the curve-confined excess locus
     \<open>BadXW \<Gamma> = {x. \<exists>\<omega>\<in>\<Gamma>. cvec \<noteq> 0 \<and> \<not> surj (DM_paper_x x (cvec \<omega>))}\<close> over the
     phase-collinear angle curve \<open>\<Gamma>\<close>.
   \<^enum> @{text fixed_omega_slice_nowhere_dense} / @{text fixed_omega_slice_meager} ---
-    sorry-free per-angle nowhere-density / meagerness from @{text nd}.
-  \<^enum> @{text excess_projection_meager} --- the ONE genuine MATH sorry: meagerness of
+    proof-complete per-angle nowhere-density / meagerness from @{text nd}.
+  \<^enum> @{text excess_projection_meager} --- the ONE genuine MATH proof hole: meagerness of
     the \<open>x\<close>-projection of the curve-confined excess locus.  This is the IFT-chart +
     \<open>\<int>\<^sup>3\<close>-phase-lattice negligibility engine.  Stated \<^bold>\<open>parametrically\<close> in the angle
     set \<open>\<Gamma>\<close> (any subset of \<open>OmegaPF\<close>) so that D4 reuses it verbatim with the
     complementary curve.  Recommended route attached.
-  \<^enum> @{text D3_excess_engine} --- the D3 target, sorry-free from (1)+(3).
-  \<^enum> @{text m5_D34_D3_collinear} --- the verbatim D3 leaf, sorry-free from
+  \<^enum> @{text D3_excess_engine} --- the D3 target, proof-complete from (1)+(3).
+  \<^enum> @{text m5_D34_D3_collinear} --- the verbatim D3 leaf, proof-complete from
     @{text D3_excess_engine} by @{thm meager_subset}.
 
   So the entire D3 (and, by reuse, D4) obligation is reduced to the single
@@ -59,10 +59,10 @@ definition phase_collinear :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 
 
 subsection \<open>Robust3-supplied fixed-angle nowhere-density (freebie at splice)\<close>
 
-text \<open>Replicated verbatim from D34/D3.  PROVEN sorry-free in
+text \<open>Replicated verbatim from D34/D3.  PROVEN proof-complete in
   \<open>Nonemptiness_Robust3\<close> (in scope at the splice site): @{text surj_iff_mstarg}
   (L578) and @{text nowhere_dense_mstarg_zeros} (L744).  Here it is a single
-  scoped sorry that closes automatically at the L970 splice (a Robust3-resident
+  scoped proof hole that closes automatically at the L970 splice (a Robust3-resident
   freebie).  In the engine proper this fact is consumed only \<^emph>\<open>through\<close> the
   abstract hypothesis @{text nd}, never directly.\<close>
 
@@ -77,11 +77,11 @@ lemma fixed_c_nonsurj_nowhere_dense:
   sorry
 
 
-subsection \<open>Per-angle slice nowhere-density / meagerness (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>Per-angle slice nowhere-density / meagerness (proof-complete from \<open>nd\<close>)\<close>
 
 text \<open>For a FIXED steering angle \<open>\<omega>\<close> with nonzero wavevector, the set of \<open>x\<close> at
   which \<open>DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>)\<close> is not surjective is nowhere dense,
-  hence meager.  Sorry-free from the abstract input @{text nd}.\<close>
+  hence meager.  proof-complete from the abstract input @{text nd}.\<close>
 
 lemma fixed_omega_slice_nowhere_dense:
   fixes \<omega> :: "real^2"
@@ -113,7 +113,7 @@ definition BadXW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Ri
         cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0 \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
 
 text \<open>The engine's bad set is the intersection of \<open>V\<close> with \<open>BadXW\<close> over the
-  phase-collinear angle curve.  Sorry-free SET equality.\<close>
+  phase-collinear angle curve.  proof-complete SET equality.\<close>
 
 lemma engine_bad_eq_projection:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -125,13 +125,13 @@ lemma engine_bad_eq_projection:
   unfolding BadXW_def by blast
 
 
-subsection \<open>The genuine analytic core (one MATH sorry, parametric in \<open>\<Gamma>\<close>)\<close>
+subsection \<open>The genuine analytic core (one MATH proof hole, parametric in \<open>\<Gamma>\<close>)\<close>
 
 text \<open>\<^bold>\<open>The Sard-free excess engine.\<close>  Meagerness of the \<open>x\<close>-projection \<open>V \<inter> BadXW\<close>
   of the bad \<open>(x,\<omega>)\<close> excess locus over a one-parameter analytic angle curve \<open>\<Gamma>\<close>
   inside the bounded box \<open>OmegaPF\<close>.
 
-  This is the ONE genuine MATH sorry.  It is stated \<^bold>\<open>parametrically\<close> in the angle
+  This is the ONE genuine MATH proof hole.  It is stated \<^bold>\<open>parametrically\<close> in the angle
   set \<open>\<Gamma>\<close> (any subset of the box \<open>OmegaPF ctr \<delta>\<close>) precisely so that D4 reuses it
   verbatim with the complementary (non phase-collinear) curve in place of the
   phase-collinear one.  The inputs are exactly what the IFT chart needs:
@@ -146,7 +146,7 @@ text \<open>\<^bold>\<open>The Sard-free excess engine.\<close>  Meagerness of t
     needs \<open>sin (\<omega>$1) \<noteq> 0\<close>) \<Rightarrow> the steering map is an immersion in the \<open>\<omega>\<^sub>2\<close> direction,
     so the collinearity equation \<open>\<Theta>(\<omega>$1,\<omega>$2) = 0\<close> cuts a genuine codimension-1 arc.
 
-  \<^bold>\<open>Recommended route (multi-week math, ONE sorry).\<close>
+  \<^bold>\<open>Recommended route (multi-week math, ONE proof hole).\<close>
   \<^enum> \<^bold>\<open>Fix the phase-period lattice.\<close>  Clearing \<open>cvec_dip\<close>/\<open>Dcvec_dip\<close> by their
     explicit trigonometric forms (@{thm cvec_dip_def}, @{thm Dcvec_dip_def}; the
     cross-product collinearity condition), \<open>\<omega> \<in> \<Gamma>\<close> is an analytic equation
@@ -188,7 +188,7 @@ lemma excess_projection_meager:
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager (V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>)"
-  \<comment> \<open>GENUINE MATH SORRY (the irreducible analytic core of M5, reused by D4).
+  \<comment> \<open>GENUINE MATH proof hole (the irreducible analytic core of M5, reused by D4).
       The Sard-free excess engine: finite cover of the bounded angle curve \<open>\<Gamma>\<close> by
       \<open>\<int>\<^sup>3\<close>-period analytic arcs (@{thm finite_affine_int_zeros}); IFT-chart each
       arc's bad fibre as a \<open>(2N-1)\<close>-dim graph (submersion off the nowhere-dense
@@ -199,10 +199,10 @@ lemma excess_projection_meager:
   sorry
 
 
-subsection \<open>The D3 excess engine, sorry-free from the abstract core\<close>
+subsection \<open>The D3 excess engine, proof-complete from the abstract core\<close>
 
 text \<open>The D3 target (verbatim from \<open>M5_Dev_D3/Scratch_m5_D3.thy\<close>, lemma
-  @{text D3_excess_engine}).  Sorry-free from @{text excess_projection_meager}
+  @{text D3_excess_engine}).  proof-complete from @{text excess_projection_meager}
   via the set equality @{thm engine_bad_eq_projection} (the phase-collinear curve
   is a subset of \<open>OmegaPF\<close>).\<close>
 
@@ -232,13 +232,13 @@ proof -
 qed
 
 
-subsection \<open>The D3 leaf, sorry-free from the excess engine\<close>
+subsection \<open>The D3 leaf, proof-complete from the excess engine\<close>
 
 text \<open>The exact D3 target statement (verbatim from
   \<open>M5_Dev_D3/Scratch_m5_D3.thy\<close>, lemma @{text m5_D34_D3_collinear}).  The D3 bad
   set is a subset of the excess engine's bad set (dropping \<open>gradU = 0\<close> and
   \<open>det Dcvec \<noteq> 0\<close> only enlarges the set), so it is meager by @{thm meager_subset}.
-  Proven sorry-free from @{thm D3_excess_engine}.\<close>
+  Proven proof-complete from @{thm D3_excess_engine}.\<close>
 
 lemma m5_D34_D3_collinear:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real

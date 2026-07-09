@@ -3,7 +3,7 @@ theory Morse_Saddle_2D
 begin
 
 text \<open>Foundational, GENERAL (reusable / AFP-candidate) development: the local structure of the
-  zero set of a 2-variable function at a nondegenerate SADDLE point.  Built as a sorry-scaffold:
+  zero set of a 2-variable function at a nondegenerate SADDLE point.  Built as a proof hole-scaffold:
   the main theorem @{text saddle_form_two_arcs} is assembled from two clean stubs
   (@{text factor_indef_C1}, @{text level_zero_C1_arc}); the Hadamard bridge @{text hadamard2}
   is the third (foundational) stub.  Each stub is an independent agent target.\<close>
@@ -836,7 +836,7 @@ qed
 
 subsection \<open>MAIN: the zero set of an indefinite C1 form is two transverse C1 arcs\<close>
 
-text \<open>Assembled from the two stubs above (no further sorry).\<close>
+text \<open>Assembled from the two stubs above (no further proof hole).\<close>
 
 theorem saddle_form_two_arcs:
   fixes f a b c :: "real^2 \<Rightarrow> real" and ga gb gc :: "real^2 \<Rightarrow> real^2" and p :: "real^2"

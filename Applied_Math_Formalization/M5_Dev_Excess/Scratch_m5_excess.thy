@@ -11,22 +11,22 @@ text \<open>\<^bold>\<open>(M5) D3/D4 --- the Sard-free excess engine: @{text ex
   @{file \<open>../M5_Dev_Engine/Scratch_m5_engine.thy\<close>} (L182--L199); the surrounding
   engine plumbing (@{text BadXW}, @{text engine_bad_eq_projection},
   @{text D3_excess_engine}, @{text m5_D34_D3_collinear}) is reproduced so the
-  whole D3 reduction stays sorry-free above the one analytic core.
+  whole D3 reduction stays proof-complete above the one analytic core.
 
   \<^bold>\<open>What this scaffold proves (the reduction LAYERS).\<close>
   \<^enum> @{text BadXW_mono} / @{text BadXW_Union} --- the bad set is monotone in the
-    angle set and distributes over unions of angle sets (sorry-free).
+    angle set and distributes over unions of angle sets (proof-complete).
   \<^enum> @{text excess_projection_meager_of_finite_cover} --- \<^bold>\<open>the assembly layer\<close>:
     if the angle curve \<open>\<Gamma>\<close> is covered by a FINITE family of arcs each of whose
     \<open>x\<close>-projection \<open>V \<inter> BadXW \<omega>0 \<omega>s (arc)\<close> is meager, then \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close>
-    is meager.  Sorry-free, via @{thm meager_Union_finite} and @{thm meager_subset}.
+    is meager.  proof-complete, via @{thm meager_Union_finite} and @{thm meager_subset}.
   \<^enum> @{text fixed_omega_proj_meager} --- the per-FIXED-angle slice is meager from
-    the abstract input @{text nd} (sorry-free); this is the degenerate "arc = a
+    the abstract input @{text nd} (proof-complete); this is the degenerate "arc = a
     single point" case and the structural sanity check on the cut.
   \<^enum> @{text excess_projection_meager} --- assembled from the two isolated analytic
-    sorries (the finite-arc cover and the per-arc projection-negligibility).
+    proof holes (the finite-arc cover and the per-arc projection-negligibility).
 
-  \<^bold>\<open>The two isolated analytic sorries (the irreducible core, reused by D4).\<close>
+  \<^bold>\<open>The two isolated analytic proof holes (the irreducible core, reused by D4).\<close>
   \<^item> @{text phase_collinear_curve_finite_arc_cover}: the bounded angle curve \<open>\<Gamma>\<close>
     (a subset of the box \<open>OmegaPF\<close>) is covered by FINITELY many analytic arcs.
     At the D3/D4 call sites \<open>\<Gamma>\<close> is the phase-collinear curve, an analytic equation
@@ -63,7 +63,7 @@ lemma fixed_c_nonsurj_nowhere_dense:
   sorry
 
 
-subsection \<open>Per-angle slice nowhere-density / meagerness (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>Per-angle slice nowhere-density / meagerness (proof-complete from \<open>nd\<close>)\<close>
 
 lemma fixed_omega_slice_nowhere_dense:
   fixes \<omega> :: "real^2"
@@ -100,7 +100,7 @@ lemma engine_bad_eq_projection:
 
 subsection \<open>BadXW is monotone in, and distributes over unions of, the angle set\<close>
 
-text \<open>Sorry-free set algebra: the bad \<open>x\<close>-set grows with the angle set and the
+text \<open>proof-complete set algebra: the bad \<open>x\<close>-set grows with the angle set and the
   bad \<open>x\<close>-set of a finite union of angle sets is the finite union of the bad
   \<open>x\<close>-sets.  These are the structural facts that turn a finite arc cover of \<open>\<Gamma>\<close>
   into a finite cover of \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close>.\<close>
@@ -129,11 +129,11 @@ proof -
 qed
 
 
-subsection \<open>The per-fixed-angle x-projection is meager (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>The per-fixed-angle x-projection is meager (proof-complete from \<open>nd\<close>)\<close>
 
 text \<open>The degenerate "arc = a single point" case: \<open>V \<inter> BadXW \<omega>0 \<omega>s {\<omega>}\<close> is
   contained in the bad \<open>x\<close>-slice of the fixed angle \<open>\<omega>\<close>, which is nowhere dense
-  (hence meager) by @{text nd}.  Sorry-free; the structural sanity check that the
+  (hence meager) by @{text nd}.  proof-complete; the structural sanity check that the
   cut at @{text excess_arc_projection_meager} is the right one.\<close>
 
 lemma fixed_omega_proj_meager:
@@ -156,11 +156,11 @@ next
 qed
 
 
-subsection \<open>The assembly layer (sorry-free): finite arc cover \<open>\<Longrightarrow>\<close> meager\<close>
+subsection \<open>The assembly layer (proof-complete): finite arc cover \<open>\<Longrightarrow>\<close> meager\<close>
 
 text \<open>\<^bold>\<open>The assembly layer.\<close>  If a FINITE family \<open>{arc i}\<^bsub>i\<in>I\<^esub>\<close> of angle sets
   covers \<open>\<Gamma>\<close> and each per-arc \<open>x\<close>-projection \<open>V \<inter> BadXW \<omega>0 \<omega>s (arc i)\<close> is meager,
-  then \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is meager.  Sorry-free: \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is
+  then \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is meager.  proof-complete: \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is
   contained in the finite union \<open>\<Union>\<^bsub>i\<in>I\<^esub> V \<inter> BadXW \<omega>0 \<omega>s (arc i)\<close>
   (@{thm BadXW_subset_of_cover}), which is meager (@{thm meager_Union_finite}).\<close>
 
@@ -188,9 +188,9 @@ proof -
 qed
 
 
-subsection \<open>Sorry 1: the bounded angle curve has a finite analytic-arc cover\<close>
+subsection \<open>proof hole 1: the bounded angle curve has a finite analytic-arc cover\<close>
 
-text \<open>\<^bold>\<open>GENUINE analytic sorry (1 of 2).\<close>  The bounded angle curve \<open>\<Gamma>\<close> --- at the
+text \<open>\<^bold>\<open>GENUINE analytic proof hole (1 of 2).\<close>  The bounded angle curve \<open>\<Gamma>\<close> --- at the
   D3/D4 call sites the phase-collinear curve inside the box \<open>OmegaPF ctr \<delta>\<close> --- is
   covered by FINITELY many analytic arcs, each the graph of an analytic function
   over a real interval.  We package the abstract finite cover as the existence of
@@ -216,13 +216,13 @@ definition analytic_arc :: "(real^2) set \<Rightarrow> bool" where
   "analytic_arc \<gamma> \<longleftrightarrow> (\<exists>(a::real) b \<phi>. a \<le> b \<and> continuous_on {a..b} \<phi>
                           \<and> \<gamma> = \<phi> ` {a..b})"
 
-text \<open>The cover sorry is stated for an arbitrary angle set \<open>\<Gamma> \<subseteq> OmegaPF\<close> so the
+text \<open>The cover proof hole is stated for an arbitrary angle set \<open>\<Gamma> \<subseteq> OmegaPF\<close> so the
   verbatim @{text excess_projection_meager} below needs only its native
   \<open>Gsub : \<Gamma> \<subseteq> OmegaPF\<close>.  The 1-parameter (curve) hypothesis under which the engine
   is true --- and under which the cover is FINITE --- is supplied by the D3/D4 call
   sites, where \<open>\<Gamma>\<close> is the phase-collinear analytic curve; the route makes this
   explicit.  For a genuine 2D \<open>\<Gamma>\<close> the cover would be infinite and the engine false,
-  so this sorry is exactly the place where the curve structure enters.\<close>
+  so this proof hole is exactly the place where the curve structure enters.\<close>
 
 lemma phase_collinear_curve_finite_arc_cover:
   fixes ctr :: "real^2" and \<delta> :: real and \<Gamma> :: "(real^2) set"
@@ -231,7 +231,7 @@ lemma phase_collinear_curve_finite_arc_cover:
   shows "\<exists>(I::nat set) arc. finite I
             \<and> \<Gamma> \<subseteq> (\<Union>i\<in>I. arc i)
             \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>)"
-  \<comment> \<open>GENUINE analytic sorry (1/2): finite \<open>\<int>\<^sup>3\<close>-period analytic-arc cover of the
+  \<comment> \<open>GENUINE analytic proof hole (1/2): finite \<open>\<int>\<^sup>3\<close>-period analytic-arc cover of the
       bounded angle curve \<open>\<Gamma>\<close>.  At the D3/D4 call sites \<open>\<Gamma>\<close> is the phase-collinear
       analytic curve, an equation \<open>\<Theta>(\<omega>\<^sub>1,\<omega>\<^sub>2)=0\<close> whose \<open>cos\<close>/\<open>sin\<close>/\<open>a cos + b sin\<close>
       factors meet the bounded box in finitely many \<open>\<int>\<^sup>3\<close>-period windows
@@ -242,9 +242,9 @@ lemma phase_collinear_curve_finite_arc_cover:
   sorry
 
 
-subsection \<open>Sorry 2: the per-arc x-projection of the bad fibre is meager\<close>
+subsection \<open>proof hole 2: the per-arc x-projection of the bad fibre is meager\<close>
 
-text \<open>\<^bold>\<open>GENUINE analytic sorry (2 of 2).\<close>  Over a single analytic arc \<open>\<gamma>\<close>, the
+text \<open>\<^bold>\<open>GENUINE analytic proof hole (2 of 2).\<close>  Over a single analytic arc \<open>\<gamma>\<close>, the
   \<open>x\<close>-projection \<open>V \<inter> BadXW \<omega>0 \<omega>s \<gamma>\<close> of the bad fibre is meager.
 
   ROUTE (the IFT chart + negligible projection).  The bad pairs over the arc lie in
@@ -272,7 +272,7 @@ lemma excess_arc_projection_meager:
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager (V \<inter> BadXW \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)"
-  \<comment> \<open>GENUINE analytic sorry (2/2): the IFT chart of the per-arc bad fibre as a
+  \<comment> \<open>GENUINE analytic proof hole (2/2): the IFT chart of the per-arc bad fibre as a
       \<open>(2N-1)\<close>-dim graph and the negligibility of its \<open>x\<close>-projection
       (@{thm negligible_singular_image_2n}), upgraded to meager by a closed
       negligible cover (@{thm meager_negligible_closed_cover}).  Route above.
@@ -280,18 +280,18 @@ lemma excess_arc_projection_meager:
   sorry
 
 
-subsection \<open>The genuine analytic core, assembled from the two isolated sorries\<close>
+subsection \<open>The genuine analytic core, assembled from the two isolated proof holes\<close>
 
 text \<open>\<^bold>\<open>The Sard-free excess engine.\<close>  Copied \<^bold>\<open>verbatim\<close> from the engine file
   (@{file \<open>../M5_Dev_Engine/Scratch_m5_engine.thy\<close>} L182--L199).  Assembled
-  sorry-free from the two isolated analytic sorries @{text
+  proof-complete from the two isolated analytic proof holes @{text
   phase_collinear_curve_finite_arc_cover} and @{text excess_arc_projection_meager}
-  via the sorry-free assembly layer @{text excess_projection_meager_of_finite_cover}.
+  via the proof-complete assembly layer @{text excess_projection_meager_of_finite_cover}.
 
   NOTE on the parametric statement.  The lemma is copied VERBATIM (assumptions and
   conclusion identical to the engine file); in particular its only constraint on
   \<open>\<Gamma>\<close> is \<open>Gsub : \<Gamma> \<subseteq> OmegaPF\<close>.  The 1-parameter (curve) hypothesis under which the
-  engine is genuinely true is absorbed entirely into the finite-arc-cover sorry
+  engine is genuinely true is absorbed entirely into the finite-arc-cover proof obligation
   @{text phase_collinear_curve_finite_arc_cover} (which is FINITE precisely when
   \<open>\<Gamma>\<close> is an analytic curve, as it always is at the D3/D4 call sites).  This keeps
   the verbatim signature while exposing the single place the curve structure is
@@ -307,13 +307,13 @@ lemma excess_projection_meager:
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager (V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>)"
 proof -
-  \<comment> \<open>Sorry 1: a finite analytic-arc cover of the bounded angle curve \<open>\<Gamma>\<close>.\<close>
+  \<comment> \<open>proof hole 1: a finite analytic-arc cover of the bounded angle curve \<open>\<Gamma>\<close>.\<close>
   obtain I :: "nat set" and arc :: "nat \<Rightarrow> (real^2) set"
     where finI: "finite I"
       and cover\<Gamma>: "\<Gamma> \<subseteq> (\<Union>i\<in>I. arc i)"
       and arcprops: "\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>"
     using phase_collinear_curve_finite_arc_cover[OF d0 pf Gsub] by blast
-  \<comment> \<open>Sorry 2: each per-arc projection is meager.\<close>
+  \<comment> \<open>proof hole 2: each per-arc projection is meager.\<close>
   have meagerarc: "meager (V \<inter> BadXW \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set)" if iI: "i \<in> I" for i
   proof -
     have aarc: "analytic_arc (arc i)" using arcprops iI by blast
@@ -321,15 +321,15 @@ proof -
     show ?thesis
       by (rule excess_arc_projection_meager[OF openV Vne c6 aarc asub pf nd])
   qed
-  \<comment> \<open>Assembly layer (sorry-free).\<close>
+  \<comment> \<open>Assembly layer (proof-complete).\<close>
   show ?thesis
     by (rule excess_projection_meager_of_finite_cover[OF finI cover\<Gamma> meagerarc])
 qed
 
 
-subsection \<open>The D3 excess engine, sorry-free from the abstract core\<close>
+subsection \<open>The D3 excess engine, proof-complete from the abstract core\<close>
 
-text \<open>The D3 target.  Sorry-free from @{text excess_projection_meager} via the set
+text \<open>The D3 target.  proof-complete from @{text excess_projection_meager} via the set
   equality @{thm engine_bad_eq_projection}.  The phase-collinear curve is both a
   subset of \<open>OmegaPF\<close> and (trivially) a subset of itself, supplying the two
   curve hypotheses @{text Gsub}, @{text Gpc}.\<close>
@@ -360,7 +360,7 @@ proof -
 qed
 
 
-subsection \<open>The D3 leaf, sorry-free from the excess engine\<close>
+subsection \<open>The D3 leaf, proof-complete from the excess engine\<close>
 
 lemma m5_D34_D3_collinear:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real

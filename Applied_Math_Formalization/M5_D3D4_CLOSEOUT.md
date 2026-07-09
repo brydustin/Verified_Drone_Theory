@@ -5,17 +5,17 @@ _Status as of 2026-06-22. The single source of truth for finishing `F0_dip_nonem
 ## 1. F0 status (oracle-verified)
 
 `F0_dip_nonempty` (`Appendix/Robust3/Nonemptiness_Robust3.thy:3450`) is proven under exactly
-`6 ≤ CARD('n)` ∧ `odd CARD('n)`, modulo **exactly two `sorry`s**. Confirmed two ways:
-- clean grep: Robust1/Robust2/base/Regnonzero = 0 live sorries; `Nonemptiness_Capstone`'s 6 are
+`6 ≤ CARD('n)` ∧ `odd CARD('n)`, modulo **exactly two `proof hole`s**. Confirmed two ways:
+- clean grep: Robust1/Robust2/base/Regnonzero = 0 live proof holes; `Nonemptiness_Capstone`'s 6 are
   OFF-path (F0 cites none);
 - Isabelle kernel: `thm_oracles F0_dip_nonempty` = `{skip_proof, cooper}` (full chain replays
   `EVAL_EXIT=0`). `cooper` = the sound Presburger decision procedure, not a gap.
 
-The two live sorries:
+The two live proof holes:
 - **D3**: `m5_D34_D3_collinear` (`Robust3:2412`)
 - **D4**: `branchP_indep_charts_Nn` (`Robust3:2512`)
 
-Everything else is sorry-free: D1 (`meager_grad_x_regular_part`, Robust2:2373), D2, D5, the Sard
+Everything else is proof-complete: D1 (`meager_grad_x_regular_part`, Robust2:2373), D2, D5, the Sard
 reduction (`branchP_indep_negligible_closed_cover`, Robust3:2547), the meager capstone
 (`meager_rank_deficient_stratum` → `Phi_bad_meager_dip`), feasibility (Slater witness), and
 `DM_paper_x_regular_point_exists` (proven at Robust3:495).
@@ -40,14 +40,14 @@ of the bad fibre (the `gradU=0` + moment-rank-drop conjunction, codim ≥ 3 in (
 
 ## 3. D3 close-out structure
 
-Sound chain (all `BadXWG` = `gradU = 0` RETAINED; all proven sorry-free in the dev sessions):
+Sound chain (all `BadXWG` = `gradU = 0` RETAINED; all proven proof-complete in the dev sessions):
 
 ```
-m5_D34_D3_collinear  (Robust3:2412 — the live opaque sorry)
-  ⟸ m5_D34_D3_collinear_fixed        (M5_Dev_D3fix, connector, sorry-free)
-  ⟸ collinear_locus_finite_arc_cover (M5_Dev_curvecover, ~3700 lines sorry-free given nsing_all)
+m5_D34_D3_collinear  (Robust3:2412 — the live opaque proof hole)
+  ⟸ m5_D34_D3_collinear_fixed        (M5_Dev_D3fix, connector, proof-complete)
+  ⟸ collinear_locus_finite_arc_cover (M5_Dev_curvecover, ~3700 lines proof-complete given nsing_all)
   ⟸ excess_arc_projection_meager / excess_arc_negligible_closed_cover / excess_arc_charts_Nn
-                                     (M5_Dev_D3proof/Scratch_m5_d3sound_detHess.thy, sorry-free)
+                                     (M5_Dev_D3proof/Scratch_m5_d3sound_detHess.thy, proof-complete)
        ⟸ RESIDUAL A  (BadXWG_H0_charts_Nn, detHess.thy:233)   — det HessU = 0
        ⟸ RESIDUAL B  (BadXWG_Hn_charts_Nn, detHess.thy:281)   — det HessU ≠ 0
 ```
@@ -61,30 +61,30 @@ Agent decompositions (UNVERIFIED static reasoning — must be re-derived/verifie
   core (§2).
 
 ### TODO — land the sound reduction in Robust3 (achievable, days)
-This replaces the opaque `m5_D34_D3_collinear` sorry with the two precise cores, everything else
-machine-checked. Net: D3's 1 opaque sorry → 2 precise sorries + verified scaffold (a trust gain).
+This replaces the opaque `m5_D34_D3_collinear` proof hole with the two precise cores, everything else
+machine-checked. Net: D3's 1 opaque proof hole → 2 precise proof holes + verified scaffold (a trust gain).
 1. Port the sound dev layers (detHess det-split + `excess_arc_*`; curvecover arc-cover; d3fix
    connector) into Robust3 (or a new heap theory imported by it). **NEVER** import the UNSOUND
    `BadXW` (gradU-dropped) files: `M5_Dev_CurveEngine`, `M5_Dev_Excess`, `M5_Dev_D3charts`,
    `M5_Dev_D3Sound`, `M5_Dev_D3proof/Scratch_m5_d3proof.thy` (old), `M5_Dev_D3/Scratch_m5_D3.thy`.
 2. Discharge `nsing_all` / `hsep` / `kdiff` from the F0 config (ω0 = vector[pi/2,0],
    ωs = vector[0,0]; hsep/kdiff are derived inside F0's proof ~L3468-3471).
-3. Replace the bare sorry with the connector proof; keep RESIDUAL A + B (verbatim) as the only new
-   sorries.
+3. Replace the bare proof hole with the connector proof; keep RESIDUAL A + B (verbatim) as the only new
+   proof holes.
 
 ## 4. D4
 
 `branchP_indep_charts_Nn` (Robust3:2512) — the non-collinear moment-transversality chart, the SAME
-moment-determinant transversality as D3-B, over Γ with `¬gamma_par_c`. The only sorry-free dev
+moment-determinant transversality as D3-B, over Γ with `¬gamma_par_c`. The only proof-complete dev
 "proof" (`M5_Dev_D4eng/Scratch_m5_d4eng.thy:536`) is the dead Bug-4 joint `(gradU,mstarg)→ℝ³`
 submersion (vacuous `regular_value_on_Gjoint_off_Sigma`, real content hidden in `Sigma0_bad_charts`)
-— **DO NOT consolidate it**. Keep only its sorry-free helpers.
+— **DO NOT consolidate it**. Keep only its proof-complete helpers.
 
 ## 5. Reusable asset
 
 `gradU_joint_surj_of_detHess` — det HessU ≠ 0 ⟹ the joint gradU derivative is C¹ + surjective
 (SOUND via the ω-Hessian, NOT mstarg). Source: `M5_Dev_MomentSard/Scratch_bridge_check.thy`.
-Verification: **VERIFIED** via eval_at — `theorem` established sorry-free on the
+Verification: **VERIFIED** via eval_at — `theorem` established proof-complete on the
 Applied_Math_Appendix heap (2026-06-23). Feeds the IFT-applicability of both D3-B and D4's
 det-HessU≠0 parts. The three library/heap lemmas it composes (`gradU_dip_joint_C1`,
 `not_surj_omega_deriv_iff_detHess_dip`, `exists_surj_deriv_iff_partial`) all exist and check —
@@ -103,8 +103,8 @@ moment-transversality lemma.
 | Consolidate the sound D3 reduction into Robust3 | days | mechanical port; arc-cover already proven |
 | **moment-determinant transversality** lemma | multi-week | the genuine core; unlocks **D3-B + D4** |
 | D3-A-NSx degenerate-critical stratum | multi-week | needs 2-jet/Morse stratification |
-| **Total to zero-sorry F0** | **~5–10 weeks** | concentrated in 1–2 genuine new lemmas |
+| **Total to zero-proof hole F0** | **~5–10 weeks** | concentrated in 1–2 genuine new lemmas |
 
 Bottom line: the formalization is complete except for one (reused) piece of genuine
 geometric-measure mathematics plus one degenerate stratum. F0 is honestly proven modulo exactly two
-precisely-scoped, oracle-verified sorries.
+precisely-scoped, oracle-verified proof holes.

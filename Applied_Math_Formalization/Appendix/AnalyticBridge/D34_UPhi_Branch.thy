@@ -169,7 +169,7 @@ text \<open>The remaining upstream obligation is deliberately isolated here.  It
   the c-adapted gauge dictionary from the invariant derivative formula
   @{thm Phi_par_parallel_slot_value} to the paper variables on the slice
   \<open>Im (M\<^sub>1) = 0\<close>.  Downstream of this identity, the zero-equivalence is
-  sorry-free scalar algebra.\<close>
+  proof-complete scalar algebra.\<close>
 theorem Phi_par_parallel_slot_F_eta_identification:
   fixes m :: "'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n"
   defines "c \<equiv> cvec_dip \<omega>0 \<omega>s \<omega>"

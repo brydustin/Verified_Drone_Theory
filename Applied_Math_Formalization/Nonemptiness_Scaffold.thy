@@ -8,7 +8,7 @@ text \<open>
   This theory formalizes the topological backbone of the proof in
    \<open>Applied Math/nonemptiness_unified_singlefile_complete.tex\<close>.
 
-  It is now \<^emph>\<open>locale-free and \<^theory_text>\<open>sorry\<close>-free\<close>: the configuration sets are ordinary
+  It is now \<^emph>\<open>locale-free and \<^theory_text>\<open>proof hole\<close>-free\<close>: the configuration sets are ordinary
   function arguments rather than abstract locale parameters, and every lemma here
   is a genuine theorem. Concretely it provides:
 
@@ -22,7 +22,7 @@ text \<open>
   \<^emph>\<open>concrete\<close> bad sets built from \<^const>\<open>array_factor\<close>; they are the explicit
   hypotheses of \<open>nonemptiness_from_branches\<close>, not hidden assumptions. The
   repository's existing quantum-computing sessions still contain active
-  @{command sorry}s, so this development intentionally avoids importing that
+  proof-command leaves, so this development intentionally avoids importing that
   stack.
 \<close>
 
@@ -325,7 +325,7 @@ qed
 text \<open>
   Meagerness of the bundled bad set follows from meagerness of the four branches
   by set algebra and \<open>meager_Un\<close>. This is now a genuine theorem with no
-  \<^theory_text>\<open>sorry\<close>: it takes the four branch facts as explicit hypotheses.
+  \<^theory_text>\<open>proof hole\<close>: it takes the four branch facts as explicit hypotheses.
 \<close>
 
 theorem bad_union_meagerness:
@@ -408,7 +408,7 @@ qed
 section \<open>Main Theorem Inventory from the TeX Note\<close>
 
 text \<open>
-  The deep branch results are not stated here as abstract \<^theory_text>\<open>sorry\<close> lemmas,
+  The deep branch results are not stated here as abstract \<^theory_text>\<open>proof hole\<close> lemmas,
   because they are false for arbitrary sets: they only become genuine theorems once
   \<open>Fset\<close>, \<open>X0\<close>, the working set \<open>V\<close>, and the four bad strata are given concrete
   definitions in terms of \<^const>\<open>array_factor\<close>. They are the hypotheses of
@@ -426,7 +426,7 @@ text \<open>
 
   When each is proved for the concrete sets, feeding them to
   \<open>nonemptiness_from_branches\<close> yields the final odd-\<open>N\<close> nonemptiness theorem
-  with no remaining \<^theory_text>\<open>sorry\<close>.
+  with no remaining \<^theory_text>\<open>proof hole\<close>.
 \<close>
 
 

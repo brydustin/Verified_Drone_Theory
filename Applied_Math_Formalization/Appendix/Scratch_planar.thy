@@ -3,7 +3,7 @@ theory Scratch_planar
 begin
 
 text \<open>Development scratch for \<open>parametric_transversality_meager_planar_config\<close>:
-  transport the sorry-free Euclidean engine to the configuration type
+  transport the proof-complete Euclidean engine to the configuration type
   \<open>(real^2)^'n\<close> via the \<open>\<Phi>/\<Psi>\<close> flattening iso (lifted from the proof of
   \<open>negligible_singular_image_2n\<close> in \<open>Nonemptiness_Paper\<close>).\<close>
 
@@ -158,7 +158,7 @@ proof -
       using comp sDpm unfolding Ge_def by blast
   qed
 
-  \<comment> \<open>Run the sorry-free Euclidean engine at \<open>'m = 'n bit0\<close>.\<close>
+  \<comment> \<open>Run the proof-complete Euclidean engine at \<open>'m = 'n bit0\<close>.\<close>
   have core: "meager {w \<in> Ve. \<exists>\<omega>\<in>\<Omega>. Ge (w, \<omega>) = 0 \<and>
         \<not> (\<exists>D\<omega>. ((\<lambda>u. Ge (w, u)) has_derivative D\<omega>) (at \<omega> within \<Omega>) \<and> surj D\<omega>)}"
     using parametric_transversality_meager_euclidean_stub[OF openVe Vene openOm derGe contGe' reg0e]

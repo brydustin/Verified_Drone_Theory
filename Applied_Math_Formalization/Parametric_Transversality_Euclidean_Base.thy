@@ -17,7 +17,7 @@ text \<open>
   Isabelle/HOL (as shipped) provides Sard in the form of @{thm baby_Sard}. What is
   missing is a convenient packaged regular-value / submanifold development. We
   therefore record the pipeline here as a single theorem with one central
-  \<open>sorry\<close>, and we will later refine it by proving the intermediate lemmas.
+  \<open>proof hole\<close>, and we will later refine it by proving the intermediate lemmas.
 \<close>
 
 subsection \<open>Regular Value Predicate\<close>
@@ -349,7 +349,7 @@ text \<open>
   targets (in this order).
 \<close>
 
-text \<open>\<^bold>\<open>PROVEN engine\<close> (replaces the sorried core_2d below).  Strengthened with
+text \<open>\<^bold>\<open>PROVEN engine\<close> (replaces the stubbed core_2d below).  Strengthened with
   \<open>derG\<close>/\<open>contG'\<close> (which the actual smooth \<open>G\<close> supplies); kernel step + Lindelof chart
   cover with \<open>D\<phi>\<close> (range \<open>D\<phi>\<close> = ker \<open>DG\<close>) \<Longrightarrow> bad params are rank-deficient projection critical
   points.\<close>

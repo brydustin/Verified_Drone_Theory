@@ -1,6 +1,6 @@
 # Nonemptiness Formalization Roadmap
 
-This is the sorry-first plan for formalizing
+This is the proof hole-first plan for formalizing
 `Applied Math/nonemptiness_unified_singlefile_complete.tex`.
 
 ## Current scaffold
@@ -11,7 +11,7 @@ This is the sorry-first plan for formalizing
   - isolate the work in a clean session,
   - record the top-level theorem inventory,
   - define missing topological notions (`nowhere_dense`, `meager`),
-  - centralize the future `sorry` targets.
+  - centralize the future `proof hole` targets.
 
 ## Vendored topology resource
 
@@ -34,7 +34,7 @@ Integration constraint:
 
 ## Why a separate session
 
-- The existing project session still imports theories with active `sorry`s.
+- The existing project session still imports theories with active `proof hole`s.
 - This proof is primarily finite-dimensional analysis, topology, and explicit algebra.
 - A clean session reduces proof noise and prevents us from building new results on unfinished quantum-computing dependencies.
 
@@ -77,7 +77,7 @@ The current scaffold keeps everything in one theory. The next split should be:
    - Baire closeout
    - final nonemptiness theorem
 
-## Main sorry buckets
+## Main proof hole buckets
 
 These are the major proof families, in dependency order.
 
@@ -190,7 +190,7 @@ Recommendation:
 5. Build the specialized transversality lemma for the regular-zero branch.
 6. Formalize the moment-map algebra and determinant witness.
 7. Attack the residual `H = 0` and Case B appendix closures.
-8. Remove the closeout `sorry`.
+8. Remove the closeout `proof hole`.
 
 ## Naming policy
 
@@ -208,5 +208,5 @@ Keep theorem names close to the paper labels, but not identical to LaTeX labels.
 ## Verification policy
 
 - Short-term: `quick_and_dirty = true` is acceptable in this session.
-- Mid-term: eliminate `sorry`s from the topological layer first.
+- Mid-term: eliminate `proof hole`s from the topological layer first.
 - Long-term: switch this session to `quick_and_dirty = false` only after the appendix modules are in place.

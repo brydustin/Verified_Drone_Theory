@@ -16,9 +16,9 @@ invariance of domain, hence unprovable. The keystone's `shows` and `loc` are alr
 pinned to `real^'m`.
 
 ## Current state
-- `Regular_Value_Theorem.thy`: two `sorry` lemmas — `dim_kernel_surj`,
+- `Regular_Value_Theorem.thy`: two `proof hole` lemmas — `dim_kernel_surj`,
   `linear_surj_augment_to_bij`.
-- Keystone in `Parametric_*`: `shows` type-pinned, proof still `sorry`.
+- Keystone in `Parametric_*`: `shows` type-pinned, proof still `proof hole`.
 - A stray duplicate `exists_aug_proj_2d` was added to `Parametric_*` before the
   separate-theory decision — **DELETE it**; make `Parametric_*` import
   `Regular_Value_Theorem` and use `linear_surj_augment_to_bij`.
@@ -87,7 +87,7 @@ isabelle eval_at -d ../Imported_Munkres_Topology -d . -l Applied_Math_Base \
   Regular_Value_Theorem.thy <LINE> '<command>'
 ```
 To `sledgehammer`/inspect a goal, the proof state must be OPEN at `<LINE>` ("No proof
-state" = injected past the goal; temporarily replace `sorry` with the command).
+state" = injected past the goal; temporarily replace `proof hole` with the command).
 Full build: temp-ROOT swap → session `Applied_Math_Nonemptiness` with the theory under
-test, `quick_and_dirty=true` (other sorries allowed; real errors still surface);
+test, `quick_and_dirty=true` (other proof holes allowed; real errors still surface);
 restore ROOT after.

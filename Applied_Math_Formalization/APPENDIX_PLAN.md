@@ -15,7 +15,7 @@ STATUS "Label" column. Transcribe from here; do not reverse-engineer from one-li
 ## What is already DONE (foundations — do not redo)
 - **Architecture:** `thm_final` = Baire closeout over 4 meager branches
   (`nonemptiness_from_meager_branches`); `prop_regnonzero` = proved 4-piece
-  decomposition reduction. Both sorry-free, branch facts are hypotheses.
+  decomposition reduction. Both proof-complete, branch facts are hypotheses.
 - **`lem:Msurj` (THE #1-hardest item, the explicit 12×12 determinant):** DONE as
   `bigJ_det_nonzero` + `bigJ_surj` + `DM_paper_open_dense_surjective`
   (`= W_surj` is open dense). The tex partials (∂_uA, ∂_uM₁,…) = `DM_paper_x_components`.
@@ -34,9 +34,9 @@ STATUS "Label" column. Transcribe from here; do not reverse-engineer from one-li
 ## Dependency-ordered execution tiers
 
 ### Tier 0 — close the *non*-appendix branches (shrinks thm_final's hypotheses fastest)
-- [ ] `lem_Efinite` isolated-zeros `sorry` → closes `prop_foldnonzero`.
+- [ ] `lem_Efinite` isolated-zeros `proof hole` → closes `prop_foldnonzero`.
       (Reuse the real-analytic engine: nontrivial real-analytic g has isolated zeros.)
-- [ ] Transversality pipeline `sorry`s in `Parametric_Transversality_Euclidean_Base.thy`
+- [ ] Transversality pipeline `proof hole`s in `Parametric_Transversality_Euclidean_Base.thy`
       (L369 `charts_core_2d`, L1015 meager-stub) → closes `prop_regzero`, `prop_foldzero`.
 - [ ] `prop_openfeas` (◐ feasibility half), `lem_twotriplecover` (◐ geometric packaging).
 

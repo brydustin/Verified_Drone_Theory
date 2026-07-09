@@ -20,7 +20,7 @@ text \<open>\<^bold>\<open>(M5) Core D3 (CHARTS) --- CORRECTED per-arc IFT chart
   Re-thread the entire chart chain over @{text BadXWG}; the chain reductions are
   gradU-agnostic (they carry the set abstractly through
   @{thm negligible_singular_image_2n} / @{thm meager_negligible_closed_cover}), so
-  the threading is mechanical and the per-slice / cover layers stay sorry-free.
+  the threading is mechanical and the per-slice / cover layers stay proof-complete.
 
   \<^bold>\<open>The codim count (sanity test).\<close>  The combined bad locus is cut by
   TWO scalar gradient equations @{text \<open>gradU = 0\<close>} (\<open>\<omega>\<close>-Hessian content) PLUS the
@@ -31,7 +31,7 @@ text \<open>\<^bold>\<open>(M5) Core D3 (CHARTS) --- CORRECTED per-arc IFT chart
   reason the prior @{text BadXW} core was false: an uncountable union of
   nowhere-dense per-\<open>\<omega>\<close> slices need not be meager).
 
-  \<^bold>\<open>What is proven sorry-free here.\<close>
+  \<^bold>\<open>What is proven proof-complete here.\<close>
   \<^item> @{text analytic_arc_negligible} (a \<open>C\<^sup>1\<close> arc is negligible);
   \<^item> the structural set algebra for @{text BadXWG} (@{text empty}/@{text mono}/
     @{text UN}/@{text point});
@@ -40,7 +40,7 @@ text \<open>\<^bold>\<open>(M5) Core D3 (CHARTS) --- CORRECTED per-arc IFT chart
     shrinks the slice);
   \<^item> the EMPTY-arc extreme instance @{text excess_arc_charts_Nn_empty};
   \<^item> the closed-negligible cover @{text excess_arc_negligible_closed_cover} and the
-    meagerness @{text excess_arc_projection_meager}, assembled sorry-free from the
+    meagerness @{text excess_arc_projection_meager}, assembled proof-complete from the
     (corrected) chart bundle;
   \<^item> the CORRECTED downstream connector @{text m5_D34_D3_collinear_fixed}: the
     canonical D3 leaf statement (which already KEEPS @{text \<open>gradU = 0\<close>}), now
@@ -48,7 +48,7 @@ text \<open>\<^bold>\<open>(M5) Core D3 (CHARTS) --- CORRECTED per-arc IFT chart
     @{text BadXW} --- confirming the corrected target feeds the consumer.
 
   \<^bold>\<open>The single isolated residual.\<close>  The IFT chart of the per-arc combined
-  bad fibre @{text excess_arc_charts_Nn} is the one precisely-scoped \<open>sorry\<close>,
+  bad fibre @{text excess_arc_charts_Nn} is the one precisely-scoped \<open>proof hole\<close>,
   now SOUND (codim 3, @{text \<open>gradU = 0\<close>} retained).  It is the genuine multi-week
   analytic content (the joint \<open>(gradU, mstarg)\<close> transversality over the arc), NOT a
   splice freebie.\<close>
@@ -84,12 +84,12 @@ proof -
 qed
 
 
-subsection \<open>The mstarg interface (RE-STATED as local sorry-stubs --- discharge at the Robust3 splice)\<close>
+subsection \<open>The mstarg interface (RE-STATED as local proof hole-stubs --- discharge at the Robust3 splice)\<close>
 
 text \<open>The Gram determinant @{text mstarg} of the moment-map \<open>x\<close>-Jacobian lives in
   @{file \<open>../Appendix/Robust3/Nonemptiness_Robust3.thy\<close>}, NOT in the Robust2 heap.
   We re-state the facts the corrected chart core references, with EXACT signatures,
-  as local @{text sorry}-stubs; they discharge verbatim when this file is spliced
+  as local @{text \<open>proof hole\<close>}-stubs; they discharge verbatim when this file is spliced
   against the Robust3 heap (where @{text mstarg} and these lemmas are proven).
 
   These stubs are SOUND interface facts (proven in Robust3), NOT the irreducible
@@ -135,7 +135,7 @@ definition BadXWG :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<R
       \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
 
 
-subsection \<open>Structural set algebra for \<open>BadXWG\<close> (sorry-free)\<close>
+subsection \<open>Structural set algebra for \<open>BadXWG\<close> (proof-complete)\<close>
 
 lemma BadXWG_empty:
   "BadXWG \<omega>0 \<omega>s {} = ({} :: ((real^2)^'n) set)"
@@ -163,7 +163,7 @@ lemma BadXWG_point:
   unfolding BadXWG_def by blast
 
 
-subsection \<open>The per-fixed-angle slice is nowhere dense / meager (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>The per-fixed-angle slice is nowhere dense / meager (proof-complete from \<open>nd\<close>)\<close>
 
 text \<open>The per-\<open>\<omega>\<close> slice of @{text BadXWG} is a SUBSET of the corresponding slice of
   the prior @{text BadXW} (adding @{text \<open>gradU = 0\<close>} only shrinks it), so the same
@@ -235,9 +235,9 @@ proof -
 qed
 
 
-subsection \<open>The EMPTY-arc extreme instance of the chart bundle (sorry-free)\<close>
+subsection \<open>The EMPTY-arc extreme instance of the chart bundle (proof-complete)\<close>
 
-text \<open>The EMPTY-arc instance is closable sorry-free: the bad fibre is empty, so the
+text \<open>The EMPTY-arc instance is closable proof-complete: the bad fibre is empty, so the
   empty-critical-set chart bundle satisfies every conjunct vacuously.  Soundness
   sanity check that the (corrected) chart-bundle output shape is inhabited.\<close>
 
@@ -269,7 +269,7 @@ proof (intro exI conjI)
 qed
 
 
-subsection \<open>The irreducible IFT-chart bundle (single isolated analytic \<open>sorry\<close>, codim 3)\<close>
+subsection \<open>The irreducible IFT-chart bundle (single isolated analytic \<open>proof hole\<close>, codim 3)\<close>
 
 text \<open>\<^bold>\<open>The genuine analytic content, corrected and isolated as ONE precisely-scoped
   statement.\<close>  Over the (\<open>C\<^sup>1\<close>) analytic arc \<open>\<gamma> = \<phi> ` {a..b}\<close>, the CORRECTED
@@ -319,15 +319,15 @@ lemma excess_arc_charts_Nn:
   \<comment> \<open>GENUINE analytic core (CORRECTED, codim 3): the IFT chart of the per-arc
       COMBINED bad fibre (joint \<open>(gradU, mstarg)\<close>, \<open>gradU = 0\<close> RETAINED) in the
       @{thm charts_core_Nn} output shape (route above).  The single irreducible
-      \<open>sorry\<close> of this file; it does NOT follow from @{text nd} alone.  NOT a splice
-      freebie.  The EMPTY-arc instance is closed sorry-free as
+      \<open>proof hole\<close> of this file; it does NOT follow from @{text nd} alone.  NOT a splice
+      freebie.  The EMPTY-arc instance is closed proof-complete as
       @{thm excess_arc_charts_Nn_empty}.\<close>
   sorry
 
 
-subsection \<open>The closed negligible cover (sorry-free from the corrected chart bundle)\<close>
+subsection \<open>The closed negligible cover (proof-complete from the corrected chart bundle)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled proof-complete from the chart bundle.\<close>
   From @{thm excess_arc_charts_Nn} the pieces \<open>K i = (fst \<circ> charts i) ` (Crit i)\<close>
   are CLOSED (chart output) and NEGLIGIBLE (@{thm negligible_singular_image_2n}:
   the projection has non-surjective derivative on \<open>Crit i\<close>), and they cover the
@@ -375,7 +375,7 @@ proof -
 qed
 
 
-subsection \<open>Assembly bridge + the verbatim per-arc target (sorry-free from the core)\<close>
+subsection \<open>Assembly bridge + the verbatim per-arc target (proof-complete from the core)\<close>
 
 lemma excess_arc_projection_of_negligible_closed_cover:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
@@ -417,7 +417,7 @@ text \<open>\<^bold>\<open>Confirmation that the corrected target re-derives the
   is dropped), so meagerness of @{text BadXWG} legitimately transfers to the goal.
 
   We bundle the @{text finitely_arc_coverable} cover of the collinear locus as an
-  explicit hypothesis (it is the SEPARATE terminal sorry
+  explicit hypothesis (it is the SEPARATE terminal proof obligation
   @{text collinear_locus_finite_arc_cover}, proven in Robust3 and provided by the
   sibling reduction --- NOT part of this file's chart obligation).  This lemma
   certifies that the corrected per-arc core, threaded through @{text BadXWG},
@@ -436,7 +436,7 @@ lemma m5_D34_D3_collinear_fixed:
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
     \<comment> \<open>The collinear locus is finitely \<open>C\<^sup>1\<close>-arc-coverable (the SEPARATE Robust3
-        terminal sorry @{text collinear_locus_finite_arc_cover}, supplied here as a
+        terminal proof hole @{text collinear_locus_finite_arc_cover}, supplied here as a
         hypothesis; NOT part of this file's chart obligation).\<close>
     and finI: "finite I"
     and Lcov: "{\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} \<subseteq> (\<Union>i\<in>I. arc i)"

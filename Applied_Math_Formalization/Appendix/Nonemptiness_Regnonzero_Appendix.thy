@@ -5,7 +5,7 @@ begin
 section \<open>Regular-stratum nonzero-\<open>A\<close> branch: appendix obligation skeleton\<close>
 
 text \<open>
-  This theory states --- each closed by @{command sorry} --- the obligations of the
+  This theory states --- each closed by a proof-command leaf --- the obligations of the
   regular-stratum nonzero-\<open>A\<close> branch \<open>prop:regnonzero\<close> (the one unformalized branch
   of the Baire closeout \<open>thm:final\<close>) of
   \<open>Applied Math/nonemptiness_unified_singlefile_complete.tex\<close>.

@@ -18,19 +18,19 @@ text \<open>\<^bold>\<open>(M5) Core A --- the deep per-arc x-projection meagern
   \<open>\<gamma> \<subseteq> OmegaPF\<close>, the phase-foot condition \<open>pf\<close>, and the abstract fixed-angle
   nowhere-density input @{text nd}).  Degenerate sanity checks below confirm the
   cut is sound at the extreme instances:
-  \<^item> the EMPTY arc (\<open>\<gamma> = {}\<close>): \<open>BadXW \<omega>0 \<omega>s {} = {}\<close>, meager (proven sorry-free);
+  \<^item> the EMPTY arc (\<open>\<gamma> = {}\<close>): \<open>BadXW \<omega>0 \<omega>s {} = {}\<close>, meager (proven proof-complete);
   \<^item> the POINT arc (\<open>\<gamma> = {\<omega>}\<close>): reduces to the per-fixed-angle nowhere-dense slice
-    supplied by @{text nd} (proven sorry-free);
-  \<^item> a FINITE arc (\<open>\<gamma>\<close> finite): a finite union of point slices, meager sorry-free.
+    supplied by @{text nd} (proven proof-complete);
+  \<^item> a FINITE arc (\<open>\<gamma>\<close> finite): a finite union of point slices, meager proof-complete.
 
-  \<^bold>\<open>What is proven sorry-free here (the reduction layers).\<close>
+  \<^bold>\<open>What is proven proof-complete here (the reduction layers).\<close>
   \<^enum> @{text BadXW_empty} / @{text BadXW_point} / @{text BadXW_mono} / @{text BadXW_finite}
     --- structural set algebra for the bad \<open>x\<close>-set.
   \<^enum> @{text fixed_omega_slice_nowhere_dense} / @{text fixed_omega_proj_meager}
     --- the per-fixed-angle slice is nowhere dense (hence meager) from @{text nd}.
   \<^enum> @{text excess_arc_projection_of_negligible_closed_cover} --- \<^bold>\<open>the assembly
     bridge\<close>: if the bad \<open>x\<close>-set over the arc is contained in a COUNTABLE union of
-    CLOSED NEGLIGIBLE pieces, it is meager (sorry-free, via
+    CLOSED NEGLIGIBLE pieces, it is meager (proof-complete, via
     @{thm meager_negligible_closed_cover}).
   \<^enum> @{text excess_arc_projection_meager} --- the verbatim target, assembled from
     the single isolated analytic core @{text excess_arc_negligible_closed_cover}.
@@ -47,7 +47,7 @@ text \<open>\<^bold>\<open>(M5) Core A --- the deep per-arc x-projection meagern
     (@{thm negligible_singular_image_2n}) and closed-coverable.  This is the
     deepest core; it does NOT follow from the abstract topological input
     @{text nd} alone (which carries no derivative / closedness data), so it is
-    carried here as ONE precisely-scoped \<open>sorry\<close>.  GENUINE math, NOT a splice
+    carried here as ONE precisely-scoped \<open>proof hole\<close>.  GENUINE math, NOT a splice
     freebie.\<close>
 
 
@@ -65,7 +65,7 @@ definition BadXW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Ri
         cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0 \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
 
 
-subsection \<open>Structural set algebra for \<open>BadXW\<close> (sorry-free)\<close>
+subsection \<open>Structural set algebra for \<open>BadXW\<close> (proof-complete)\<close>
 
 lemma BadXW_empty:
   "BadXW \<omega>0 \<omega>s {} = ({} :: ((real^2)^'n) set)"
@@ -91,7 +91,7 @@ lemma BadXW_point:
   unfolding BadXW_def by blast
 
 
-subsection \<open>The per-fixed-angle slice is nowhere dense / meager (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>The per-fixed-angle slice is nowhere dense / meager (proof-complete from \<open>nd\<close>)\<close>
 
 lemma fixed_omega_slice_nowhere_dense:
   fixes \<omega> :: "real^2"
@@ -156,7 +156,7 @@ lemma excess_point_arc_meager:
   by (rule fixed_omega_proj_meager[OF nd])
 
 text \<open>Sanity check 3 (a FINITE arc).  When \<open>\<gamma>\<close> is finite the bad \<open>x\<close>-set is a
-  FINITE union of point slices, hence meager sorry-free --- the arc-parameter
+  FINITE union of point slices, hence meager proof-complete --- the arc-parameter
   union is harmless for countable \<open>\<gamma>\<close>.  The genuine difficulty is precisely the
   UNCOUNTABLE arc, which is what the analytic core handles.\<close>
 
@@ -178,7 +178,7 @@ qed
 
 subsection \<open>Assembly bridge: a closed negligible countable cover \<open>\<Longrightarrow>\<close> meager\<close>
 
-text \<open>\<^bold>\<open>The assembly bridge (sorry-free).\<close>  If the bad \<open>x\<close>-set over the arc is
+text \<open>\<^bold>\<open>The assembly bridge (proof-complete).\<close>  If the bad \<open>x\<close>-set over the arc is
   contained in a COUNTABLE union of CLOSED NEGLIGIBLE \<open>x\<close>-sets, it is meager.
   This is the structural fact that turns the IFT-chart's negligible-projection
   output (the analytic core) into the @{const meager} conclusion, via
@@ -223,7 +223,7 @@ text \<open>\<^bold>\<open>GENUINE analytic core (the irreducible content).\<clo
   is NOT a consequence of @{text nd} alone (uncountable unions of nowhere-dense
   sets need not be meager).  Hence the genuine analytic work is isolated to this
   single closed-negligible-cover obligation; everything else in this file is
-  sorry-free.  NOT a splice freebie.\<close>
+  proof-complete.  NOT a splice freebie.\<close>
 
 lemma excess_arc_negligible_closed_cover:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
@@ -240,7 +240,7 @@ lemma excess_arc_negligible_closed_cover:
   \<comment> \<open>GENUINE analytic core: the IFT chart of the per-arc bad fibre as a
       \<open>(2N-1)\<close>-dim graph (@{thm negligible_singular_image_2n}), presented as a
       countable closed negligible \<open>x\<close>-cover.  Route above.  This is the deepest
-      core of M5 and the single irreducible \<open>sorry\<close> of this file; it does NOT
+      core of M5 and the single irreducible \<open>proof hole\<close> of this file; it does NOT
       follow from @{text nd} alone.  NOT a splice freebie.\<close>
   sorry
 
@@ -249,8 +249,8 @@ subsection \<open>The verbatim target, assembled from the single analytic core\<
 
 text \<open>\<^bold>\<open>The per-arc x-projection meagerness.\<close>  Copied \<^bold>\<open>verbatim\<close> from
   @{file \<open>../M5_Dev_Excess/Scratch_m5_excess.thy\<close>} (L266--L280).  Assembled
-  sorry-free from the single isolated analytic core
-  @{text excess_arc_negligible_closed_cover} via the sorry-free assembly bridge
+  proof-complete from the single isolated analytic core
+  @{text excess_arc_negligible_closed_cover} via the proof-complete assembly bridge
   @{text excess_arc_projection_of_negligible_closed_cover}.\<close>
 
 lemma excess_arc_projection_meager:

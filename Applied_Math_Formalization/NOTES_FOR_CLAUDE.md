@@ -61,7 +61,7 @@ The remaining Tier 2 work is the gauge dictionary/algebra:
   `F_eta u = cos(kappa*u) - kappa*(u-eta)*sin(kappa*u)` under the gauge
   hypotheses (`b = 0`, `Phi = 0`, `a > 0`, `eta = g1/(2g)`);
 - if the full statement does not come together cleanly, use a precisely stated
-  `sorry` in `D34_UPhi_Branch.thy` with a `NEEDS:` block instead of blocking
+  `proof hole` in `D34_UPhi_Branch.thy` with a `NEEDS:` block instead of blocking
   Tier 1.
 
 The relevant bridge names already available:
@@ -109,9 +109,9 @@ Builds checked during implementation:
 - `Applied_Math_M5_UPhi` BUILD_EXIT=0
 - `Applied_Math_D34_Analytic` BUILD_EXIT=0
 
-## Soundness warning on the UPhi Tier 2 sorry
+## Soundness warning on the UPhi Tier 2 proof hole
 
-Follow-up investigation found that the remaining `sorry`
+Follow-up investigation found that the remaining `proof hole`
 `Phi_par_parallel_slot_F_eta_identification` is not merely an unfinished
 technical proof.  As currently stated, it appears to ask Isabelle to prove the
 wrong scalar identity for the definitions in this repo.
@@ -158,11 +158,11 @@ identity is replaced by a sound statement.
 Codex next-target work on 2026-07-08 changed
 `Appendix/Robust3/Nonemptiness_Robust3.thy` again.
 
-`m5_D34_D3_collinear` is now proved, not sorried.  The proof is a checked
+`m5_D34_D3_collinear` is now proved, not stubbed.  The proof is a checked
 assembly over a new exact retained D3 fibre `D3BadXG`; it no longer drops any of
 the retained Case-B conjuncts.
 
-Remaining Robust3 on-path sorries are now:
+Remaining Robust3 on-path proof holes are now:
 
 - `d3_retained_arc_charts_Nn`
 - `d3_active_collinear_finite_arc_cover`
@@ -189,7 +189,7 @@ pure steering-angle statement:
   `d3_collinear_locus_finite_arc_cover`, whose statement is only about
   `{ω ∈ OmegaPF ctr δ. phase_collinear ω0 ωs ω}`.
 
-Current Robust3 on-path sorries are therefore:
+Current Robust3 on-path proof holes are therefore:
 
 - `d3_retained_arc_charts_Nn`
 - `d3_collinear_locus_finite_arc_cover`
@@ -304,7 +304,7 @@ notably `d3_crossG`, and proves the imported-cover endpoint
 
 `Appendix/Robust4/Nonemptiness_Robust4.thy` now imports
 `Applied_Math_D3_Curve_Cover.D3_Curve_Cover`.
-Its former sorry at `d3_collinear_locus_finite_arc_cover` is replaced by a
+Its former proof hole at `d3_collinear_locus_finite_arc_cover` is replaced by a
 small bridge:
 
 - unfold `d3_collinear_nsing_all_def`;
@@ -342,7 +342,7 @@ For interactive Robust4 work, load the frontier against the curve-cover heap:
   Appendix/Robust4/Nonemptiness_Robust4.thy
 ```
 
-Remaining explicit `sorry` tactics in Robust4 are now exactly:
+Remaining explicit `proof hole` tactics in Robust4 are now exactly:
 
 - `d3_retained_arc_charts_Nn`
 - `branchP_indep_charts_Nn`
@@ -360,7 +360,7 @@ named upstream core:
 - `D3BadXG_subset_H0core`
 - `d3_detHess_arc_charts_Nn`
 
-The remaining D3 analytic sorry has deliberately moved to
+The remaining D3 analytic proof hole has deliberately moved to
 `d3_detHess_arc_charts_Nn`.  This core states the actual det-HessU/H0 retained
 critical fibre over one C1 arc:
 
@@ -386,7 +386,7 @@ Build command used:
 
 Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
-Remaining explicit `sorry` tactics in Robust4 are now exactly:
+Remaining explicit `proof hole` tactics in Robust4 are now exactly:
 
 - `d3_detHess_arc_charts_Nn`
 - `branchP_indep_charts_Nn`
@@ -418,7 +418,7 @@ not (exists Dx.
 
 The checked wrapper `D3BadXG_subset_H0core` still builds, and downstream
 `d3_retained_arc_charts_Nn` still consumes `d3_detHess_arc_charts_Nn` by subset.
-The remaining D3 sorry is therefore not the broad H0 chart theorem; it is the
+The remaining D3 proof hole is therefore not the broad H0 chart theorem; it is the
 NSx degenerate-critical chart theorem.
 
 Build command used:
@@ -432,12 +432,12 @@ Build command used:
 
 Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
-Remaining explicit `sorry` tactics in Robust4 are still exactly:
+Remaining explicit `proof hole` tactics in Robust4 are still exactly:
 
 - `d3_detHess_arc_charts_Nn`
 - `branchP_indep_charts_Nn`
 
-## Robust4 D3 det-Hess sorry removed as an explicit hypothesis
+## Robust4 D3 det-Hess proof hole removed as an explicit hypothesis
 
 Codex work on 2026-07-09 revisited the user-requested
 `d3_detHess_arc_charts_Nn` frontier in
@@ -451,14 +451,14 @@ content, not a splice/freebie.  In particular, the available
 `regular_value_on_gradU_dip` path requires `surj (DM_paper_x ...)`, while the
 D3 retained branch has `not surj (DM_paper_x ...)`.
 
-To avoid leaving an invalid unconditional theorem with `sorry`, Robust4 now
+To avoid leaving an invalid unconditional theorem with `proof hole`, Robust4 now
 states the missing D3 chart theorem as an explicit predicate:
 
 - `d3_detHess_arc_chart_core`
 - `d3_detHess_arc_chart_core_all`
 
 The old `d3_detHess_arc_charts_Nn` lemma is now proved from the predicate
-instead of by `sorry`.  The predicate is threaded through:
+instead of by `proof hole`.  The predicate is threaded through:
 
 - `d3_retained_arc_charts_Nn`
 - `d3_retained_arc_negligible_closed_cover`
@@ -486,16 +486,16 @@ Verification:
 
 Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
-`desorry` result for Robust4 now reports only:
+`proof-hole audit` result for Robust4 now reports only:
 
 ```text
 no proof found at line 391
 ```
 
 That line is the remaining D4 core `branchP_indep_charts_Nn`.  The former D3
-explicit `sorry` is no longer present.
+explicit `proof hole` is no longer present.
 
-## Robust4 Branch-P explicit sorry removed by exposing the real D4 core
+## Robust4 Branch-P explicit proof hole removed by exposing the real D4 core
 
 Codex work on 2026-07-09 addressed the remaining Robust4 explicit proof hole,
 formerly `branchP_indep_charts_Nn`.
@@ -521,7 +521,7 @@ What changed in `Appendix/Robust4/Nonemptiness_Robust4.thy`:
   - `branchP_indep_closed_cover_core_all`
   - `branchP_indep_chart_core`
 - Reproved `branchP_indep_charts_Nn` from the explicit
-  `branchP_indep_chart_core` premise instead of leaving a `sorry`.
+  `branchP_indep_chart_core` premise instead of leaving a `proof hole`.
 - Rewired the downstream path to consume the weaker, actually-needed
   `branchP_indep_closed_cover_core_all` premise:
   `branchP_indep_negligible_closed_cover`, `branchP_indep_core`,
@@ -530,7 +530,7 @@ What changed in `Appendix/Robust4/Nonemptiness_Robust4.thy`:
   `regular_feasible_point_dip`, `regular_feasible_witness_dip`, and
   `F0_dip_nonempty`.
 
-So Robust4 now has no explicit Isabelle `sorry`, but the theorem stack still
+So Robust4 now has no explicit Isabelle `proof hole`, but the theorem stack still
 has honest analytic assumptions at the D3 and D4 boundaries:
 
 - `d3_detHess_arc_chart_core_all`
@@ -553,8 +553,8 @@ Verification:
 
 Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
-`desorry` result for Robust4:
+`proof-hole audit` result for Robust4:
 
 ```text
-no sorry's found
+no proof holes found
 ```

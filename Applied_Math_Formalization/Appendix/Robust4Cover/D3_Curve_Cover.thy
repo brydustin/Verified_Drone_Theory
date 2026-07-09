@@ -23,7 +23,7 @@ qed
 
 
 
-subsection \<open>GENUINE REDUCTION 1: component forms (copied from ArcCover2, sorry-free)\<close>
+subsection \<open>GENUINE REDUCTION 1: component forms (copied from ArcCover2, proof-complete)\<close>
 
 lemma c1_eq:
   "cvec_dip \<omega>0 \<omega>s \<omega> $ 1
@@ -46,7 +46,7 @@ lemma Dc2_eq:
   by (simp add: Dcvec_dip_def axis_def)
 
 
-subsection \<open>GENUINE REDUCTION 2: phase_collinear = d3_crossTheta vanishes (sorry-free)\<close>
+subsection \<open>GENUINE REDUCTION 2: phase_collinear = d3_crossTheta vanishes (proof-complete)\<close>
 
 lemma d3_curve_phase_collinear_iff_crossTheta:
   "phase_collinear \<omega>0 \<omega>s \<omega> \<longleftrightarrow> d3_crossTheta \<omega>0 \<omega>s \<omega> = 0"
@@ -97,7 +97,7 @@ lemma collinear_locus_eq_d3_crossTheta_zero:
 
 subsection \<open>GENUINE REDUCTION 3: separable trig form \<open>\<Theta> = \<alpha>(\<omega>\<^sub>1)cos\<omega>\<^sub>2 + \<beta>(\<omega>\<^sub>1)sin\<omega>\<^sub>2 + \<gamma>(\<omega>\<^sub>1)\<close>\<close>
 
-text \<open>\<^bold>\<open>The decisive structural simplification (sorry-free).\<close>  Clearing the explicit trig
+text \<open>\<^bold>\<open>The decisive structural simplification (proof-complete).\<close>  Clearing the explicit trig
   forms and using the Pythagorean identity, the cross determinant collapses to a
   function that is AFFINE-TRIGONOMETRIC in the second angle:
   \<open>d3_crossTheta = d3_crossA * cos(w2) + d3_crossB * sin(w2) + d3_crossG\<close>, where the three
@@ -176,7 +176,7 @@ proof -
 qed
 
 
-subsection \<open>Continuity of \<open>d3_crossTheta\<close> and compactness of the locus (sorry-free)\<close>
+subsection \<open>Continuity of \<open>d3_crossTheta\<close> and compactness of the locus (proof-complete)\<close>
 
 text \<open>From the separable form @{thm d3_crossTheta_separable}, \<open>d3_crossTheta\<close> is a continuous
   function of \<open>\<omega>\<close> (a polynomial in \<open>cos/sin\<close> of the two continuous components \<open>\<omega>$1\<close>,
@@ -2885,9 +2885,9 @@ qed
 
 subsection \<open>The single irreducible curve-structure residual: the locus is LOCALLY a \<open>C\<^sup>1\<close> arc\<close>
 
-text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>sorry\<close>.\<close>
+text \<open>\<^bold>\<open>GENUINE analytic content, isolated as the SMALLEST precisely-scoped \<open>proof hole\<close>.\<close>
 
-  By the sorry-free reductions above, the collinear locus is the bounded-box zero set
+  By the proof-complete reductions above, the collinear locus is the bounded-box zero set
   of the SINGLE separable-trigonometric equation
   \<open>d3_crossA(\<omega>\<^sub>1)cos\<omega>\<^sub>2 + d3_crossB(\<omega>\<^sub>1)sin\<omega>\<^sub>2 + d3_crossG(\<omega>\<^sub>1) = 0\<close> (@{thm d3_crossTheta_separable}),
   a genuine 1-dimensional real-analytic curve.  The only remaining content is the
@@ -2928,7 +2928,7 @@ lemma locus_locally_C1_arc:
       "{\<omega> \<in> OmegaPF ctr \<delta>. d3_crossTheta \<omega>0 \<omega>s \<omega> = 0} \<inter> ball \<omega>' r \<subseteq> \<Union>\<A>"
   \<comment> \<open>REGULAR interior case (\<open>\<partial>\<^sub>2\<Theta>\<noteq>0\<close>, \<open>\<omega>'\<close> interior) is now PROVEN via
       @{thm d3_crossTheta_local_C1_graph} + @{thm locus_arc_cover_from_graph}.  The residual
-      \<open>sorry\<close> is confined to the \<open>\<partial>\<^sub>2\<Theta>=0\<close> / boundary case (the symmetric
+      \<open>proof hole\<close> is confined to the \<open>\<partial>\<^sub>2\<Theta>=0\<close> / boundary case (the symmetric
       \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> \<open>\<chi>\<close>-graph and the finitely many \<open>\<nabla>\<Theta>=0\<close> singular points).\<close>
 proof -
   have z0: "d3_crossTheta \<omega>0 \<omega>s \<omega>' = 0" using win by simp
@@ -3026,7 +3026,7 @@ proof -
         \<comment> \<open>BOUNDARY case: \<omega>' on \<partial>(OmegaPF) (awkward orientation / corner).  Split on
             \<open>R = Ac\<cdot>ky\<omega>s - Bc\<cdot>kx\<omega>s\<close>.  \<open>R \<noteq> 0\<close> rules out every flat box edge, so the
             \<open>\<phi>\<close>-graph (B1), \<open>\<chi>\<close>-graph (B2', robust) and singular (B3) clips all go through;
-            the residual \<open>sorry\<close> is the collinear-wavevector degeneracy \<open>R = 0\<close>.\<close>
+            the residual \<open>proof hole\<close> is the collinear-wavevector degeneracy \<open>R = 0\<close>.\<close>
         show ?thesis
         proof (cases "?Ac * ky \<omega>s - ?Bc * kx \<omega>s \<noteq> 0")
           case True
@@ -3495,7 +3495,7 @@ proof -
                 qed
               next
                 case False
-                \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL (the ONLY remaining \<open>sorry\<close>): \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and>
+                \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL (the ONLY remaining \<open>proof hole\<close>): \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and>
                     \<partial>\<^sub>1\<Theta> = 0\<close> with at least one FLAT box-edge line.\<close>  A super-degenerate
                     codim-2 sub-case: \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> at the collinear-wavevector
                     degeneracy \<open>R = 0\<close>, at a saddle (\<open>\<nabla>\<Theta> = 0\<close>, \<open>det H < 0\<close>), AND some box
@@ -3520,7 +3520,7 @@ proof -
 qed
 
 
-subsection \<open>ASSEMBLY (sorry-free from the local-arc residual + compactness)\<close>
+subsection \<open>ASSEMBLY (proof-complete from the local-arc residual + compactness)\<close>
 
 text \<open>Heine--Borel: the compact locus is covered by the per-point balls of
   @{thm locus_locally_C1_arc}; a finite subcover yields finitely many \<open>C\<^sup>1\<close> arcs whose

@@ -10,12 +10,12 @@ text \<open>\<^bold>\<open>(M5) Core D3 (CHARTS) --- the per-arc IFT chart bundl
   verbatim from @{file \<open>../M5_Dev_D3Sound/Scratch_m5_d3sound.thy\<close>}) together with
   the SOUND \<open>C\<^sup>1\<close> @{text analytic_arc} predicate and the @{text BadXW} definition.
 
-  \<^bold>\<open>What is proven sorry-free here.\<close>
+  \<^bold>\<open>What is proven proof-complete here.\<close>
   \<^item> the soundness gate @{text analytic_arc_negligible} (a \<open>C\<^sup>1\<close> arc is negligible);
   \<^item> the structural set algebra for @{text BadXW};
   \<^item> the per-fixed-angle slice meagerness from @{text nd};
   \<^item> the degenerate \<^bold>\<open>extreme-instance\<close> of the chart bundle: the EMPTY arc
-    @{text excess_empty_arc_charts_Nn} is closed sorry-free with a constant
+    @{text excess_empty_arc_charts_Nn} is closed proof-complete with a constant
     (empty-critical-set) chart bundle --- the soundness sanity check that the
     chart-bundle output shape is inhabited;
   \<^item> a SOUND \<^bold>\<open>reduction lemma\<close> @{text excess_arc_charts_Nn_of_closed_negligible_cover}:
@@ -26,11 +26,11 @@ text \<open>\<^bold>\<open>(M5) Core D3 (CHARTS) --- the per-arc IFT chart bundl
     negligible).  This isolates the irreducible analytic content to the production
     of \<^emph>\<open>any\<close> closed negligible cover --- the genuine IFT step.
   \<^item> the closed-negligible cover @{text excess_arc_negligible_closed_cover} and the
-    meagerness @{text excess_arc_projection_meager}, assembled sorry-free from the
+    meagerness @{text excess_arc_projection_meager}, assembled proof-complete from the
     chart bundle, copied verbatim.
 
   \<^bold>\<open>The single isolated residual.\<close>  The IFT chart of the per-arc moment-Jacobian bad
-  fibre, @{text excess_arc_charts_Nn}, is the one precisely-scoped \<open>sorry\<close>: the
+  fibre, @{text excess_arc_charts_Nn}, is the one precisely-scoped \<open>proof hole\<close>: the
   determinantal locus \<open>\<not> surj (DM_paper_x x c) \<longleftrightarrow> m\<^sup>*(c) x = 0\<close> over the \<open>1\<close>-D
   analytic arc is a positive-codimension implicit-function-theorem chart, the
   genuine multi-week analytic content.  It does NOT follow from @{text nd} alone
@@ -76,7 +76,7 @@ definition BadXW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Ri
         cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0 \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
 
 
-subsection \<open>Structural set algebra for \<open>BadXW\<close> (sorry-free)\<close>
+subsection \<open>Structural set algebra for \<open>BadXW\<close> (proof-complete)\<close>
 
 lemma BadXW_empty:
   "BadXW \<omega>0 \<omega>s {} = ({} :: ((real^2)^'n) set)"
@@ -102,7 +102,7 @@ lemma BadXW_point:
   unfolding BadXW_def by blast
 
 
-subsection \<open>The per-fixed-angle slice is nowhere dense / meager (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>The per-fixed-angle slice is nowhere dense / meager (proof-complete from \<open>nd\<close>)\<close>
 
 lemma fixed_omega_slice_nowhere_dense:
   fixes \<omega> :: "real^2"
@@ -201,7 +201,7 @@ text \<open>\<^bold>\<open>The chart-bundle output shape is exactly a packaged c
   genuine missing content is the production of charts whose derivatives \<^emph>\<open>genuinely\<close>
   drop rank.  The honest residual remains @{text excess_arc_charts_Nn}.\<close>
 
-text \<open>The EMPTY-arc extreme instance of the chart bundle is closable sorry-free: the
+text \<open>The EMPTY-arc extreme instance of the chart bundle is closable proof-complete: the
   bad fibre is empty, so the empty-critical-set chart bundle (any \<open>charts\<close>, \<open>Crit
   i = {}\<close>, any \<open>D\<close>) satisfies every conjunct vacuously.  This is the soundness
   sanity check that the chart-bundle output shape is genuinely inhabited.\<close>
@@ -234,7 +234,7 @@ proof (intro exI conjI)
 qed
 
 
-subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>sorry\<close>)\<close>
+subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>proof hole\<close>)\<close>
 
 text \<open>\<^bold>\<open>The genuine analytic content, isolated as one precisely-scoped statement\<close>
   (copied verbatim from @{file \<open>../M5_Dev_D3Sound/Scratch_m5_d3sound.thy\<close>}).  Over
@@ -280,15 +280,15 @@ lemma excess_arc_charts_Nn:
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
   \<comment> \<open>GENUINE analytic core: the IFT chart of the per-arc moment-Jacobian bad
       fibre in the @{thm charts_core_Nn} output shape (route above).  The single
-      irreducible \<open>sorry\<close> of this file; it does NOT follow from @{text nd} alone.
-      NOT a splice freebie.  The EMPTY-arc instance is closed sorry-free as
+      irreducible \<open>proof hole\<close> of this file; it does NOT follow from @{text nd} alone.
+      NOT a splice freebie.  The EMPTY-arc instance is closed proof-complete as
       @{thm excess_empty_arc_charts_Nn}.\<close>
   sorry
 
 
-subsection \<open>The analytic core: the closed negligible cover (sorry-free from the chart bundle)\<close>
+subsection \<open>The analytic core: the closed negligible cover (proof-complete from the chart bundle)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled proof-complete from the chart bundle.\<close>
   From the chart bundle @{thm excess_arc_charts_Nn} the pieces
   \<open>K i = (fst \<circ> charts i) ` (Crit i)\<close> are CLOSED (chart output) and NEGLIGIBLE
   (@{thm negligible_singular_image_2n}: the projection has non-surjective
@@ -335,7 +335,7 @@ proof -
 qed
 
 
-subsection \<open>Assembly bridge + the verbatim per-arc target (sorry-free from the core)\<close>
+subsection \<open>Assembly bridge + the verbatim per-arc target (proof-complete from the core)\<close>
 
 lemma excess_arc_projection_of_negligible_closed_cover:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"

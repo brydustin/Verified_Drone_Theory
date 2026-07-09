@@ -2,7 +2,7 @@
 
 Claude is handing off active work here due to running low on budget in its
 session. This document is the roadmap. It was written after directly
-re-checking the current repo state (git log, actual `sorry` locations via
+re-checking the current repo state (git log, actual `proof hole` locations via
 grep, actual file contents) — not from memory of what should be true. Where
 something below is unverified or a fork's self-report rather than something
 Claude directly confirmed, it says so.
@@ -16,17 +16,17 @@ just not for "what's next", which this file supersedes) and the tail of
 
 The goal is `theorem F0_dip_nonempty` in `Appendix/Robust3/Nonemptiness_Robust3.thy`
 (currently at line 3450). As of this writing there are exactly **two** real
-`sorry`s left in that file (verified via `grep -n "^\s*sorry\s*$\|by sorry\| sorry$"`,
-not by trusting comments that merely mention the word "sorry"):
+`proof hole`s left in that file (verified via `grep -n "^\s*proof hole\s*$\|by proof hole\| proof hole$"`,
+not by trusting comments that merely mention the word "proof hole"):
 
-1. **`m5_D34_D3_collinear`** (statement at line 2412, `sorry` at line 2424).
+1. **`m5_D34_D3_collinear`** (statement at line 2412, `proof hole` at line 2424).
 2. **`branchP_indep_charts_Nn`** (deep inside the D4 chain — `m5_D34_D4_branchP`
    itself, line 2625, is *already proven*, built on `branchP_indep_core` →
    `branchP_indep_negligible_closed_cover` → ... → `branchP_indep_charts_Nn`,
-   which carries the actual `sorry` and is explicitly commented as "The single
-   irreducible `sorry` of this file").
+   which carries the actual `proof hole` and is explicitly commented as "The single
+   irreducible `proof hole` of this file").
 
-**Neither of these two sorry statements mentions `det(HessU)`, `G11`, `G22`,
+**Neither of these two proof hole statements mentions `det(HessU)`, `G11`, `G22`,
 `Phi_par`, or anything from the Case-B analytic route.** Read their exact
 statements yourself (lines 2412–2421 and ~2508–2534) — both are phrased purely
 in terms of `gradU(...) = 0`, `det(matrix(Dcvec_dip...))≠0`, `cvec_dip≠0`, and
@@ -113,7 +113,7 @@ are read/scoped but untouched.
 
 **IMPORTANT — a pre-existing, DISCONNECTED, INCOMPLETE H0res scaffold already
 exists**: `Appendix/Nonemptiness_Regnonzero_Appendix.thy` has fully-proven
-(zero `sorry`) generic lemmas (`lem_h0res_Bcuts`, `lem_h0res_a1a2`,
+(zero `proof hole`) generic lemmas (`lem_h0res_Bcuts`, `lem_h0res_a1a2`,
 `prop_h0res_meager`, etc.) but (a) that file, and `Nonemptiness_Capstone.thy`
 which imports it, are not imported by `Nonemptiness_Robust3.thy` either — a
 second instance of the same disconnection pattern as §0 — and (b) its
@@ -127,14 +127,14 @@ Tier 1 (`F_eta`, `real_analytic_on_F_eta`, `F_eta_at_0`,
 `F_eta_zeros_nowhere_dense`) is fully proven. Tier 2 has substrate
 (`DM_paper_x_slot_1/2/3`, `Phi_par_slot_value`, `Phi_par_parallel_slot_value`,
 `ucoord`, `eta_par`, `uphi_E1_deriv_F_eta`, `uphi_scalar_zero_iff`,
-`uphi_reduce_pointwise`) with exactly one remaining `sorry`:
+`uphi_reduce_pointwise`) with exactly one remaining `proof hole`:
 `Phi_par_parallel_slot_F_eta_identification`. Claude reviewed the "soundness
-warning" note Codex left about this sorry (see `NOTES_FOR_CLAUDE.md` and the
+warning" note Codex left about this proof hole (see `NOTES_FOR_CLAUDE.md` and the
 diary entry "TO CODEX: reviewed NOTES_FOR_CLAUDE.md's soundness warning") and
 believes — **as a considered hypothesis, not a verified fact** — that the
 warning is a false alarm caused by the informal side-check conflating
 `M1_moment`'s ambient coordinate weight `(x$n)$1` with the c-projected
-`ucoord` coordinate. Recommend attempting the sorry directly via the existing
+`ucoord` coordinate. Recommend attempting the proof hole directly via the existing
 invariant machinery before treating it as broken.
 
 ## 2. Dead end — do not repeat this
@@ -193,7 +193,7 @@ further on them.
   (`m5_D34_subset_mstarg_residual`'s enlargement, and
   `Nonemptiness_Regnonzero_Appendix.thy`'s disconnected H0res scaffold) — a
   quick `grep -rn "theory_name\|specific_lemma_name"` across the repo to see
-  what actually imports/uses a file, rather than assuming a `zero-sorry` file
+  what actually imports/uses a file, rather than assuming a `zero-proof hole` file
   is wired into the real proof, would have caught both faster.
 
 ## 4. Coordination

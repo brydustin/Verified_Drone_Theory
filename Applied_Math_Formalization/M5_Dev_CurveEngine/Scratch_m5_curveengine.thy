@@ -29,22 +29,22 @@ text \<open>\<^bold>\<open>(M5) CORE B --- the SOUND curve-case excess engine.\<
     @{thm finite_cos_zeros_interval}, @{thm finite_phase_zeros_interval} --- the exact
     witness-confinement mirror of @{thm meager_steering_singular_stratum}), each an
     IFT graph, hence an analytic arc.  GENUINE analytic content; carried as one
-    precisely-scoped \<open>sorry\<close>, soundly stated for the COLLINEAR LOCUS (\<^bold>\<open>not\<close> for an
+    precisely-scoped \<open>proof hole\<close>, soundly stated for the COLLINEAR LOCUS (\<^bold>\<open>not\<close> for an
     arbitrary \<open>\<Gamma>\<close>).
   \<^item> @{text excess_projection_meager_curve} (Deliverable 2): the TIGHTENED engine.
     For any \<^emph>\<open>finitely-arc-coverable\<close> \<open>\<Gamma>\<close>, \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is meager.  Proven
-    sorry-free from the cover + @{text excess_arc_projection_meager} (Core A's shared
-    deliverable, stubbed locally) + the sorry-free assembly layer.
+    proof-complete from the cover + @{text excess_arc_projection_meager} (Core A's shared
+    deliverable, stubbed locally) + the proof-complete assembly layer.
   \<^item> @{text D3_excess_engine}, @{text m5_D34_D3_collinear} (Deliverable 3): re-derived
-    \<^bold>\<open>verbatim\<close> from @{file \<open>../M5_Dev_Excess/Scratch_m5_excess.thy\<close>}, now sorry-free
+    \<^bold>\<open>verbatim\<close> from @{file \<open>../M5_Dev_Excess/Scratch_m5_excess.thy\<close>}, now proof-complete
     against the SOUND engine --- confirming the whole D3 chain still closes.
 
-  \<^bold>\<open>Genuine remaining sorries\<close>: exactly two analytic obligations
+  \<^bold>\<open>Genuine remaining proof holes\<close>: exactly two analytic obligations
   (@{text collinear_locus_finite_arc_cover}, the finite \<open>\<int>\<^sup>3\<close>-arc cover of the locus;
   @{text excess_arc_projection_meager}, Core A's per-arc IFT projection) plus the
   @{text fixed_c_nonsurj_nowhere_dense} mstarg freebie (closes at the Robust3 splice).
   Everything else --- the assembly, the set algebra, the D3 re-derivation --- is
-  sorry-free.\<close>
+  proof-complete.\<close>
 
 
 subsection \<open>The phase-collinear predicate (copied verbatim from the engine)\<close>
@@ -66,7 +66,7 @@ lemma fixed_c_nonsurj_nowhere_dense:
   sorry
 
 
-subsection \<open>Per-angle slice nowhere-density / meagerness (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>Per-angle slice nowhere-density / meagerness (proof-complete from \<open>nd\<close>)\<close>
 
 lemma fixed_omega_slice_nowhere_dense:
   fixes \<omega> :: "real^2"
@@ -127,7 +127,7 @@ proof -
 qed
 
 
-subsection \<open>The per-fixed-angle x-projection is meager (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>The per-fixed-angle x-projection is meager (proof-complete from \<open>nd\<close>)\<close>
 
 lemma fixed_omega_proj_meager:
   fixes V :: "((real^2)^'n) set" and \<omega> :: "real^2"
@@ -177,11 +177,11 @@ definition finitely_arc_coverable :: "(real^2) set \<Rightarrow> real^2 \<Righta
          \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>))"
 
 
-subsection \<open>The assembly layer (sorry-free): finite arc cover \<open>\<Longrightarrow>\<close> meager\<close>
+subsection \<open>The assembly layer (proof-complete): finite arc cover \<open>\<Longrightarrow>\<close> meager\<close>
 
 text \<open>\<^bold>\<open>The assembly layer.\<close>  If a FINITE family \<open>{arc i}\<^bsub>i\<in>I\<^esub>\<close> of angle sets covers
   \<open>\<Gamma>\<close> and each per-arc \<open>x\<close>-projection \<open>V \<inter> BadXW \<omega>0 \<omega>s (arc i)\<close> is meager, then
-  \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is meager.  Sorry-free.\<close>
+  \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is meager.  proof-complete.\<close>
 
 lemma excess_projection_meager_of_finite_cover:
   fixes V :: "((real^2)^'n) set" and \<Gamma> :: "(real^2) set"
@@ -209,7 +209,7 @@ qed
 
 subsection \<open>Deliverable 1: the phase-collinear LOCUS has a finite analytic-arc cover\<close>
 
-text \<open>\<^bold>\<open>GENUINE analytic sorry (1 of 2), SOUNDLY scoped to the collinear LOCUS.\<close>
+text \<open>\<^bold>\<open>GENUINE analytic proof hole (1 of 2), SOUNDLY scoped to the collinear LOCUS.\<close>
 
   This is the sound replacement of the false
   \<open>phase_collinear_curve_finite_arc_cover\<close> of
@@ -242,7 +242,7 @@ lemma collinear_locus_finite_arc_cover:
   fixes ctr :: "real^2" and \<delta> :: real
   assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "finitely_arc_coverable {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>} ctr \<delta>"
-  \<comment> \<open>GENUINE analytic sorry (1/2), SOUNDLY scoped: finite \<open>\<int>\<^sup>3\<close>-period analytic-arc
+  \<comment> \<open>GENUINE analytic proof hole (1/2), SOUNDLY scoped: finite \<open>\<int>\<^sup>3\<close>-period analytic-arc
       cover of the phase-collinear LOCUS (not an arbitrary 2D \<open>\<Gamma>\<close>).  The locus is the
       analytic equation \<open>\<Theta>(\<omega>\<^sub>1,\<omega>\<^sub>2)=0\<close> whose \<open>cos\<close>/\<open>sin\<close>/\<open>a cos + b sin\<close> factors meet
       the box in finitely many \<open>\<int>\<^sup>3\<close>-period windows
@@ -261,7 +261,7 @@ text \<open>\<^bold>\<open>SHARED stub --- Core A's deliverable.\<close>  Over a
   chart of the bad fibre as a \<open>(2N-1)\<close>-dim graph + negligibility of its
   \<open>x\<close>-projection via @{thm negligible_singular_image_2n}, upgraded to meager by a
   closed negligible cover @{thm meager_negligible_closed_cover}).  NOT a splice
-  freebie; NOT this Core's obligation --- carried as the shared sorry.\<close>
+  freebie; NOT this Core's obligation --- carried as the shared proof hole.\<close>
 
 lemma excess_arc_projection_meager:
   fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
@@ -272,7 +272,7 @@ lemma excess_arc_projection_meager:
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager (V \<inter> BadXW \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)"
-  \<comment> \<open>SHARED sorry (Core A's deliverable): the IFT chart of the per-arc bad fibre as
+  \<comment> \<open>SHARED proof hole (Core A's deliverable): the IFT chart of the per-arc bad fibre as
       a \<open>(2N-1)\<close>-dim graph and the negligibility of its \<open>x\<close>-projection.\<close>
   sorry
 
@@ -281,9 +281,9 @@ subsection \<open>Deliverable 2: the TIGHTENED engine for finitely-arc-coverable
 
 text \<open>\<^bold>\<open>The SOUND Sard-free excess engine.\<close>  For an angle set \<open>\<Gamma>\<close> that is
   \<^emph>\<open>finitely-arc-coverable inside the box\<close> (the explicit soundness hypothesis), the
-  \<open>x\<close>-projection \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is meager.  Proven sorry-free from the cover
+  \<open>x\<close>-projection \<open>V \<inter> BadXW \<omega>0 \<omega>s \<Gamma>\<close> is meager.  Proven proof-complete from the cover
   (@{const finitely_arc_coverable}) + the per-arc projection
-  @{thm excess_arc_projection_meager} + the sorry-free assembly layer
+  @{thm excess_arc_projection_meager} + the proof-complete assembly layer
   @{thm excess_projection_meager_of_finite_cover}.
 
   \<^bold>\<open>This is the genuinely-true tightening\<close> of the false
@@ -321,7 +321,7 @@ qed
 
 subsection \<open>Deliverable 3: re-derive the D3 chain against the SOUND engine\<close>
 
-text \<open>\<^bold>\<open>The D3 excess engine, sorry-free from the SOUND tightened engine.\<close>  Copied
+text \<open>\<^bold>\<open>The D3 excess engine, proof-complete from the SOUND tightened engine.\<close>  Copied
   verbatim (statement) from @{file \<open>../M5_Dev_Excess/Scratch_m5_excess.thy\<close>}; the
   only change is the body, which now feeds the SOUND
   @{thm excess_projection_meager_curve} the finite-arc-coverability of the
@@ -355,7 +355,7 @@ proof -
 qed
 
 
-subsection \<open>The D3 leaf, sorry-free from the excess engine\<close>
+subsection \<open>The D3 leaf, proof-complete from the excess engine\<close>
 
 lemma m5_D34_D3_collinear:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real

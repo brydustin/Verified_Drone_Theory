@@ -4,7 +4,7 @@ begin
 
 text \<open>\<^bold>\<open>(M5) Rank-deficient stratum --- D1--D5 skeleton.\<close>
 
-  This file restates \<open>meager_rank_deficient_stratum\<close> (the lone live \<open>sorry\<close> on the
+  This file restates \<open>meager_rank_deficient_stratum\<close> (the lone live \<open>proof hole\<close> on the
   flagship path) as an \<^emph>\<open>assembly\<close> over an exhaustive cover of its bad set \<open>?def\<close>
   (= the \<open>?def\<close> stratum of \<open>Phi_bad_meager_dip\<close> in Robust3).  The witness angle \<open>\<omega>\<close> of every
   \<open>?def\<close> point falls into exactly one case:
@@ -20,7 +20,7 @@ text \<open>\<^bold>\<open>(M5) Rank-deficient stratum --- D1--D5 skeleton.\<clo
 
   \<^bold>\<open>Status:\<close> D1 is PROVEN here (it is a subset of the heap's @{thm meager_grad_x_regular_part},
   M5a, since restricting \<open>\<omega>\<close> to \<open>OmegaPF\<close> and adding conjuncts only shrinks the set).
-  D2, D5, D34 are \<open>sorry\<close> stubs for the parallel prover wave.  Diary design: D2 = countable
+  D2, D5, D34 are \<open>proof hole\<close> stubs for the parallel prover wave.  Diary design: D2 = countable
   beam-center angles + det-Hessian covariance-polynomial slices; D5 = M6 machinery (R3 kernel
   reduction sans \<open>surj\<close>) at the finite witness-angle set; D34 splits internally into D3
   (phase-collinear, excess engine + \<open>\<int>\<^sup>3\<close> lattice) and D4 (Branch-P, rank-drop dichotomy).\<close>

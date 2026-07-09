@@ -7,7 +7,7 @@ section \<open>app:H0res: the B1=B2=B3=0 branch, connected to the D34 configurat
 text \<open>IMPORTANT PRIOR-WORK NOTE (found during investigation, before writing anything
   here): the elementary trig fact this branch needs
   (\<open>\<beta>(t):=cos t - t sin t\<close>, \<open>\<beta>(t)=0 \<Longrightarrow> \<beta>'(t)\<noteq>0\<close>) is ALREADY fully proven,
-  with zero \<open>sorry\<close>, in \<open>Appendix/Nonemptiness_Regnonzero_Appendix.thy\<close>
+  with zero \<open>proof hole\<close>, in \<open>Appendix/Nonemptiness_Regnonzero_Appendix.thy\<close>
   (\<open>lem_h0res_Bcuts\<close>), together with the residue rank-2 argument
   (\<open>lem_h0res_a1a2\<close>) and generic nowhere-dense wrappers
   (\<open>prop_h0res_Bbranch\<close>, \<open>prop_h0res_Sbranch\<close>, \<open>prop_h0res_twocos\<close>,

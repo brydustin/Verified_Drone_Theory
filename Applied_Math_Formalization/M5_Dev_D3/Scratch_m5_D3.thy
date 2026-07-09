@@ -27,18 +27,18 @@ text \<open>\<^bold>\<open>(M5) D3 --- the phase-collinear branch of the rank-de
   \<open>\<int>\<^sup>3\<close> phase-period lattice (window-finite by @{thm finite_affine_int_zeros}).
   Negligible \<open>\<Rightarrow>\<close> meager.
 
-  \<^bold>\<open>Scaffold status.\<close>  All reduction / plumbing layers are proven sorry-free:
+  \<^bold>\<open>Scaffold status.\<close>  All reduction / plumbing layers are proven proof-complete:
   \<^item> @{text fixed_c_nonsurj_nowhere_dense} --- Robust3-supplied (mstarg), the ONE
-    \<^emph>\<open>freebie\<close> sorry that closes automatically at the L970 splice site (replicated
+    \<^emph>\<open>freebie\<close> proof hole that closes automatically at the L970 splice site (replicated
     verbatim from D34, flagged freebie).
-  \<^item> @{text fixed_omega_slice_meager} --- per-angle meagerness, sorry-free from
+  \<^item> @{text fixed_omega_slice_meager} --- per-angle meagerness, proof-complete from
     @{text nd} (replicated from D34).
   \<^item> @{text m5_D34_subset_mstarg_residual} --- the structural reduction
-    (replicated from D34), sorry-free.
+    (replicated from D34), proof-complete.
   \<^item> @{text D3_excess_engine} --- the genuine analytic core: the ONE
-    precisely-scoped \<^emph>\<open>math\<close> sorry (the IFT-chart + \<open>\<int>\<^sup>3\<close>-lattice excess engine
+    precisely-scoped \<^emph>\<open>math\<close> proof hole (the IFT-chart + \<open>\<int>\<^sup>3\<close>-lattice excess engine
     on the phase-collinear locus), with an exact statement and recommended route.
-  \<^item> @{text m5_D34_D3_collinear} --- the D3 leaf, proven sorry-free FROM
+  \<^item> @{text m5_D34_D3_collinear} --- the D3 leaf, proven proof-complete FROM
     @{text D3_excess_engine} by a structural subset reduction.
 
   So the entire D3 obligation is reduced to the single excess-engine lemma; D4
@@ -55,9 +55,9 @@ definition phase_collinear :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 
 
 subsection \<open>Robust3-supplied fixed-angle nowhere-density (freebie at splice)\<close>
 
-text \<open>Replicated verbatim from D34.  PROVEN sorry-free in \<open>Nonemptiness_Robust3\<close>
+text \<open>Replicated verbatim from D34.  PROVEN proof-complete in \<open>Nonemptiness_Robust3\<close>
   (in scope at the splice site): @{text surj_iff_mstarg} (L578) and
-  @{text nowhere_dense_mstarg_zeros} (L744).  Here it is a single scoped sorry
+  @{text nowhere_dense_mstarg_zeros} (L744).  Here it is a single scoped proof hole
   that closes automatically at the L970 splice (a Robust3-resident freebie).\<close>
 
 lemma fixed_c_nonsurj_nowhere_dense:
@@ -74,7 +74,7 @@ lemma fixed_c_nonsurj_nowhere_dense:
 subsection \<open>The structural reduction (copied verbatim from D34)\<close>
 
 text \<open>The full D34 bad set injects into the residual carrying only the geometric
-  data the excess engine consumes.  Proven sorry-free.\<close>
+  data the excess engine consumes.  Proven proof-complete.\<close>
 
 lemma m5_D34_subset_mstarg_residual:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -98,7 +98,7 @@ subsection \<open>Per-angle slice meagerness (copied verbatim from D34)\<close>
 
 text \<open>For a FIXED steering angle \<open>\<omega>\<close> with nonzero wavevector, the set of \<open>x\<close> at
   which \<open>DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>)\<close> is not surjective is nowhere dense,
-  hence meager.  Sorry-free from the abstract input @{text nd}.\<close>
+  hence meager.  proof-complete from the abstract input @{text nd}.\<close>
 
 lemma fixed_omega_slice_meager:
   fixes \<omega> :: "real^2"
@@ -109,15 +109,15 @@ lemma fixed_omega_slice_meager:
   by (rule meager_nowhere_dense[OF nd[OF c0]])
 
 
-subsection \<open>The excess engine on the phase-collinear locus (one MATH sorry)\<close>
+subsection \<open>The excess engine on the phase-collinear locus (one MATH proof hole)\<close>
 
 text \<open>\<^bold>\<open>The genuine analytic core of D3.\<close>  This is the Sard-free "excess engine"
   specialised to the phase-collinear locus.  It states directly the meagerness
   of the \<open>x\<close>-projection of the uncountable union over \<open>\<omega>\<in>OmegaPF\<close> of the bad
   slices, on the phase-collinear locus, GIVEN the per-angle nowhere-density input
   @{text nd}.  All the surrounding structure (the reduction, the leaf statement)
-  is proven sorry-free against this lemma; the lemma itself carries the single
-  scoped MATH sorry.
+  is proven proof-complete against this lemma; the lemma itself carries the single
+  scoped MATH proof hole.
 
   \<^bold>\<open>Why this is the right cut.\<close>  The bad set of @{text m5_D34_D3_collinear} is a
   superset-trimmed instance of this engine's bad set: dropping the \<open>gradU = 0\<close>
@@ -128,7 +128,7 @@ text \<open>\<^bold>\<open>The genuine analytic core of D3.\<close>  This is the
   \<open>phase_collinear\<close> (which collapses the \<open>\<gamma>\<close>-vs-\<open>c\<close> direction to a single scalar
   parameter, giving the 3-equation / 2-parameter excess count).
 
-  \<^bold>\<open>Recommended route (multi-week math, ONE sorry).\<close>
+  \<^bold>\<open>Recommended route (multi-week math, ONE proof hole).\<close>
   \<^enum> Fix the phase-period lattice.  On \<open>OmegaPF\<close> the collinearity condition
     \<open>phase_collinear \<omega>0 \<omega>s \<omega>\<close> is, after clearing \<open>cvec_dip\<close>/\<open>Dcvec_dip\<close> by their
     explicit trigonometric forms (\<^const>\<open>cvec_dip\<close>, \<^const>\<open>Dcvec_dip\<close>), an analytic
@@ -167,7 +167,7 @@ lemma D3_excess_engine:
             cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> phase_collinear \<omega>0 \<omega>s \<omega>}"
-  \<comment> \<open>GENUINE MATH SORRY.  The Sard-free excess engine on the phase-collinear
+  \<comment> \<open>GENUINE MATH proof hole.  The Sard-free excess engine on the phase-collinear
       locus: IFT-chart \<open>(2N-1)\<close>-dim graphs over the \<open>\<int>\<^sup>3\<close> phase-period lattice,
       x-projection negligible \<Rightarrow> meager.  Route above.  Inputs available:
       @{text nd} (per-angle nowhere density), @{text c6}, @{text pf} (sin \<noteq> 0 on
@@ -176,13 +176,13 @@ lemma D3_excess_engine:
   sorry
 
 
-subsection \<open>The D3 leaf, sorry-free from the excess engine\<close>
+subsection \<open>The D3 leaf, proof-complete from the excess engine\<close>
 
 text \<open>The exact target statement (verbatim from
   \<open>M5_Dev_D34/Scratch_m5_D34.thy\<close>, lemma @{text m5_D34_D3_collinear}).  The D3
   bad set is a subset of the excess engine's bad set (dropping \<open>gradU = 0\<close> and
   \<open>det Dcvec \<noteq> 0\<close> only enlarges the set), so it is meager by @{thm meager_subset}.
-  Proven sorry-free from @{thm D3_excess_engine}.\<close>
+  Proven proof-complete from @{thm D3_excess_engine}.\<close>
 
 lemma m5_D34_D3_collinear:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real

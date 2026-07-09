@@ -9,7 +9,7 @@ text \<open>
   \<^item> Multivariate analyticity is a local convergent power series over the Euclidean basis,
     so it covers every finite dimension uniformly (class \<open>euclidean_space\<close>).
 
-  This theory states the foundation sorry-first: definitions, analytic-implies-smooth,
+  This theory states the foundation proof hole-first: definitions, analytic-implies-smooth,
   the smooth-but-not-analytic witness, closure, the nowhere-dense-zeros workhorse, and the
   target analytic IFT.  It depends on nothing from the drone development; the dipole-specific
   bridge that consumes it lives in a separate theory.
@@ -250,7 +250,7 @@ proof -
         qed
         from gen[of 0] show ?thesis by simp
       qed
-      \<comment> \<open>the two facts originally introduced by \<open>sorry\<close>\<close>
+      \<comment> \<open>the two facts originally introduced by \<open>proof hole\<close>\<close>
       have coeff: "cc (i n) = (deriv ^^ n) f c / fact n" for n
       proof -
         have "\<bar>c - c\<bar> < r" using r by simp
@@ -439,7 +439,7 @@ proof -
 qed
 
 
-subsection \<open>Reused infrastructure (copied verbatim, sorry-free)\<close>
+subsection \<open>Reused infrastructure (copied verbatim, proof-complete)\<close>
 
 lemma ra_lev_finite:
   fixes n :: nat

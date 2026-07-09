@@ -8,14 +8,14 @@ clobbering each other's files. Read this whole file before touching anything.
 
 Read `D34_WITNESS_PLAN.md` and `FORMALIZATION_DIARY.md` next — they are the
 living project log (dated entries, most recent at the bottom of each). They
-tell you what's actually been proved vs. what's still `sorry`, which matters
+tell you what's actually been proved vs. what's still `proof hole`, which matters
 more than anything in this file.
 
 ## 1. The project, in one paragraph
 
 We're formalizing a nonemptiness proof (`F0_dip_nonempty`) for a drone/antenna
 configuration problem. The overarching strategy is the "analytic route": build
-real-analytic machinery to discharge sorries in
+real-analytic machinery to discharge proof holes in
 `Appendix/Robust3/Nonemptiness_Robust3.thy` by porting the paper's Case-B
 branch certificates. The paper source is
 `../Applied Math/nonemptiness_unified_singlefile_complete.tex` (also readable
@@ -102,7 +102,7 @@ growing) — that produces constant git merge conflicts on the same few lines.
   stray scratch directories from past sessions; don't sweep them into your
   commits.
 
-## 4. The "sorry upstream" protocol
+## 4. The "proof hole upstream" protocol
 
 If your assigned piece needs a fact that depends on something Claude is
 actively building (or hasn't finished yet), **do not block waiting for it.**
@@ -116,20 +116,20 @@ Instead:
    lemma needed_fact_name:
      assumes ...
      shows ...
-     sorry
+     proof hole
    ```
 2. Keep building on top of it as if it were proved. This lets you verify your
    own downstream reasoning is sound modulo that one gap, without waiting on
    anyone.
-3. Keep a running list of every such `sorry` at the top of your file (a
+3. Keep a running list of every such `proof hole` at the top of your file (a
    `NEEDS:` comment block) so re-integration later is just "replace this
-   sorry with the real theorem name" — assuming the statement shape matches;
+   proof hole with the real theorem name" — assuming the statement shape matches;
    flag it in the diary if you're not sure it will.
 4. Symmetrically, Claude will do the same for anything needed from your work
    that isn't ready yet.
 
 This is standard practice in large multi-author Isabelle developments
-(quick_and_dirty sorries as a synchronization primitive) — it's not cheating,
+(quick_and_dirty proof holes as a synchronization primitive) — it's not cheating,
 it's how the two threads stay decoupled.
 
 ## 5. Task assignment
@@ -265,11 +265,11 @@ closed form; matching it against `F_\eta(u_j)=0` is then the algebra in the
 paper's own proof of `prop:uphi-reduce` (gauge `b=0`, `E_1 := g_1 a + 2g b_1`,
 `\Phi_1 = a E_1`).
 
-**If this doesn't come together cleanly:** use the sorry-upstream protocol
-from §4. State `prop:uphi-reduce`'s conclusion as a `sorry`'d lemma with a
+**If this doesn't come together cleanly:** use the proof hole-upstream protocol
+from §4. State `prop:uphi-reduce`'s conclusion as a `proof hole`'d lemma with a
 `NEEDS:` comment explaining exactly what's missing, and still land
 `prop:uphi-codim3` + `cor:uphi-exhausted` built on top of it (marking their
-own dependence on the sorry clearly). A Tier 1 + honestly-flagged Tier 2 gap
+own dependence on the proof hole clearly). A Tier 1 + honestly-flagged Tier 2 gap
 is a real, valuable, mergeable contribution — don't let Tier 2 block Tier 1
 from shipping.
 
@@ -291,7 +291,7 @@ scratch — and use the project's actual triple-configuration type (grep
 `cor:uphi-exhausted` (Tiers 2–3) as comes together cleanly, landed in your
 own `Appendix/AnalyticBridge/D34_UPhi_Branch.thy` + `M5_Dev_UPhi/` dev
 session, verified, committed, pushed, with a diary entry stating exactly
-which tier you reached and what (if anything) is `sorry`'d.
+which tier you reached and what (if anything) is `proof hole`'d.
 
 ### Reserved for Claude — precise plan (mirrors the tiering above)
 
@@ -375,7 +375,7 @@ line 5755) — that's real, separate work for a later session, not something
 to improvise mid-flight.
 
 **Update (2026-07-08, cont. 3): `app:H0res` — started, one piece landed, one
-important finding.** Before writing anything: a fully-proven (zero `sorry`)
+important finding.** Before writing anything: a fully-proven (zero `proof hole`)
 H0res scaffold already exists in
 `Appendix/Nonemptiness_Regnonzero_Appendix.thy` (`lem_h0res_Bcuts`,
 `prop_h0res_meager`, etc.) — but it's disconnected from the actual proof

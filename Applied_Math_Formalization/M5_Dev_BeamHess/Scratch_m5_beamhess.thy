@@ -552,7 +552,7 @@ text \<open>\<^bold>\<open>GENUINE remaining math (NOT a Robust3 splice freebie)
   \<open>\<omega>\<^sub>1 = \<pi>/2 \<bmod> \<pi>\<close> the scalar second derivative of the dipole gain is
   \<open>gdip''(\<pi>/2) = (16 - 4\<pi>\<^sup>2)/8 \<noteq> 0\<close>.  This is the single-variable computation of the
   second derivative of the \<open>sinc\<close>-factored \<open>gdip\<close> (the first-derivative analysis underlies
-  @{thm gdip_deriv_zero_iff}); we isolate its non-vanishing as a scoped sorry.  It is the
+  @{thm gdip_deriv_zero_iff}); we isolate its non-vanishing as a scoped proof hole.  It is the
   irreducible analytic core shared by both beam-center stubs.\<close>
 
 lemma gdip2_nonzero_of_cos_zero:

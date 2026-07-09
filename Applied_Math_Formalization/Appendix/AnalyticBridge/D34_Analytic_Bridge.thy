@@ -1612,7 +1612,7 @@ text \<open>\<^bold>\<open>The 4b interface.\<close>  The chart engine @{thm dip
   the final chart interface consumed by the D3/D4 covering argument: a chart with
   uniqueness neighbourhood on which the bad \<open>x\<close>-locus is UNCONDITIONALLY thin
   (closure with empty interior).  \<open>wit\<close> plays the same role for 4b that \<open>nd\<close> plays
-  in the two Robust3 sorries.\<close>
+  in the two Robust3 proof holes.\<close>
 
 theorem dip_critical_chart_nowhere_dense:
   fixes x0 :: "(real^2)^'n::finite" and \<omega>b \<omega>0 \<omega>s :: "real^2"
@@ -2980,7 +2980,7 @@ lemma DM22_paper_eq_d_moment: "DM22_paper_x x c h = d_M22_moment_x x c h"
 section \<open>Layer 4b (corrected Case-B side): perp-slot derivatives of the gradient field\<close>
 
 text \<open>ARCHITECTURE NOTE (2026-07-07).  The true D34 target
-  (\<open>m5_D34_residual\<close>, Robust3) RETAINS \<open>det HessU = 0\<close> and \<open>A_cart \<noteq> 0\<close>; the two sorries
+  (\<open>m5_D34_residual\<close>, Robust3) RETAINS \<open>det HessU = 0\<close> and \<open>A_cart \<noteq> 0\<close>; the two proof holes
   were stated for the ENLARGED residual (\<open>m5_D34_subset_mstarg_residual\<close> is a
   pure \<open>blast\<close> weakening).  The needed bad set is thus EXACTLY the paper's Case-B set,
   where the branch certificates (built on \<open>\<Phi>\<^sub>3 = det H = 0\<close>) apply --- at FIXED \<open>\<omega>\<close>,

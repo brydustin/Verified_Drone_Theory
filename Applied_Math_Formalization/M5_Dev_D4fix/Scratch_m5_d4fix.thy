@@ -16,7 +16,7 @@ text \<open>\<^bold>\<open>(M5) D4 chart core --- CORRECTED, \<open>gradU = 0\<c
     contributes 1 more (codim 1);
   so \<open>BadXGW\<close> is cut by 3 independent scalar equations --- \<^bold>\<open>codim 3\<close>.
 
-  \<^bold>\<open>What is SOUND and sorry-free here\<close> (proved against the heap):
+  \<^bold>\<open>What is SOUND and proof-complete here\<close> (proved against the heap):
   \<^enum> @{text BadXGW_mono} / @{text BadXGW_UN} / @{text BadXGW_point} ---
     structural set algebra (copied verbatim from the sound D4 file).
   \<^enum> @{text not_gamma_par_c_iff} --- the linear-independence dichotomy.
@@ -30,10 +30,10 @@ text \<open>\<^bold>\<open>(M5) D4 chart core --- CORRECTED, \<open>gradU = 0\<c
   \<^enum> @{text branchP_indep_negligible_closed_cover} /
     @{text branchP_indep_of_negligible_closed_cover} /
     @{text branchP_indep_core} --- the downstream cover\<open>\<rightarrow>\<close>meager layers,
-    assembled sorry-free from the chart bundle via
+    assembled proof-complete from the chart bundle via
     @{thm negligible_singular_image_2n} and @{thm meager_negligible_closed_cover}.
 
-  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH sorry).\<close>
+  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH proof hole).\<close>
   @{text branchP_indep_charts_Nn}: the IFT chart of the retained-constraint
   locus, in the EXACT output shape of @{thm charts_core_Nn} consumed by
   @{thm negligible_singular_image_2n}.  The honest crux (DESIGN \<section>7) is the
@@ -44,7 +44,7 @@ text \<open>\<^bold>\<open>(M5) D4 chart core --- CORRECTED, \<open>gradU = 0\<c
   \<open>\<omega>\<close>-partial, whereas \<open>BadXGW\<close>'s rank drop \<open>\<not> surj (DM_paper_x x c)\<close> is the
   \<open>x\<close>-partial of the moment map to \<open>complex^6\<close>; closing the chart requires the
   codomain-\<open>real^3\<close> generalization of the engine + the steering transversality
-  (DESIGN \<section>4, \<section>7).  This is the single isolated \<open>sorry\<close>; it is NOT a splice
+  (DESIGN \<section>4, \<section>7).  This is the single isolated \<open>proof hole\<close>; it is NOT a splice
   freebie.\<close>
 
 
@@ -52,11 +52,11 @@ subsection \<open>\<open>mstarg\<close> interface --- LOCAL stubs (discharge at 
 
 text \<open>\<open>mstarg\<close> is defined in \<open>Nonemptiness_Robust3\<close>, which is NOT in this heap.
   We re-state, with EXACT Robust3 signatures, the determinantal-rank interface
-  used below.  Each is proved sorry-free in @{file
+  used below.  Each is proved proof-complete in @{file
   \<open>../Appendix/Robust3/Nonemptiness_Robust3.thy\<close>} (lines 572--754); they
   discharge automatically at the Robust3 splice.  Nothing in this file's SOUND
   results depends on these being open --- they enter only the codim-3 sanity
-  bridge (@{text bad_imp_mstarg_zero}) and the (sorry) chart core.\<close>
+  bridge (@{text bad_imp_mstarg_zero}) and the (proof hole) chart core.\<close>
 
 definition mstarg :: "(real^2) \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
   "mstarg c x = det (matrix ((transC \<circ> DM_paper_x x c) \<circ> adjoint (transC \<circ> DM_paper_x x c)))"
@@ -110,7 +110,7 @@ lemma not_gamma_par_c_iff:
   unfolding gamma_par_c_def phase_collinear_def by blast
 
 
-subsection \<open>Structural set algebra for \<open>BadXGW\<close> (sorry-free, copied verbatim)\<close>
+subsection \<open>Structural set algebra for \<open>BadXGW\<close> (proof-complete, copied verbatim)\<close>
 
 lemma BadXGW_mono:
   fixes \<Gamma> \<Delta> :: "(real^2) set"
@@ -202,7 +202,7 @@ proof
 qed
 
 
-subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>sorry\<close>)\<close>
+subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>proof hole\<close>)\<close>
 
 text \<open>\<^bold>\<open>The genuine geometric-measure content, isolated as one precisely-scoped
   statement.\<close>  Over the linear-independence (\<open>\<gamma> \<not>\<parallel> c\<close>) region
@@ -249,15 +249,15 @@ lemma branchP_indep_charts_Nn:
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
   \<comment> \<open>GENUINE geometric-measure core: the IFT chart of the retained-constraint
       (\<open>gradU = 0 \<and> mstarg = 0\<close>, codim 3) bad \<open>(x,\<omega>)\<close> locus in the
-      @{thm charts_core_Nn} output shape.  The single irreducible \<open>sorry\<close> of
+      @{thm charts_core_Nn} output shape.  The single irreducible \<open>proof hole\<close> of
       this file; it does NOT follow from @{text nd} alone (see header).  NOT a
       splice freebie.\<close>
   sorry
 
 
-subsection \<open>The verbatim target: the closed negligible cover (sorry-free from the bundle)\<close>
+subsection \<open>The verbatim target: the closed negligible cover (proof-complete from the bundle)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled proof-complete from the chart bundle.\<close>
   From @{thm branchP_indep_charts_Nn} the pieces \<open>K i = (fst \<circ> charts i) ` Crit i\<close>
   are CLOSED (chart output) and NEGLIGIBLE (@{thm negligible_singular_image_2n}:
   the projection has non-surjective derivative on \<open>Crit i\<close>), and they cover the
@@ -306,9 +306,9 @@ proof -
 qed
 
 
-subsection \<open>The downstream sorry-free layers (copied verbatim from D4Core)\<close>
+subsection \<open>The downstream proof-complete layers (copied verbatim from D4Core)\<close>
 
-text \<open>The two sorry-free layers consumed downstream confirm the cut is at the
+text \<open>The two proof-complete layers consumed downstream confirm the cut is at the
   right place: the closed negligible cover yields meagerness without further
   geometric-measure work.\<close>
 

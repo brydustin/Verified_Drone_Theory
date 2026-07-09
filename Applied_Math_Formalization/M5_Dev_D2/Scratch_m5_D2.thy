@@ -161,7 +161,7 @@ proof -
 qed
 
 
-section \<open>Finiteness of the beam-center witness-angle set (scoped genuine-math sorry)\<close>
+section \<open>Finiteness of the beam-center witness-angle set (scoped genuine-math proof hole)\<close>
 
 text \<open>\<^bold>\<open>The beam-center witness-angle set is finite.\<close>  Every witness angle \<open>\<omega>\<close> in the
   D2 bad set is \<^emph>\<open>critical\<close> (\<open>gradU = 0\<close>) at a beam center (\<open>cvec = 0\<close>) off the
@@ -175,7 +175,7 @@ text \<open>\<^bold>\<open>The beam-center witness-angle set is finite.\<close> 
   \<open>P = kx \<omega>s + Ac \<cdot> kz \<omega>s\<close>, \<open>Q = ky \<omega>s + Bc \<cdot> kz \<omega>s\<close> with \<open>P\<^sup>2 + Q\<^sup>2 = sin\<^sup>2(\<omega>\<^sub>1) = 1\<close>),
   which by @{thm sin_cos_eq_iff} pin \<open>\<omega>\<^sub>2\<close> to a \<open>2\<pi>\<int>\<close>-coset --- finite inside the box
   (@{thm finite_affine_int_zeros}).  The full carve-out is the genuine remaining
-  analytic step; we carry the resulting finiteness as a single scoped \<open>sorry\<close>.\<close>
+  analytic step; we carry the resulting finiteness as a single scoped \<open>proof hole\<close>.\<close>
 
 lemma m5_D2_beamcenter_K_finite:
   fixes ctr \<omega>0 \<omega>s :: "real^2" and \<delta> :: real
@@ -285,7 +285,7 @@ proof -
 qed
 
 
-section \<open>The per-beam-center-angle slice is nowhere dense (scoped genuine-math sorry)\<close>
+section \<open>The per-beam-center-angle slice is nowhere dense (scoped genuine-math proof hole)\<close>
 
 text \<open>For a beam-center angle \<open>\<omega>\<close> (\<open>cvec_dip \<omega>0 \<omega>s \<omega> = 0\<close>) with \<open>sin (\<omega>\<^sub>1) \<noteq> 0\<close> and a
   nonsingular steering Jacobian, the configurations \<open>x\<close> carrying a degenerate critical
@@ -294,7 +294,7 @@ text \<open>For a beam-center angle \<open>\<omega>\<close> (\<open>cvec_dip \<o
   \<open>N\<^sup>2 gdip''(\<pi>/2) e1 e1\<^sup>T + C\<^sup>T(-2N Cov x) C\<close>, whose vanishing determinant is a
   nontrivial polynomial in the (real) moments of \<open>x\<close> --- nontrivial because
   \<open>gdip''(\<pi>/2) = (16 - 4\<pi>\<^sup>2)/8 \<noteq> 0\<close> --- so its zero set is nowhere dense.  Carried as
-  a single scoped \<open>sorry\<close>.\<close>
+  a single scoped \<open>proof hole\<close>.\<close>
 
 lemma m5_D2_slice_nowhere_dense:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
@@ -368,7 +368,7 @@ text \<open>The exact target statement (verbatim from the M5 skeleton), closed b
   work \<^emph>\<open>x\<close>-universally at a beam center: the \<open>\<not> surj (DM_paper_x x 0)\<close> conjunct is
   automatic (@{thm DM_paper_x_null_not_surj}), so it drops out of the slice; and
   critical witnesses satisfy \<open>cos (\<omega>\<^sub>1) = 0\<close> (@{thm beamcenter_critical_cos_zero}),
-  pinning the witness angle into the finite \<open>K\<close>.  Sorry-free at this assembly layer.\<close>
+  pinning the witness angle into the finite \<open>K\<close>.  proof-complete at this assembly layer.\<close>
 
 lemma m5_D2_beamcenter:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real

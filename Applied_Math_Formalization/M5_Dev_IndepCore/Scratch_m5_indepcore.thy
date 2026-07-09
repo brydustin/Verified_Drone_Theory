@@ -19,21 +19,21 @@ text \<open>\<^bold>\<open>(M5) D4 core --- @{text branchP_indep_core}, the deep
   through; every helper below is stated soundly and the degenerate extremes are
   sanity-checked.
 
-  \<^bold>\<open>What this file establishes SOUND, sorry-free (the reduction layers).\<close>
+  \<^bold>\<open>What this file establishes SOUND, proof-complete (the reduction layers).\<close>
   \<^enum> @{text BadXGW_point} / @{text BadXGW_mono} / @{text BadXGW_UN} --- structural
     set algebra for the retained bad \<open>x\<close>-set.
   \<^enum> @{text fixed_omega_branchP_meager} --- per-fixed-angle slice meagerness from the
-    abstract @{text nd} input (degenerate "single angle" sanity check, sorry-free).
+    abstract @{text nd} input (degenerate "single angle" sanity check, proof-complete).
   \<^enum> @{text branchP_indep_of_negligible_closed_cover} --- \<^bold>\<open>THE ASSEMBLY BRIDGE\<close>: if
     \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> is contained in a COUNTABLE union of CLOSED NEGLIGIBLE
-    \<open>x\<close>-pieces, it is meager (sorry-free, via @{thm meager_negligible_closed_cover}).
+    \<open>x\<close>-pieces, it is meager (proof-complete, via @{thm meager_negligible_closed_cover}).
     This discharges the meagerness \<open>\<Leftarrow>\<close> negligible-cover implication that is the
     structural half of the analytic core.
-  \<^enum> @{text branchP_indep_core} --- the verbatim target, assembled sorry-free from a
+  \<^enum> @{text branchP_indep_core} --- the verbatim target, assembled proof-complete from a
     SINGLE remaining geometric-measure obligation
     (@{text branchP_indep_negligible_closed_cover}).
 
-  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH sorry).\<close>
+  \<^bold>\<open>The single remaining irreducible obligation (ONE scoped MATH proof hole).\<close>
   @{text branchP_indep_negligible_closed_cover}: over the linear-independence
   (\<open>\<gamma> \<not>\<parallel> c\<close>) region, the bad \<open>(x,\<omega>)\<close> locus cut by \<open>gradU = 0\<close> (two scalar equations)
   and the moment rank-drop \<open>\<not> surj (DM_paper_x x (cvec \<omega>))\<close> is a \<open>(2N-1)\<close>-dim C1
@@ -44,7 +44,7 @@ text \<open>\<^bold>\<open>(M5) D4 core --- @{text branchP_indep_core}, the deep
   machinery, different codimension source (here \<open>gradU = 0\<close> on a 2-D region; there a
   1-D analytic arc).  It does NOT follow from the abstract topological @{text nd}
   alone (which carries no derivative / closedness / joint-regularity data over the
-  uncountable angle union), so it is the single isolated \<open>sorry\<close>.
+  uncountable angle union), so it is the single isolated \<open>proof hole\<close>.
   \<open>freebie_at_splice = false\<close>.\<close>
 
 
@@ -78,7 +78,7 @@ lemma not_gamma_par_c_iff:
   unfolding gamma_par_c_def phase_collinear_def by blast
 
 
-subsection \<open>Structural set algebra for \<open>BadXGW\<close> (sorry-free)\<close>
+subsection \<open>Structural set algebra for \<open>BadXGW\<close> (proof-complete)\<close>
 
 lemma BadXGW_mono:
   fixes \<Gamma> \<Delta> :: "(real^2) set"
@@ -103,11 +103,11 @@ lemma BadXGW_point:
   unfolding BadXGW_def by blast
 
 
-subsection \<open>Per-fixed-angle slice meagerness (sorry-free from \<open>nd\<close>)\<close>
+subsection \<open>Per-fixed-angle slice meagerness (proof-complete from \<open>nd\<close>)\<close>
 
 text \<open>The degenerate "angle set is a single point" sanity check: the per-angle bad
   slice is contained in the nowhere-dense slice supplied by @{text nd} (when
-  \<open>cvec \<noteq> 0\<close>), or empty (when \<open>cvec = 0\<close>), hence meager.  Sorry-free.  This confirms
+  \<open>cvec \<noteq> 0\<close>), or empty (when \<open>cvec = 0\<close>), hence meager.  proof-complete.  This confirms
   the cut at @{text branchP_indep_core} is on the right object: the genuine core
   ADDS exactly the uncountable angle-parameter union beyond this degenerate slice.\<close>
 
@@ -131,7 +131,7 @@ next
 qed
 
 text \<open>Sanity check (a FINITE angle set).  When \<open>\<Gamma>\<close> is finite the bad \<open>x\<close>-set is a
-  FINITE union of point slices, hence meager sorry-free --- the angle union is
+  FINITE union of point slices, hence meager proof-complete --- the angle union is
   harmless for countable \<open>\<Gamma>\<close>.  The genuine difficulty is precisely the UNCOUNTABLE
   2-D region, which is what the analytic core handles.\<close>
 
@@ -151,9 +151,9 @@ proof -
 qed
 
 
-subsection \<open>Assembly bridge: closed negligible countable cover \<open>\<Longrightarrow>\<close> meager (sorry-free)\<close>
+subsection \<open>Assembly bridge: closed negligible countable cover \<open>\<Longrightarrow>\<close> meager (proof-complete)\<close>
 
-text \<open>\<^bold>\<open>The assembly bridge (sorry-free).\<close>  If the bad \<open>x\<close>-set over the angle region
+text \<open>\<^bold>\<open>The assembly bridge (proof-complete).\<close>  If the bad \<open>x\<close>-set over the angle region
   is contained in a COUNTABLE union of CLOSED NEGLIGIBLE \<open>x\<close>-sets, it is meager.
   This is the structural fact that turns the geometric-measure output of the core
   (the negligible \<open>x\<close>-projection of the \<open>(2N-1)\<close>-dim graph) into the @{const meager}
@@ -200,7 +200,7 @@ text \<open>\<^bold>\<open>GENUINE geometric-measure core (the irreducible conte
   need not be meager, so it is NOT a consequence of @{text nd} alone.  This is the
   EXACT analogue of the ArcProj sibling core (same projection machinery; the
   codimension source is \<open>gradU = 0\<close> on a 2-D region here, a 1-D analytic arc there),
-  and the single isolated \<open>sorry\<close> of this file.  NOT a splice freebie.\<close>
+  and the single isolated \<open>proof hole\<close> of this file.  NOT a splice freebie.\<close>
 
 lemma branchP_indep_negligible_closed_cover:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -218,7 +218,7 @@ lemma branchP_indep_negligible_closed_cover:
   \<comment> \<open>GENUINE geometric-measure core: the linear-independence rank-drop cut of the
       bad \<open>(x,\<omega>)\<close> locus as a \<open>(2N-1)\<close>-dim graph (@{thm negligible_singular_image_2n}),
       presented as a countable closed negligible \<open>x\<close>-cover.  Route above.  This is
-      the deepest core of D4 and the single irreducible \<open>sorry\<close> of this file; it does
+      the deepest core of D4 and the single irreducible \<open>proof hole\<close> of this file; it does
       NOT follow from @{text nd} alone.  NOT a splice freebie.\<close>
   sorry
 
@@ -227,8 +227,8 @@ subsection \<open>The verbatim target @{text branchP_indep_core}, assembled from
 
 text \<open>\<^bold>\<open>The genuine NEW Branch-P core.\<close>  Copied \<^bold>\<open>verbatim\<close> from
   @{file \<open>../M5_Dev_BranchP/Scratch_m5_branchp.thy\<close>} (L245--L259).  Assembled
-  sorry-free from the single isolated geometric-measure obligation
-  @{text branchP_indep_negligible_closed_cover} via the sorry-free assembly bridge
+  proof-complete from the single isolated geometric-measure obligation
+  @{text branchP_indep_negligible_closed_cover} via the proof-complete assembly bridge
   @{text branchP_indep_of_negligible_closed_cover}.\<close>
 
 lemma branchP_indep_core:

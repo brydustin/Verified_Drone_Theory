@@ -451,7 +451,7 @@ text \<open>The coefficient functions a, b, c are the parametric integrals of th
   second partials along the segment from p to x. C1field of a, b, c is the
   differentiate-under-the-integral (Leibniz) step, discharged via @{thm leibniz_coeff}
   (witnesses ga, gb, gc supplied). The quadratic decomposition of f and the identification
-  of 2 a p, 2 b p, 2 c p with the second partials are proven below. No sorry.\<close>
+  of 2 a p, 2 b p, 2 c p with the second partials are proven below. No proof hole.\<close>
 
 lemma hadamard2:
   fixes f :: "real^2 \<Rightarrow> real" and p :: "real^2" and \<rho>0 :: real

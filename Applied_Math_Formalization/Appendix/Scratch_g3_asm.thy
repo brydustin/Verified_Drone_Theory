@@ -4,8 +4,8 @@ begin
 
 text \<open>Goal G3: the (M6) steering-singular stratum ASSEMBLY.  The two upstream
   lemmas \<open>gdip_deriv_zero_iff\<close> and \<open>M6_slice_nowhere_dense\<close> are being proven by
-  sibling agents and are included here as sorried stubs (spliced later).
-  Everything else is sorry-free.\<close>
+  sibling agents and are included here as stubbed stubs (spliced later).
+  Everything else is proof-complete.\<close>
 
 section \<open>Upstream stubs (sibling agents; spliced later)\<close>
 

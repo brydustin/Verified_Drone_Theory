@@ -23,9 +23,9 @@ meagerness. So we must show that surjective stratum is open **and dense** in `V`
 | P1.2 | base config `x0_paper`, `c0_paper` | ✅ `20c7035` |
 | P1.3 | moment-map + Fréchet derivatives factored into `Moment_Map.thy` heap | ✅ `1b77582` |
 | P1.4 | `M_paper` is **C¹** — `continuous_on V (λx. Blinfun (DM_paper_x x c))` (`C1_M_paper_x`) | ✅ (this arc) |
-| — | `bigJ_det` = `-(5·π⁸)/3`, `bigJ_det_nonzero`, `bigJ_surj` | ✅ (BlockDet, 0 sorry) |
+| — | `bigJ_det` = `-(5·π⁸)/3`, `bigJ_det_nonzero`, `bigJ_surj` | ✅ (BlockDet, 0 proof hole) |
 | P1.5 | **Jacobian identification**: `DM_paper_x x0_paper c0_paper = (*v) bigJ` ⟹ `surj` at the base point (the regular-point input) | ❌ |
-| P1.6 | `rank_lower_semicont_open_dense_propagation` (`Nonemptiness_Paper.thy:3650`): surjective stratum is open **and dense** | ❌ (sorry) |
+| P1.6 | `rank_lower_semicont_open_dense_propagation` (`Nonemptiness_Paper.thy:3650`): surjective stratum is open **and dense** | ❌ (proof hole) |
 | P1.7 | assemble `DM_paper_open_dense_surjective` (C¹ + regular point + P1.6) → `ZH0surj` meager → `prop_regnonzero` unconditional | ❌ |
 
 ## Key finding (2026-05-29): density needs real-analyticity, **not** C¹

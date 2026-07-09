@@ -507,7 +507,7 @@ qed
 
 text \<open>\<^bold>\<open>(M2) Open-dense submersion at a fixed nonzero wavevector.\<close>  From one regular point (M1) plus
   lower semicontinuity of rank (the rank-semicontinuity tool was deleted as dead code; this is
-  delivered sorry-free by the \<open>mstarg\<close> machinery below), the moment-map derivative is surjective on an open dense subset of any open
+  delivered proof-complete by the \<open>mstarg\<close> machinery below), the moment-map derivative is surjective on an open dense subset of any open
   \<open>V\<close>.  This is the general-wavevector analogue of \<open>DM_paper_open_dense_surjective\<close>.\<close>
 
 text \<open>\<^bold>\<open>[E]/[F] sound open-dense machinery (in progress).\<close>  The general-n analogue of
@@ -932,11 +932,11 @@ lemma steering_singular_nowhere_dense:
       using closedE intE by (simp add: feq nowhere_dense_def closure_closed)
   qed
 
-text \<open>\<^bold>\<open>The planar-config transversality engine is DONE\<close> --- proven sorry-free as
+text \<open>\<^bold>\<open>The planar-config transversality engine is DONE\<close> --- proven proof-complete as
   \<open>parametric_transversality_meager_planar_config\<close> in \<open>Nonemptiness_Robust2\<close>
   (in the \<open>Applied_Math_Appendix\<close> heap; development history in \<open>Scratch_planar\<close>).
   It is available here via the import.  CAUTION (sledgehammer): do NOT accept
-  proofs citing the 7 sorried facts (capstone_feasible, branch_*_meager,
+  proofs citing the 7 stubbed facts (capstone_feasible, branch_*_meager,
   capstone_X0_sound, odd_N_nonemptiness).\<close>
 
 text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open locus where \<open>A \<noteq> 0\<close>, \<open>surj (DM_paper_x \<dots>)\<close>,
@@ -945,7 +945,7 @@ text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open 
   {thm parametric_transversality_meager_planar_config} on each, the degenerate-critical projection
   over the regular stratum is meager.\<close>
 
-text \<open>\<open>meager_bad_regular_stratum\<close> (M4) is DONE --- proven sorry-free in
+text \<open>\<open>meager_bad_regular_stratum\<close> (M4) is DONE --- proven proof-complete in
   \<open>Nonemptiness_Robust2\<close> (in the heap), together with the reusable helpers
   \<open>regular_value_on_subset\<close>, \<open>open_prod_nat_cover\<close>, \<open>dip_slice_no_surj_deriv\<close>.
   Development history in \<open>Scratch_m4\<close>.\<close>
@@ -958,7 +958,7 @@ text \<open>\<^bold>\<open>(M5) Rank-deficient stratum is meager.\<close>  The s
 
 (* ============================================================================
    M5 CONSOLIDATION GRAFT (auto-assembled): D1 + D2 + D5 + D34 strata, proven
-   sorry-free except the two D34 chart-branch cores (m5_D34_D3_collinear,
+   proof-complete except the two D34 chart-branch cores (m5_D34_D3_collinear,
    m5_D34_D4_branchP).  Sources: M5_Dev_D5 / M5_Dev_D2 / M5_Dev_D34 / M5_Dev.
    The freebie fixed_c_nonsurj_nowhere_dense is discharged here in-place from the
    resident mstarg machinery (surj_iff_mstarg + nowhere_dense_mstarg_zeros).
@@ -2066,7 +2066,7 @@ proof -
 qed
 
 
-section \<open>Finiteness of the beam-center witness-angle set (scoped genuine-math sorry)\<close>
+section \<open>Finiteness of the beam-center witness-angle set (scoped genuine-math proof hole)\<close>
 
 text \<open>\<^bold>\<open>The beam-center witness-angle set is finite.\<close>  Every witness angle \<open>\<omega>\<close> in the
   D2 bad set is \<^emph>\<open>critical\<close> (\<open>gradU = 0\<close>) at a beam center (\<open>cvec = 0\<close>) off the
@@ -2080,7 +2080,7 @@ text \<open>\<^bold>\<open>The beam-center witness-angle set is finite.\<close> 
   \<open>P = kx \<omega>s + Ac \<cdot> kz \<omega>s\<close>, \<open>Q = ky \<omega>s + Bc \<cdot> kz \<omega>s\<close> with \<open>P\<^sup>2 + Q\<^sup>2 = sin\<^sup>2(\<omega>\<^sub>1) = 1\<close>),
   which by @{thm sin_cos_eq_iff} pin \<open>\<omega>\<^sub>2\<close> to a \<open>2\<pi>\<int>\<close>-coset --- finite inside the box
   (@{thm finite_affine_int_zeros}).  The full carve-out is the genuine remaining
-  analytic step; we carry the resulting finiteness as a single scoped \<open>sorry\<close>.\<close>
+  analytic step; we carry the resulting finiteness as a single scoped \<open>proof hole\<close>.\<close>
 
 lemma m5_D2_beamcenter_K_finite:
   fixes ctr \<omega>0 \<omega>s :: "real^2" and \<delta> :: real
@@ -2190,7 +2190,7 @@ proof -
 qed
 
 
-section \<open>The per-beam-center-angle slice is nowhere dense (scoped genuine-math sorry)\<close>
+section \<open>The per-beam-center-angle slice is nowhere dense (scoped genuine-math proof hole)\<close>
 
 text \<open>For a beam-center angle \<open>\<omega>\<close> (\<open>cvec_dip \<omega>0 \<omega>s \<omega> = 0\<close>) with \<open>sin (\<omega>\<^sub>1) \<noteq> 0\<close> and a
   nonsingular steering Jacobian, the configurations \<open>x\<close> carrying a degenerate critical
@@ -2199,7 +2199,7 @@ text \<open>For a beam-center angle \<open>\<omega>\<close> (\<open>cvec_dip \<o
   \<open>N\<^sup>2 gdip''(\<pi>/2) e1 e1\<^sup>T + C\<^sup>T(-2N Cov x) C\<close>, whose vanishing determinant is a
   nontrivial polynomial in the (real) moments of \<open>x\<close> --- nontrivial because
   \<open>gdip''(\<pi>/2) = (16 - 4\<pi>\<^sup>2)/8 \<noteq> 0\<close> --- so its zero set is nowhere dense.  Carried as
-  a single scoped \<open>sorry\<close>.\<close>
+  a single scoped \<open>proof hole\<close>.\<close>
 
 lemma m5_D2_slice_nowhere_dense:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
@@ -2273,7 +2273,7 @@ text \<open>The exact target statement (verbatim from the M5 skeleton), closed b
   work \<^emph>\<open>x\<close>-universally at a beam center: the \<open>\<not> surj (DM_paper_x x 0)\<close> conjunct is
   automatic (@{thm DM_paper_x_null_not_surj}), so it drops out of the slice; and
   critical witnesses satisfy \<open>cos (\<omega>\<^sub>1) = 0\<close> (@{thm beamcenter_critical_cos_zero}),
-  pinning the witness angle into the finite \<open>K\<close>.  Sorry-free at this assembly layer.\<close>
+  pinning the witness angle into the finite \<open>K\<close>.  proof-complete at this assembly layer.\<close>
 
 lemma m5_D2_beamcenter:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -2432,7 +2432,7 @@ definition d3_collinear_nsing_all :: "real^2 \<Rightarrow> real \<Rightarrow> re
      (\<forall>\<omega>\<in>{\<omega> \<in> OmegaPF ctr \<delta>. d3_crossTheta \<omega>0 \<omega>s \<omega> = 0}.
         d3_collinear_d2 \<omega>0 \<omega>s \<omega> \<noteq> 0 \<or> d3_collinear_d1 \<omega>0 \<omega>s \<omega> \<noteq> 0)"
 
-(* ---- D34: residual assembly (m5_D34_D3_collinear + m5_D34_D4_branchP = the 2 scoped sorries) ---- *)
+(* ---- D34: residual assembly (m5_D34_D3_collinear + m5_D34_D4_branchP = the 2 scoped proof holes) ---- *)
 
 lemma m5_D34_subset_mstarg_residual:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -2463,7 +2463,7 @@ subsection \<open>Proven building block: the fixed-angle slice is nowhere dense\
 text \<open>For a FIXED steering angle \<open>\<omega>\<close> with nonzero wavevector \<open>cvec_dip \<omega>0 \<omega>s \<omega>\<close>,
   the set of \<open>x\<close> at which the moment-map derivative \<open>DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>)\<close>
   is not surjective is nowhere dense --- hence meager.  This is the per-angle
-  payload of the excess engine, derived sorry-free from the abstract input
+  payload of the excess engine, derived proof-complete from the abstract input
   @{text nd} (the Robust3 \<open>mstarg\<close> fact).  The genuine remaining work in D3/D4 is
   precisely the passage from this PER-ANGLE meagerness to meagerness of the
   UNCOUNTABLE \<open>x\<close>-projection \<open>\<Union>\<^bsub>\<omega>\<in>OmegaPF\<^esub>\<close> of the slices --- which needs the

@@ -16,7 +16,7 @@ text \<open>
     the inverse-function theorem.
 
   The final theorem \<open>real_analytic_implicit_function\<close> matches verbatim the statement
-  left as \<open>sorry\<close> in \<open>Real_Analytic\<close>.
+  left as \<open>proof hole\<close> in \<open>Real_Analytic\<close>.
 \<close>
 
 theory Real_Analytic_IFT

@@ -4457,7 +4457,7 @@ text \<open>\<^bold>\<open>(B2) The transversality engine in our ACTUAL configur
   local_chart_2d\<close>, \<open>countable_chart_cover_of_levelset_2d\<close>, \<open>meager_critical_values_from_charts\<close>).
   \<^bold>\<open>SOUNDNESS FIX:\<close> it carries the \<open>C\<^sup>1\<close> hypotheses \<open>derG\<close>/\<open>contG'\<close> (a continuous blinfun derivative
   field) that the local-chart step genuinely requires --- the existing Euclidean \<^emph>\<open>stub\<close>
-  (\<open>regular_value_on\<close> only) is understated and its \<open>sorry\<close> core is not provable without this.  The
+  (\<open>regular_value_on\<close> only) is understated and its \<open>proof hole\<close> core is not provable without this.  The
   hypothesis is supplied for our \<open>G = \<nabla>\<^sub>\<Omega>U\<close> by @{thm gradU_dip_joint_C1}.\<close>
 
 
