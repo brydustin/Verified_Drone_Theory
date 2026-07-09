@@ -516,3 +516,12 @@ covering splice into Robust3).
   open obligations but fixes the statement shape for grafting
   `M5_Dev_curvecover`.  Verified `Applied_Math_Appendix_Full` with
   `BUILD_EXIT=0`.
+
+- 2026-07-09 (Codex, heap/frontier split): **moved the active M5/F0 frontier
+  into `Appendix/Robust4/Nonemptiness_Robust4.thy`**.  Robust3 is now the stable
+  heap theory ending after `d3_active_cover_from_angle_cover`; Robust4 imports
+  `Applied_Math_Appendix_Full.Nonemptiness_Robust3` and contains the three open
+  frontier obligations plus `F0_dip_nonempty`.  `ROOT` now has
+  `Applied_Math_Appendix_Full` for Robust3 and
+  `Applied_Math_Appendix_Frontier` for Robust4.  Verified both sessions with
+  `BUILD_EXIT=0`.

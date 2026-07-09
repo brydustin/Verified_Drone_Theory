@@ -236,3 +236,43 @@ same nonsingularity hypothesis shape as the proven C1 curve-cover development.
 
 Verified with `Applied_Math_Appendix_Full` build, `BUILD_EXIT=0`
 (`Finished Applied_Math_Appendix_Full`, session elapsed `0:04:26`).
+
+## Robust3/Robust4 frontier split
+
+Codex work on 2026-07-09 split the active F0 frontier out of
+`Appendix/Robust3/Nonemptiness_Robust3.thy`.
+
+New layout:
+
+- `Appendix/Robust3/Nonemptiness_Robust3.thy` is now the stable heap theory.
+  It ends after the checked D3 angle-cover set-algebra bridge
+  `d3_active_cover_from_angle_cover`.
+- `Appendix/Robust4/Nonemptiness_Robust4.thy` imports
+  `Applied_Math_Appendix_Full.Nonemptiness_Robust3` and contains the live
+  frontier: `d3_retained_arc_charts_Nn`, `d3_collinear_locus_finite_arc_cover`,
+  `branchP_indep_charts_Nn`, downstream meagerness/regularity assembly, and
+  `F0_dip_nonempty`.
+- `ROOT` now has `Applied_Math_Appendix_Full` for Robust3 and a child
+  `Applied_Math_Appendix_Frontier` for Robust4.
+
+For interactive work, open Robust4 against the Robust3 heap, not as part of the
+loaded heap:
+
+```text
+../../Isabelle2025-2/bin/isabelle jedit -l Applied_Math_Appendix_Full -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Appendix/Robust4/Nonemptiness_Robust4.thy
+```
+
+Verified after the split with:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Applied_Math_Appendix_Full Applied_Math_Appendix_Frontier
+```
+
+Build result: `Finished Applied_Math_Appendix_Full`, then
+`Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.

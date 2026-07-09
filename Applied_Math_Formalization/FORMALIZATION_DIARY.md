@@ -4140,3 +4140,30 @@ middle one is now stated with the side condition needed by the C1 curve-cover
 engine.  Verified with `Applied_Math_Appendix_Full`; build result:
 `Finished Applied_Math_Appendix_Full`, `BUILD_EXIT=0` (`0:04:26` elapsed
 reported for the session).
+
+### Robust3/Robust4 heap-frontier split (Codex, 2026-07-09)
+
+Split the M5/F0 capstone theory so the editable frontier is no longer baked
+into the heap image used by jEdit.
+
+`Appendix/Robust3/Nonemptiness_Robust3.thy` now ends after the checked D3
+angle-cover set-algebra bridge `d3_active_cover_from_angle_cover`; this is the
+stable heap theory in `Applied_Math_Appendix_Full`.
+
+Created `Appendix/Robust4/Nonemptiness_Robust4.thy`, importing
+`Applied_Math_Appendix_Full.Nonemptiness_Robust3`, and moved the current
+frontier into it:
+
+- `d3_retained_arc_charts_Nn`
+- `d3_collinear_locus_finite_arc_cover`
+- `branchP_indep_charts_Nn`
+- downstream D34/M5/Phi/regularity assembly
+- `F0_dip_nonempty`
+
+Updated `ROOT` with a child session `Applied_Math_Appendix_Frontier` in
+`Appendix/Robust4`.  Interactive frontier editing should load
+`Applied_Math_Appendix_Full` and open Robust4 as the buffer.
+
+Verified both sessions:
+`Applied_Math_Appendix_Full` finished, then `Applied_Math_Appendix_Frontier`
+finished; `BUILD_EXIT=0`.

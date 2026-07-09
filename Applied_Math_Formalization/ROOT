@@ -39,10 +39,9 @@ session Applied_Math_Nonemptiness in "." = Applied_Math_MomentJac +
    Nonemptiness_Robust1 (the long, stable first half) bakes into the
    Applied_Math_Appendix_Base heap; Nonemptiness_Robust2 (the Sym^2 T
    diagonal moment laws, formerly a parse-time hotspot) sits alone in the
-   Applied_Math_Appendix leaf so it can be rebuilt/iterated in minutes.
-   Nonemptiness_Robust3 (active development, formerly named Robust2) is
-   deliberately in NO session - edit it in jEdit against the
-   Applied_Math_Appendix heap. *)
+   Applied_Math_Appendix leaf so it can be rebuilt/iterated in minutes;
+   Nonemptiness_Robust3 is the stable M5 scaffold heap; and
+   Nonemptiness_Robust4 is the live F0 frontier theory. *)
 session Applied_Math_Appendix_Base in "Appendix" = Applied_Math_Nonemptiness +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   sessions
@@ -80,15 +79,23 @@ session Applied_Math_HigherDiff in "HigherDiff" = "HOL-Analysis" +
     Taylor_Peano
     Ck1_C1_Bridge
 
-(* M5 consolidation: Nonemptiness_Robust3 (the M5/F0 capstone, formerly in no
-   session) baked as a leaf on the prebuilt Applied_Math_Appendix heap, so the
-   D1/D2/D5/D34 graft + the F0 chain are checked in CI.  quick_and_dirty allows
-   the two terminal D34 chart-branch sorries to remain while everything else is
-   verified for real. *)
+(* M5 consolidation stable heap: Nonemptiness_Robust3 contains the checked
+   upstream scaffold through the D3 cover set-algebra bridge.  The active F0
+   frontier lives in the child session below, so jEdit can load this heap while
+   editing the frontier theory rather than baking the target buffer into the
+   active logic image. *)
 session Applied_Math_Appendix_Full in "Appendix/Robust3" = Applied_Math_Appendix +
   options [document = false, quick_and_dirty = true, timeout = 3600]
   theories
     Nonemptiness_Robust3
+
+(* Live frontier for the M5/F0 capstone.  This theory imports the stable
+   Applied_Math_Appendix_Full heap and contains the remaining D3/D4 chart
+   obligations plus the downstream F0_dip_nonempty target. *)
+session Applied_Math_Appendix_Frontier in "Appendix/Robust4" = Applied_Math_Appendix_Full +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  theories
+    Nonemptiness_Robust4
 
 (* Standalone real-analytic (C^omega) function theory + analytic IFT.  Foundational
    and reusable: parented only on the (Malta-synced) higher-derivative/Taylor stack,
