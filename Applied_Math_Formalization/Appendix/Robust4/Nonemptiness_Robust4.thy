@@ -1357,8 +1357,8 @@ qed
 text \<open>\<^bold>\<open>The concrete capstone: \<open>\<F>\<^sub>0\<close> for the ACTUAL dipole pattern is nonempty.\<close>  This is
   \<open>thm:final\<close>'s nonemptiness for the real radiation intensity \<open>U_dip = g(\<omega>)\<bar>A(\<bm>x,\<omega>)\<bar>\<^sup>2\<close>
   with the steered wavevector \<open>cvec\<^sub>dip\<close> and the smooth dipole gain \<open>gain\<^sub>dip = \<bar>e(\<theta>)\<bar>\<^sup>2\<close>
-  --- no abstract \<open>cvec\<close>/\<open>g\<close>.  The continuity half is fully proven; the only assumption is
-  the regular feasible point (the determinant/Baire payoff, @{thm regular_feasible_point_dip}).\<close>
+  --- no abstract \<open>cvec\<close>/\<open>g\<close>.  The continuity half is fully proven; the remaining
+  analytic inputs are the explicit D3 and Branch-P core premises threaded below.\<close>
 
 theorem F0_dip_nonempty:
   assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
