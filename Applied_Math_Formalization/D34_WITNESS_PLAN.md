@@ -483,3 +483,15 @@ covering splice into Robust3).
   through `m5_D34_D4_branchP`, and the D34 assembly split now target the actual
   retained residual rather than the older `gradU + detDc + cvec + not-surj-DM`
   superset.  `Applied_Math_Appendix_Full` rebuilt with `BUILD_EXIT=0`.
+
+- 2026-07-08 (Codex, D3 next target): **`m5_D34_D3_collinear` is no longer an
+  opaque `sorry`**.  Added a retained D3 fibre `D3BadXG` and proved the D3 branch
+  by checked assembly from two precise residuals:
+  `d3_retained_arc_charts_Nn` (per-C1-arc chart bundle for the exact retained
+  fibre) and `d3_active_collinear_finite_arc_cover` (finite active
+  phase-collinear witness-arc cover).  `m5_D34_residual` now passes the existing
+  `hsep`/`kdiff` assumptions into D3; `meager_rank_deficient_stratum` already had
+  those assumptions, so no capstone API change was needed.  Current Robust3
+  on-path sorries are exactly the two new D3 residuals plus the existing D4
+  `branchP_indep_charts_Nn`.  Verified `Applied_Math_Appendix_Full`
+  `BUILD_EXIT=0`.

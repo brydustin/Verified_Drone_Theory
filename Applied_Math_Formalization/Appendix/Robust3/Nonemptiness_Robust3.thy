@@ -2406,6 +2406,132 @@ lemma fixed_omega_slice_meager:
   by (rule meager_nowhere_dense[OF nd[OF c0]])
 
 
+subsection \<open>D3 retained active-arc reduction\<close>
+
+definition analytic_arc :: "(real^2) set \<Rightarrow> bool" where
+  "analytic_arc \<gamma> \<longleftrightarrow> (\<exists>(a::real) b \<phi>. a \<le> b \<and> \<phi> C1_differentiable_on {a..b}
+                          \<and> \<gamma> = \<phi> ` {a..b})"
+
+definition D3BadXG :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
+  "D3BadXG \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
+        gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+      \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+      \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+      \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+      \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+      \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
+
+lemma D3BadXG_UN:
+  fixes arc :: "'i \<Rightarrow> (real^2) set"
+  shows "D3BadXG \<omega>0 \<omega>s (\<Union>i\<in>I. arc i)
+          = (\<Union>i\<in>I. (D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
+  unfolding D3BadXG_def by blast
+
+text \<open>The D3 branch is now reduced to two explicit active-arc obligations:
+  a finite C1-arc cover of the active phase-collinear witness set, and the
+  per-arc chart bundle for the retained Case-B fibre.  The assembly below is
+  sorry-free and keeps all retained residual conjuncts.\<close>
+
+lemma d3_retained_arc_charts_Nn:
+  fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and arc: "analytic_arc \<gamma>"
+    and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
+              nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         (V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+            \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+  \<comment> \<open>GENUINE D3 analytic core: retained Case-B fibre over one C1 arc, including
+      \<open>gradU=0\<close>, \<open>det HessU=0\<close>, \<open>A_cart\<noteq>0\<close>, steering immersion, moment rank drop,
+      and failure of the configuration derivative.  This is the precise per-arc
+      chart obligation replacing the previous opaque D3 branch sorry.\<close>
+  sorry
+
+lemma d3_retained_arc_negligible_closed_cover:
+  fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and arc: "analytic_arc \<gamma>"
+    and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
+              nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+  shows "\<exists>K :: nat \<Rightarrow> ((real^2)^'n) set.
+            (V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)
+          \<and> (\<forall>n. closed (K n))
+          \<and> (\<forall>n. negligible (K n))"
+proof -
+  obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+     and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+     and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+    where cover: "(V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+                    \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
+      and rank: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      and clo: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+    using d3_retained_arc_charts_Nn[OF openV Vne c6 arc gsub pf nd]
+    by (smt (verit, best))
+  define K :: "nat \<Rightarrow> ((real^2)^'n) set"
+    where "K i = (fst \<circ> charts i) ` (Crit i)" for i
+  have Kcover: "(V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
+    using cover unfolding K_def by simp
+  have Kclosed: "closed (K n)" for n
+    using clo unfolding K_def by blast
+  have Knegligible: "negligible (K n)" for n
+    unfolding K_def
+    by (rule negligible_singular_image_2n
+          [where f = "fst \<circ> charts n" and S = "Crit n"
+             and f' = "\<lambda>x. blinfun_apply (D n x)"])
+       (use der rank in blast)+
+  show ?thesis
+    using Kcover Kclosed Knegligible by blast
+qed
+
+lemma d3_retained_arc_projection_meager:
+  fixes V :: "((real^2)^'n) set" and \<gamma> :: "(real^2) set"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and arc: "analytic_arc \<gamma>"
+    and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
+              nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+  shows "meager (V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)"
+proof -
+  obtain K :: "nat \<Rightarrow> ((real^2)^'n) set"
+    where cover: "(V \<inter> D3BadXG \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
+      and clo: "\<forall>n. closed (K n)"
+      and neg: "\<forall>n. negligible (K n)"
+    using d3_retained_arc_negligible_closed_cover[OF openV Vne c6 arc gsub pf nd] by blast
+  show ?thesis
+    by (rule meager_negligible_closed_cover[OF cover]) (use clo neg in blast)+
+qed
+
+lemma d3_active_collinear_finite_arc_cover:
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+  shows "\<exists>(I::nat set) arc. finite I
+            \<and> (V \<inter> D3BadXG \<omega>0 \<omega>s {\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>}
+                  :: ((real^2)^'n) set)
+                \<subseteq> (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))
+            \<and> (\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>)"
+  \<comment> \<open>GENUINE D3 curve-cover obligation, scoped to the active retained D3 fibre.
+      Existing curve-cover development covers the phase-collinear equation under
+      dipole separation/nontriviality hypotheses; this statement is the exact
+      witness-cover form consumed by the checked D3 assembly below.\<close>
+  sorry
+
+
 subsection \<open>D3 --- the phase-collinear branch (one scoped sorry)\<close>
 
 text \<open>The phase-collinear branch of the residual.  Internally: the 3-equation /
@@ -2419,6 +2545,8 @@ lemma m5_D34_D3_collinear:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
@@ -2430,7 +2558,36 @@ lemma m5_D34_D3_collinear:
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)
           \<and> phase_collinear \<omega>0 \<omega>s \<omega>}"
-  sorry
+proof -
+  let ?L = "{\<omega> \<in> OmegaPF ctr \<delta>. phase_collinear \<omega>0 \<omega>s \<omega>}"
+  have eq: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)
+          \<and> phase_collinear \<omega>0 \<omega>s \<omega>}
+          = (V \<inter> D3BadXG \<omega>0 \<omega>s ?L :: ((real^2)^'n) set)"
+    unfolding D3BadXG_def by blast
+  obtain I :: "nat set" and arc :: "nat \<Rightarrow> (real^2) set"
+    where finI: "finite I"
+      and cover: "(V \<inter> D3BadXG \<omega>0 \<omega>s ?L :: ((real^2)^'n) set)
+                    \<subseteq> (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
+      and arcprops: "\<forall>i\<in>I. analytic_arc (arc i) \<and> arc i \<subseteq> OmegaPF ctr \<delta>"
+    using d3_active_collinear_finite_arc_cover[OF d0 pf hsep kdiff, of V] by blast
+  have meagU: "meager (\<Union>i\<in>I. (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set))"
+  proof (rule meager_Union_finite[OF finI])
+    fix i :: nat assume iI: "i \<in> I"
+    have ai: "analytic_arc (arc i)" and asub: "arc i \<subseteq> OmegaPF ctr \<delta>"
+      using arcprops iI by blast+
+    show "meager (V \<inter> D3BadXG \<omega>0 \<omega>s (arc i) :: ((real^2)^'n) set)"
+      by (rule d3_retained_arc_projection_meager[OF openV Vne c6 ai asub pf nd])
+  qed
+  show ?thesis
+    unfolding eq by (rule meager_subset[OF cover meagU])
+qed
 
 
 subsection \<open>D4 --- the Branch-P residual (one scoped sorry)\<close>
@@ -2686,6 +2843,8 @@ lemma m5_D34_residual:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
@@ -2729,7 +2888,7 @@ proof -
   \<comment> \<open>The residual is the D3/D4 union (excluded middle on \<open>phase_collinear\<close>).\<close>
   have RsubD: "?R \<subseteq> ?D3 \<union> ?D4" by blast
   \<comment> \<open>Each piece is meager (the two genuine obligations, sorried inside).\<close>
-  have mD3: "meager ?D3" by (rule m5_D34_D3_collinear[OF openV Vne c6 d0 pf nd])
+  have mD3: "meager ?D3" by (rule m5_D34_D3_collinear[OF openV Vne c6 d0 pf hsep kdiff nd])
   have mD4: "meager ?D4" by (rule m5_D34_D4_branchP[OF openV Vne c6 d0 pf nd])
   have mR: "meager ?R"
     by (rule meager_subset[OF RsubD meager_Un[OF mD3 mD4]])
@@ -2815,7 +2974,7 @@ proof -
           m5_D1_regular[OF openV Vne]
           m5_D2_beamcenter[OF openV Vne c6 d0 pf]
           m5_D5_steersing[OF openV Vne c6 d0 pf hsep kdiff]
-          m5_D34_residual[OF openV Vne c6 d0 pf])
+          m5_D34_residual[OF openV Vne c6 d0 pf hsep kdiff])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0

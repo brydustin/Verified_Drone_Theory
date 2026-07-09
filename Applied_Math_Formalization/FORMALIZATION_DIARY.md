@@ -4043,3 +4043,39 @@ Changed statement shapes:
 This does not close the two sorries; it corrects their targets so future Case-B analytic branch
 certificates can actually be wired into `F0_dip_nonempty`.  Verified with
 `Applied_Math_Appendix_Full` BUILD_EXIT=0.
+
+### D3 retained active-arc scaffold landed (Codex, 2026-07-08)
+
+Continued from the layer-5 correction and attacked the next target,
+`m5_D34_D3_collinear`, in `Appendix/Robust3/Nonemptiness_Robust3.thy`.
+
+Result: the old broad D3 branch `sorry` is gone.  It is replaced by a checked
+assembly over the exact retained D3 fibre:
+
+- new `D3BadXG` retains `gradU=0`, `det HessU=0`, `A_cart != 0`,
+  `det Dcvec != 0`, `cvec != 0`, `not surj(DM_paper_x ...)`, and failure of
+  the `x`-derivative of `gradU` to be surjective;
+- `m5_D34_D3_collinear` is now proved from a finite active phase-collinear
+  arc cover plus a per-arc chart/negligible-cover core;
+- `m5_D34_residual` now threads the already-available dipole separation
+  hypotheses `hsep`/`kdiff` down to D3.
+
+New Robust3 on-path sorry ledger:
+
+1. `d3_retained_arc_charts_Nn` — precise per-C1-arc chart bundle for the retained D3 fibre.
+2. `d3_active_collinear_finite_arc_cover` — finite active phase-collinear witness-arc cover.
+3. `branchP_indep_charts_Nn` — existing retained D4 chart core.
+
+This is a trust-gain reduction, not a zero-sorry finish: D3's one opaque branch
+obligation has been split into two narrower obligations whose statements match
+the retained Case-B residual.  Verified with:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Applied_Math_Appendix_Full
+```
+
+Build result: `Finished Applied_Math_Appendix_Full`, `BUILD_EXIT=0`
+(`0:04:27` elapsed reported for the session).
