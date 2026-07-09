@@ -4185,6 +4185,43 @@ the downstream retained Case-B D3 assembly proved.
 Verified with `Applied_Math_Appendix_Frontier`; build result:
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
 
+### Robust4 Branch-P sorry converted to explicit closed-cover core (Codex, 2026-07-09)
+
+Removed the remaining explicit `sorry` from
+`Appendix/Robust4/Nonemptiness_Robust4.thy` without claiming an unavailable
+unconditional Branch-P chart proof.
+
+Added the checked moment-rank bridge:
+
+- `MomentBad`
+- `BadXGW_subset_MomentBad`
+- `MomentBad_eq_mstarg_zeros`
+- `closed_mstarg_zero_slice`
+
+Then exposed the genuine Branch-P D4 boundary as named predicates:
+
+- `branchP_indep_closed_cover_core`
+- `branchP_indep_closed_cover_core_all`
+- `branchP_indep_chart_core`
+
+`branchP_indep_charts_Nn` is now a checked wrapper from
+`branchP_indep_chart_core`.  The downstream meagerness path consumes the weaker
+and actually needed `branchP_indep_closed_cover_core_all` premise, threaded
+through D4, D34, M5, `Phi_bad_meager_dip`, the Baire witness chain, and
+`F0_dip_nonempty`.
+
+This is a sound boundary exposure, not a completion of the D4 analytic theorem:
+the remaining mathematical target is to prove
+`branchP_indep_closed_cover_core_all`, i.e. a countable closed negligible cover
+for the retained Branch-P bad fibre over the non-collinear 2-parameter steering
+region.  The per-fixed-angle nowhere-density input is insufficient for that
+continuum union.
+
+Verified with `Applied_Math_Appendix_Frontier`; build result:
+`Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+`desorry` on Robust4 now reports: `no sorry's found`.
+
 ### Robust4 D3 det-Hess sorry converted to explicit chart-core premise (Codex, 2026-07-09)
 
 Removed the explicit `sorry` from `d3_detHess_arc_charts_Nn` without claiming an

@@ -494,3 +494,67 @@ no proof found at line 391
 
 That line is the remaining D4 core `branchP_indep_charts_Nn`.  The former D3
 explicit `sorry` is no longer present.
+
+## Robust4 Branch-P explicit sorry removed by exposing the real D4 core
+
+Codex work on 2026-07-09 addressed the remaining Robust4 explicit proof hole,
+formerly `branchP_indep_charts_Nn`.
+
+Important soundness point: I did **not** find a valid proof that the literal
+Branch-P chart bundle follows from the old relaxed assumptions (`nd` plus
+`Γ ⊆ OmegaPF` and non-collinearity).  The available D4 scratch files confirm
+that this requires a genuine joint codimension-3 IFT/Sard argument, not a
+splice from the existing `charts_core_Nn` theorem.  In particular, the current
+heap chart engine is typed for a `real^2` codomain, while the honest Branch-P
+joint map is codimension 3 (`gradU_1`, `gradU_2`, and the moment-rank-drop
+determinant).
+
+What changed in `Appendix/Robust4/Nonemptiness_Robust4.thy`:
+
+- Added verified bridge material:
+  - `MomentBad`
+  - `BadXGW_subset_MomentBad`
+  - `MomentBad_eq_mstarg_zeros`
+  - `closed_mstarg_zero_slice`
+- Added explicit Branch-P boundary predicates:
+  - `branchP_indep_closed_cover_core`
+  - `branchP_indep_closed_cover_core_all`
+  - `branchP_indep_chart_core`
+- Reproved `branchP_indep_charts_Nn` from the explicit
+  `branchP_indep_chart_core` premise instead of leaving a `sorry`.
+- Rewired the downstream path to consume the weaker, actually-needed
+  `branchP_indep_closed_cover_core_all` premise:
+  `branchP_indep_negligible_closed_cover`, `branchP_indep_core`,
+  `m5_D34_D4_branchP`, `m5_D34_residual`, `meager_rank_deficient_stratum`,
+  `Phi_bad_meager_dip`, `regular_config_exists`,
+  `regular_feasible_point_dip`, `regular_feasible_witness_dip`, and
+  `F0_dip_nonempty`.
+
+So Robust4 now has no explicit Isabelle `sorry`, but the theorem stack still
+has honest analytic assumptions at the D3 and D4 boundaries:
+
+- `d3_detHess_arc_chart_core_all`
+- `branchP_indep_closed_cover_core_all`
+
+The next real mathematical target is to prove `branchP_indep_closed_cover_core_all`.
+The moment bridge above shows every retained Branch-P bad point lies in the
+moment-rank-drop fibre.  The missing theorem is a countable closed negligible
+cover of that 2-parameter continuum of moment-rank-drop slices; per-fixed-angle
+nowhere-density is not enough.
+
+Verification:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Applied_Math_Appendix_Frontier
+```
+
+Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+`desorry` result for Robust4:
+
+```text
+no sorry's found
+```

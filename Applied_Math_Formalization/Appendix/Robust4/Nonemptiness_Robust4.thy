@@ -275,19 +275,20 @@ proof -
 qed
 
 
-subsection \<open>D4 --- the Branch-P residual (one scoped sorry)\<close>
+subsection \<open>D4 --- the Branch-P residual (explicit closed-cover core)\<close>
 
 text \<open>The Branch-P residual: the complementary (non phase-collinear) part.
   Internally: the explicit rank-drop dichotomy (\<open>\<gamma> \<parallel> c\<close> or not) plus the excess
   engine on the \<open>(\<star>n)/Hess.u(w)\<close> rows.  \<open>core_3d\<close> is ruled out structurally (the
   gradU rows degenerate exactly at the residual witnesses), so a dedicated
-  stratification is required.  Carried as a single scoped \<open>sorry\<close>.\<close>
+  stratification is required.  The genuine Branch-P geometric-measure content is
+  now exposed as \<open>branchP_indep_closed_cover_core_all\<close>.\<close>
 
 
 (* ===== D4 Stage-B reduction: D4charts chart-route (BadXGW RETAINS gradU=0 -> sound) =====
    phase_collinear already defined above (~L2358); Sard NOT needed -- negligible_singular_image_2n
-   + meager_negligible_closed_cover resolve from the Applied_Math_Nonemptiness heap. The single
-   new sorry is branchP_indep_charts_Nn, the canonical D4 IFT chart core. ===== *)
+   + meager_negligible_closed_cover resolve from the Applied_Math_Nonemptiness heap. The D4
+   analytic content is an explicit closed-cover core premise, not a hidden oracle. ===== *)
 
 definition BadXGW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
   "BadXGW \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
@@ -340,31 +341,64 @@ lemma BadXGW_point:
   unfolding BadXGW_def by blast
 
 
-subsection \<open>The irreducible IFT-chart bundle (the single isolated analytic \<open>sorry\<close>)\<close>
+subsection \<open>Moment-rank bridge and the explicit Branch-P core\<close>
 
-text \<open>\<^bold>\<open>The genuine geometric-measure content, isolated as one precisely-scoped
-  statement.\<close>  Over the linear-independence (\<open>\<gamma> \<not>\<parallel> c\<close>) region \<open>\<Gamma> \<subseteq> OmegaPF ctr \<delta>\<close>,
-  the retained-constraint bad \<open>x\<close>-fibre \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> admits a chart bundle in
-  the EXACT shape consumed by @{thm negligible_proj_charts_Nn} (the @{thm
-  charts_core_Nn} output): a COUNTABLE family of charts
-  \<open>charts i :: (real^2)^'n \<Rightarrow> ((real^2)^'n \<times> (real^2))\<close> with critical sets \<open>Crit i\<close>
-  and blinfun derivatives \<open>D i\<close> such that
-  \<^enum> the bad fibre is covered by the \<open>x\<close>-projections \<open>(fst \<circ> charts i) ` Crit i\<close>;
-  \<^enum> on each \<open>Crit i\<close> the projection \<open>fst \<circ> charts i\<close> has derivative \<open>D i x\<close>;
-  \<^enum> that derivative is NON-surjective on \<open>(real^2)^'n\<close> (the codimension \<open>\<ge> 1\<close>
-    rank-drop from RETAINED \<open>gradU = 0\<close> + the moment rank-drop), and
-  \<^enum> each \<open>x\<close>-projection piece \<open>(fst \<circ> charts i) ` Crit i\<close> is CLOSED.
+text \<open>The Branch-P bad set is contained in the pure moment-rank-drop fibre.  This
+  bridge is the verified part of the D4 reduction: the retained conjuncts
+  \<open>gradU = 0\<close>, \<open>det HessU = 0\<close>, \<open>A \<noteq> 0\<close>, \<open>det Dcvec \<noteq> 0\<close>, and the failed
+  configuration derivative only shrink the set.\<close>
 
-  This is the implicit-function-theorem chart of the retained-constraint locus.  See
-  the file header for the engine analysis showing why neither @{thm charts_core_Nn}
-  (G = \<open>gradU\<close>: its \<open>\<omega>\<close>-partial rank drop is \<open>det (HessU) = 0\<close>, not the moment
-  \<open>x\<close>-Jacobian rank drop) nor @{thm parametric_transversality_negligible_complex}
-  (its rank drop is the \<open>\<omega>\<close>-partial of a complex map, with the variable roles
-  transposed relative to the \<open>x\<close>-partial @{const DM_paper_x}) yields an inclusion of
-  \<open>V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma>\<close> into the engine bad set.  The codimension source is the
-  conjunction \<open>gradU = 0\<close> \<open>\<and>\<close> the moment rank drop; realising the chart of that
-  combined locus is the genuine multi-week IFT content and does NOT follow from
-  @{text nd} alone.  NOT a splice freebie.\<close>
+definition MomentBad :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
+  "MomentBad \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
+        cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+
+lemma BadXGW_subset_MomentBad:
+  "(BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> MomentBad \<omega>0 \<omega>s \<Gamma>"
+  unfolding BadXGW_def MomentBad_def by blast
+
+lemma MomentBad_eq_mstarg_zeros:
+  "(MomentBad \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+     = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>. cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
+                              \<and> mstarg (cvec_dip \<omega>0 \<omega>s \<omega>) x = 0}"
+  unfolding MomentBad_def by (simp add: surj_iff_mstarg)
+
+lemma closed_mstarg_zero_slice:
+  "closed {x::(real^2)^'n. mstarg c x = 0}"
+  by (rule closed_Collect_eq[OF cont_mstarg continuous_on_const])
+
+definition branchP_indep_closed_cover_core ::
+  "((real^2)^'n) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> bool" where
+  "branchP_indep_closed_cover_core V \<omega>0 \<omega>s \<Gamma> \<longleftrightarrow>
+     (\<exists>K :: nat \<Rightarrow> ((real^2)^'n) set.
+        (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)
+      \<and> (\<forall>n. closed (K n))
+      \<and> (\<forall>n. negligible (K n)))"
+
+definition branchP_indep_closed_cover_core_all ::
+  "((real^2)^'n) set \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> bool" where
+  "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s \<longleftrightarrow>
+     (\<forall>\<Gamma>. \<Gamma> \<subseteq> OmegaPF ctr \<delta> \<longrightarrow>
+        (\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>) \<longrightarrow>
+        branchP_indep_closed_cover_core V \<omega>0 \<omega>s \<Gamma>)"
+
+definition branchP_indep_chart_core ::
+  "((real^2)^'n) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> bool" where
+  "branchP_indep_chart_core V \<omega>0 \<omega>s \<Gamma> \<longleftrightarrow>
+    (\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+       (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+       (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+       (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
+          \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+       (\<forall>i x. x \<in> Crit i \<longrightarrow>
+          ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+       (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+       (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))))"
+
+text \<open>The literal chart-bundle theorem is no longer asserted from the relaxed
+  assumptions alone.  Its real content is the explicit predicate
+  @{const branchP_indep_chart_core}; downstream only needs the weaker closed
+  negligible cover predicate above.\<close>
 
 lemma branchP_indep_charts_Nn:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -375,6 +409,7 @@ lemma branchP_indep_charts_Nn:
     and Gindep: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and core: "branchP_indep_chart_core V \<omega>0 \<omega>s \<Gamma>"
   shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
             (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
             (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
@@ -384,22 +419,15 @@ lemma branchP_indep_charts_Nn:
             ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
          (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
-  \<comment> \<open>GENUINE geometric-measure core: the IFT chart of the retained-constraint bad
-      \<open>(x,\<omega>)\<close> locus in the @{thm charts_core_Nn} output shape.  The single irreducible
-      \<open>sorry\<close> of this file; it does NOT follow from @{text nd} alone (see header).
-      NOT a splice freebie.\<close>
-  sorry
+  using core unfolding branchP_indep_chart_core_def by blast
 
 
-subsection \<open>The verbatim target: the closed negligible cover (sorry-free from the bundle)\<close>
+subsection \<open>The closed negligible cover (from the explicit core)\<close>
 
-text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the chart bundle.\<close>
-  From the chart bundle @{thm branchP_indep_charts_Nn} the pieces
-  \<open>K i = (fst \<circ> charts i) ` (Crit i)\<close> are CLOSED (chart output) and NEGLIGIBLE
-  (@{thm negligible_singular_image_2n}: the projection has non-surjective derivative
-  on \<open>Crit i\<close>), and they cover the bad fibre.  This turns the IFT-chart content into
-  the countable closed negligible cover the reduction layer consumes.  The target
-  statement is copied VERBATIM from the D4 core file.\<close>
+text \<open>\<^bold>\<open>The closed negligible cover, assembled sorry-free from the explicit core.\<close>
+  This is the form actually consumed downstream.  A literal chart bundle would
+  imply it, but the weaker closed-cover core is enough for meagerness and avoids
+  claiming a codimension-3 chart theorem from the relaxed \<open>nd\<close> hypothesis.\<close>
 
 lemma branchP_indep_negligible_closed_cover:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
@@ -410,37 +438,12 @@ lemma branchP_indep_negligible_closed_cover:
     and Gindep: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and core: "branchP_indep_closed_cover_core V \<omega>0 \<omega>s \<Gamma>"
   shows "\<exists>K :: nat \<Rightarrow> ((real^2)^'n) set.
             (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)
           \<and> (\<forall>n. closed (K n))
           \<and> (\<forall>n. negligible (K n))"
-proof -
-  obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
-     and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
-     and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
-    where cover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
-                    \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
-      and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
-            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
-      and rank: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
-      and clo: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
-    using branchP_indep_charts_Nn[OF openV Vne c6 d0 pf Gsub Gindep nd]
-    by (smt (verit, best))
-  define K :: "nat \<Rightarrow> ((real^2)^'n) set"
-    where "K i = (fst \<circ> charts i) ` (Crit i)" for i
-  have Kcover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
-    using cover unfolding K_def by simp
-  have Kclosed: "closed (K n)" for n
-    using clo unfolding K_def by blast
-  have Knegligible: "negligible (K n)" for n
-    unfolding K_def
-    by (rule negligible_singular_image_2n
-          [where f = "fst \<circ> charts n" and S = "Crit n"
-             and f' = "\<lambda>x. blinfun_apply (D n x)"])
-       (use der rank in blast)+
-  show ?thesis
-    using Kcover Kclosed Knegligible by blast
-qed
+  using core unfolding branchP_indep_closed_cover_core_def by blast
 
 
 subsection \<open>The downstream sorry-free layers (copied verbatim from D4Core)\<close>
@@ -467,13 +470,14 @@ lemma branchP_indep_core:
     and Gindep: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and core: "branchP_indep_closed_cover_core V \<omega>0 \<omega>s \<Gamma>"
   shows "meager (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)"
 proof -
   obtain K :: "nat \<Rightarrow> ((real^2)^'n) set"
     where cover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
       and clo: "\<forall>n. closed (K n)"
       and neg: "\<forall>n. negligible (K n)"
-    using branchP_indep_negligible_closed_cover[OF openV Vne c6 d0 pf Gsub Gindep nd]
+    using branchP_indep_negligible_closed_cover[OF openV Vne c6 d0 pf Gsub Gindep nd core]
     by blast
   show ?thesis
     by (rule branchP_indep_of_negligible_closed_cover[OF cover]) (use clo neg in blast)+
@@ -485,6 +489,7 @@ lemma m5_D34_D4_branchP:
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
+    and branchcore: "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
@@ -512,8 +517,11 @@ proof -
     unfolding BadXGW_def by blast
   have Gsub: "?Gam \<subseteq> OmegaPF ctr \<delta>" by blast
   have Gindep: "\<forall>\<omega>\<in>?Gam. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>" by (auto simp: gamma_par_c_def)
+  have coreGam: "branchP_indep_closed_cover_core V \<omega>0 \<omega>s ?Gam"
+    using branchcore Gsub Gindep
+    unfolding branchP_indep_closed_cover_core_all_def by blast
   show ?thesis unfolding eq
-    by (rule branchP_indep_core[OF openV Vne c6 d0 pf Gsub Gindep nd])
+    by (rule branchP_indep_core[OF openV Vne c6 d0 pf Gsub Gindep nd coreGam])
 qed
 
 
@@ -532,6 +540,7 @@ lemma m5_D34_residual:
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and d3core: "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+    and branchcore: "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
@@ -541,7 +550,7 @@ lemma m5_D34_residual:
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
 proof -
-  \<comment> \<open>The Robust3-supplied fixed-angle nowhere-density (here a single scoped sorry).\<close>
+  \<comment> \<open>The Robust3-supplied fixed-angle nowhere-density input.\<close>
   have nd: "\<And>c::real^2. c \<noteq> 0 \<Longrightarrow>
               nowhere_dense {x::(real^2)^'n. \<not> surj (DM_paper_x x c)}"
     by (rule fixed_c_nonsurj_nowhere_dense[OF _ c6])
@@ -574,9 +583,9 @@ proof -
           \<and> \<not> phase_collinear \<omega>0 \<omega>s \<omega>}"
   \<comment> \<open>The residual is the D3/D4 union (excluded middle on \<open>phase_collinear\<close>).\<close>
   have RsubD: "?R \<subseteq> ?D3 \<union> ?D4" by blast
-  \<comment> \<open>Each piece is meager (the two genuine obligations, sorried inside).\<close>
+  \<comment> \<open>Each piece is meager from the explicit D3 and D4 core premises.\<close>
   have mD3: "meager ?D3" by (rule m5_D34_D3_collinear[OF openV Vne c6 d0 pf hsep kdiff nsing nd d3core])
-  have mD4: "meager ?D4" by (rule m5_D34_D4_branchP[OF openV Vne c6 d0 pf nd])
+  have mD4: "meager ?D4" by (rule m5_D34_D4_branchP[OF openV Vne c6 d0 pf nd branchcore])
   have mR: "meager ?R"
     by (rule meager_subset[OF RsubD meager_Un[OF mD3 mD4]])
   show ?thesis
@@ -621,12 +630,13 @@ lemma meager_rank_deficient_stratum:
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and d3core: "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+    and branchcore: "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
   \<comment> \<open>(M5) assembled from the four-stratum cover D1 \<union> D2 \<union> D5 \<union> D34 (grafted above).
-      D1/D2/D5 are proven sorry-free; D34 rests on the two scoped chart-branch cores
+      D1/D2/D5 are proven sorry-free; D34 rests on the two scoped branch cores
       \<open>m5_D34_D3_collinear\<close> / \<open>m5_D34_D4_branchP\<close>.\<close>
 proof -
   let ?D1 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
@@ -663,7 +673,7 @@ proof -
           m5_D1_regular[OF openV Vne]
           m5_D2_beamcenter[OF openV Vne c6 d0 pf]
           m5_D5_steersing[OF openV Vne c6 d0 pf hsep kdiff]
-          m5_D34_residual[OF openV Vne c6 d0 pf hsep kdiff nsing d3core])
+          m5_D34_residual[OF openV Vne c6 d0 pf hsep kdiff nsing d3core branchcore])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
                   \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
@@ -724,6 +734,7 @@ lemma Phi_bad_meager_dip:
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and nsing: "d3_collinear_nsing_all ctr \<delta> \<omega>0 \<omega>s"
     and d3core: "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+    and branchcore: "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
 proof -
   let ?reg = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
@@ -745,7 +756,7 @@ proof -
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
   have meag4: "meager (?reg \<union> ?def \<union> ?steer \<union> ?null)"
     by (intro meager_Un meager_bad_regular_stratum_on[OF openV Vne c6]
-              meager_rank_deficient_stratum[OF openV Vne c6 d0 pf hsep kdiff nsing d3core]
+              meager_rank_deficient_stratum[OF openV Vne c6 d0 pf hsep kdiff nsing d3core branchcore]
               meager_steering_singular_stratum[OF openV Vne c6 d0 pf hsep kdiff]
               meager_Azero_degenerate_stratum[OF openV Vne c6 oddN d0 pf])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
@@ -1027,6 +1038,9 @@ lemma regular_config_exists:
     and d3core: "d3_detHess_arc_chart_core_all
           (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
              :: ((real^2)^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
+    and branchcore: "branchP_indep_closed_cover_core_all
+          (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+             :: ((real^2)^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
                           :: ((real^2)^'n) set).
             \<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
@@ -1037,8 +1051,10 @@ proof -
   have Ine: "I \<noteq> {}" unfolding I_def by (rule int_ne)
   have d3coreI: "d3_detHess_arc_chart_core_all I ctr \<delta> \<omega>0 \<omega>s"
     using d3core unfolding I_def by simp
+  have branchcoreI: "branchP_indep_closed_cover_core_all I ctr \<delta> \<omega>0 \<omega>s"
+    using branchcore unfolding I_def by simp
   have meagB: "meager {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
-    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN hsep kdiff d0 pf nsing d3coreI])
+    by (rule Phi_bad_meager_dip[OF openI Ine c6 oddN hsep kdiff d0 pf nsing d3coreI branchcoreI])
   have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
   proof
     assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
@@ -1221,6 +1237,9 @@ lemma regular_feasible_point_dip:
     and d3core: "d3_detHess_arc_chart_core_all
           (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
              :: (planar^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
+    and branchcore: "branchP_indep_closed_cover_core_all
+          (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+             :: (planar^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> (\<forall>\<omega>\<in>sphere ctr \<epsilon>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0)
@@ -1229,13 +1248,13 @@ lemma regular_feasible_point_dip:
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y))"
   \<comment> \<open>\<^bold>\<open>SOUNDNESS FIX:\<close> requires \<open>feasible\<close> (the feasible body has nonempty interior).  Without
       it the claim is false for infeasible parameters (e.g.\ \<open>pmin > gain_dip ctr * N\<^sup>2\<close> forces
-      \<open>Ffeas = {}\<close>).  The composition below is \<^bold>\<open>machine-checked\<close>; only the leaf lemmas remain
-      \<open>sorry\<close>.\<close>
+      \<open>Ffeas = {}\<close>).  The composition below is \<^bold>\<open>machine-checked\<close> from the explicit D3
+      and Branch-P core premises.\<close>
 proof -
   obtain x0 :: "planar^'n"
     where x0I: "x0 \<in> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin)"
       and x0reg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> \<noteq> 0"
-    using regular_config_exists[OF c6 oddN hsep kdiff d0 pf nsing feasible d3core] by blast
+    using regular_config_exists[OF c6 oddN hsep kdiff d0 pf nsing feasible d3core branchcore] by blast
   have x0F: "x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin"
     using x0I interior_subset by blast
   have nondeg: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. \<not> (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega> = 0
@@ -1301,6 +1320,9 @@ lemma regular_feasible_witness_dip:
     and d3core: "d3_detHess_arc_chart_core_all
           (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
              :: (planar^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
+    and branchcore: "branchP_indep_closed_cover_core_all
+          (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
+             :: (planar^'n) set)) ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>(x0::planar^'n) \<epsilon>. 0 < \<epsilon>
             \<and> x0 \<in> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr \<delta>null pmin
             \<and> continuous_on (sphere ctr \<epsilon>)
@@ -1320,7 +1342,7 @@ proof -
       and rO: "\<forall>y\<in>OmegaPF ctr \<delta> - ball ctr \<epsilon>.
                   gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y \<noteq> 0
                   \<or> 0 < sigma_min (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 y)"
-    using regular_feasible_point_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible d3core] by blast
+    using regular_feasible_point_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible d3core branchcore] by blast
   have c1: "continuous_on (sphere ctr \<epsilon>)
               (\<lambda>\<omega>. norm (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>))"
     by (rule norm_gradU_dip_continuous_on)
@@ -1342,6 +1364,8 @@ theorem F0_dip_nonempty:
   assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
     and d3core: "\<And>(V::(planar^'n) set) ctr \<delta> \<omega>0 \<omega>s.
           d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+    and branchcore: "\<And>(V::(planar^'n) set) ctr \<delta> \<omega>0 \<omega>s.
+          branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr \<delta> R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
             0 < \<delta> \<and> 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
           \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr (OmegaPF ctr \<delta>) \<delta>null pmin \<xi> \<kappa> \<epsilon>
@@ -1485,8 +1509,13 @@ proof -
         (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0
            :: (planar^'n) set)) \<omega>0 (pi/4) \<omega>0 \<omega>s"
       by (rule d3core)
+    have branchcore_feas: "branchP_indep_closed_cover_core_all
+        (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0
+           :: (planar^'n) set)) \<omega>0 (pi/4) \<omega>0 \<omega>s"
+      by (rule branchcore)
     show ?thesis
-      using regular_feasible_witness_dip[OF c6 oddN hsep kdiff d0 dpi pf nsing feasible d3core_feas]
+      using regular_feasible_witness_dip[
+          OF c6 oddN hsep kdiff d0 dpi pf nsing feasible d3core_feas branchcore_feas]
     by (blast intro: F0_nonempty_of_witness OmegaPF_compact)
   qed
   thus ?thesis using d0 by blast
