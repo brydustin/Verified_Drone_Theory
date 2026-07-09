@@ -12,7 +12,8 @@ definition D3BadXG_H0core :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2)
         gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
       \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
       \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+      \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
 
 lemma D3BadXG_subset_H0core:
   "(D3BadXG \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> D3BadXG_H0core \<omega>0 \<omega>s \<Gamma>"
@@ -35,10 +36,11 @@ lemma d3_detHess_arc_charts_Nn:
             ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
          (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
          (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
-  \<comment> \<open>GENUINE D3 analytic core: the det-HessU retained critical fibre over one
-      C1 arc.  This is the H0 half identified in the D3 soundness analysis:
-      \<open>gradU=0\<close>, \<open>det HessU=0\<close>, and moment rank drop.  The stronger retained
-      Case-B fibre @{const D3BadXG} is a checked subset of this core.\<close>
+  \<comment> \<open>GENUINE D3 analytic core: the det-HessU/NSx retained critical fibre over one
+      C1 arc.  This is the H0 part actually needed downstream:
+      \<open>gradU=0\<close>, \<open>det HessU=0\<close>, moment rank drop, and failure of the
+      configuration derivative.  The stronger retained Case-B fibre @{const D3BadXG}
+      is a checked subset of this core.\<close>
   sorry
 
 lemma d3_retained_arc_charts_Nn:

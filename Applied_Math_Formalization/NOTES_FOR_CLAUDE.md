@@ -390,3 +390,49 @@ Remaining explicit `sorry` tactics in Robust4 are now exactly:
 
 - `d3_detHess_arc_charts_Nn`
 - `branchP_indep_charts_Nn`
+
+## Robust4 D3 det-Hess target narrowed to NSx
+
+Codex work on 2026-07-09 tightened the remaining D3 residual in
+`Appendix/Robust4/Nonemptiness_Robust4.thy`.
+
+The previous `D3BadXG_H0core` statement was broader than the downstream
+Robust4 branch actually needs: it retained `gradU = 0`, `det HessU = 0`,
+`cvec != 0`, and `not surj DM_paper_x`, but it dropped the
+`not (exists Dx. x-partial gradU derivative is surjective)` conjunct already
+present in `D3BadXG`.
+
+That over-broad statement included the x-partial-regular part, which is already
+handled elsewhere by `meager_grad_x_regular_part` for the M5 assembly and is
+not the live D3 collinear frontier.  The live D3 chart target is the smaller
+D3-A-NSx residual described in `M5_D3D4_CLOSEOUT.md`: degenerate criticality
+with non-surjective configuration derivative.
+
+`D3BadXG_H0core` now includes this NSx conjunct:
+
+```text
+not (exists Dx.
+  ((lambda y. gradU (cvec_dip omega0 omegas) gain_dip y omega)
+     has_derivative Dx) (at x) and surj Dx)
+```
+
+The checked wrapper `D3BadXG_subset_H0core` still builds, and downstream
+`d3_retained_arc_charts_Nn` still consumes `d3_detHess_arc_charts_Nn` by subset.
+The remaining D3 sorry is therefore not the broad H0 chart theorem; it is the
+NSx degenerate-critical chart theorem.
+
+Build command used:
+
+```text
+../../Isabelle2025-2/bin/isabelle build -b -d . \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  Applied_Math_Appendix_Frontier
+```
+
+Build result: `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+Remaining explicit `sorry` tactics in Robust4 are still exactly:
+
+- `d3_detHess_arc_charts_Nn`
+- `branchP_indep_charts_Nn`

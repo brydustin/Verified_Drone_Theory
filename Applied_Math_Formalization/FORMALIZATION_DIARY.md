@@ -4184,3 +4184,18 @@ the downstream retained Case-B D3 assembly proved.
 
 Verified with `Applied_Math_Appendix_Frontier`; build result:
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+### Robust4 D3 det-Hess target narrowed to NSx (Codex, 2026-07-09)
+
+Tightened `D3BadXG_H0core` in `Appendix/Robust4/Nonemptiness_Robust4.thy` to
+include the non-surjective configuration-derivative conjunct already present in
+`D3BadXG`.
+
+This corrects an over-broad intermediate statement: the remaining D3 chart
+sorry `d3_detHess_arc_charts_Nn` is now the D3-A-NSx degenerate-critical chart
+target, not the whole det-HessU plus moment-rank-drop H0 set.  The checked
+subset wrapper from `D3BadXG` still builds, and the downstream retained D3
+assembly is unchanged.
+
+Verified with `Applied_Math_Appendix_Frontier`; build result:
+`Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
