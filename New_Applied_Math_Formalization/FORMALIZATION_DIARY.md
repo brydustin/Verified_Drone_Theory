@@ -4493,3 +4493,40 @@ STATUS: both side-condition functions of `Jac3_H12rad_nonzero_criterion`
 The genericity argument needs exactly one more ingredient: a single
 nonvanishing WITNESS configuration, after which the nowhere-dense-zeros
 workhorse yields generic rank 3 for the H12=0 branch.
+
+## 2026-07-10 (Claude): Tier 5a landed — the s_k witness found, and its genericity theorem
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 1625
+lines, zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0
+(2:18), guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0. The closed-form
+evaluation (sign included) passed on the FIRST build iteration; only the
+trivial `c \<bullet> c \<noteq> 0` step needed a fix (`dot_square_norm`).
+
+The witness family: the single-bump configuration `slot k w` (element k at
+position w, all others at the origin). New machine-checked names:
+
+- `slot_bump_phase`, `A_moment_single_bump`
+  (`A = cis(-(c \<bullet> w)) + (N - 1)`), `perp2_component_1/2`,
+  `DM_perp_slot_1/2/3` (the perp-slot direction kills the `d_A` entry and
+  the moment-drag terms; the `d_M1/d_M2` entries collapse to
+  `\<mp>c\<^sub>2/c\<^sub>1` multiples of the bump phase).
+- **`gradU2_perp_slot_single_bump`** — the closed form:
+  `s_k(slot k w) = 2 gain (C\<^sub>1 c\<^sub>2 - C\<^sub>2 c\<^sub>1) (N - 1) sin (c \<bullet> w)` where
+  `C = Dcvec_dip(axis 2)`. Every factor is meaningful: gain (dipole
+  pattern), the non-parallelism `K = C\<^sub>1c\<^sub>2 - C\<^sub>2c\<^sub>1` of the steering
+  derivative and the wavevector, the array size, and the bump phase.
+- `gradU2_perp_slot_witness`: nonzero when `gain \<noteq> 0`, `K \<noteq> 0`,
+  `CARD('n) \<ge> 2`, `sin (c \<bullet> w) \<noteq> 0` (choose `c \<bullet> w = \<pi>/2`).
+- **`gradU2_perp_slot_zeros_nowhere_dense`** — the genericity: under
+  `gain \<noteq> 0`, `K \<noteq> 0`, `CARD \<ge> 2`, `c \<noteq> 0`, the set
+  `{x. s_k x = 0}` has empty-interior closure, via
+  `real_analytic_nowhere_dense_zeros` + `real_analytic_on_gradU2_slot`.
+
+The `s_k` side condition of `Jac3_H12rad_nonzero_criterion` is now
+GENERICALLY nonzero, with explicit checkable \<omega>-side conditions (`gain \<noteq> 0`,
+`K \<noteq> 0`, `c \<noteq> 0` — all verifiable at the F0 design point). Remaining for
+the full H12=0 genericity: the `Lambda_rad_ij` witness — needs a TWO-bump
+configuration (single bumps give `Lambda = 0` by the i/j symmetry of the
+identical non-bump elements), evaluating the `Phi_par` and `Hrad2` u-slot
+factors at `slot i w\<^sub>1 + slot j w\<^sub>2`; a 2-parameter trig polynomial whose
+nonvanishing can be checked at explicit angles.

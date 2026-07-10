@@ -1471,4 +1471,155 @@ theorem real_analytic_on_Lambda_rad_ij:
   by (rule real_analytic_on_Lambda_rad_ij_of_factors[OF detnz
         real_analytic_on_Phi_par_uslot real_analytic_on_Phi_par_uslot])
 
+
+section \<open>Tier 5a: the \<open>s\<^sub>k\<close> witness and its genericity\<close>
+
+text \<open>\<^bold>\<open>The witness.\<close>  At the single-bump configuration \<open>slot k w\<close> (element \<open>k\<close> at
+  position \<open>w\<close>, all others at the origin) the \<open>s\<^sub>k\<close> side condition of
+  \<open>Jac3_H12rad_nonzero_criterion\<close> evaluates in CLOSED FORM: the perp-slot direction
+  kills the \<open>d_A\<close> entry and the moment-drag terms, and what survives is a multiple of
+  \<open>gain \<cdot> K \<cdot> (N - 1) \<cdot> sin (c \<bullet> w)\<close>, where \<open>K = C\<^sub>1 c\<^sub>2 - C\<^sub>2 c\<^sub>1\<close> measures the
+  non-parallelism of \<open>Dcvec(axis 2)\<close> and \<open>c\<close>.  Choosing \<open>w\<close> with \<open>c \<bullet> w = \<pi>/2\<close> makes
+  it nonzero whenever \<open>gain \<noteq> 0\<close>, \<open>K \<noteq> 0\<close>, \<open>CARD('n) \<ge> 2\<close>.  Feeding the witness to
+  the multivariate workhorse @{thm real_analytic_nowhere_dense_zeros} (with
+  @{thm real_analytic_on_gradU2_slot}) yields the genericity: the bad set
+  \<open>{x. s\<^sub>k x = 0}\<close> is nowhere dense.\<close>
+
+subsection \<open>Single-bump evaluation of the moment data\<close>
+
+lemma slot_bump_phase:
+  fixes c w :: "real^2" and k n :: "'n::finite"
+  shows "phase c (slot k w) n = (if n = k then cis (- (c \<bullet> w)) else 1)"
+  by (simp add: phase_def slot_nth)
+
+lemma A_moment_single_bump:
+  fixes c w :: "real^2" and k :: "'n::finite"
+  shows "A_moment (slot k w) c = cis (- (c \<bullet> w)) + of_nat (CARD('n) - 1)"
+proof -
+  have "A_moment (slot k w) c = (\<Sum>n\<in>UNIV. if n = k then cis (- (c \<bullet> w)) else 1)"
+    unfolding A_moment_def by (rule sum.cong[OF refl]) (simp add: slot_bump_phase)
+  also have "\<dots> = (if k = k then cis (- (c \<bullet> w)) else 1)
+      + (\<Sum>n\<in>UNIV - {k}. if n = k then cis (- (c \<bullet> w)) else 1)"
+    by (rule sum.remove[OF finite UNIV_I])
+  also have "(\<Sum>n\<in>UNIV - {k}. if n = k then cis (- (c \<bullet> w)) else (1::complex))
+      = of_nat (CARD('n) - 1)"
+    by (simp add: card_Diff_singleton)
+  finally show ?thesis by simp
+qed
+
+lemma perp2_component_1: "vec_nth (perp2 c) 1 = - vec_nth c 2"
+  by (simp add: perp2_def)
+
+lemma perp2_component_2: "vec_nth (perp2 c) 2 = vec_nth c 1"
+  by (simp add: perp2_def)
+
+lemma DM_perp_slot_1:
+  fixes c :: "real^2" and x :: "(real^2)^'n::finite" and k :: 'n
+  shows "DM_paper_x x c (slot k (perp2 c)) $ 1 = 0"
+  by (simp add: DM_paper_x_eq_MM d_A_moment_x_slot perp2_orth)
+
+lemma DM_perp_slot_2:
+  fixes c :: "real^2" and x :: "(real^2)^'n::finite" and k :: 'n
+  shows "DM_paper_x x c (slot k (perp2 c)) $ 2
+       = of_real (- vec_nth c 2) * phase c x k"
+  by (simp add: DM_paper_x_eq_MM d_M1_moment_x_slot perp2_orth perp2_component_1)
+
+lemma DM_perp_slot_3:
+  fixes c :: "real^2" and x :: "(real^2)^'n::finite" and k :: 'n
+  shows "DM_paper_x x c (slot k (perp2 c)) $ 3
+       = of_real (vec_nth c 1) * phase c x k"
+  by (simp add: DM_paper_x_eq_MM d_M2_moment_x_slot perp2_orth perp2_component_2)
+
+subsection \<open>The closed-form value of \<open>s\<^sub>k\<close> at the single bump\<close>
+
+theorem gradU2_perp_slot_single_bump:
+  fixes \<omega> \<omega>0 \<omega>s w :: "real^2" and k :: "'n::finite"
+  shows "frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2)
+           (at (slot k w)) (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       = 2 * gain_dip \<omega>
+         * (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 2
+          - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 1)
+         * (real (CARD('n)) - 1) * sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> w)"
+proof -
+  have hd: "((\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) has_derivative
+      (dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (2::2) 1) 1)) (gain_dip \<omega>)
+           (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1)
+           (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2)
+           (M_paper (slot k w) (cvec_dip \<omega>0 \<omega>s \<omega>))
+       \<circ> DM_paper_x (slot k w) (cvec_dip \<omega>0 \<omega>s \<omega>))) (at (slot k w))"
+    by (rule has_derivative_gradU_dip_component_x)
+  have fd_eq: "frechet_derivative
+      (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at (slot k w))
+      = (dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (2::2) 1) 1)) (gain_dip \<omega>)
+           (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1)
+           (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2)
+           (M_paper (slot k w) (cvec_dip \<omega>0 \<omega>s \<omega>))
+       \<circ> DM_paper_x (slot k w) (cvec_dip \<omega>0 \<omega>s \<omega>))"
+    by (rule frechet_derivative_at[OF hd, symmetric])
+  have P0: "frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (2::2) 1) 1) = 0"
+    by (simp add: frechet_gdip_eq axis_def)
+  have MA: "M_paper (slot k w) (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1
+      = cis (- (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> w)) + of_nat (CARD('n) - 1)"
+    by (simp add: A_moment_single_bump)
+  have ph: "phase (cvec_dip \<omega>0 \<omega>s \<omega>) (slot k w) k = cis (- (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> w))"
+    by (simp add: slot_bump_phase)
+  show ?thesis
+    unfolding fd_eq o_def dEjm_def P0 MA
+    by (simp add: DM_perp_slot_1 DM_perp_slot_2 DM_perp_slot_3 ph
+          cis_mult sin_minus cos_minus algebra_simps)
+qed
+
+subsection \<open>The witness and the genericity theorem\<close>
+
+corollary gradU2_perp_slot_witness:
+  fixes \<omega> \<omega>0 \<omega>s w :: "real^2" and k :: "'n::finite"
+  assumes gnz: "gain_dip \<omega> \<noteq> 0"
+    and Knz: "vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 2
+            - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 1
+            \<noteq> 0"
+    and Nge2: "2 \<le> CARD('n)"
+    and snz: "sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> w) \<noteq> 0"
+  shows "frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2)
+           (at (slot k w)) (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) \<noteq> 0"
+proof -
+  have Npos: "real (CARD('n)) - 1 \<noteq> 0"
+    using Nge2 by simp
+  show ?thesis
+    unfolding gradU2_perp_slot_single_bump
+    using gnz Knz Npos snz by simp
+qed
+
+theorem gradU2_perp_slot_zeros_nowhere_dense:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and k :: "'n::finite"
+  assumes gnz: "gain_dip \<omega> \<noteq> 0"
+    and Knz: "vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 2
+            - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 1
+            \<noteq> 0"
+    and Nge2: "2 \<le> CARD('n)"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  shows "interior (closure {x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+        (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) = 0}) = {}"
+proof -
+  define w where "w = (pi / (2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega>)))
+      *\<^sub>R cvec_dip \<omega>0 \<omega>s \<omega>"
+  have ccnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    using cnz by simp
+  have cw: "cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> w = pi / 2"
+    unfolding w_def
+    using ccnz by fastforce 
+  have snz: "sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> w) \<noteq> 0"
+    unfolding cw by simp
+  have ex: "\<exists>x\<in>UNIV. frechet_derivative
+      (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+        (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) \<noteq> 0"
+    using gradU2_perp_slot_witness[OF gnz Knz Nge2 snz, of k] by blast
+  have "interior (closure {x \<in> UNIV.
+      frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+        (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) = 0}) = {}"
+    by (rule real_analytic_nowhere_dense_zeros[OF real_analytic_on_gradU2_slot
+          connected_UNIV ex])
+  thus ?thesis by simp
+qed
+
 end
