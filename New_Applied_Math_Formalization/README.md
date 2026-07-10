@@ -49,7 +49,7 @@ The capstone is `F0_dip_nonempty` in `Appendix/Robust4/Nonemptiness_Robust4.thy`
 | `Applied_Math_Analytic` | `Analytic/` | real-analytic (C^ω) function theory + bump functions |
 | `Applied_Math_Analytic_Inverse` | `Analytic/Inverse/` | majorant-method formal-series local inverse |
 | `Applied_Math_Analytic_Complex` | `Analytic/Complex/` | complexification bridge + analytic IFT + nowhere-dense-zeros workhorse |
-| `Applied_Math_D34_Analytic` | `Appendix/AnalyticBridge/` | `D34_Analytic_Bridge` + `D34_H0res_Branch`: verified Case-B/H0 machinery aimed at the two open hypotheses |
+| `Applied_Math_D34_Analytic` | `Appendix/AnalyticBridge/` | `D34_Analytic_Bridge` + `D34_H0res_Branch` + `D34_Geodesic_Branch`: verified Case-B/H0/normal-coordinate machinery aimed at the two open hypotheses |
 
 ## Building
 

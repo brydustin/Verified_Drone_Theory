@@ -4258,3 +4258,39 @@ assembly is unchanged.
 
 Verified with `Applied_Math_Appendix_Frontier`; build result:
 `Finished Applied_Math_Appendix_Frontier`, `BUILD_EXIT=0`.
+
+## 2026-07-09 (Claude): D34_Geodesic_Branch landed — the c-space normal-coordinate invariant, with the H12=0 vanishing law proven
+
+New file `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (309 lines, zero
+admissions), registered in `Applied_Math_D34_Analytic`; dev history in
+`M5_Dev_Geodesic/` (now a guard-only stub). Builds: `Applied_Math_D34_Analytic`
+BUILD_EXIT=0 (0:42), `Applied_Math_M5_Geodesic` BUILD_EXIT=0.
+
+The design insight replacing the failed `H_par` route: `U_cart`'s x-dependence
+factors entirely through `c = cvec \<omega>` (phases `c \<bullet> x_n`), so the correct
+"normal coordinates" are the c-coordinates themselves and the "geodesics" are
+straight lines `t \<mapsto> c + t \<cdot> d` — no sphere machinery, no chart inversion.
+
+What is proven (all unconditional identities, no stratum hypotheses):
+
+- `Wc x c = \<Sum>\<^sub>n\<^sub>p cos (c \<bullet> (x\<^sub>n - x\<^sub>p))` with `Wc_eq_cmod_sq` / `U_cart_Wc` /
+  `U_dip_Wc`: `U_dip \<omega>0 \<omega>s x \<omega> = gain_dip \<omega> * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>)`.
+- `has_derivative_pair_phase_sum_x` + `pair_phase_sum_perp_slot_zero`: the
+  MASTER law — for ANY differentiable scalar profile g, the x-slot derivative
+  of `\<Sum>\<^sub>n\<^sub>p g (c \<bullet> (x\<^sub>n - x\<^sub>p))` in direction `slot m (perp2 c)` is identically 0
+  (every summand carries the factor `c \<bullet> perp2 c = 0`).
+- `Wc_d1/Wc_d2/Wc_d3` + `Wc_curve_d1/d2/d3`: the full third-order jet of
+  `t \<mapsto> Wc x (c + t \<cdot> d)` in closed trig form.
+- `T3rad x c = Wc_d3 x c c` (the radial cubic) and the PAYOFF:
+  `T3rad_slot_perp_zero` — the x-slot perp2-derivative of the radial cubic
+  vanishes IDENTICALLY. This is by construction the v-slot-independence
+  property whose `H_par` analogue was machine-refuted (`h_par_vslot_zero`
+  false); in c-space it costs nothing. Also `Wc/T1rad/T2rad_slot_perp_zero`:
+  the whole radial jet is v-slot-blind.
+
+Remaining for the H11=H22=0 stratum (next tier): the omega-side dictionary —
+relate the third omega-derivatives of `U_dip` on the stratum
+`gradU = 0 \<and> HessU = 0` to `gain \<cdot> T3rad` + lower-order terms via the chain
+rule through `cvec_dip` and `gain_dip` (the corrections carry grad/Hess factors
+that vanish on the stratum), then feed `T3rad` into a `Jac3`-style
+block-triangular rank criterion exactly as `Phi_par` did at first order.
