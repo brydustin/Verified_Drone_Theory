@@ -4859,3 +4859,41 @@ codim-3 level set of the C1 triple, compose with inclusion to get
 config-space self-maps of rank \<le> 2N - 3, exhaust by closed pieces) to
 produce the `charts/Crit/D` data of `d3_detHess_arc_chart_core`. That
 engine — plus quantifying the genericity over the arc — is the next tier.
+
+## 2026-07-10 (Claude + Dustin): the scalar-cut engine landed — chart-core data from countable closed cuts
+
+Spliced into `Appendix/Wiring/D3_Chart_Wiring.thy`. Builds:
+`Applied_Math_D3_Wiring` BUILD_EXIT=0, guard `Applied_Math_M5_Wiring`
+BUILD_EXIT=0. Zero admissions.
+
+THE DECISIVE SIMPLIFICATION (design insight of this tier): the chart-core
+predicate demands only `\<not> surj` derivatives and permits IDENTITY chart maps.
+If a closed piece `C` lies in the zero set of ONE scalar function `f` with
+derivative `v \<mapsto> g \<bullet> v` (`g \<noteq> 0`) at each of its points, then `id` has
+within-`C` derivative equal to the tangential projection
+`P v = v - ((g \<bullet> v)/(g \<bullet> g)) \<cdot> g`: the auxiliary `\<psi> w = w - (f w/(g \<bullet> g)) \<cdot> g`
+EQUALS `id` on `C` and has full-space derivative exactly `P` — so the
+transform-within principle does all the analytic work. No epsilon-delta, no
+IFT, no orthogonal-projection machinery.
+
+Machine-checked names:
+- `tangential_projection_bounded_linear`, `tangential_projection_not_surj`
+  (range \<perp> g);
+- `scalar_cut_id_within_derivative` (the keystone; Dustin's
+  `has_derivative_transform`-based metis endgame — cleaner than the
+  radius-carrying `transform_within` I had drafted);
+- **`chart_core_data_of_scalar_cuts`**: countable closed pieces + per-piece
+  scalar cuts with nonvanishing gradient fields `G i x` \<Longrightarrow> the LITERAL
+  `charts/Crit/D` data of `d3_detHess_arc_chart_core` (charts = `(id, 0)`,
+  `Crit = C`, `D = Blinfun \<circ> tangential projection`).
+
+Debugging note (Dustin caught it live in PIDE): an unannotated binder in
+`define charts = (\<lambda>i w. ...)` silently generalizes `i` to a fixed 'a
+("Introduced fixed type variable(s)") and the later `\<exists>`-instantiation at
+`nat` becomes impossible — annotate `(i::nat)`.
+
+STATUS: the D3 predicate gap is now exactly ONE construction: produce
+countably many CLOSED pieces covering `V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>`, each
+inside a scalar cut with nonvanishing gradient. The cut functions and their
+explicit gradient fields come from the geodesic branch (slot values +
+genericity); the arc-direction countability is the remaining joint step.

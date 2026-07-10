@@ -97,4 +97,133 @@ text \<open>\<^bold>\<open>The remaining engine gap, stated precisely.\<close>  
   rank \<open>\<le> 2N - 3\<close> derivatives, and exhaust by closed pieces.  That engine is the
   next tier; this theory pins its interface.\<close>
 
+
+section \<open>The scalar-cut engine: level-set pieces to rank-deficient chart data\<close>
+
+text \<open>\<^bold>\<open>The decisive simplification.\<close>  The chart-core predicate demands only
+  \<open>\<not> surj\<close> derivatives, and permits the chart maps to be the IDENTITY on each piece.
+  If a closed piece \<open>C\<close> lies in the zero set of ONE scalar function \<open>f\<close> whose
+  derivative at \<open>x \<in> C\<close> is \<open>v \<mapsto> g \<bullet> v\<close> with \<open>g \<noteq> 0\<close>, then the identity has
+  within-\<open>C\<close> derivative equal to the tangential projection
+  \<open>P v = v - ((g \<bullet> v)/(g \<bullet> g)) \<cdot> g\<close>: the auxiliary map
+  \<open>\<psi> w = w - (f w/(g \<bullet> g)) \<cdot> g\<close> EQUALS the identity on \<open>C\<close> (where \<open>f \<equiv> 0\<close>) and has
+  full-space derivative exactly \<open>P\<close>, so \<open>has_derivative_transform_within\<close> does all the
+  analytic work --- no \<open>\<epsilon>\<close>-\<open>\<delta>\<close>, no IFT, no projection machinery.  \<open>P\<close> is explicitly
+  non-surjective (its range is orthogonal to \<open>g\<close>).  Consequently the ENTIRE remaining
+  D3 gap reduces to: produce countably many closed pieces covering the arc-fibre, each
+  inside a scalar cut with nonvanishing gradient.\<close>
+
+subsection \<open>The tangential projection: linearity and non-surjectivity\<close>
+
+lemma tangential_projection_bounded_linear:
+  fixes g :: "'a::real_inner"
+  shows "bounded_linear (\<lambda>v. v - ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g)"
+proof -
+  have inner_bl: "bounded_linear (\<lambda>v. (g \<bullet> v) / (g \<bullet> g))"
+    using bounded_linear_compose[OF bounded_linear_mult_left bounded_linear_inner_right]
+    by (simp add: divide_inverse)
+  have "bounded_linear (\<lambda>v. ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g)"
+    by (rule bounded_linear_compose[OF bounded_linear_scaleR_left inner_bl])
+  thus ?thesis
+    by (intro bounded_linear_sub bounded_linear_ident)
+qed
+
+lemma tangential_projection_not_surj:
+  fixes g :: "'a::real_inner"
+  assumes gnz: "g \<noteq> 0"
+  shows "\<not> surj (\<lambda>v. v - ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g)"
+proof
+  assume s: "surj (\<lambda>v. v - ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g)"
+  then obtain v where veq: "v - ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g = g"
+    by (metis (no_types, lifting) surjD)
+  have ggnz: "g \<bullet> g \<noteq> 0"
+    using gnz by simp
+  have "(v - ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g) \<bullet> g = 0"
+    using ggnz by (simp add: inner_diff_left inner_commute divide_inverse inner_diff_right)
+  with veq have "g \<bullet> g = 0"
+    by (simp only: inner_commute)
+  with ggnz show False by simp
+qed
+
+subsection \<open>The within-derivative of the identity at a scalar cut\<close>
+
+lemma scalar_cut_id_within_derivative:
+  fixes C :: "'a::real_inner set" and x g :: 'a and f :: "'a \<Rightarrow> real"
+  assumes xC: "x \<in> C"
+    and df: "(f has_derivative (\<lambda>v. g \<bullet> v)) (at x)"
+    and f0: "\<And>y. y \<in> C \<Longrightarrow> f y = 0"
+  shows "((\<lambda>w. w) has_derivative (\<lambda>v. v - ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g)) (at x within C)"
+proof -
+  have d0: "((\<lambda>w. (f w / (g \<bullet> g)) *\<^sub>R g) has_derivative
+      (\<lambda>v. ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g)) (at x)"
+  proof -
+    have d1: "((\<lambda>w. f w / (g \<bullet> g)) has_derivative (\<lambda>v. (g \<bullet> v) / (g \<bullet> g))) (at x)"
+      using bounded_linear.has_derivative[OF bounded_linear_mult_left df]
+      by (simp add: divide_inverse)
+    show ?thesis
+      by (rule bounded_linear.has_derivative[OF bounded_linear_scaleR_left d1])
+  qed
+  have hpsi: "((\<lambda>w. w - (f w / (g \<bullet> g)) *\<^sub>R g) has_derivative
+      (\<lambda>v. v - ((g \<bullet> v) / (g \<bullet> g)) *\<^sub>R g)) (at x within C)"
+    by (rule has_derivative_at_withinI[OF has_derivative_diff[OF has_derivative_ident d0]])
+  show ?thesis
+    by (metis (no_types, lifting) 
+        arith_simps(57) assms(1) div_0 f0 has_derivative_transform hpsi scaleR_simps(7))  
+qed
+
+subsection \<open>Assembling the chart-core data from countable closed scalar cuts\<close>
+
+theorem chart_core_data_of_scalar_cuts:
+  fixes S :: "((real^2)^'n::finite) set"
+    and C :: "nat \<Rightarrow> ((real^2)^'n) set"
+    and f :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> real"
+    and G :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (real^2)^'n"
+  assumes cover: "S \<subseteq> (\<Union>i. C i)"
+    and closedC: "\<And>i. closed (C i)"
+    and cut0: "\<And>i y. y \<in> C i \<Longrightarrow> f i y = 0"
+    and cutd: "\<And>i x. x \<in> C i \<Longrightarrow> (f i has_derivative (\<lambda>v. G i x \<bullet> v)) (at x)"
+    and Gnz: "\<And>i x. x \<in> C i \<Longrightarrow> G i x \<noteq> 0"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         S \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+proof -
+  define P where "P = (\<lambda>i x v. v - ((G i x \<bullet> v) / (G i x \<bullet> G i x)) *\<^sub>R G i x)"
+  define D where "D = (\<lambda>i x. Blinfun (P i x))"
+  define charts where "charts = (\<lambda>(i::nat) (w :: (real^2)^'n). (w, 0::real^2))"
+  have fst_id: "(fst \<circ> charts i) = (\<lambda>w. w)" for i
+    unfolding charts_def by (simp add: o_def)
+  have appD: "blinfun_apply (D i x) = P i x" for i x
+    unfolding D_def
+    by (rule bounded_linear_Blinfun_apply)
+       (simp add: P_def tangential_projection_bounded_linear)
+  have cov: "S \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (C i))"
+    using cover unfolding fst_id by simp
+  have der: "\<forall>i x. x \<in> C i \<longrightarrow>
+      ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within C i)"
+  proof (intro allI impI)
+    fix i x assume xC: "x \<in> C i"
+    have "((\<lambda>w. w) has_derivative (P i x)) (at x within C i)"
+      unfolding P_def
+      by (rule scalar_cut_id_within_derivative[OF xC cutd[OF xC] cut0])
+    thus "((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within C i)"
+      unfolding fst_id appD .
+  qed
+  have nsurj: "\<forall>i x. x \<in> C i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+  proof (intro allI impI)
+    fix i x assume xC: "x \<in> C i"
+    show "\<not> surj (blinfun_apply (D i x))"
+      unfolding appD P_def
+      by (rule tangential_projection_not_surj[OF Gnz[OF xC]])
+  qed
+  have cls: "\<forall>i. closed ((fst \<circ> charts i) ` (C i))"
+    unfolding fst_id using closedC by simp
+  show ?thesis
+    by (intro exI[of _ charts] exI[of _ C] exI[of _ D] conjI cov der nsurj cls)
+qed
+
 end
