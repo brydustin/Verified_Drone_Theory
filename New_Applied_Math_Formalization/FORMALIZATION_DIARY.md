@@ -4398,3 +4398,29 @@ degenerate-critical fibre — the analogue of what the H11/H22 branches
 (`Jac3`/`Jac3_22`) also still owe. The superseded `Jac3_H12zero` section in
 `D34_Analytic_Bridge.thy` should be treated as legacy; new work must use
 `Jac3_H12rad`.
+
+## 2026-07-10 (Claude): Tier 4a landed — explicit u-slot values for the radial jet (genericity substrate)
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 1104
+lines, zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0
+(1:15), guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0.
+
+New machine-checked names:
+
+- `pair_phase_sum_slot_value`: the master slot-VALUE law — for any profile g,
+  the x-slot derivative of `\<Sum>\<^sub>n\<^sub>p g (c \<bullet> (x\<^sub>n - x\<^sub>p))` at `slot m u` equals
+  `(c \<bullet> u) \<cdot> (\<Sum>\<^sub>p g'(c\<bullet>(x\<^sub>m - x\<^sub>p)) - \<Sum>\<^sub>n g'(c\<bullet>(x\<^sub>n - x\<^sub>m)))`.
+- `pair_phase_sum_slot_value_odd`: for ODD g' the two sums merge:
+  `2 (c \<bullet> u) \<Sum>\<^sub>p g'(c \<bullet> (x\<^sub>m - x\<^sub>p))`. Every profile in the radial jet has odd
+  derivative, so this covers the whole ladder.
+- Instances `Wc_slot_value`, `T1rad_slot_value`, `T2rad_slot_value`,
+  `T3rad_slot_value`, and (detnz) `Hrad2_slot_value` — the slot derivatives
+  of the whole radial jet as EXPLICIT finite trig sums. In particular
+  `Lambda_rad_ij` is now explicitly computable (Phi_par slot values from the
+  bridge + `Hrad2_slot_value`), which is the substrate any genericity /
+  nowhere-dense-zeros argument for the rank-criterion side conditions needs.
+
+Debugging note for the record: a fact named `term` (`have term: ...`) SILENTLY
+kills outer parsing — `term` is a diagnostic command keyword, and the error
+("proposition expected / end-of-input") pointed everywhere but at the name.
+Fact names to avoid: term, thm, value, typ, prop, ML.

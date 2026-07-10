@@ -20,5 +20,8 @@ thm has_derivative_gradU_inner_e_factored HessU_quad_dictionary
 thm H_par_eq_quadform H_par_radial_dictionary
 thm Hrad2_def Hrad2_radial_form Hrad2_slot_perp_zero
 thm Lambda_rad_ij_def Jac3_H12rad_def Jac3_H12rad_identity Jac3_H12rad_nonzero_criterion
+thm pair_phase_sum_slot_value pair_phase_sum_slot_value_odd
+thm Wc_slot_value T1rad_slot_value T2rad_slot_value T3rad_slot_value
+thm Hrad2_slot_value
 
 end

@@ -884,4 +884,221 @@ corollary Jac3_H12rad_nonzero_criterion:
   unfolding Jac3_H12rad_identity[OF detnz]
   using s_k_nz lambda_nz by simp
 
+
+section \<open>Tier 4a: explicit u-slot VALUES for the radial jet (the genericity substrate)\<close>
+
+text \<open>\<^bold>\<open>Why this tier.\<close>  The rank-3 criterion \<open>Jac3_H12rad_nonzero_criterion\<close> has two
+  honest side conditions: \<open>s\<^sub>k \<noteq> 0\<close> and \<open>Lambda_rad_ij \<noteq> 0\<close>.  Any genericity argument
+  for them needs the slot derivatives of \<open>Hrad2\<close> as EXPLICIT functions of \<open>x\<close> (so the
+  real-analytic nowhere-dense machinery can bite).  This tier provides the master
+  slot-VALUE law for pair-phase sums and its instances for the whole radial jet.
+
+  Structural bonus: every profile derivative in the radial jet is an ODD function, so
+  the two sums in the master formula merge and every slot value collapses to the single
+  \<open>m\<close>-row sum \<open>2 (c \<bullet> u) \<Sum>\<^sub>p g' (c \<bullet> (x\<^sub>m - x\<^sub>p))\<close>.\<close>
+
+subsection \<open>The master slot-value law\<close>
+
+theorem pair_phase_sum_slot_value:
+  fixes c u :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+    and g g' :: "real \<Rightarrow> real"
+  assumes dg: "\<And>v. (g has_field_derivative g' v) (at v)"
+  shows "frechet_derivative (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. g (c \<bullet> (vec_nth y n - vec_nth y p)))
+           (at x) (slot m u)
+       = (c \<bullet> u) * ((\<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x m - vec_nth x p)))
+                   - (\<Sum>n\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x m))))"
+proof -
+  have fd: "frechet_derivative (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. g (c \<bullet> (vec_nth y n - vec_nth y p))) (at x)
+      = (\<lambda>h. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x p))
+               * (c \<bullet> (vec_nth h n - vec_nth h p)))"
+    by (rule frechet_derivative_at[OF has_derivative_pair_phase_sum_x[OF dg], symmetric])
+  have sterm: "g' (c \<bullet> (vec_nth x n - vec_nth x p))
+        * (c \<bullet> (vec_nth (slot m u) n - vec_nth (slot m u) p))
+      = (if n = m then g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u) else 0)
+      - (if p = m then g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u) else 0)"
+    for n p :: 'n
+    by (auto simp: slot_nth inner_diff_right algebra_simps)
+  have step1: "(\<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      (if n = m then g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u) else 0))
+      = (\<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x m - vec_nth x p)) * (c \<bullet> u))"
+  proof -
+    have pull: "(\<Sum>p\<in>UNIV. (if n = m then g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u) else 0))
+        = (if n = m then (\<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u)) else 0)"
+      for n :: 'n
+      by (cases "n = m") auto
+    show ?thesis by (simp add: pull sum.delta)
+  qed
+  have step2: "(\<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      (if p = m then g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u) else 0))
+      = (\<Sum>n\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x m)) * (c \<bullet> u))"
+    by (simp add: sum.delta)
+  have "frechet_derivative (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. g (c \<bullet> (vec_nth y n - vec_nth y p)))
+          (at x) (slot m u)
+      = (\<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+          (if n = m then g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u) else 0))
+      - (\<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+          (if p = m then g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (c \<bullet> u) else 0))"
+    unfolding fd by (simp add: sterm sum_subtractf)
+  also have "\<dots> = (\<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x m - vec_nth x p)) * (c \<bullet> u))
+      - (\<Sum>n\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x m)) * (c \<bullet> u))"
+    unfolding step1 step2 ..
+  also have "\<dots> = (c \<bullet> u) * ((\<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x m - vec_nth x p)))
+                            - (\<Sum>n\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x m))))"
+    by (simp add: algebra_simps flip: sum_distrib_left)
+  finally show ?thesis .
+qed
+
+corollary pair_phase_sum_slot_value_odd:
+  fixes c u :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+    and g g' :: "real \<Rightarrow> real"
+  assumes dg: "\<And>v. (g has_field_derivative g' v) (at v)"
+    and oddg: "\<And>v. g' (- v) = - g' v"
+  shows "frechet_derivative (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. g (c \<bullet> (vec_nth y n - vec_nth y p)))
+           (at x) (slot m u)
+       = 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x m - vec_nth x p)))"
+proof -
+  have flipterm: "g' (c \<bullet> (vec_nth x n - vec_nth x m)) = - g' (c \<bullet> (vec_nth x m - vec_nth x n))"
+    for n :: 'n
+  proof -
+    have "c \<bullet> (vec_nth x n - vec_nth x m) = - (c \<bullet> (vec_nth x m - vec_nth x n))"
+      by (simp add: inner_diff_right)
+    thus ?thesis by (simp add: oddg)
+  qed
+  have flipsum: "(\<Sum>n\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x m)))
+      = - (\<Sum>n\<in>UNIV. g' (c \<bullet> (vec_nth x m - vec_nth x n)))"
+    by (simp add: flipterm sum_negf)
+  show ?thesis
+    unfolding pair_phase_sum_slot_value[OF dg] flipsum by simp
+qed
+
+subsection \<open>Slot values for the radial jet\<close>
+
+theorem Wc_slot_value:
+  fixes c u :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+  shows "frechet_derivative (\<lambda>y. Wc y c) (at x) (slot m u)
+       = 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV. - sin (c \<bullet> (vec_nth x m - vec_nth x p)))"
+proof -
+  have dg: "(cos has_field_derivative (\<lambda>v. - sin v) v) (at v)" for v :: real
+    using DERIV_cos[of v] by simp
+  have oddg: "(\<lambda>v. - sin v) (- v) = - (\<lambda>v. - sin v) v" for v :: real
+    by simp
+  have eqf: "(\<lambda>y. Wc y c) = (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. cos (c \<bullet> (vec_nth y n - vec_nth y p)))"
+    by (rule ext) (simp add: Wc_def)
+  show ?thesis
+    unfolding eqf by (rule pair_phase_sum_slot_value_odd[OF dg oddg])
+qed
+
+theorem T1rad_slot_value:
+  fixes c u :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+  shows "frechet_derivative (\<lambda>y. Wc_d1 y c c) (at x) (slot m u)
+       = 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV. - (sin (c \<bullet> (vec_nth x m - vec_nth x p))
+           + (c \<bullet> (vec_nth x m - vec_nth x p)) * cos (c \<bullet> (vec_nth x m - vec_nth x p))))"
+proof -
+  have dg: "((\<lambda>v. - (v * sin v)) has_field_derivative
+      (\<lambda>v. - (sin v + v * cos v)) v) (at v)" for v :: real
+    by (auto intro!: derivative_eq_intros simp: algebra_simps)
+  have oddg: "(\<lambda>v. - (sin v + v * cos v)) (- v) = - (\<lambda>v. - (sin v + v * cos v)) v" for v :: real
+    by simp
+  have eqf: "(\<lambda>y. Wc_d1 y c c) = (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      (\<lambda>w. - (w * sin w)) (c \<bullet> (vec_nth y n - vec_nth y p)))"
+    by (rule ext) (simp add: Wc_d1_def sum_negf)
+  show ?thesis
+    unfolding eqf by (rule pair_phase_sum_slot_value_odd[OF dg oddg])
+qed
+
+theorem T2rad_slot_value:
+  fixes c u :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+  shows "frechet_derivative (\<lambda>y. Wc_d2 y c c) (at x) (slot m u)
+       = 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV. - (2 * (c \<bullet> (vec_nth x m - vec_nth x p))
+             * cos (c \<bullet> (vec_nth x m - vec_nth x p))
+           - (c \<bullet> (vec_nth x m - vec_nth x p))\<^sup>2
+             * sin (c \<bullet> (vec_nth x m - vec_nth x p))))"
+proof -
+  have dg: "((\<lambda>v. - (v\<^sup>2 * cos v)) has_field_derivative
+      (\<lambda>v. - (2 * v * cos v - v\<^sup>2 * sin v)) v) (at v)" for v :: real
+    by (auto intro!: derivative_eq_intros simp: power2_eq_square algebra_simps)
+  have oddg: "(\<lambda>v. - (2 * v * cos v - v\<^sup>2 * sin v)) (- v)
+      = - (\<lambda>v. - (2 * v * cos v - v\<^sup>2 * sin v)) v" for v :: real
+    by (simp add: power2_eq_square algebra_simps)
+  have eqf: "(\<lambda>y. Wc_d2 y c c) = (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      (\<lambda>w. - (w\<^sup>2 * cos w)) (c \<bullet> (vec_nth y n - vec_nth y p)))"
+    by (rule ext) (simp add: Wc_d2_def sum_negf)
+  show ?thesis
+    unfolding eqf by (rule pair_phase_sum_slot_value_odd[OF dg oddg])
+qed
+
+theorem T3rad_slot_value:
+  fixes c u :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+  shows "frechet_derivative (\<lambda>y. T3rad y c) (at x) (slot m u)
+       = 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV.
+           3 * (c \<bullet> (vec_nth x m - vec_nth x p))\<^sup>2
+             * sin (c \<bullet> (vec_nth x m - vec_nth x p))
+           + (c \<bullet> (vec_nth x m - vec_nth x p)) ^ 3
+             * cos (c \<bullet> (vec_nth x m - vec_nth x p)))"
+proof -
+  have dg: "((\<lambda>v. v ^ 3 * sin v) has_field_derivative
+      (\<lambda>v. 3 * v\<^sup>2 * sin v + v ^ 3 * cos v) v) (at v)" for v :: real
+    by (auto intro!: derivative_eq_intros simp: power2_eq_square power3_eq_cube algebra_simps)
+  have oddg: "(\<lambda>v. 3 * v\<^sup>2 * sin v + v ^ 3 * cos v) (- v)
+      = - (\<lambda>v. 3 * v\<^sup>2 * sin v + v ^ 3 * cos v) v" for v :: real
+    by (simp add: power2_eq_square power3_eq_cube algebra_simps)
+  have eqf: "(\<lambda>y. T3rad y c) = (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      (\<lambda>w. w ^ 3 * sin w) (c \<bullet> (vec_nth y n - vec_nth y p)))"
+    by (rule ext) (rule T3rad_pair_phase_form)
+  show ?thesis
+    unfolding eqf by (rule pair_phase_sum_slot_value_odd[OF dg oddg])
+qed
+
+subsection \<open>The \<open>Hrad2\<close> slot value: \<open>Lambda_rad_ij\<close> becomes explicitly computable\<close>
+
+theorem Hrad2_slot_value:
+  fixes u \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot m u)
+       = 2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> u) * (\<Sum>p\<in>UNIV.
+           deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+             * (- (sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                 + (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                   * cos (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))))
+           + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+               * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+             * (- sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p)))
+           + gain_dip \<omega>
+             * (- (2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                   * cos (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                 - (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))\<^sup>2
+                   * sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))))
+           + deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+             * (- (sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                 + (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                   * cos (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p)))))"
+proof -
+  define A where "A = deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1"
+  define B where "B = deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+      * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1"
+  define G where "G = (\<lambda>w. A * (- (w * sin w)) + B * cos w
+      + gain_dip \<omega> * (- (w\<^sup>2 * cos w)) + A * (- (w * sin w)))"
+  define G' where "G' = (\<lambda>w. A * (- (sin w + w * cos w)) + B * (- sin w)
+      + gain_dip \<omega> * (- (2 * w * cos w - w\<^sup>2 * sin w))
+      + A * (- (sin w + w * cos w)))"
+  have eqf: "(\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) = (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      G (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth y n - vec_nth y p)))"
+    unfolding G_def
+    by (rule ext)
+       (simp add: Hrad2_radial_form[OF detnz] A_def B_def Wc_def Wc_d1_def Wc_d2_def
+          sum.distrib sum_negf sum_subtractf sum_distrib_left power2_eq_square
+          algebra_simps)
+  have dG: "(G has_field_derivative G' w) (at w)" for w :: real
+    unfolding G_def G'_def
+    by (auto intro!: derivative_eq_intros simp: power2_eq_square algebra_simps)
+  have oddG: "G' (- w) = - G' w" for w :: real
+    unfolding G'_def by (simp add: power2_eq_square algebra_simps)
+  have "frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot m u)
+      = 2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> u) * (\<Sum>p\<in>UNIV.
+          G' (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p)))"
+    unfolding eqf by (rule pair_phase_sum_slot_value_odd[OF dG oddG])
+  thus ?thesis
+    unfolding G'_def A_def B_def by simp
+qed
+
 end
