@@ -4778,3 +4778,50 @@ with a fully concrete, capstone-compatible witness. Remaining on the
 geodesic thread: the cubic `T3rad` dictionary for the H11=H22=0 full-zero
 stratum, then wiring the branch criteria into
 `d3_detHess_arc_chart_core_all`.
+
+## 2026-07-10 (Claude + Dustin): Tier 6 landed — the cubic T3rad tier for the full-Hessian-zero stratum
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 2588
+lines, zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0
+(1:45), guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0.
+
+New machine-checked names:
+
+- STRATUM DICTIONARY: `Phi_par_zero_of_gradU_zero`,
+  `radial_level1_of_gradU_zero` (`gain \<cdot> Wc_d1(c;c) = -A \<cdot> Wc` on critical
+  points), `H_par_zero_of_HessU_zero`, `radial_level2_of_HessU_zero`
+  (the radial second derivative + `D2cvec` correction pinned on `HessU = 0`)
+  — the identities showing `T3rad` is the genuinely next invariant on the
+  full-zero stratum.
+- `Lambda_cub_ij` + `Jac3_H0cub` (rows `Phi_par`, `gradU\<^sub>2`, `T3rad \<circ> cvec`):
+  `Jac3_H0cub_identity` (`= -s\<^sub>k \<cdot> Lambda_cub_ij`, only `det \<noteq> 0` — the `T3rad`
+  perp-slot zero is hypothesis-FREE) + nonzero criterion.
+- `real_analytic_on_Lambda_cub_ij` (no det hypothesis at all — both factor
+  stacks are unconditional).
+- `Lambda_cub_two_bump_witness`: same two-bump family as Tier 5b; the cubic
+  Wronskian bracket is `-\<pi>\<^sup>3(A + g\<^sub>0/4)`, so the side condition is just
+  `A + g\<^sub>0/4 \<noteq> 0`. `Lambda_cub_zeros_nowhere_dense`,
+  `Jac3_H0cub_zeros_meager`, `Jac3_H0cub_nonzero_in_open` (gain \<noteq> 0 derived
+  from det \<noteq> 0 via Dustin's Tier 5c lemma), and
+  **`Jac3_H0cub_nonzero_in_open_robust4_witness`**: at the same Robust4
+  design point, `gdip'(\<pi>/2) = 0` makes the cubic side condition literally
+  `1/4 \<noteq> 0` — NO `e_par` evaluation needed. Hypotheses: `open V`, `V \<noteq> {}`,
+  `i \<noteq> j`, `CARD('n) \<ge> 4`.
+
+Debugging notes for the record (joint session; Dustin's jEdit goal-state
+output was the key diagnostic twice):
+1. NEVER name lemma variables with trailing digits: `w1` exports as
+   schematic `?w` with INDEX 1, so `[where w1 = ...]` fails with
+   "No such variable" — use positional `[of ...]` or digit-free names.
+2. When a rewrite's redex contains `vec_nth (a + b) i`, plain `simp add:`
+   loses the race against `vector_add_component`; apply the rule with
+   `subst` first, then simp the remainder.
+3. `isabelle eval_at -s` (goal-state inspection) is available and beats
+   blind build iteration for this kind of debugging.
+
+STATUS: BOTH remaining D3 sub-branches (H12=0 via `Jac3_H12rad`, and the
+full-Hessian-zero stratum via `Jac3_H0cub`) now have sound rank-3 criteria,
+generic satisfaction, and concrete capstone-compatible witnesses at the
+same design point. The geodesic branch's invariant program is complete;
+what remains is the WIRING: assembling these criteria into
+`d3_detHess_arc_chart_core_all`, the predicate `F0_dip_nonempty` consumes.
