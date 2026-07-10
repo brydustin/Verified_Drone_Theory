@@ -1242,4 +1242,233 @@ lemma real_analytic_on_Lambda_rad_ij_of_factors:
   by (intro real_analytic_on_diff real_analytic_on_mult phi_i phi_j
         real_analytic_on_Hrad2_slot_value[OF detnz])
 
+
+section \<open>Tier 4c: the \<open>Phi_par\<close> factor assembly --- \<open>Lambda_rad_ij\<close> analyticity unconditional\<close>
+
+text \<open>\<^bold>\<open>Purpose.\<close>  Discharge the two hypotheses of
+  \<open>real_analytic_on_Lambda_rad_ij_of_factors\<close>: the \<open>Phi_par\<close> u-slot derivative is the
+  moment/\<open>dEjm\<close> composite (@{thm Phi_par_uslot_value}), and its x-analyticity assembles
+  from the bridge's JOINT \<open>(c, x)\<close> moment-analyticity stack by composing with the
+  analytic pairing \<open>x \<mapsto> (c, x)\<close>.  The same route gives analyticity of the \<open>gradU\<^sub>2\<close>
+  slot derivative (the \<open>s\<^sub>k\<close> side condition) via
+  @{thm has_derivative_gradU_dip_component_x}.  Net result: BOTH side-condition
+  functions of the \<open>Jac3_H12rad\<close> rank criterion are real-analytic in \<open>x\<close>, so the
+  nowhere-dense-zeros genericity argument can run on them.\<close>
+
+subsection \<open>Fixing the first coordinate of the joint moment lemmas\<close>
+
+lemma real_analytic_on_pair_const_fst:
+  fixes c :: "'a::euclidean_space"
+  shows "real_analytic_on (\<lambda>x::'b::euclidean_space. (c, x)) UNIV"
+proof -
+  have bl: "bounded_linear (\<lambda>x::'b. ((0::'a), x))"
+    by (intro bounded_linear_Pair bounded_linear_zero bounded_linear_ident)
+  have eq: "(\<lambda>x::'b. (c, x)) = (\<lambda>x::'b. (c, (0::'b)) + ((0::'a), x))"
+    by (rule ext) (simp add: prod_eq_iff)
+  thus ?thesis
+    using bl real_analytic_on_add[of "\<lambda>uua. (c, 0) + (0, 0)" UNIV "Pair 0"] 
+      real_analytic_on_bounded_linear[of UNIV "Pair 0"]
+      real_analytic_on_const[of UNIV "(c, 0) + (0, 0)"] by auto
+
+qed
+
+lemma real_analytic_on_fix_c:
+  fixes F :: "(real^2) \<times> ((real^2)^'n::finite) \<Rightarrow> 'b::banach" and c :: "real^2"
+  assumes FA: "real_analytic_on F UNIV"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n. F (c, x)) UNIV"
+  by (rule real_analytic_on_compose[OF real_analytic_on_pair_const_fst FA subset_UNIV])
+
+lemma real_analytic_on_A_moment_x:
+  fixes c :: "real^2"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n::finite. A_moment x c) UNIV"
+proof -
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+      (\<lambda>p::(real^2) \<times> ((real^2)^'n). A_moment (snd p) (fst p)) (c, x)) UNIV"
+    by (rule real_analytic_on_fix_c[OF real_analytic_on_A_moment])
+  thus ?thesis by simp
+qed
+
+lemma real_analytic_on_M1_moment_x:
+  fixes c :: "real^2"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n::finite. M1_moment x c) UNIV"
+proof -
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+      (\<lambda>p::(real^2) \<times> ((real^2)^'n). M1_moment (snd p) (fst p)) (c, x)) UNIV"
+    by (rule real_analytic_on_fix_c[OF real_analytic_on_M1_moment])
+  thus ?thesis by simp
+qed
+
+lemma real_analytic_on_M2_moment_x:
+  fixes c :: "real^2"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n::finite. M2_moment x c) UNIV"
+proof -
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+      (\<lambda>p::(real^2) \<times> ((real^2)^'n). M2_moment (snd p) (fst p)) (c, x)) UNIV"
+    by (rule real_analytic_on_fix_c[OF real_analytic_on_M2_moment])
+  thus ?thesis by simp
+qed
+
+lemma real_analytic_on_d_A_moment_x_fix:
+  fixes c :: "real^2" and h :: "(real^2)^'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n. d_A_moment_x x c h) UNIV"
+proof -
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+      (\<lambda>p::(real^2) \<times> ((real^2)^'n). d_A_moment_x (snd p) (fst p) h) (c, x)) UNIV"
+    by (rule real_analytic_on_fix_c[OF real_analytic_on_d_A_moment_x])
+  thus ?thesis by simp
+qed
+
+lemma real_analytic_on_d_M1_moment_x_fix:
+  fixes c :: "real^2" and h :: "(real^2)^'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n. d_M1_moment_x x c h) UNIV"
+proof -
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+      (\<lambda>p::(real^2) \<times> ((real^2)^'n). d_M1_moment_x (snd p) (fst p) h) (c, x)) UNIV"
+    by (rule real_analytic_on_fix_c[OF real_analytic_on_d_M1_moment_x])
+  thus ?thesis by simp
+qed
+
+lemma real_analytic_on_d_M2_moment_x_fix:
+  fixes c :: "real^2" and h :: "(real^2)^'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n. d_M2_moment_x x c h) UNIV"
+proof -
+  have "real_analytic_on (\<lambda>x::(real^2)^'n.
+      (\<lambda>p::(real^2) \<times> ((real^2)^'n). d_M2_moment_x (snd p) (fst p) h) (c, x)) UNIV"
+    by (rule real_analytic_on_fix_c[OF real_analytic_on_d_M2_moment_x])
+  thus ?thesis by simp
+qed
+
+subsection \<open>The \<open>dEjm\<close> composite is analytic in \<open>x\<close>\<close>
+
+lemma real_analytic_on_dEjm_moment:
+  fixes P G C1 C2 :: real and c :: "real^2" and h :: "(real^2)^'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n.
+      dEjm P G C1 C2 (M_paper x c) (DM_paper_x x c h)) UNIV"
+proof -
+  have eq:
+    "(\<lambda>x::(real^2)^'n.
+        dEjm P G C1 C2 (M_paper x c) (DM_paper_x x c h))
+      =
+     (\<lambda>x.
+        P * (2 * Re (A_moment x c) * Re (d_A_moment_x x c h)
+           + 2 * Im (A_moment x c) * Im (d_A_moment_x x c h))
+      + G * (2 * Re
+          (cnj (d_A_moment_x x c h)
+             * ((- \<i>) * complex_of_real C1 * M1_moment x c
+              + (- \<i>) * complex_of_real C2 * M2_moment x c)
+           + cnj (A_moment x c)
+             * ((- \<i>) * complex_of_real C1 * d_M1_moment_x x c h
+              + (- \<i>) * complex_of_real C2 * d_M2_moment_x x c h))))"
+  proof (rule ext)
+    fix x :: "(real^2)^'n"
+    have MA:   "M_paper x c $ 1 = A_moment x c"
+      by (rule M_paper_components(1))
+    have MM1:  "M_paper x c $ 2 = M1_moment x c"
+      by (rule M_paper_components(2))
+    have MM2:  "M_paper x c $ 3 = M2_moment x c"
+      by (rule M_paper_components(3))
+    have DMA:  "DM_paper_x x c h $ 1 = d_A_moment_x x c h"
+      by (simp add: DM_paper_x_eq_MM)
+    have DMM1: "DM_paper_x x c h $ 2 = d_M1_moment_x x c h"
+      by (simp add: DM_paper_x_eq_MM)
+    have DMM2: "DM_paper_x x c h $ 3 = d_M2_moment_x x c h"
+      by (simp add: DM_paper_x_eq_MM)
+    show "dEjm P G C1 C2 (M_paper x c) (DM_paper_x x c h) =
+       P * (2 * Re (A_moment x c) * Re (d_A_moment_x x c h)
+          + 2 * Im (A_moment x c) * Im (d_A_moment_x x c h))
+       + G * (2 * Re
+          (cnj (d_A_moment_x x c h)
+             * ((- \<i>) * complex_of_real C1 * M1_moment x c
+              + (- \<i>) * complex_of_real C2 * M2_moment x c)
+           + cnj (A_moment x c)
+             * ((- \<i>) * complex_of_real C1 * d_M1_moment_x x c h
+              + (- \<i>) * complex_of_real C2 * d_M2_moment_x x c h)))"
+      unfolding dEjm_def by (simp only: MA MM1 MM2 DMA DMM1 DMM2)
+  qed    
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_add real_analytic_on_mult
+          real_analytic_on_const[OF open_UNIV] real_analytic_on_Re real_analytic_on_Im
+          real_analytic_on_cnj real_analytic_on_cmult[OF open_UNIV]
+          real_analytic_on_A_moment_x real_analytic_on_M1_moment_x
+          real_analytic_on_M2_moment_x real_analytic_on_d_A_moment_x_fix
+          real_analytic_on_d_M1_moment_x_fix real_analytic_on_d_M2_moment_x_fix)
+qed
+
+subsection \<open>The \<open>Phi_par\<close> u-slot factor and the \<open>gradU\<^sub>2\<close> slot factor are analytic\<close>
+
+theorem real_analytic_on_Phi_par_uslot:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i :: "'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+        (slot i (cvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
+proof -
+  have eq: "(\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)))
+      = (\<lambda>x. vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+           * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)))) 1
+         + vec_nth (e_par \<omega>0 \<omega>s \<omega>) 2
+           * vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)))) 2)"
+    by (rule ext) (rule Phi_par_uslot_value)
+  show ?thesis
+    unfolding eq vec_lambda_beta
+    by (intro real_analytic_on_add real_analytic_on_mult
+          real_analytic_on_const[OF open_UNIV] real_analytic_on_dEjm_moment)
+qed
+
+theorem real_analytic_on_gradU2_slot:
+  fixes \<omega> \<omega>0 \<omega>s v :: "real^2" and k :: "'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+        (slot k v)) UNIV"
+proof -
+  have fd_eq: "frechet_derivative
+      (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+      = (dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (2::2) 1) 1)) (gain_dip \<omega>)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 1)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 2)
+             (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+         \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))" for x :: "(real^2)^'n"
+  proof -
+    have hd: "((\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) has_derivative
+        (dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (2::2) 1) 1)) (gain_dip \<omega>)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 1)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 2)
+             (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+         \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at x)"
+      by (rule has_derivative_gradU_dip_component_x)
+    show ?thesis
+      by (rule frechet_derivative_at[OF hd, symmetric])
+  qed
+  have eq: "(\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+        (slot k v))
+      = (\<lambda>x. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (2::2) 1) 1))
+             (gain_dip \<omega>)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 1)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 2)
+             (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+             (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot k v)))"
+    by (metis (no_types, lifting) comp_def fd_eq)
+  show ?thesis
+    unfolding eq by (rule real_analytic_on_dEjm_moment)
+qed
+
+subsection \<open>The prize: \<open>Lambda_rad_ij\<close> is real-analytic in \<open>x\<close>, unconditionally in the factors\<close>
+
+theorem real_analytic_on_Lambda_rad_ij:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i j :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n. Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j) UNIV"
+  by (rule real_analytic_on_Lambda_rad_ij_of_factors[OF detnz
+        real_analytic_on_Phi_par_uslot real_analytic_on_Phi_par_uslot])
+
 end

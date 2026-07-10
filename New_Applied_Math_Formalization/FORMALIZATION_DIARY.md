@@ -4457,3 +4457,39 @@ Next concrete steps for the genericity argument:
 2. A nonvanishing witness for `Lambda_rad_ij` (or `s_k`) at one configuration,
    then the multivariate nowhere-dense-zeros workhorse gives genericity on the
    fibre — the last analytic input the H12=0 branch needs.
+
+## 2026-07-10 (Claude + Dustin): Tier 4c landed — Phi_par factor assembly; Lambda_rad_ij and s_k analyticity DONE
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 1474
+lines, zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0
+(1:50), guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0.
+
+Joint session: Dustin fixed the pairing-lemma proof and the `dEjm`
+component-unfolding step (via `DM_paper_x_eq_MM` — there are TWO `DM_paper_x`
+constants in the merged heap, `Nonemptiness_Paper`'s and `Moment_Map`'s, and
+the component-simp lemmas belong to the latter); Claude resolved the last
+`sorry` (`real_analytic_on_gradU2_slot`): in `axis 2 1` nothing constrains
+the index TYPE, so it silently generalizes to a fixed `'b` that can never
+unify with the heap lemma's `?j::2` — the fix is the annotation
+`axis (2::2) 1`. Gotcha recorded: numeral axis indices in standalone
+positions need explicit index-type annotations.
+
+New machine-checked names:
+
+- `real_analytic_on_pair_const_fst` / `real_analytic_on_fix_c`: the analytic
+  pairing `x \<mapsto> (c, x)`, specializing the bridge's JOINT `(c,x)` lemmas to
+  fixed `c`.
+- `real_analytic_on_{A,M1,M2}_moment_x`, `real_analytic_on_d_{A,M1,M2}_moment_x_fix`:
+  fixed-c moment analyticity (only components 1..3 feed `dEjm`).
+- `real_analytic_on_dEjm_moment`: the full `dEjm` composite is analytic in x.
+- `real_analytic_on_Phi_par_uslot`: the `Phi_par` u-slot derivative is
+  real-analytic in x — discharges the Tier 4b hypotheses.
+- `real_analytic_on_gradU2_slot`: the `gradU\<^sub>2` slot derivative (ANY slot
+  direction, covering the `s_k` side condition) is real-analytic in x.
+- **`real_analytic_on_Lambda_rad_ij`** (detnz): unconditional in the factors.
+
+STATUS: both side-condition functions of `Jac3_H12rad_nonzero_criterion`
+(`s_k` and `Lambda_rad_ij`) are now real-analytic in the configuration.
+The genericity argument needs exactly one more ingredient: a single
+nonvanishing WITNESS configuration, after which the nowhere-dense-zeros
+workhorse yields generic rank 3 for the H12=0 branch.
