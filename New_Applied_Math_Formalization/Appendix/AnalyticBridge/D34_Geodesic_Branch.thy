@@ -809,4 +809,79 @@ proof -
     unfolding eqf by (rule pair_phase_sum_perp_slot_zero[OF dG])
 qed
 
+
+section \<open>Tier 3: the H12=0 rank-3 criterion rebuilt on \<open>Hrad2\<close> --- no carried hypothesis\<close>
+
+text \<open>\<^bold>\<open>This section supersedes the bridge's \<open>Jac3_H12zero\<close> block.\<close>  That block's
+  rank-3 criterion carries \<open>h_par_vslot_zero\<close> as an explicit UNVERIFIED hypothesis ---
+  later machine-refuted (see the diary).  Here the same block-triangular determinant is
+  rebuilt with the corrected invariant \<open>Hrad2\<close> in \<open>H_par\<close>'s row.  Both perpendicular-slot
+  entries now vanish by PROVEN theorems (@{thm Phi_par_perp_slot_zero} for the first row,
+  \<open>Hrad2_slot_perp_zero\<close> for the third), so the determinant identity and the rank-3
+  criterion hold under \<open>det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0\<close> alone --- the H12=0
+  branch obligation no longer rests on any unverified assumption.\<close>
+
+subsection \<open>\<open>Lambda_rad_ij\<close>: the u-slot determinant of \<open>(Phi_par, Hrad2)\<close>\<close>
+
+definition Lambda_rad_ij :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> 'n \<Rightarrow> 'n \<Rightarrow> real" where
+  "Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j =
+     frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>))
+       * frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot j (cvec_dip \<omega>0 \<omega>s \<omega>))
+   - frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot j (cvec_dip \<omega>0 \<omega>s \<omega>))
+       * frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>))"
+
+subsection \<open>The block-triangular 3x3 Jacobian on \<open>(Phi_par, gradU\<^sub>2, Hrad2)\<close>\<close>
+
+definition Jac3_H12rad :: "(real^2)^'n::finite \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> 'n \<Rightarrow> 'n \<Rightarrow> 'n \<Rightarrow> real" where
+  "Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k =
+     det3
+       (frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       (frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot j (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       (frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+       (frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+            (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       (frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+            (slot j (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       (frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+            (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+       (frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       (frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot j (cvec_dip \<omega>0 \<omega>s \<omega>)))
+       (frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))"
+
+text \<open>\<^bold>\<open>The identity, with NO carried hypothesis.\<close>  Both perp-slot entries in the
+  \<open>Phi_par\<close> and \<open>Hrad2\<close> rows vanish by proven theorems, so the determinant collapses
+  block-triangularly to \<open>-s\<^sub>k \<cdot> \<Lambda>\<close> where \<open>s\<^sub>k\<close> is the \<open>gradU\<^sub>2\<close> perp-slot entry.\<close>
+
+theorem Jac3_H12rad_identity:
+  fixes i j k :: "'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k
+       = - (frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+              (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))
+            * Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j)"
+proof -
+  have perpi: "cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>) = 0"
+    by (rule perp2_orth)
+  have zk: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+      (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) = 0"
+    by (rule Phi_par_perp_slot_zero[OF detnz perpi])
+  have zh: "frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x)
+      (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) = 0"
+    by (rule Hrad2_slot_perp_zero[OF detnz])
+  show ?thesis
+    unfolding Jac3_H12rad_def Lambda_rad_ij_def det3_def zk zh
+    by (simp add: algebra_simps)
+qed
+
+corollary Jac3_H12rad_nonzero_criterion:
+  fixes i j k :: "'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and s_k_nz:
+      "frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+           (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))) \<noteq> 0"
+    and lambda_nz: "Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j \<noteq> 0"
+  shows "Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k \<noteq> 0"
+  unfolding Jac3_H12rad_identity[OF detnz]
+  using s_k_nz lambda_nz by simp
+
 end

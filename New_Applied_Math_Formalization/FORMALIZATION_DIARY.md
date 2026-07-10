@@ -4369,3 +4369,32 @@ Next (Tier 3): rebuild the `Jac3_H12zero` block-triangular criterion with
 `Hrad2` in `H_par`'s place (the v-slot column entries now provably vanish),
 and the cubic tier: `T3rad` third-order dictionary on the full-Hessian-zero
 stratum for the H11=H22=0 sub-branch.
+
+## 2026-07-10 (Claude): Tier 3 landed — the H12=0 rank-3 criterion rebuilt on Hrad2, carried hypothesis GONE
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 887 lines,
+zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0 (0:43),
+guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0. First-iteration green.
+
+New machine-checked names:
+
+- `Lambda_rad_ij`: the u-slot 2x2 determinant of `(Phi_par, Hrad2)` — the
+  `Hrad2` twin of the bridge's `Lambda_ij`.
+- `Jac3_H12rad`: the block-triangular 3x3 Jacobian on rows
+  `(Phi_par, gradU_2, Hrad2)` — the `Hrad2` twin of `Jac3_H12zero`.
+- `Jac3_H12rad_identity` (only `det Dcvec \<noteq> 0`):
+  `Jac3_H12rad = - s_k \<cdot> Lambda_rad_ij` where `s_k` is the `gradU_2` perp-slot
+  entry. Both perp-slot zeros in the collapse are PROVEN
+  (`Phi_par_perp_slot_zero`, `Hrad2_slot_perp_zero`) — unlike the superseded
+  `Jac3_H12zero_identity`, which carries the machine-refuted
+  `h_par_vslot_zero` as an explicit hypothesis.
+- `Jac3_H12rad_nonzero_criterion`: rank-3 under `detnz` + `s_k \<noteq> 0` +
+  `Lambda_rad_ij \<noteq> 0` — no unverified assumption anywhere.
+
+Status of the H12=0 branch (`cor:H12zero`): the determinant/rank framework is
+now fully sound. What remains mathematical is the GENERICITY of the two
+nonvanishing side conditions (`s_k \<noteq> 0`, `Lambda_rad_ij \<noteq> 0`) on the
+degenerate-critical fibre — the analogue of what the H11/H22 branches
+(`Jac3`/`Jac3_22`) also still owe. The superseded `Jac3_H12zero` section in
+`D34_Analytic_Bridge.thy` should be treated as legacy; new work must use
+`Jac3_H12rad`.
