@@ -11,5 +11,8 @@ thm has_derivative_pair_phase_sum_x pair_phase_sum_perp_slot_zero
 thm Wc_curve_d1 Wc_curve_d2 Wc_curve_d3
 thm T3rad_def T3rad_slot_perp_zero
 thm Wc_slot_perp_zero T1rad_slot_perp_zero T2rad_slot_perp_zero
+thm has_derivative_pair_phase_sum_c has_derivative_Wc_c
+thm has_derivative_U_dip_omega_factored gradU_dip_inner_omega
+thm Phi_par_radial_dictionary Phi_par_zero_radial
 
 end

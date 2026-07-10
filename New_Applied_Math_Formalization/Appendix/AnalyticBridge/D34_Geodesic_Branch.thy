@@ -306,4 +306,169 @@ proof -
     unfolding eqf by (rule pair_phase_sum_perp_slot_zero[OF dg])
 qed
 
+
+section \<open>The omega-side dictionary: \<open>gradU\<close> and \<open>Phi_par\<close> in \<open>c\<close>-space radial data\<close>
+
+text \<open>\<^bold>\<open>Tier 2 of the normal-coordinate branch.\<close>  The chain rule through the
+  factorization \<open>U_dip = gain_dip \<cdot> (Wc x \<circ> cvec_dip)\<close> (@{thm U_dip_Wc}) identifies the
+  genuine omega-derivative of \<open>U_dip\<close> with \<open>c\<close>-space radial data:
+
+    \<open>D\<^sub>\<omega>U[h] = Dgain[h] \<cdot> Wc + gain \<cdot> DWc[Dcvec h]\<close>.
+
+  Combined with @{thm gradU_explicit} and Fréchet-derivative uniqueness this gives the
+  dictionary \<open>gradU \<bullet> w\<close> = (that functional at \<open>w\<close>) --- no unfolding of the complex-form
+  \<open>dU_cart\<close> is ever needed.  Instantiating \<open>w = e_par\<close> (which pushes forward to \<open>c\<close> by
+  @{thm Dcvec_dip_e_par}) expresses the EXISTING first-order invariant \<open>Phi_par\<close> in
+  radial \<open>c\<close>-jet data: \<open>Phi_par = Dgain[e_par] \<cdot> Wc + gain \<cdot> Wc_d1(c; c)\<close>.  This is the
+  first entry of the dictionary that will let the radial cubic \<open>T3rad\<close> (whose perp-slot
+  law is already proven unconditionally) play \<open>H_par\<close>'s intended role on the
+  \<open>H11 = H22 = 0\<close> stratum.\<close>
+
+subsection \<open>Fréchet derivative of \<open>Wc\<close> in the \<open>c\<close>-variable\<close>
+
+lemma has_derivative_pair_phase_sum_c:
+  fixes x :: "(real^2)^'n::finite" and c :: "real^2" and g g' :: "real \<Rightarrow> real"
+  assumes dg: "\<And>u. (g has_field_derivative g' u) (at u)"
+  shows "((\<lambda>c'. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. g (c' \<bullet> (vec_nth x n - vec_nth x p))) has_derivative
+      (\<lambda>u. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. g' (c \<bullet> (vec_nth x n - vec_nth x p))
+             * (u \<bullet> (vec_nth x n - vec_nth x p)))) (at c)"
+proof -
+  have summand: "((\<lambda>c'. g (c' \<bullet> (vec_nth x n - vec_nth x p))) has_derivative
+      (\<lambda>u. g' (c \<bullet> (vec_nth x n - vec_nth x p)) * (u \<bullet> (vec_nth x n - vec_nth x p))))
+      (at c)" for n p :: 'n
+  proof -
+    have lin: "((\<lambda>c'::real^2. c' \<bullet> (vec_nth x n - vec_nth x p)) has_derivative
+        (\<lambda>u. u \<bullet> (vec_nth x n - vec_nth x p))) (at c)"
+      by (rule bounded_linear.has_derivative[OF bounded_linear_inner_left has_derivative_ident])
+    have outer: "(g has_derivative (\<lambda>u. g' (c \<bullet> (vec_nth x n - vec_nth x p)) * u))
+        (at (c \<bullet> (vec_nth x n - vec_nth x p)))"
+      using dg[of "c \<bullet> (vec_nth x n - vec_nth x p)"]
+      unfolding has_field_derivative_def by simp
+    show ?thesis
+      using has_derivative_compose[OF lin outer] by simp
+  qed
+  show ?thesis
+    by (intro has_derivative_sum) (rule summand)
+qed
+
+lemma has_derivative_Wc_c:
+  fixes x :: "(real^2)^'n::finite" and c :: "real^2"
+  shows "((\<lambda>c'. Wc x c') has_derivative (\<lambda>u. Wc_d1 x c u)) (at c)"
+proof -
+  have dgcos: "(cos has_field_derivative (\<lambda>v. - sin v) u) (at u)" for u :: real
+    using DERIV_cos[of u] by simp
+  have F: "((\<lambda>c'. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. cos (c' \<bullet> (vec_nth x n - vec_nth x p))) has_derivative
+      (\<lambda>u. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+          - sin (c \<bullet> (vec_nth x n - vec_nth x p)) * (u \<bullet> (vec_nth x n - vec_nth x p))))
+      (at c)"
+    using has_derivative_pair_phase_sum_c[OF dgcos, of x c] by simp
+  have eqf: "(\<lambda>c'. Wc x c') = (\<lambda>c'. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV. cos (c' \<bullet> (vec_nth x n - vec_nth x p)))"
+    by (rule ext) (simp add: Wc_def)
+  have eqd: "(\<lambda>u. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      - sin (c \<bullet> (vec_nth x n - vec_nth x p)) * (u \<bullet> (vec_nth x n - vec_nth x p)))
+      = (\<lambda>u. Wc_d1 x c u)"
+    by (rule ext) (simp add: Wc_d1_def sum_negf sum_subtractf algebra_simps)
+  show ?thesis unfolding eqf using F unfolding eqd .
+qed
+
+subsection \<open>The factored omega-derivative of \<open>U_dip\<close>\<close>
+
+lemma has_derivative_U_dip_omega_factored:
+  fixes x :: "(real^2)^'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2"
+  shows "((\<lambda>\<omega>'. U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>') has_derivative
+      (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1) * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>)
+         + gain_dip \<omega> * Wc_d1 x (cvec_dip \<omega>0 \<omega>s \<omega>) (Dcvec_dip \<omega>0 \<omega>s \<omega> h))) (at \<omega>)"
+proof -
+  have eqU: "(\<lambda>\<omega>'. U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>')
+      = (\<lambda>\<omega>'. gain_dip \<omega>' * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>'))"
+    by (rule ext) (rule U_cart_Wc)
+  have compW: "((\<lambda>\<omega>'. Wc x (cvec_dip \<omega>0 \<omega>s \<omega>')) has_derivative
+      (\<lambda>h. Wc_d1 x (cvec_dip \<omega>0 \<omega>s \<omega>) (Dcvec_dip \<omega>0 \<omega>s \<omega> h))) (at \<omega>)"
+    by (rule has_derivative_compose[OF has_derivative_cvec_dip has_derivative_Wc_c])
+  have M: "((\<lambda>\<omega>'. gain_dip \<omega>' * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>')) has_derivative
+      (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1) * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>)
+         + gain_dip \<omega> * Wc_d1 x (cvec_dip \<omega>0 \<omega>s \<omega>) (Dcvec_dip \<omega>0 \<omega>s \<omega> h))) (at \<omega>)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF gain_dip_has_derivative compW]])
+       (rule ext, simp add: algebra_simps)
+  show ?thesis unfolding eqU by (rule M)
+qed
+
+subsection \<open>The dictionary: \<open>gradU \<bullet> w\<close> in radial \<open>c\<close>-jet data\<close>
+
+lemma gradU_dip_inner_omega:
+  fixes x :: "(real^2)^'n::finite" and w \<omega> \<omega>0 \<omega>s :: "real^2"
+  shows "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> \<bullet> w
+       = frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth w 1) * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>)
+       + gain_dip \<omega> * Wc_d1 x (cvec_dip \<omega>0 \<omega>s \<omega>) (Dcvec_dip \<omega>0 \<omega>s \<omega> w)"
+proof -
+  define myF where "myF = (\<lambda>h::real^2.
+      frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1) * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>)
+      + gain_dip \<omega> * Wc_d1 x (cvec_dip \<omega>0 \<omega>s \<omega>) (Dcvec_dip \<omega>0 \<omega>s \<omega> h))"
+  have Umine: "((\<lambda>\<omega>'. U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>') has_derivative myF) (at \<omega>)"
+    unfolding myF_def by (rule has_derivative_U_dip_omega_factored)
+  have Utheir: "((\<lambda>\<omega>'. U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>') has_derivative
+      dU_cart (cvec_dip \<omega>0 \<omega>s) (Dcvec_dip \<omega>0 \<omega>s \<omega>) gain_dip
+        (\<lambda>v. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth v 1)) x \<omega>) (at \<omega>)"
+    by (rule has_derivative_U_cart[OF has_derivative_cvec_dip gain_dip_has_derivative])
+  have uniq: "dU_cart (cvec_dip \<omega>0 \<omega>s) (Dcvec_dip \<omega>0 \<omega>s \<omega>) gain_dip
+        (\<lambda>v. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth v 1)) x \<omega> = myF"
+    by (rule has_derivative_unique[OF Utheir Umine])
+  have gradEq: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>
+      = (\<Sum>i\<in>UNIV. myF (axis i 1) *\<^sub>R axis i 1)"
+  proof -
+    have "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>
+        = (\<Sum>i\<in>UNIV. dU_cart (cvec_dip \<omega>0 \<omega>s) (Dcvec_dip \<omega>0 \<omega>s \<omega>) gain_dip
+            (\<lambda>v. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth v 1)) x \<omega>
+            (axis i 1) *\<^sub>R axis i 1)"
+      by (rule gradU_explicit[OF has_derivative_cvec_dip gain_dip_has_derivative])
+    thus ?thesis unfolding uniq by simp
+  qed
+  have blF: "bounded_linear myF"
+    by (rule has_derivative_bounded_linear[OF Umine])
+  have linF: "linear myF"
+    by (rule bounded_linear.linear[OF blF])
+  have decomp: "h = vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1" for h :: "real^2"
+  proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+    fix i :: 2
+    show "vec_nth h i = vec_nth (vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1) i"
+      using exhaust_2[of i] by (auto simp: axis_def)
+  qed
+  have Fw: "myF w = vec_nth w 1 *\<^sub>R myF (axis 1 1) + vec_nth w 2 *\<^sub>R myF (axis 2 1)"
+    using decomp[of w] linear_add[OF linF] linear_scale[OF linF] by metis
+  have axw: "axis i (1::real) \<bullet> w = vec_nth w i" for i :: 2
+    by (simp add: inner_axis inner_commute)
+  have "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> \<bullet> w
+      = (\<Sum>i\<in>UNIV. myF (axis i 1) * (axis i 1 \<bullet> w))"
+    unfolding gradEq by (simp add: inner_sum_left)
+  also have "\<dots> = myF (axis 1 1) * vec_nth w 1 + myF (axis 2 1) * vec_nth w 2"
+    by (simp add: sum_2 axw)
+  also have "\<dots> = myF w"
+    using Fw by simp
+  finally show ?thesis unfolding myF_def by simp
+qed
+
+subsection \<open>\<open>Phi_par\<close> in radial data, and the level-1 critical identity\<close>
+
+theorem Phi_par_radial_dictionary:
+  fixes x :: "(real^2)^'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "Phi_par x \<omega> \<omega>0 \<omega>s
+       = frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+           * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>)
+       + gain_dip \<omega> * Wc_d1 x (cvec_dip \<omega>0 \<omega>s \<omega>) (cvec_dip \<omega>0 \<omega>s \<omega>)"
+  unfolding Phi_par_def
+  using gradU_dip_inner_omega[where x = x and w = "e_par \<omega>0 \<omega>s \<omega>" and \<omega> = \<omega>
+          and \<omega>0 = \<omega>0 and \<omega>s = \<omega>s]
+        Dcvec_dip_e_par[OF detnz]
+  by simp
+
+corollary Phi_par_zero_radial:
+  fixes x :: "(real^2)^'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and crit: "Phi_par x \<omega> \<omega>0 \<omega>s = 0"
+  shows "gain_dip \<omega> * Wc_d1 x (cvec_dip \<omega>0 \<omega>s \<omega>) (cvec_dip \<omega>0 \<omega>s \<omega>)
+       = - (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+             * Wc x (cvec_dip \<omega>0 \<omega>s \<omega>))"
+  using Phi_par_radial_dictionary[OF detnz, where x = x] crit by linarith
+
 end

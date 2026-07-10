@@ -4294,3 +4294,41 @@ relate the third omega-derivatives of `U_dip` on the stratum
 rule through `cvec_dip` and `gain_dip` (the corrections carry grad/Hess factors
 that vanish on the stratum), then feed `T3rad` into a `Jac3`-style
 block-triangular rank criterion exactly as `Phi_par` did at first order.
+
+## 2026-07-09 (Claude): omega-side dictionary Tier 2a landed — gradU and Phi_par in radial c-jet data
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 474 lines,
+still zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0
+(0:43), guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0.
+
+New machine-checked names:
+
+- `has_derivative_pair_phase_sum_c`: the c-side master derivative law (the
+  c-variable twin of the x-side master), reusable for the higher-order
+  dictionary entries.
+- `has_derivative_Wc_c`: the Frechet derivative of `c \<mapsto> Wc x c` is the
+  functional `Wc_d1 x c`.
+- `has_derivative_U_dip_omega_factored`: the genuine omega-derivative of
+  `U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x` is
+  `\<lambda>h. Dgdip[h\<^sub>1] \<cdot> Wc + gain \<cdot> Wc_d1(c; Dcvec h)` — the chain rule through the
+  `U_dip_Wc` factorization.
+- `gradU_dip_inner_omega`: THE dictionary entry — `gradU \<bullet> w` equals that
+  functional at `w`, for every `w`, with NO hypotheses. Proof trick: both
+  functionals are Frechet derivatives of the same function, so
+  `has_derivative_unique` against the heap's `has_derivative_U_cart` /
+  `gradU_explicit` does all the work; the complex-form `dU_cart` is never
+  unfolded.
+- `Phi_par_radial_dictionary` (needs only `det Dcvec \<noteq> 0`):
+  `Phi_par = Dgdip[e_par\<^sub>1] \<cdot> Wc + gain \<cdot> Wc_d1(c; c)` — the EXISTING first-order
+  invariant is exactly gain-weighted radial first-derivative data plus a
+  gain-gradient multiple of `Wc`. Consistency check passed: its known v-slot
+  law is an instance of the branch's master perp-slot law.
+- `Phi_par_zero_radial`: on critical points (`Phi_par = 0`) the radial first
+  derivative `gain \<cdot> Wc_d1(c;c)` equals `-Dgdip[e_par\<^sub>1] \<cdot> Wc` — the level-1
+  critical identity.
+
+Next (Tier 2b): the same uniqueness pattern one order up — identify
+`HessU`-contractions with `Wc_dd` bilinear data + `D2cvec_dip` corrections
+(against `HessU_explicit` / `gradU_dip_has_derivative`), yielding the level-2
+identity on `HessU = 0`, then the cubic dictionary that hands the stratum role
+to `T3rad`.
