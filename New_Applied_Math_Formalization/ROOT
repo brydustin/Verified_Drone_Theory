@@ -158,3 +158,14 @@ session Applied_Math_D34_Analytic in "Appendix/AnalyticBridge" = Applied_Math_Ap
     D34_Analytic_Bridge
     D34_H0res_Branch
     D34_Geodesic_Branch
+
+(* The wiring layer: the first theory that imports BOTH the Robust4 frontier heap
+   (the honest D3/D4 boundary predicates consumed by F0_dip_nonempty) and the
+   D34 geodesic-branch heap (the rank-3 criteria with generic satisfaction).
+   Assembles the branch criteria toward d3_detHess_arc_chart_core_all. *)
+session Applied_Math_D3_Wiring in "Appendix/Wiring" = Applied_Math_Appendix_Frontier +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_D34_Analytic
+  theories
+    D3_Chart_Wiring

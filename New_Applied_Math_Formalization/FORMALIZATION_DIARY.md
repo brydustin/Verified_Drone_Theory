@@ -4825,3 +4825,37 @@ generic satisfaction, and concrete capstone-compatible witnesses at the
 same design point. The geodesic branch's invariant program is complete;
 what remains is the WIRING: assembling these criteria into
 `d3_detHess_arc_chart_core_all`, the predicate `F0_dip_nonempty` consumes.
+
+## 2026-07-10 (Claude): the wiring layer opened — dual-heap merge VALIDATED, fibre facts + branch trichotomy landed
+
+New session `Applied_Math_D3_Wiring` (in `Appendix/Wiring/`, parented on
+`Applied_Math_Appendix_Frontier` with `sessions Applied_Math_D34_Analytic`)
+and its theory `D3_Chart_Wiring.thy` — the FIRST theory that imports both
+the Robust4 frontier heap and the geodesic-branch heap. Builds:
+`Applied_Math_D3_Wiring` BUILD_EXIT=0 (1:40, heap merge included); also
+confirmed interactively by Dustin in jEdit.
+
+The architectural point: the endgame plan ("a final theory imports Robust4
++ the bridge, proves the two boundary predicates, instantiates
+F0_dip_nonempty") depended on Isabelle merging these two sibling heaps
+without conflict. IT DOES. No name clashes bit (the two `det3`s and two
+`DM_paper_x`s coexist; the wiring theory just has to disambiguate on use).
+
+Machine-checked content of the first slice:
+
+- `H0core_fibre_Phi_par_zero`, `H0core_fibre_gradU2_zero`: on the
+  `D3BadXG_H0core` fibre (`gradU = 0` conjunct) the first two rank-criterion
+  rows vanish.
+- **`detHess_zero_cases`**: `det (HessU) = 0` forces
+  `H\<^sub>2\<^sub>2 \<noteq> 0` (route to `Jac3_22`), or `H\<^sub>2\<^sub>2 = 0 \<and> H\<^sub>1\<^sub>1 \<noteq> 0` (route to `Jac3`),
+  or `HessU = 0` entirely (route to Tier 6's `Jac3_H0cub`) — the diagonal-zero
+  + det-zero case collapses the off-diagonal via `HessU_dip_symmetric`
+  (Clairaut). Every fibre point is now routed to a rank-3 criterion with
+  generic satisfaction.
+
+The remaining engine gap is stated precisely in the theory's closing text:
+a level-set-to-rank-deficient-closed-cover engine (locally parametrize the
+codim-3 level set of the C1 triple, compose with inclusion to get
+config-space self-maps of rank \<le> 2N - 3, exhaust by closed pieces) to
+produce the `charts/Crit/D` data of `d3_detHess_arc_chart_core`. That
+engine — plus quantifying the genericity over the arc — is the next tier.
