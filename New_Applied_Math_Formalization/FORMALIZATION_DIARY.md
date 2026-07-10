@@ -4530,3 +4530,251 @@ configuration (single bumps give `Lambda = 0` by the i/j symmetry of the
 identical non-bump elements), evaluating the `Phi_par` and `Hrad2` u-slot
 factors at `slot i w\<^sub>1 + slot j w\<^sub>2`; a 2-parameter trig polynomial whose
 nonvanishing can be checked at explicit angles.
+
+## 2026-07-10 (Codex): M5_Dev_Geodesic two-bump Lambda witness proof completed
+
+Resolved the remaining admissions in `M5_Dev_Geodesic/Scratch_Geodesic.thy`
+and verified the guard session:
+
+```
+../../Isabelle2025-2/bin/isabelle build \
+  -D /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -D . -D M5_Dev_Geodesic Applied_Math_M5_Geodesic
+```
+
+Result: `Finished Applied_Math_M5_Geodesic`; `Scratch_Geodesic.thy` has no
+remaining `sorry`/`oops`.
+
+Proof edits:
+
+- Replaced the four local `sorry`s in `Lambda_rad_two_bump_witness` with
+  explicit row-sum facts:
+  `row_Phi_i`, `row_Phi_j`, `row_Gr_i`, `row_Gr_j`.
+- The row facts apply `two_bump_row_sum_i` / `two_bump_row_sum_j` to the tuned
+  two-bump point `x0 = slot i w1 + slot j w2`, then use `c \<bullet> w1 = pi`,
+  `c \<bullet> w2 = pi / 2`, and oddness of the profile derivatives for the `j`
+  row.
+- Important Isabelle gotcha: named instantiation like `where w1=w1` fails for
+  `two_bump_row_sum_i/j` with `No such variable in theorem: "?w1"` because the
+  internal schematic names do not match the source names. Use positional
+  instantiation instead:
+  `two_bump_row_sum_i[of i j Phi' c w1 w2, OF ij Phi'0]` and similarly for
+  `Gr'`.
+- Another gotcha: `unfolding phi_val` does not instantiate the local fact
+  `phi_val` (`for m`). Use `phi_val[of i]`, `phi_val[of j]`, `H_val[of i]`,
+  and `H_val[of j]`, then rewrite with the named row facts.
+
+New checked theorem in the scratch session:
+
+- `Lambda_rad_two_bump_witness`: explicit nonzero two-bump witness for
+  `Lambda_rad_ij` under `detnz`, `i \<noteq> j`, `cvec_dip \<noteq> 0`, `4 <= CARD('n)`,
+  and the Wronskian/design nonzero condition `Wnz`.
+- `Lambda_rad_zeros_nowhere_dense`: nowhere-dense zero set for `Lambda_rad_ij`
+  via `real_analytic_on_Lambda_rad_ij` and the two-bump witness.
+
+## 2026-07-10 (Codex): Tier 5b promoted into D34_Geodesic_Branch; H12rad determinant bad set is meager
+
+Read the recent Claude trajectory and followed the established splice pattern:
+scratch work belongs in `M5_Dev_Geodesic` only until it is checked, then it is
+promoted into the main bridge heap.
+
+Edits:
+
+- Spliced the full Tier 5b two-bump block from
+  `M5_Dev_Geodesic/Scratch_Geodesic.thy` into
+  `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy`, after Tier 5a.
+- Restored `M5_Dev_Geodesic/Scratch_Geodesic.thy` to a guard-only file that
+  checks the promoted names rather than redefining them.
+- Added Tier 5c assembly theorem:
+  `Jac3_H12rad_zeros_meager`.
+
+New theorem:
+
+- `Jac3_H12rad_zeros_meager`: under the explicit omega/design conditions
+  `det Dcvec != 0`, `i != j`, `cvec != 0`, `CARD >= 4`, `gain != 0`,
+  the `K != 0` non-parallelism condition from the `s_k` witness, and the
+  two-bump Wronskian/design condition `Wnz`, the set
+  `{x. Jac3_H12rad x omega omega0 omegas i j k = 0}` is meager.
+
+Proof shape:
+
+- Convert `gradU2_perp_slot_zeros_nowhere_dense` and
+  `Lambda_rad_zeros_nowhere_dense` to `nowhere_dense` via
+  `nowhere_dense_def`.
+- Use `meager_nowhere_dense` and `meager_Un`.
+- Use `Jac3_H12rad_identity` to show the zero set of the determinant is
+  contained in the union of the two factor-zero sets.
+- Finish with `meager_subset`.
+
+Builds:
+
+```
+../../Isabelle2025-2/bin/isabelle build \
+  -D /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -D . Applied_Math_D34_Analytic
+```
+
+Result: `Finished Applied_Math_D34_Analytic`.
+
+```
+../../Isabelle2025-2/bin/isabelle build \
+  -D /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -D . -D M5_Dev_Geodesic Applied_Math_M5_Geodesic
+```
+
+Result: `Finished Applied_Math_M5_Geodesic`.
+
+Status after this step: both scalar side conditions in
+`Jac3_H12rad_nonzero_criterion` are not only individually generic; their
+product determinant's bad set is now packaged as a single meager set. This is
+the natural H12rad handoff theorem for downstream D34/Robust4 integration.
+
+## 2026-07-10 (Codex): H12rad genericity converted to open-set witness form
+
+Surveyed the downstream bridge/frontier shape after Tier 5c:
+
+- `Robust4` still carries the two large explicit assumptions
+  `d3_detHess_arc_chart_core_all` and `branchP_indep_closed_cover_core_all`.
+  It does not yet import the D34 analytic bridge, so directly wiring
+  `Jac3_H12rad_zeros_meager` into the capstone chain would be premature.
+- The Baire pattern that downstream selection arguments actually use is the
+  one in `regular_config_exists`: meager bad set + nonempty open arena implies
+  existence of a good point in that arena.
+
+Made the corresponding bridge move in
+`Appendix/AnalyticBridge/D34_Geodesic_Branch.thy`:
+
+- Added `Jac3_H12rad_nonzero_in_open`.
+
+The theorem states that under the same explicit omega/design hypotheses as
+`Jac3_H12rad_zeros_meager`, every nonempty open configuration set `V` contains
+some `x` with
+
+```
+Jac3_H12rad x omega omega0 omegas i j k != 0
+```
+
+Proof shape:
+
+- Use `Jac3_H12rad_zeros_meager` for the bad set
+  `{x. Jac3_H12rad x ... = 0}`.
+- If a nonempty open `V` were contained in that bad set, `meager_subset` would
+  make `V` meager.
+- Contradict `open_nonempty_not_meager`.
+
+Also updated `M5_Dev_Geodesic/Scratch_Geodesic.thy` to guard the new theorem.
+
+Builds:
+
+```
+../../Isabelle2025-2/bin/isabelle build \
+  -D /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -D . Applied_Math_D34_Analytic
+```
+
+Result: `Finished Applied_Math_D34_Analytic`.
+
+```
+../../Isabelle2025-2/bin/isabelle build \
+  -D /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -D . -D M5_Dev_Geodesic Applied_Math_M5_Geodesic
+```
+
+Result: `Finished Applied_Math_M5_Geodesic`.
+
+## 2026-07-10 (Codex): H12rad genericity no longer needs a separate gain hypothesis
+
+Continued the D34/M5 geodesic bridge work by reducing one explicit omega-side
+side condition in `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy`.
+
+The useful observation was already present in `Nonemptiness_Robust1`: the
+immersion hypothesis
+
+```
+det (matrix (Dcvec_dip omega0 omegas omega)) != 0
+```
+
+forces `sin (omega$1) != 0`, and then `gain_dip omega != 0`.  I packaged this
+as:
+
+- `gain_dip_nonzero_of_Dcvec_det_nonzero`
+
+Then I added determinant-only wrappers for the Tier 5c genericity theorem:
+
+- `Jac3_H12rad_zeros_meager_of_det`
+- `Jac3_H12rad_nonzero_in_open_of_det`
+
+These have the same hypotheses as the previous `Jac3_H12rad_zeros_meager` and
+`Jac3_H12rad_nonzero_in_open` except that they do **not** ask for a separate
+`gain_dip omega != 0`; they derive it internally from the steering determinant.
+This is a cleaner handoff theorem for downstream capstone integration, where
+carrying fewer independent design assumptions matters.
+
+Also updated `M5_Dev_Geodesic/Scratch_Geodesic.thy` so the guard checks these
+new exported names.
+
+Builds:
+
+```
+../../Isabelle2025-2/bin/isabelle build \
+  -D /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -D . Applied_Math_D34_Analytic
+```
+
+Result: `Finished Applied_Math_D34_Analytic`.
+
+```
+../../Isabelle2025-2/bin/isabelle build \
+  -D /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -D . -D M5_Dev_Geodesic Applied_Math_M5_Geodesic
+```
+
+Result: `Finished Applied_Math_M5_Geodesic`.
+
+## 2026-07-10 (Dustin + Claude): Tiers 5b/5c landed — two-bump Lambda witness, COMBINED Jac3_H12rad genericity, and the concrete Robust4 design-point witness
+
+`Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` now 2239 lines, ZERO
+admissions. Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0 (1:44), guard
+`Applied_Math_M5_Geodesic` BUILD_EXIT=0. Genuinely joint session.
+
+Tier 5b (Claude): the two-bump witness. Single bumps make `Lambda_rad_ij`
+vanish IDENTICALLY (both `Phi_par` and `Hrad2` are pair-phase functions,
+hence translation-invariant; slot derivatives sum to zero and non-bump rows
+coincide). New names:
+- `two_bump_nth`, `card_ge_two`, `two_bump_row_sum_i/j` (row sums at
+  `slot i w1 + slot j w2` for profiles vanishing at 0);
+- `Phi_par_uslot_radial` — the `Phi_par` u-slot derivative as a radial
+  pair-phase sum `2q \<Sum>\<^sub>p \<Phi>'(z\<^sub>m\<^sub>p)` (via the Tier 2a dictionary; NO dEjm);
+- `Lambda_rad_two_bump_witness` — at `c \<bullet> w\<^sub>1 = \<pi>`, `c \<bullet> w\<^sub>2 = \<pi>/2` the
+  determinant collapses to the profile Wronskian:
+  `\<Lambda> = 4\<pi>q\<^sup>2(N-3)(N-2)(2(A+g\<^sub>0)\<^sup>2 - g\<^sub>0(2A+B) + g\<^sub>0\<^sup>2\<pi>\<^sup>2/4)`;
+- `Lambda_rad_zeros_nowhere_dense`.
+
+Tier 5c (Dustin): the combined genericity and the concrete witness.
+- `gain_dip_nonzero_of_Dcvec_det_nonzero`: `gain \<noteq> 0` FOLLOWS from
+  `det Dcvec \<noteq> 0` — one fewer independent hypothesis;
+- `Jac3_H12rad_zeros_meager` / `Jac3_H12rad_nonzero_in_open` (+ `_of_det`
+  variants): `Jac3 = -s\<^sub>k \<cdot> \<Lambda>` puts the Jac3 zero set inside the union of the
+  two nowhere-dense sets \<Rightarrow> meager; every nonempty open set contains a
+  rank-3 point — the exact consumption shape for the D3 chart argument;
+- `gdip_pi_half` / `deriv_gdip_pi_half` (= 0) / `deriv2_gdip_pi_half`
+  (= 2 - \<pi>\<^sup>2>/2), `h12rad_robust4_omega_witness_in_OmegaPF`,
+  `h12rad_robust4_omega_side_conditions`, and the capstone-ready
+  **`Jac3_H12rad_nonzero_in_open_robust4_witness`**: at the Robust4 design
+  `\<omega>\<^sub>0 = (\<pi>/2, 0)`, `\<omega>\<^sub>s = 0`, witness angle `\<omega> = (\<pi>/2, \<pi>/3)`, ALL side
+  conditions discharged numerically — hypotheses reduced to
+  `open V`, `V \<noteq> {}`, `i \<noteq> j`, `CARD('n) \<ge> 4`.
+
+The one `sorry` (Dustin's `e1` value): resolved by Claude — the claimed
+`e_par$1 = -2` was WRONG; `eq1`/`e2` force `e_par$1 = -1` (independently
+re-derived: `Dcvec = [-1, -\<surd>3/2; 0, 1/2]`, `e_par = (-1, \<surd>3)`). The
+downstream Wronskian value corrects from `9\<pi>\<^sup>2/4 - 6` to `3\<pi>\<^sup>2/4` — cleaner,
+positive, one-line nonvanishing. Lesson: the witness survived because
+`gdip'(\<pi>/2) = 0` makes A = 0 (e\<^sub>1 enters only via B\<cdot>e\<^sub>1\<^sup>2), but the fact
+itself had to be right.
+
+STATUS: the H12=0 branch's rank-3 criterion is now GENERICALLY SATISFIED
+with a fully concrete, capstone-compatible witness. Remaining on the
+geodesic thread: the cubic `T3rad` dictionary for the H11=H22=0 full-zero
+stratum, then wiring the branch criteria into
+`d3_detHess_arc_chart_core_all`.

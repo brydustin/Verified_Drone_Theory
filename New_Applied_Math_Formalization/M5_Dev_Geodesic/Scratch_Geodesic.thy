@@ -3,39 +3,17 @@ theory Scratch_Geodesic
 begin
 
 text \<open>Guard-only: the geodesic (c-space normal-coordinate) branch content lives in
-  \<open>Appendix/AnalyticBridge/D34_Geodesic_Branch.thy\<close>.  This file just re-checks the
-  key names are present in the heap.\<close>
+  \<open>Appendix/AnalyticBridge/D34_Geodesic_Branch.thy\<close>.  This file re-checks the
+  Tier 5b two-bump \<open>Lambda_rad_ij\<close> witness and genericity names are present in
+  the heap.\<close>
 
-thm Wc_def Wc_eq_cmod_sq U_dip_Wc
-thm has_derivative_pair_phase_sum_x pair_phase_sum_perp_slot_zero
-thm Wc_curve_d1 Wc_curve_d2 Wc_curve_d3
-thm T3rad_def T3rad_slot_perp_zero
-thm Wc_slot_perp_zero T1rad_slot_perp_zero T2rad_slot_perp_zero
-thm has_derivative_pair_phase_sum_c has_derivative_Wc_c
-thm has_derivative_U_dip_omega_factored gradU_dip_inner_omega
-thm Phi_par_radial_dictionary Phi_par_zero_radial
-thm has_derivative_pair_phase_sum_c_coeff Wc_dd_def Wc_d2_eq_dd has_derivative_Wc_d1_c
-thm has_derivative_Wc_d1_comp has_derivative_gradU_inner_e_hess
-thm has_derivative_gradU_inner_e_factored HessU_quad_dictionary
-thm H_par_eq_quadform H_par_radial_dictionary
-thm Hrad2_def Hrad2_radial_form Hrad2_slot_perp_zero
-thm Lambda_rad_ij_def Jac3_H12rad_def Jac3_H12rad_identity Jac3_H12rad_nonzero_criterion
-thm pair_phase_sum_slot_value pair_phase_sum_slot_value_odd
-thm Wc_slot_value T1rad_slot_value T2rad_slot_value T3rad_slot_value
-thm Hrad2_slot_value
-thm real_analytic_on_xslot_phase
-thm real_analytic_on_Wc_slot_value real_analytic_on_T1rad_slot_value
-thm real_analytic_on_T2rad_slot_value real_analytic_on_T3rad_slot_value
-thm real_analytic_on_Hrad2_slot_value real_analytic_on_Lambda_rad_ij_of_factors
-thm real_analytic_on_pair_const_fst real_analytic_on_fix_c
-thm real_analytic_on_A_moment_x real_analytic_on_M1_moment_x real_analytic_on_M2_moment_x
-thm real_analytic_on_d_A_moment_x_fix real_analytic_on_d_M1_moment_x_fix
-thm real_analytic_on_d_M2_moment_x_fix real_analytic_on_dEjm_moment
-thm real_analytic_on_Phi_par_uslot real_analytic_on_gradU2_slot
-thm real_analytic_on_Lambda_rad_ij
-thm slot_bump_phase A_moment_single_bump
-thm DM_perp_slot_1 DM_perp_slot_2 DM_perp_slot_3
-thm gradU2_perp_slot_single_bump gradU2_perp_slot_witness
-thm gradU2_perp_slot_zeros_nowhere_dense
+thm two_bump_nth two_bump_row_sum_i two_bump_row_sum_j
+thm Phi_par_uslot_radial
+thm Lambda_rad_two_bump_witness Lambda_rad_zeros_nowhere_dense
+thm gradU2_perp_slot_zeros_nowhere_dense real_analytic_on_Lambda_rad_ij
+thm Jac3_H12rad_zeros_meager Jac3_H12rad_nonzero_in_open
+thm gain_dip_nonzero_of_Dcvec_det_nonzero
+thm Jac3_H12rad_zeros_meager_of_det Jac3_H12rad_nonzero_in_open_of_det
+thm Jac3_H12rad_identity Jac3_H12rad_nonzero_criterion
 
 end

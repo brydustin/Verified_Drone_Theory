@@ -1622,4 +1622,620 @@ proof -
   thus ?thesis by simp
 qed
 
+
+section \<open>Tier 5b: the two-bump \<open>Lambda_rad_ij\<close> witness and its genericity\<close>
+
+text \<open>\<^bold>\<open>Why two bumps.\<close>  Both \<open>Phi_par\<close> (via @{thm Phi_par_radial_dictionary}) and
+  \<open>Hrad2\<close> (via @{thm Hrad2_radial_form}) are pair-phase functions of \<open>x\<close>, hence
+  translation-invariant, so their u-slot derivatives sum to zero over the slots.  On a
+  single bump all non-bump rows coincide and \<open>Lambda_rad_ij\<close> vanishes identically by
+  that symmetry.  The minimal asymmetric family is the two-bump configuration
+  \<open>slot i w\<^sub>1 + slot j w\<^sub>2\<close>; with \<open>c \<bullet> w\<^sub>1 = \<pi>\<close>, \<open>c \<bullet> w\<^sub>2 = \<pi>/2\<close> the determinant
+  collapses to a Wronskian of the two radial-jet profiles at \<open>\<pi>\<close> and \<open>\<pi>/2\<close>, giving
+
+    \<open>\<Lambda> = 4\<pi>q\<^sup>2(N-3)(N-2) \<cdot> (2(A+g\<^sub>0)\<^sup>2 - g\<^sub>0(2A+B) + g\<^sub>0\<^sup>2\<pi>\<^sup>2/4)\<close>
+
+  with \<open>q = c \<bullet> c\<close>, \<open>A = gdip'(\<omega>\<^sub>1)e\<^sub>1\<close>, \<open>B = gdip''(\<omega>\<^sub>1)e\<^sub>1\<^sup>2\<close>, \<open>g\<^sub>0 = gain\<close>.  The last
+  factor is the explicit design condition \<open>Wnz\<close>.\<close>
+
+subsection \<open>Two-bump row sums for profiles vanishing at 0\<close>
+
+lemma two_bump_nth:
+  fixes w1 w2 :: "real^2" and i j p :: "'n::finite"
+  assumes ij: "i \<noteq> j"
+  shows "vec_nth (slot i w1 + slot j w2) p
+       = (if p = i then w1 else if p = j then w2 else 0)"
+  using ij by (simp add: slot_nth vector_add_component)
+
+lemma card_ge_two:
+  fixes i j :: "'n::finite"
+  assumes ij: "i \<noteq> j"
+  shows "2 \<le> CARD('n)"
+proof -
+  have "card {i, j} \<le> CARD('n)"
+    by (rule card_mono[OF finite subset_UNIV])
+  thus ?thesis using ij by simp
+qed
+
+lemma two_bump_row_sum_i:
+  fixes f :: "real \<Rightarrow> real" and c w1 w2 :: "real^2" and i j :: "'n::finite"
+  assumes ij: "i \<noteq> j" and f0: "f 0 = 0"
+  shows "(\<Sum>p\<in>UNIV. f (c \<bullet> (vec_nth (slot i w1 + slot j w2) i
+                          - vec_nth (slot i w1 + slot j w2) p)))
+       = f (c \<bullet> w1 - c \<bullet> w2) + (real (CARD('n)) - 2) * f (c \<bullet> w1)"
+proof -
+  have body: "f (c \<bullet> (vec_nth (slot i w1 + slot j w2) i
+                    - vec_nth (slot i w1 + slot j w2) p))
+      = (if p = i then 0 else if p = j then f (c \<bullet> w1 - c \<bullet> w2) else f (c \<bullet> w1))"
+    for p :: 'n
+    by (metis (mono_tags, opaque_lifting) assms diff_self diff_zero inner_diff_right two_bump_nth)
+  have jmem: "j \<in> UNIV - {i}"
+    using ij by simp
+  have "(\<Sum>p\<in>UNIV. f (c \<bullet> (vec_nth (slot i w1 + slot j w2) i
+                        - vec_nth (slot i w1 + slot j w2) p)))
+      = (\<Sum>p\<in>UNIV. if p = i then 0 else if p = j then f (c \<bullet> w1 - c \<bullet> w2)
+          else f (c \<bullet> w1))"
+    by (rule sum.cong[OF refl]) (rule body)
+  also have "\<dots> = (if i = i then 0 else if i = j then f (c \<bullet> w1 - c \<bullet> w2)
+        else f (c \<bullet> w1))
+      + (\<Sum>p\<in>UNIV - {i}. if p = i then 0 else if p = j then f (c \<bullet> w1 - c \<bullet> w2)
+          else f (c \<bullet> w1))"
+    by (rule sum.remove[OF finite UNIV_I])
+  also have "(\<Sum>p\<in>UNIV - {i}. if p = i then 0 else if p = j then f (c \<bullet> w1 - c \<bullet> w2)
+        else f (c \<bullet> w1))
+      = (if j = i then 0 else if j = j then f (c \<bullet> w1 - c \<bullet> w2) else f (c \<bullet> w1))
+      + (\<Sum>p\<in>UNIV - {i} - {j}. if p = i then 0
+          else if p = j then f (c \<bullet> w1 - c \<bullet> w2) else f (c \<bullet> w1))"
+    by (rule sum.remove[OF _ jmem]) simp
+  also have "(\<Sum>p\<in>UNIV - {i} - {j}. if p = i then 0
+        else if p = j then f (c \<bullet> w1 - c \<bullet> w2) else f (c \<bullet> w1))
+      = (\<Sum>p\<in>UNIV - {i} - {j}. f (c \<bullet> w1))"
+    by (rule sum.cong[OF refl]) auto
+  also have "\<dots> = real (card (UNIV - {i} - {j})) * f (c \<bullet> w1)"
+    by simp
+  also have "card (UNIV - {i} - {j}) = CARD('n) - 2"
+    using ij by (simp add: card_Diff_singleton)
+  also have "real (CARD('n) - 2) = real (CARD('n)) - 2"
+    using card_ge_two[OF ij] by simp
+  finally show ?thesis using ij by simp
+qed
+
+lemma two_bump_row_sum_j:
+  fixes f :: "real \<Rightarrow> real" and c w1 w2 :: "real^2" and i j :: "'n::finite"
+  assumes ij: "i \<noteq> j" and f0: "f 0 = 0"
+  shows "(\<Sum>p\<in>UNIV. f (c \<bullet> (vec_nth (slot i w1 + slot j w2) j
+                          - vec_nth (slot i w1 + slot j w2) p)))
+       = f (c \<bullet> w2 - c \<bullet> w1) + (real (CARD('n)) - 2) * f (c \<bullet> w2)"
+proof -
+  have swap: "slot i w1 + slot j w2 = slot j w2 + slot i w1"
+    by (simp add: add.commute)
+  show ?thesis
+    unfolding swap using assms by (subst two_bump_row_sum_i, simp_all)
+qed
+
+subsection \<open>The \<open>Phi_par\<close> u-slot derivative as a radial pair-phase sum\<close>
+
+theorem Phi_par_uslot_radial:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and x :: "(real^2)^'n::finite" and m :: 'n
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot m (cvec_dip \<omega>0 \<omega>s \<omega>))
+       = 2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega>) * (\<Sum>p\<in>UNIV.
+           deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+             * (- sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p)))
+           + gain_dip \<omega>
+             * (- (sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                 + (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                   * cos (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p)))))"
+proof -
+  define A where "A = deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1"
+  define G where "G = (\<lambda>u. A * cos u + gain_dip \<omega> * (- (u * sin u)))"
+  define G' where "G' = (\<lambda>u. A * (- sin u)
+      + gain_dip \<omega> * (- (sin u + u * cos u)))"
+  have eqf: "(\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) = (\<lambda>y. \<Sum>n\<in>UNIV. \<Sum>p\<in>UNIV.
+      G (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth y n - vec_nth y p)))"
+    unfolding G_def
+    by (rule ext)
+       (simp add: Phi_par_radial_dictionary[OF detnz] frechet_gdip_eq A_def
+          Wc_def Wc_d1_def sum.distrib sum_negf sum_subtractf sum_distrib_left
+          algebra_simps)
+  have dG: "(G has_field_derivative G' u) (at u)" for u :: real
+    unfolding G_def G'_def
+    by (auto intro!: derivative_eq_intros simp: algebra_simps)
+  have oddG: "G' (- u) = - G' u" for u :: real
+    unfolding G'_def by (simp add: algebra_simps)
+  have "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot m (cvec_dip \<omega>0 \<omega>s \<omega>))
+      = 2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega>) * (\<Sum>p\<in>UNIV.
+          G' (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p)))"
+    unfolding eqf by (rule pair_phase_sum_slot_value_odd[OF dG oddG])
+  thus ?thesis
+    unfolding G'_def A_def by simp
+qed
+
+subsection \<open>The two-bump witness\<close>
+
+theorem Lambda_rad_two_bump_witness:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i j :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and ij: "i \<noteq> j"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and N4: "4 \<le> CARD('n)"
+    and Wnz: "2 * (deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 + gain_dip \<omega>)\<^sup>2
+            - gain_dip \<omega> * (2 * deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                  * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+            + (gain_dip \<omega>)\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+  shows "Lambda_rad_ij
+      (slot i ((pi / (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega>)) *\<^sub>R cvec_dip \<omega>0 \<omega>s \<omega>)
+       + slot j ((pi / (2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega>))) *\<^sub>R cvec_dip \<omega>0 \<omega>s \<omega>))
+      \<omega> \<omega>0 \<omega>s i j \<noteq> 0"
+proof -
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  define q where "q = c \<bullet> c"
+  define A where "A = deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1"
+  define B where "B = deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+      * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1"
+  define g0 where "g0 = gain_dip \<omega>"
+  define Phi' where "Phi' = (\<lambda>u. A * (- sin u) + g0 * (- (sin u + u * cos u)))"
+  define Gr' where "Gr' = (\<lambda>u. A * (- (sin u + u * cos u)) + B * (- sin u)
+      + g0 * (- (2 * u * cos u - u\<^sup>2 * sin u))
+      + A * (- (sin u + u * cos u)))"
+  define w1 where "w1 = (pi / q) *\<^sub>R c"
+  define w2 where "w2 = (pi / (2 * q)) *\<^sub>R c"
+  define x0 where "x0 = slot i w1 + slot j w2"
+  define N where "N = real (CARD('n))"
+  have qnz: "q \<noteq> 0"
+    unfolding q_def c_def using cnz by (simp add: dot_square_norm)
+  have t1: "c \<bullet> w1 = pi"
+    unfolding w1_def by (simp add: inner_scaleR_right q_def[symmetric] qnz)
+  have t2: "c \<bullet> w2 = pi / 2"
+    unfolding w2_def by (simp add: inner_scaleR_right q_def[symmetric] qnz)
+  have Phi'0: "Phi' 0 = 0"
+    unfolding Phi'_def by simp
+  have Gr'0: "Gr' 0 = 0"
+    unfolding Gr'_def by simp
+  have Phi'odd: "Phi' (- u) = - Phi' u" for u :: real
+    unfolding Phi'_def by (simp add: algebra_simps)
+  have row_Phi_i: "(\<Sum>p\<in>UNIV. Phi' (c \<bullet> (vec_nth x0 i - vec_nth x0 p)))
+      = Phi' (pi / 2) + (N - 2) * Phi' pi"
+    using two_bump_row_sum_i[of i j Phi' c w1 w2, OF ij Phi'0] t1 t2
+    unfolding x0_def N_def by simp
+  have row_Phi_j: "(\<Sum>p\<in>UNIV. Phi' (c \<bullet> (vec_nth x0 j - vec_nth x0 p)))
+      = - Phi' (pi / 2) + (N - 2) * Phi' (pi / 2)"
+    using two_bump_row_sum_j[of i j Phi' c w1 w2, OF ij Phi'0] t1 t2
+    unfolding x0_def N_def
+    by (simp add: Phi'odd[of "pi/2", symmetric])
+  have phi_val: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot m c)
+      = 2 * q * (\<Sum>p\<in>UNIV. Phi' (c \<bullet> (vec_nth x0 m - vec_nth x0 p)))" for m :: 'n
+    using Phi_par_uslot_radial[OF detnz, of x0 m]
+    unfolding c_def[symmetric] q_def[symmetric] Phi'_def A_def g0_def by simp
+  have H_val: "frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x0) (slot m c)
+      = 2 * q * (\<Sum>p\<in>UNIV. Gr' (c \<bullet> (vec_nth x0 m - vec_nth x0 p)))" for m :: 'n
+    using Hrad2_slot_value[OF detnz, of x0 m c]
+    unfolding c_def[symmetric] q_def[symmetric] Gr'_def A_def B_def g0_def by simp
+  have phi_i: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot i c)
+      = 2 * q * (Phi' (pi / 2) + (N - 2) * Phi' pi)"
+    unfolding phi_val[of i] row_Phi_i ..
+  have phi_j: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot j c)
+      = 2 * q * (- Phi' (pi / 2) + (N - 2) * Phi' (pi / 2))"
+    unfolding phi_val[of j] row_Phi_j ..
+  have row_Gr_i: "(\<Sum>p\<in>UNIV. Gr' (c \<bullet> (vec_nth x0 i - vec_nth x0 p)))
+      = Gr' (pi / 2) + (N - 2) * Gr' pi"
+    using two_bump_row_sum_i[of i j Gr' c w1 w2, OF ij Gr'0] t1 t2
+    unfolding x0_def N_def by simp
+  have H_i: "frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x0) (slot i c)
+      = 2 * q * (Gr' (pi / 2) + (N - 2) * Gr' pi)"
+    unfolding H_val[of i] row_Gr_i ..
+  have Gr'odd: "Gr' (- u) = - Gr' u" for u :: real
+    unfolding Gr'_def by (simp add: power2_eq_square algebra_simps)
+  have row_Gr_j: "(\<Sum>p\<in>UNIV. Gr' (c \<bullet> (vec_nth x0 j - vec_nth x0 p)))
+      = - Gr' (pi / 2) + (N - 2) * Gr' (pi / 2)"
+    using two_bump_row_sum_j[of i j Gr' c w1 w2, OF ij Gr'0] t1 t2
+    unfolding x0_def N_def
+    by (simp add: Gr'odd[of "pi/2", symmetric])
+  have H_j: "frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x0) (slot j c)
+      = 2 * q * (- Gr' (pi / 2) + (N - 2) * Gr' (pi / 2))"
+    unfolding H_val[of j] row_Gr_j ..
+  have PhiPi: "Phi' pi = pi * g0"
+    unfolding Phi'_def by simp
+  have PhiHalf: "Phi' (pi / 2) = - (A + g0)"
+    unfolding Phi'_def by simp
+  have GrPi: "Gr' pi = 2 * pi * A + 2 * pi * g0"
+    unfolding Gr'_def by (simp add: power2_eq_square)
+  have GrHalf: "Gr' (pi / 2) = - (2 * A) - B + g0 * pi\<^sup>2 / 4"
+    unfolding Gr'_def by (simp add: power2_eq_square algebra_simps)
+  have Lval: "Lambda_rad_ij x0 \<omega> \<omega>0 \<omega>s i j
+      = 4 * q\<^sup>2 * (N - 3) * (N - 2)
+        * (Phi' pi * Gr' (pi / 2) - Phi' (pi / 2) * Gr' pi)"
+    unfolding Lambda_rad_ij_def c_def[symmetric] phi_i phi_j H_i H_j
+    by (simp add: power2_eq_square algebra_simps)
+  have Wron: "Phi' pi * Gr' (pi / 2) - Phi' (pi / 2) * Gr' pi
+      = pi * (2 * (A + g0)\<^sup>2 - g0 * (2 * A + B) + g0\<^sup>2 * pi\<^sup>2 / 4)"
+    unfolding PhiPi PhiHalf GrPi GrHalf
+    by (simp add: power2_eq_square field_simps)
+  have N3: "N - 3 \<noteq> 0" and N2: "N - 2 \<noteq> 0"
+    using N4 unfolding N_def by simp_all
+  have Wnz': "2 * (A + g0)\<^sup>2 - g0 * (2 * A + B) + g0\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+    using Wnz unfolding A_def B_def g0_def by argo
+  have "Lambda_rad_ij x0 \<omega> \<omega>0 \<omega>s i j \<noteq> 0"
+    unfolding Lval Wron
+    using qnz N3 N2 Wnz' by simp
+  thus ?thesis
+    unfolding x0_def w1_def w2_def q_def c_def by simp
+qed
+
+theorem Lambda_rad_zeros_nowhere_dense:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i j :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and ij: "i \<noteq> j"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and N4: "4 \<le> CARD('n)"
+    and Wnz: "2 * (deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 + gain_dip \<omega>)\<^sup>2
+            - gain_dip \<omega> * (2 * deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                  * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+            + (gain_dip \<omega>)\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+  shows "interior (closure {x::(real^2)^'n. Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j = 0}) = {}"
+proof -
+  have ex: "\<exists>x\<in>UNIV. Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j \<noteq> 0"
+    using Lambda_rad_two_bump_witness[OF detnz ij cnz N4 Wnz] by blast
+  have "interior (closure {x \<in> UNIV. Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j = 0}) = {}"
+    by (rule real_analytic_nowhere_dense_zeros[OF real_analytic_on_Lambda_rad_ij[OF detnz]
+          connected_UNIV ex])
+  thus ?thesis by simp
+qed
+
+
+section \<open>Tier 5c: combined genericity of the H12 radial rank determinant\<close>
+
+text \<open>The two Tier 5 witnesses give nowhere-dense zero sets for the two scalar factors in
+  @{thm Jac3_H12rad_identity}.  This assembly theorem packages the consequence needed by
+  downstream H12 work: the whole block-triangular rank determinant is nonzero off a meager
+  set, under explicit checkable \<omega>-side design conditions.\<close>
+
+lemma gain_dip_nonzero_of_Dcvec_det_nonzero:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "gain_dip \<omega> \<noteq> 0"
+  using detnz Dcvec_det_zero_of_sin gain_dip_nonzero_of_sin by metis
+
+theorem Jac3_H12rad_zeros_meager:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i j k :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and ij: "i \<noteq> j"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and N4: "4 \<le> CARD('n)"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and Knz: "vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 2
+            - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 1
+            \<noteq> 0"
+    and Wnz: "2 * (deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 + gain_dip \<omega>)\<^sup>2
+            - gain_dip \<omega> * (2 * deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                  * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+            + (gain_dip \<omega>)\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+  shows "meager {x::(real^2)^'n. Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k = 0}"
+proof -
+  let ?s = "\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 2) (at x)
+        (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))"
+  let ?S = "{x::(real^2)^'n. ?s x = 0}"
+  let ?L = "{x::(real^2)^'n. Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j = 0}"
+  have Nge2: "2 \<le> CARD('n)"
+    using N4 by simp
+  have ndS: "nowhere_dense ?S"
+    using gradU2_perp_slot_zeros_nowhere_dense[OF gnz Knz Nge2 cnz, of k]
+    by (simp add: nowhere_dense_def)
+  have ndL: "nowhere_dense ?L"
+    using Lambda_rad_zeros_nowhere_dense[OF detnz ij cnz N4 Wnz]
+    by (simp add: nowhere_dense_def)
+  have sub: "{x::(real^2)^'n. Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k = 0} \<subseteq> ?S \<union> ?L"
+    by (auto simp: Jac3_H12rad_identity[OF detnz])
+  have "meager (?S \<union> ?L)"
+    by (rule meager_Un[OF meager_nowhere_dense[OF ndS] meager_nowhere_dense[OF ndL]])
+  thus ?thesis
+    by (rule meager_subset[OF sub])
+qed
+
+theorem Jac3_H12rad_nonzero_in_open:
+  fixes V :: "((real^2)^'n::finite) set" and \<omega> \<omega>0 \<omega>s :: "real^2" and i j k :: 'n
+  assumes openV: "open V" and Vne: "V \<noteq> {}"
+    and detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and ij: "i \<noteq> j"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and N4: "4 \<le> CARD('n)"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and Knz: "vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 2
+            - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 1
+            \<noteq> 0"
+    and Wnz: "2 * (deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 + gain_dip \<omega>)\<^sup>2
+            - gain_dip \<omega> * (2 * deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                  * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+            + (gain_dip \<omega>)\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+  shows "\<exists>x\<in>V. Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k \<noteq> 0"
+proof -
+  let ?B = "{x::(real^2)^'n. Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k = 0}"
+  have meagB: "meager ?B"
+    by (rule Jac3_H12rad_zeros_meager[OF detnz ij cnz N4 gnz Knz Wnz])
+  have "\<not> V \<subseteq> ?B"
+  proof
+    assume sub: "V \<subseteq> ?B"
+    have "meager V"
+      by (rule meager_subset[OF sub meagB])
+    moreover have "\<not> meager V"
+      by (rule open_nonempty_not_meager[OF openV Vne])
+    ultimately show False by simp
+  qed
+  thus ?thesis by blast
+qed
+
+theorem Jac3_H12rad_zeros_meager_of_det:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i j k :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and ij: "i \<noteq> j"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and N4: "4 \<le> CARD('n)"
+    and Knz: "vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 2
+            - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 1
+            \<noteq> 0"
+    and Wnz: "2 * (deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 + gain_dip \<omega>)\<^sup>2
+            - gain_dip \<omega> * (2 * deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                  * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+            + (gain_dip \<omega>)\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+  shows "meager {x::(real^2)^'n. Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k = 0}"
+proof -
+  have gnz: "gain_dip \<omega> \<noteq> 0"
+    by (rule gain_dip_nonzero_of_Dcvec_det_nonzero[OF detnz])
+  show ?thesis
+    by (rule Jac3_H12rad_zeros_meager[OF detnz ij cnz N4 gnz Knz Wnz])
+qed
+
+theorem Jac3_H12rad_nonzero_in_open_of_det:
+  fixes V :: "((real^2)^'n::finite) set" and \<omega> \<omega>0 \<omega>s :: "real^2" and i j k :: 'n
+  assumes openV: "open V" and Vne: "V \<noteq> {}"
+    and detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and ij: "i \<noteq> j"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and N4: "4 \<le> CARD('n)"
+    and Knz: "vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 2
+            - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2 * vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>) 1
+            \<noteq> 0"
+    and Wnz: "2 * (deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 + gain_dip \<omega>)\<^sup>2
+            - gain_dip \<omega> * (2 * deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+                  * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1)
+            + (gain_dip \<omega>)\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+  shows "\<exists>x\<in>V. Jac3_H12rad x \<omega> \<omega>0 \<omega>s i j k \<noteq> 0"
+proof -
+  have gnz: "gain_dip \<omega> \<noteq> 0"
+    by (rule gain_dip_nonzero_of_Dcvec_det_nonzero[OF detnz])
+  show ?thesis
+    by (rule Jac3_H12rad_nonzero_in_open[OF openV Vne detnz ij cnz N4 gnz Knz Wnz])
+qed
+
+subsection \<open>A concrete Robust4-compatible omega witness\<close>
+
+lemma gdip_pi_half: "gdip (pi / 2) = 1"
+  by (simp add: gdip_eq_edip_sq edip_def sin_pi_half cos_pi_half)
+
+lemma deriv_gdip_pi_half: "deriv gdip (pi / 2) = 0"
+proof -
+  have D0: "DERIV gdip (pi / 2) :> 0"
+    using g1_gdip_has_deriv[of "pi / 2"]
+    by (simp add: sin_pi_half cos_pi_half)
+  show ?thesis
+    by (rule DERIV_unique[OF DERIV_gdip D0])
+qed
+
+lemma deriv2_gdip_pi_half: "deriv (deriv gdip) (pi / 2) = 2 - pi\<^sup>2 / 2"
+proof -
+  let ?F = "\<lambda>t::real. (cos (pi / 2 * cos t) / sin t)\<^sup>2"
+  let ?F' = "\<lambda>t::real.
+      pi * cos (pi / 2 * cos t) * sin (pi / 2 * cos t) / sin t
+      - 2 * (cos (pi / 2 * cos t))\<^sup>2 * cos t / (sin t)^3"
+  have ev: "eventually (\<lambda>t. gdip t = ?F t) (nhds (pi / 2))"
+    by (simp add: gdip_eq_edip_sq edip_def)
+  have open_sin: "open {t::real. sin t \<noteq> 0}"
+    by (intro open_Collect_neq continuous_intros)
+  have base_sin: "pi / 2 \<in> {t::real. sin t \<noteq> 0}"
+    by (simp add: sin_pi_half)
+  have ev_sin: "eventually (\<lambda>t::real. sin t \<noteq> 0) (nhds (pi / 2))"
+  proof -
+    have "eventually (\<lambda>t::real. t \<in> {u. sin u \<noteq> 0}) (nhds (pi / 2))"
+      by (rule eventually_nhds_in_open[OF open_sin base_sin])
+    thus ?thesis by simp
+  qed
+  have dF: "deriv ?F t = ?F' t" if st: "sin t \<noteq> 0" for t :: real
+  proof -
+    have D: "DERIV ?F t :> ?F' t"
+      using st
+      by (auto intro!: derivative_eq_intros
+          simp: field_simps power2_eq_square power3_eq_cube)
+    show ?thesis by (rule DERIV_imp_deriv[OF D])
+  qed
+  have ev_dF: "eventually (\<lambda>t. deriv ?F t = ?F' t) (nhds (pi / 2))"
+    using ev_sin by eventually_elim (rule dF)
+  have "(deriv ^^ 2) gdip (pi / 2) = (deriv ^^ 2) ?F (pi / 2)"
+    by (rule higher_deriv_cong_ev[OF ev refl])
+  also have "\<dots> = deriv ?F' (pi / 2)"
+  proof -
+    have "deriv (deriv ?F) (pi / 2) = deriv ?F' (pi / 2)"
+      by (rule deriv_cong_ev[OF ev_dF refl])
+    thus ?thesis by (simp add: numeral_2_eq_2)
+  qed
+  also have "\<dots> = 2 - pi\<^sup>2 / 2"
+  proof -
+    have D2: "DERIV ?F' (pi / 2) :> 2 - pi\<^sup>2 / 2"
+      by (auto intro!: derivative_eq_intros
+          simp: sin_pi_half cos_pi_half field_simps power2_eq_square)
+    show ?thesis by (rule DERIV_imp_deriv[OF D2])
+  qed
+  finally show ?thesis
+    by (simp add: numeral_2_eq_2)
+qed
+
+lemma h12rad_robust4_omega_witness_in_OmegaPF:
+  "vector [pi / 2, pi / 3] \<in> OmegaPF (vector [pi / 2, 0] :: real^2) (pi / 4)"
+proof -
+  have pi_pos: "0 < (pi::real)" by simp
+  show ?thesis
+    unfolding OmegaPF_def mem_box_cart
+  proof (intro allI conjI)
+    fix i :: 2
+    show "(vector [pi / 2, 0] - vector [pi / 4, pi]) $ i \<le>
+        (vector [pi / 2, pi / 3] :: real^2) $ i"
+      using exhaust_2[of i] pi_pos
+      by (auto simp: vector_2 vector_minus_component)
+    show "(vector [pi / 2, pi / 3] :: real^2) $ i \<le>
+        (vector [pi / 2, 0] + vector [pi / 4, pi]) $ i"
+      using exhaust_2[of i] pi_pos
+      by (auto simp: vector_2 vector_add_component)
+  qed
+qed
+
+lemma h12rad_robust4_omega_side_conditions:
+  shows "det (matrix (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3]))) \<noteq> 0"
+    and "cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3]) \<noteq> 0"
+    and "vec_nth (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3]) (axis (2::2) 1)) 1
+        * vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3])) 2
+        - vec_nth (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3]) (axis (2::2) 1)) 2
+          * vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3])) 1
+        \<noteq> 0"
+    and "2 * (deriv gdip (vec_nth (vector [pi / 2, pi / 3] :: real^2) 1)
+            * vec_nth (e_par (vector [pi / 2, 0]) (vector [0, 0])
+                (vector [pi / 2, pi / 3])) 1
+            + gain_dip (vector [pi / 2, pi / 3]))\<^sup>2
+        - gain_dip (vector [pi / 2, pi / 3])
+          * (2 * deriv gdip (vec_nth (vector [pi / 2, pi / 3] :: real^2) 1)
+              * vec_nth (e_par (vector [pi / 2, 0]) (vector [0, 0])
+                  (vector [pi / 2, pi / 3])) 1
+            + deriv (deriv gdip) (vec_nth (vector [pi / 2, pi / 3] :: real^2) 1)
+              * vec_nth (e_par (vector [pi / 2, 0]) (vector [0, 0])
+                  (vector [pi / 2, pi / 3])) 1
+              * vec_nth (e_par (vector [pi / 2, 0]) (vector [0, 0])
+                  (vector [pi / 2, pi / 3])) 1)
+        + (gain_dip (vector [pi / 2, pi / 3]))\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+proof -
+  define w0 :: "real^2" where
+    "w0 = vector [pi / 2, 0]"
+  define ws :: "real^2" where
+    "ws = vector [0, 0]"
+  define w :: "real^2" where
+    "w = vector [pi / 2, pi / 3]"
+  have sqrt3_sq: "sqrt 3 * sqrt 3 = (3::real)"
+    by (simp add: power2_eq_square[symmetric])
+  have detnz: "det (matrix (Dcvec_dip w0 ws w)) \<noteq> 0"
+    unfolding w0_def ws_def w_def 
+    by (simp add: Dcvec_dip_def kx_def ky_def kz_def det_2 matrix_def axis_def vector_2
+        sin_pi_half cos_pi_half cos_60 sin_60 sqrt3_sq)
+  show g1: "det (matrix (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+          (vector [pi / 2, pi / 3]))) \<noteq> 0"
+    using detnz
+    unfolding w0_def ws_def w_def by simp
+  have c1: "vec_nth (cvec_dip w0 ws w) 1 = -1 / 2"
+    unfolding w0_def ws_def w_def 
+    by (simp add: cvec_dip_def kx_def ky_def kz_def axis_def vector_2
+        sin_pi_half cos_pi_half cos_60 sin_60)
+  have c2: "vec_nth (cvec_dip w0 ws w) 2 = sqrt 3 / 2"
+    unfolding w0_def ws_def w_def by (simp add: cvec_dip_def kx_def ky_def kz_def axis_def vector_2
+        sin_pi_half cos_pi_half cos_60 sin_60)
+  show "cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 3]) \<noteq> 0"
+    using c1 w0_def w_def ws_def by fastforce  
+  show "Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 3]) (axis 2 1) $h 1 *
+    cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 3]) $h 2 -
+    Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 3]) (axis 2 1) $h 2 *
+    cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 3]) $h 1 \<noteq> 0"
+    by (simp add: Dcvec_dip_def cvec_dip_def kx_def ky_def kz_def axis_def vector_2
+        sin_pi_half cos_pi_half cos_60 sin_60 sqrt3_sq)
+  have push: "Dcvec_dip w0 ws w (e_par w0 ws w) = cvec_dip w0 ws w"
+    unfolding w0_def ws_def w_def by(subst Dcvec_dip_e_par, simp add: g1, simp)
+  have eq2: "vec_nth (Dcvec_dip w0 ws w (e_par w0 ws w)) 2  = vec_nth (cvec_dip w0 ws w) 2"
+    using push by simp
+  have e2_half: "vec_nth (e_par w0 ws w) 2 / 2 = sqrt 3 / 2"
+    unfolding w0_def ws_def w_def using eq2 cos_60 sin_60 w0_def w_def ws_def
+    by (simp add: Dcvec_dip_def cvec_dip_def kx_def ky_def kz_def axis_def vector_2
+        sin_pi_half cos_pi_half cos_60 sin_60)
+  have e2: "vec_nth (e_par w0 ws w) 2 = sqrt 3"
+    using e2_half by simp
+  have eq1: "- (sqrt 3 * vec_nth (e_par w0 ws w) 2 / 2)
+      - vec_nth (e_par w0 ws w) 1 = - 1 / 2"
+  proof -
+    have "vec_nth (Dcvec_dip w0 ws w (e_par w0 ws w)) 1
+      = vec_nth (cvec_dip w0 ws w) 1"
+      using push by simp
+    thus ?thesis
+      unfolding w0_def ws_def w_def 
+      by (simp add: Dcvec_dip_def cvec_dip_def kx_def ky_def kz_def axis_def vector_2
+          sin_pi_half cos_pi_half cos_60 sin_60)
+  qed
+  have e1: "vec_nth (e_par w0 ws w) 1 = - 1"
+  proof -
+    have "- (sqrt 3 * sqrt 3 / 2) - vec_nth (e_par w0 ws w) 1 = - 1 / 2"
+      using eq1 by (simp add: e2)
+    thus ?thesis
+      using sqrt3_sq by linarith
+  qed
+  have gain: "gain_dip w = 1"
+    unfolding w_def gain_dip_def by (simp add: gdip_pi_half)
+  have d1: "deriv gdip (vec_nth w 1) = 0"
+    unfolding w_def by (simp add: deriv_gdip_pi_half)
+  have d2: "deriv (deriv gdip) (vec_nth w 1) = 2 - pi\<^sup>2 / 2"
+    unfolding w_def by (simp add: deriv2_gdip_pi_half)
+  have W_eq: "2 * (deriv gdip (vec_nth w 1) * vec_nth (e_par w0 ws w) 1 + gain_dip w)\<^sup>2
+        - gain_dip w * (2 * deriv gdip (vec_nth w 1) * vec_nth (e_par w0 ws w) 1
+            + deriv (deriv gdip) (vec_nth w 1) * vec_nth (e_par w0 ws w) 1
+              * vec_nth (e_par w0 ws w) 1)
+        + (gain_dip w)\<^sup>2 * pi\<^sup>2 / 4 = 3 * pi\<^sup>2 / 4"
+    using e1 gain d1 d2 by (simp add: power2_eq_square field_simps)
+  have Wpos: "(3::real) * pi\<^sup>2 / 4 \<noteq> 0"
+    using pi_gt_zero by simp
+  show "2 * (deriv gdip (vec_nth w 1) * vec_nth (e_par w0 ws w) 1 + gain_dip w)\<^sup>2
+        - gain_dip w * (2 * deriv gdip (vec_nth w 1) * vec_nth (e_par w0 ws w) 1
+            + deriv (deriv gdip) (vec_nth w 1) * vec_nth (e_par w0 ws w) 1
+              * vec_nth (e_par w0 ws w) 1)
+        + (gain_dip w)\<^sup>2 * pi\<^sup>2 / 4 \<noteq> 0"
+    unfolding W_eq using Wpos by simp
+qed
+
+theorem Jac3_H12rad_nonzero_in_open_robust4_witness:
+  fixes V :: "((real^2)^'n::finite) set" and i j k :: 'n
+  assumes openV: "open V" and Vne: "V \<noteq> {}"
+    and ij: "i \<noteq> j"
+    and N4: "4 \<le> CARD('n)"
+  shows "\<exists>x\<in>V. Jac3_H12rad x (vector [pi / 2, pi / 3])
+      (vector [pi / 2, 0]) (vector [0, 0]) i j k \<noteq> 0"
+proof -
+  define w0 :: "real^2" where "w0 = vector [pi / 2, 0]"
+  define ws :: "real^2" where "ws = vector [0, 0]"
+  define w :: "real^2"  where "w = vector [pi / 2, pi / 3]"
+
+  have detnz: "det (matrix (Dcvec_dip w0 ws w)) \<noteq> 0"
+    unfolding w0_def ws_def w_def by (rule h12rad_robust4_omega_side_conditions(1))
+  have cnz: "cvec_dip w0 ws w \<noteq> 0"
+    unfolding w0_def ws_def w_def by (rule h12rad_robust4_omega_side_conditions(2))
+  have Knz: "vec_nth (Dcvec_dip w0 ws w (axis (2::2) 1)) 1
+        * vec_nth (cvec_dip w0 ws w) 2
+      - vec_nth (Dcvec_dip w0 ws w (axis (2::2) 1)) 2
+        * vec_nth (cvec_dip w0 ws w) 1  \<noteq> 0"
+    unfolding w0_def ws_def w_def by (rule h12rad_robust4_omega_side_conditions(3))
+  have Wnz: "2 * (deriv gdip (vec_nth w 1) * vec_nth (e_par w0 ws w) 1 + gain_dip w)\<^sup>2
+      - gain_dip w
+          * (2 * deriv gdip (vec_nth w 1)
+              * vec_nth (e_par w0 ws w) 1
+            + deriv (deriv gdip) (vec_nth w 1)
+              * vec_nth (e_par w0 ws w) 1
+              * vec_nth (e_par w0 ws w) 1)
+      + (gain_dip w)\<^sup>2 * pi\<^sup>2 / 4  \<noteq> 0"
+    unfolding w0_def ws_def w_def by (rule h12rad_robust4_omega_side_conditions(4))
+  show "\<exists>x\<in>V. Jac3_H12rad x w w0 ws i j k \<noteq> 0"
+    by (rule Jac3_H12rad_nonzero_in_open_of_det[OF openV Vne detnz ij cnz N4 Knz Wnz])
+qed
+
 end
