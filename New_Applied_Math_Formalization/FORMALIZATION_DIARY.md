@@ -4424,3 +4424,36 @@ Debugging note for the record: a fact named `term` (`have term: ...`) SILENTLY
 kills outer parsing — `term` is a diagnostic command keyword, and the error
 ("proposition expected / end-of-input") pointed everywhere but at the name.
 Fact names to avoid: term, thm, value, typ, prop, ML.
+
+## 2026-07-10 (Claude): Tier 4b landed — x-analyticity of the slot values; genericity substrate complete on the Hrad2 side
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 1245
+lines, zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0
+(1:30), guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0. First-iteration green.
+
+New machine-checked names:
+
+- `real_analytic_on_xslot_phase`: the pair phase `x \<mapsto> c \<bullet> (x\<^sub>m - x\<^sub>p)` is
+  real-analytic (bounded linear).
+- `real_analytic_on_Wc_slot_value`, `_T1rad_`, `_T2rad_`, `_T3rad_slot_value`:
+  the functions `x \<mapsto> frechet_derivative (\<lambda>y. <jet> y c) (at x) (slot m u)` are
+  real-analytic on UNIV, unconditionally — proven by rewriting with the Tier 4a
+  slot-value identities and assembling with the Real_Analytic combinator stack
+  (`real_analytic_on_sum/mult/add/diff/uminus/power/sin_comp/cos_comp`).
+- `real_analytic_on_Hrad2_slot_value` (detnz): same for the corrected
+  second-order invariant.
+- `real_analytic_on_Lambda_rad_ij_of_factors`: `Lambda_rad_ij` is analytic in
+  x GIVEN analyticity of its two `Phi_par` u-slot factors. This states the one
+  remaining gap precisely: the `Phi_par` factor is the moment/`dEjm` composite
+  (see `Phi_par_uslot_value`), and its analyticity should assemble from the
+  bridge's existing `real_analytic_on_M*_moment` / `real_analytic_on_DM*_paper_x`
+  stack (those are stated in the JOINT variable `(c, x)`; a fixed-c
+  specialization or a pairing-composition step is needed).
+
+Next concrete steps for the genericity argument:
+1. Assemble `real_analytic_on` for the `Phi_par` u-slot derivative in x
+   (fixed-c specialization of the bridge's joint moment analyticity, then the
+   `dEjm` polynomial assembly), discharging the two hypotheses above.
+2. A nonvanishing witness for `Lambda_rad_ij` (or `s_k`) at one configuration,
+   then the multivariate nowhere-dense-zeros workhorse gives genericity on the
+   fibre — the last analytic input the H12=0 branch needs.

@@ -1101,4 +1101,145 @@ proof -
     unfolding G'_def A_def B_def by simp
 qed
 
+
+section \<open>Tier 4b: x-analyticity of the slot values (so genericity can run)\<close>
+
+text \<open>\<^bold>\<open>Purpose.\<close>  The nowhere-dense-zeros workhorse needs the slot-derivative functions
+  to be real-analytic in the configuration \<open>x\<close>.  Every slot value proven in Tier 4a is a
+  finite trig sum in the pair phases \<open>c \<bullet> (x\<^sub>m - x\<^sub>p)\<close> (bounded-linear in \<open>x\<close>), so
+  analyticity is pure combinator assembly on the existing \<open>Real_Analytic\<close> stack.  The
+  final lemma reduces \<open>Lambda_rad_ij\<close>-analyticity to the two \<open>Phi_par\<close>-factor
+  analyticity facts (the moment/\<open>dEjm\<close> composite), making the one remaining gap precise.\<close>
+
+lemma real_analytic_on_xslot_phase:
+  fixes c :: "real^2" and m p :: "'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n. c \<bullet> (vec_nth x m - vec_nth x p)) UNIV"
+  by (rule real_analytic_on_bounded_linear[OF open_UNIV bounded_linear_pair_inner])
+
+theorem real_analytic_on_Wc_slot_value:
+  fixes c u :: "real^2" and m :: "'n::finite"
+  shows "real_analytic_on
+      (\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Wc y c) (at x) (slot m u)) UNIV"
+proof -
+  have eq: "(\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Wc y c) (at x) (slot m u))
+      = (\<lambda>x. 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV. - sin (c \<bullet> (vec_nth x m - vec_nth x p))))"
+    by (rule ext) (rule Wc_slot_value)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_uminus
+          real_analytic_on_sin_comp real_analytic_on_xslot_phase)
+qed
+
+theorem real_analytic_on_T1rad_slot_value:
+  fixes c u :: "real^2" and m :: "'n::finite"
+  shows "real_analytic_on
+      (\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Wc_d1 y c c) (at x) (slot m u)) UNIV"
+proof -
+  have eq: "(\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Wc_d1 y c c) (at x) (slot m u))
+      = (\<lambda>x. 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV. - (sin (c \<bullet> (vec_nth x m - vec_nth x p))
+          + (c \<bullet> (vec_nth x m - vec_nth x p)) * cos (c \<bullet> (vec_nth x m - vec_nth x p)))))"
+    by (rule ext) (rule T1rad_slot_value)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_uminus
+          real_analytic_on_add real_analytic_on_sin_comp real_analytic_on_cos_comp
+          real_analytic_on_xslot_phase)
+qed
+
+theorem real_analytic_on_T2rad_slot_value:
+  fixes c u :: "real^2" and m :: "'n::finite"
+  shows "real_analytic_on
+      (\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Wc_d2 y c c) (at x) (slot m u)) UNIV"
+proof -
+  have eq: "(\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Wc_d2 y c c) (at x) (slot m u))
+      = (\<lambda>x. 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV. - (2 * (c \<bullet> (vec_nth x m - vec_nth x p))
+            * cos (c \<bullet> (vec_nth x m - vec_nth x p))
+          - (c \<bullet> (vec_nth x m - vec_nth x p))\<^sup>2
+            * sin (c \<bullet> (vec_nth x m - vec_nth x p)))))"
+    by (rule ext) (rule T2rad_slot_value)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_uminus
+          real_analytic_on_diff real_analytic_on_power
+          real_analytic_on_sin_comp real_analytic_on_cos_comp
+          real_analytic_on_xslot_phase)
+qed
+
+theorem real_analytic_on_T3rad_slot_value:
+  fixes c u :: "real^2" and m :: "'n::finite"
+  shows "real_analytic_on
+      (\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. T3rad y c) (at x) (slot m u)) UNIV"
+proof -
+  have eq: "(\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. T3rad y c) (at x) (slot m u))
+      = (\<lambda>x. 2 * (c \<bullet> u) * (\<Sum>p\<in>UNIV.
+          3 * (c \<bullet> (vec_nth x m - vec_nth x p))\<^sup>2
+            * sin (c \<bullet> (vec_nth x m - vec_nth x p))
+          + (c \<bullet> (vec_nth x m - vec_nth x p)) ^ 3
+            * cos (c \<bullet> (vec_nth x m - vec_nth x p))))"
+    by (rule ext) (rule T3rad_slot_value)
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_add
+          real_analytic_on_power real_analytic_on_sin_comp real_analytic_on_cos_comp
+          real_analytic_on_xslot_phase)
+qed
+
+theorem real_analytic_on_Hrad2_slot_value:
+  fixes u \<omega> \<omega>0 \<omega>s :: "real^2" and m :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "real_analytic_on
+      (\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot m u)) UNIV"
+proof -
+  have eq: "(\<lambda>x::(real^2)^'n. frechet_derivative (\<lambda>y. Hrad2 y \<omega> \<omega>0 \<omega>s) (at x) (slot m u))
+      = (\<lambda>x. 2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> u) * (\<Sum>p\<in>UNIV.
+           deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+             * (- (sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                 + (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                   * cos (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))))
+           + deriv (deriv gdip) (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+               * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+             * (- sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p)))
+           + gain_dip \<omega>
+             * (- (2 * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                   * cos (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                 - (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))\<^sup>2
+                   * sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))))
+           + deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1
+             * (- (sin (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                 + (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))
+                   * cos (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> (vec_nth x m - vec_nth x p))))))"
+    by (rule ext) (rule Hrad2_slot_value[OF detnz])
+  show ?thesis
+    unfolding eq
+    by (intro real_analytic_on_mult real_analytic_on_const[OF open_UNIV]
+          real_analytic_on_sum[OF open_UNIV finite] real_analytic_on_add
+          real_analytic_on_diff real_analytic_on_uminus real_analytic_on_power
+          real_analytic_on_sin_comp real_analytic_on_cos_comp
+          real_analytic_on_xslot_phase)
+qed
+
+text \<open>\<^bold>\<open>The remaining gap, made precise.\<close>  \<open>Lambda_rad_ij\<close> is a polynomial in the
+  \<open>Phi_par\<close> u-slot derivatives and the \<open>Hrad2\<close> u-slot derivatives.  The \<open>Hrad2\<close> factors
+  are analytic by the theorem above; the \<open>Phi_par\<close> factors are the moment/\<open>dEjm\<close>
+  composite (see \<open>Phi_par_uslot_value\<close>), whose analyticity assembles from the bridge's
+  \<open>real_analytic_on_M*_moment\<close> / \<open>real_analytic_on_DM*_paper_x\<close> stack --- stated here as
+  explicit hypotheses so the genericity argument can consume this lemma the moment that
+  assembly lands.\<close>
+
+lemma real_analytic_on_Lambda_rad_ij_of_factors:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i j :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and phi_i: "real_analytic_on (\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot i (cvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
+    and phi_j: "real_analytic_on (\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x) (slot j (cvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
+  shows "real_analytic_on (\<lambda>x. Lambda_rad_ij x \<omega> \<omega>0 \<omega>s i j) UNIV"
+  unfolding Lambda_rad_ij_def
+  by (intro real_analytic_on_diff real_analytic_on_mult phi_i phi_j
+        real_analytic_on_Hrad2_slot_value[OF detnz])
+
 end
