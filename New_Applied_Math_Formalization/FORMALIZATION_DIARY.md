@@ -4332,3 +4332,40 @@ Next (Tier 2b): the same uniqueness pattern one order up — identify
 (against `HessU_explicit` / `gradU_dip_has_derivative`), yielding the level-2
 identity on `HessU = 0`, then the cubic dictionary that hands the stratum role
 to `T3rad`.
+
+## 2026-07-10 (Claude): Tier 2b landed — second-order dictionary, the H_par residual exhibited, and the corrected invariant Hrad2
+
+Spliced into `Appendix/AnalyticBridge/D34_Geodesic_Branch.thy` (now 812 lines,
+zero admissions). Builds: `Applied_Math_D34_Analytic` BUILD_EXIT=0 (0:44),
+guard `Applied_Math_M5_Geodesic` BUILD_EXIT=0.
+
+New machine-checked names:
+
+- `has_derivative_pair_phase_sum_c_coeff`, `Wc_dd` (the mixed bilinear
+  \<open>-\<Sum>(d\<sqdot>\<delta>)(u\<sqdot>\<delta>)cos(c\<sqdot>\<delta>)\<close>), `Wc_d2_eq_dd`, `has_derivative_Wc_d1_c`.
+- `has_derivative_Wc_d1_comp`: omega-derivative of the Dcvec-composed radial
+  first derivative — this is where `D2cvec_dip` enters, via the heap's
+  `has_derivative_Dcvec_dip`.
+- `HessU_quad_dictionary` (NO hypotheses): every Hessian contraction
+  `(HessU *v w) \<bullet> e` in explicit c-jet data + the `D2cvec_dip` correction —
+  proven by `has_derivative_unique` against `gradU_dip_has_derivative`
+  (the heap's "derivative of the gradient field IS the Hessian" fact).
+- `H_par_eq_quadform`, `H_par_radial_dictionary` (only `det Dcvec \<noteq> 0`):
+  `H_par` = radial c-jet combination + `gain \<cdot> Wc_d1(c; D2cvec(e_par,e_par))`.
+  The second summand is EXACTLY the residual that the old approach needed to
+  vanish (the refuted `h_par_vslot_zero`); it is now a named, explicit,
+  machine-checked term instead of a false hope.
+- `Hrad2 := H_par - gain \<cdot> Wc_d1(c; D2cvec(e_par,e_par))` — the corrected
+  second-order invariant; `Hrad2_radial_form` (purely radial jet).
+- **`Hrad2_slot_perp_zero`** (only `det Dcvec \<noteq> 0`): the x-slot derivative of
+  `Hrad2` in direction `slot m (perp2 c)` is ZERO — proven by folding the
+  radial form into a single scalar profile G and applying the pair-phase
+  master law. This is the sound, unconditional replacement for the false
+  `h_par_vslot_zero` hypothesis carried by the bridge's Jac3_H12zero section:
+  the H12=0 branch's rank-3 criterion can now be rebuilt on `Hrad2` with no
+  carried assumption.
+
+Next (Tier 3): rebuild the `Jac3_H12zero` block-triangular criterion with
+`Hrad2` in `H_par`'s place (the v-slot column entries now provably vanish),
+and the cubic tier: `T3rad` third-order dictionary on the full-Hessian-zero
+stratum for the H11=H22=0 sub-branch.
