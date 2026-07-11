@@ -5085,3 +5085,12 @@ countable/isolated), and (b) the fixed-angle-to-arc bridge for
 `d3_detHess_arc_chart_core_all` (the solve-the-parameter IFT branch).
 Splicing the scratch layers into `Appendix/Wiring/D3_Chart_Wiring.thy` and
 rebuilding the wiring heap is now worth doing as a consolidation step.
+
+ADDENDUM (same session): **`fixed_omega_H0core_chart_core_robust4_witness`**
+— at the Robust4 design point `\<omega>0 = (\<pi>/2, 0)`, `\<omega>s = 0`, `\<omega> = (\<pi>/2, \<pi>/3)` both
+angle conditions discharge from existing facts:
+`cvec \<noteq> 0` is `h12rad_robust4_omega_side_conditions(2)`, and the global
+factor is `2 \<cdot> gain \<cdot> (Dcvec(axis 2 1) \<bullet> perp2 c) = -2 \<cdot> (D\<^sub>1 c\<^sub>2 - D\<^sub>2 c\<^sub>1)` —
+the NEGATIVE of side condition (3) — with `gain = gdip(\<pi>/2) = 1`. So
+`d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}` holds at the capstone design point
+under `2 \<le> CARD('n)` alone. First-iteration green; scratch now 1386 lines.

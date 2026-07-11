@@ -1231,6 +1231,52 @@ theorem fixed_omega_H0core_chart_core_of_angle_conditions:
   by (rule fixed_omega_H0core_chart_core_from_phase_aligned_residual[OF cnz facnz
         fixed_omega_phase_aligned_residual_chart_core_data[OF cnz card2]])
 
+text \<open>At the Robust4 design point \<open>\<omega>\<^sub>0 = (\<pi>/2, 0)\<close>, \<open>\<omega>\<^sub>s = 0\<close>, \<open>\<omega> = (\<pi>/2, \<pi>/3)\<close>,
+  both angle conditions are literally the geodesic branch's side-condition
+  facts: \<open>cvec \<noteq> 0\<close> is condition (2), and the global factor is
+  \<open>2 \<cdot> gain \<cdot> (Dcvec(axis 2 1) \<bullet> perp2 c) = -2 \<cdot> (D\<^sub>1 c\<^sub>2 - D\<^sub>2 c\<^sub>1)\<close>, the negative
+  of condition (3), with \<open>gain = gdip(\<pi>/2) = 1\<close>.\<close>
+
+theorem fixed_omega_H0core_chart_core_robust4_witness:
+  fixes V :: "((real^2)^'n::finite) set"
+  assumes card2: "2 \<le> CARD('n)"
+  shows "d3_detHess_arc_chart_core V (vector [pi / 2, 0]) (vector [0, 0])
+      {vector [pi / 2, pi / 3]}"
+proof (rule fixed_omega_H0core_chart_core_of_angle_conditions)
+  show "cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 3]) \<noteq> 0"
+    by (rule h12rad_robust4_omega_side_conditions(2))
+  show "2 \<le> CARD('n)"
+    by (rule card2)
+  have gain: "gain_dip (vector [pi / 2, pi / 3]) = 1"
+    unfolding gain_dip_def by (simp add: vector_2 gdip_pi_half)
+  have key: "vec_nth (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+          (vector [pi / 2, pi / 3]) (axis (2::2) 1)) 1
+      * vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+          (vector [pi / 2, pi / 3])) 2
+      - vec_nth (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+          (vector [pi / 2, pi / 3]) (axis (2::2) 1)) 2
+        * vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+          (vector [pi / 2, pi / 3])) 1
+      \<noteq> 0"
+    by (rule h12rad_robust4_omega_side_conditions(3))
+  have expand: "Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+        (vector [pi / 2, pi / 3]) (axis (2::2) 1)
+      \<bullet> perp2 (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 3]))
+      = - (vec_nth (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3]) (axis (2::2) 1)) 1
+          * vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3])) 2
+        - vec_nth (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3]) (axis (2::2) 1)) 2
+          * vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
+            (vector [pi / 2, pi / 3])) 1)"
+    by (simp add: perp2_def inner_vec_def sum_2 vector_2 algebra_simps)
+  show "d3_s2_global_factor (vector [pi / 2, 0]) (vector [0, 0])
+      (vector [pi / 2, pi / 3]) \<noteq> 0"
+    unfolding d3_s2_global_factor_def expand
+    using key by (simp add: gain)
+qed
+
 subsection \<open>Arc chart core from countably many fixed-\<open>\<omega>\<close> pieces\<close>
 
 theorem d3_chart_core_of_fixed_omega_piece_cover:
