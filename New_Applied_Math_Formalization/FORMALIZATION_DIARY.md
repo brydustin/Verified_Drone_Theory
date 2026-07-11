@@ -5257,3 +5257,126 @@ so, decide whether to attempt the joint-chart (varying with \<open>\<omega>\<clo
 needed to close the arc-cover, or scope it as a separate multi-session
 project.  The entire D4/`branchP_indep_closed_cover_core_all` program remains
 completely untouched.
+
+## 2026-07-11 (Claude), continued: every angle in the Robust4 box is regular
+
+Checked (at the user's request) whether `gain_dip \<omega> \<noteq> 0` and
+`det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0` hold identically throughout the
+design box `OmegaPF (\<pi>/2,0) (\<pi>/4)`.  Result: `gain_dip \<noteq> 0` does (already
+essentially proved via the existing `pf` fact + `gain_dip_nonzero_of_sin`).
+`det (matrix Dcvec) \<noteq> 0` does NOT --- worked out the closed form
+`det = sin\<omega>\<^sub>1 \<cdot> (cos\<omega>\<^sub>1 - sin\<omega>\<^sub>1 \<cdot> cos\<omega>\<^sub>2)` at this design point (via
+`Dcvec_det_eq`, Nonemptiness_Robust3.thy:770) and found it vanishes at, e.g.,
+\<omega>=(\<pi>/2,\<pi>/2) and \<omega>=(\<pi>/4,0), both inside the box (the box's second
+coordinate is UNCONSTRAINED --- `OmegaPF`'s half-width there is hard-coded to
+\<pi> regardless of \<delta>).  So `fixed_omega_H0core_chart_core_of_generic_conditions`
+does not close every angle after all.
+
+BUT: checked (per the user's choice, before committing to a big finite-cover
+mirror of `D3_Curve_Cover.thy` for this new locus) whether the TRUE bad locus
+(`d3_s1_global_factor = 0 \<and> d3_s2_global_factor = 0`) could be smaller than
+`{det Dcvec = 0}`.  Worked out both factors explicitly at the design point:
+`d3_s1_global_factor \<propto> sin\<omega>\<^sub>2 \<cdot> (1-\<cos\<omega>\<^sub>1)` (in fact this equals
+`-2\<cdot>gain\<cdot>d3_crossTheta`, an exact identity: `Dcvec(axis 1 1)\<cdot>perp2(c)` is
+literally `-d3_crossTheta` by definition, for ANY \<omega>0,\<omega>s) and
+`d3_s2_global_factor \<propto> sin\<omega>\<^sub>1\<cdot>(\<sin\<omega>\<^sub>1 + \<cos\<omega>\<^sub>2\cdot(\<cos\<omega>\<^sub>1-1))`.  Solving "both
+zero" with `0<\<omega>\<^sub>1<\<pi>` (elementary trig only --- square, use
+`sin\<^sup>2+\<cos\<^sup>2=1`, discard the spurious root) gives a UNIQUE solution:
+\<omega>=(\<pi>/2,0) = \<omega>0 itself, where `cvec_dip = 0` anyway (already vacuous by
+`D3BadXG_H0core`'s own definition).  So the true bad locus is EMPTY once you
+exclude a point that was already excluded for an unrelated reason.
+
+New scratch theorems (`M5_Dev_Wiring/Scratch_Wiring.thy`, appended after the
+generic-conditions capstone, now ~2900 lines):
+
+- `d3_s1_s2_both_zero_forces_cvec_zero_robust4`: `0<\<omega>$1<\<pi> \<and> both factors
+  zero \<Longrightarrow> cvec_dip (\<pi>/2,0) (0,0) \<omega> = 0`.
+- `fixed_omega_H0core_chart_core_robust4_all_angles`: `0<\<omega>$1<\<pi> \<and> 2\<le>CARD('n)
+  \<Longrightarrow> d3_detHess_arc_chart_core V (\<pi>/2,0) (0,0) {\<omega>}` --- UNCONDITIONALLY, no
+  exceptions, at the literal Robust4 design point.  (Empty-fibre case handled
+  via `chart_core_data_of_functional_cuts` instantiated at the empty cover;
+  nonempty case splits on which factor is nonzero.)
+
+Debugging notes (both fixed by the by-now-familiar patterns): (1) a
+Pythagorean-collapse residual in `D1eq`/`D2eq`'s raw `simp` needed the exact
+`trig_collapse`/`trig_collapse2` `also`-chain helper pattern (gotcha 7 family
+--- `simp add: fact` loses the race when `algebra_simps` normalizes the
+fact's own LHS differently); (2) `by algebra` failed on plain
+`(a+b)\<^sup>2=a\<^sup>2+b\<^sup>2+2ab`-type goals in this session (unclear why; the `algebra`
+method apparently doesn't unfold `\<^sup>2`) --- replaced throughout with
+`simp add: power2_eq_square algebra_simps`, explicit `also`/`hence` chains.
+Also hit a spurious Edit-tool no-op (a rewrite reported "updated successfully"
+but the disk file was unchanged on the next reload) --- caught by grepping
+the actual file content immediately after editing rather than trusting the
+tool's own report, then redone successfully.
+
+Verification: ML_process reload green (zero `sorry`/`oops`), independently
+confirmed by a full batch `isabelle build` (`Finished Applied_Math_M5_Wiring`,
+BUILD had one false failure from an "Incoherent digest" caused by editing the
+file mid-build --- rerun after edits settled was clean).  Committed together
+with Codex's piece-cover reduction batch-verify from earlier today (see the
+"Batch-verify Codex's Robust4 piece-cover reductions..." commit) plus this
+addendum in a follow-up commit.
+
+## 2026-07-11 (Claude), continued: the arc-packaging problem is a known, deferred gap
+
+User asked: is D3 complete?  No --- explained the distinction clearly: every
+FIXED angle is now regular, but `d3_detHess_arc_chart_core_all` needs a
+COUNTABLE chart cover of `V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>` for an entire
+analytic ARC \<gamma> (a continuum of angles), and individual-angle regularity does
+not imply this.  User asked me to tackle it.
+
+Found (by reading, not guessing) that this exact gap is ALREADY documented in
+`Appendix/Wiring/D3_Chart_Wiring.thy`'s own docstring, written by whoever
+built the pre-Codex/pre-Claude infrastructure: "What converts 'the fibre is
+locally inside a level set of a C\<^sup>1 triple with rank-3 x-derivative' into the
+charts/Crit/D data ... is a level-set-to-rank-deficient-closed-cover engine
+... That engine is the next tier; this theory pins its interface."  So this
+is a DELIBERATELY deferred piece, not an oversight --- confirms the difficulty
+assessment rather than revealing a missed shortcut.
+
+Worked out BY HAND why individual-angle regularity doesn't suffice (the
+"sliding zero" argument): a bad x-configuration can in principle be witnessed
+by a DIFFERENT critical angle for every nearby x, sweeping through
+uncountably many angles with no finite/countable subfamily sufficing, UNLESS
+ruled out by a genuine joint (x,\<omega>) argument.  Dimension-counted the fix: the
+existing single-scalar functional-cut engine
+(`chart_core_data_of_functional_cuts`) only reduces codimension by 1 per cut;
+using it on an AUXILIARY residual condition (not `gradU=0` itself) does NOT
+shrink dimension when \<omega> is allowed to vary jointly with x (the auxiliary
+cut alone, unioned over a 1-parameter family of \<omega>, generically SWEEPS OUT a
+FULL-DIMENSIONAL piece of x-space --- confirmed this is the same failure mode
+as the naive "dense sample of angles" idea).  The FIX needs a genuine
+CORANK-3 cut (3 simultaneous scalar constraints with an invertible 3x3
+sub-Jacobian, e.g. `gradU=0` (2 eqns) plus one more, OR the pre-existing
+geodesic-branch `(Phi_par, Phi2, G11)` triple with its `Jac3_*` rank-3
+criteria --- Tiers 1-6, already GENERIC + witnessed at the design point per
+[[new-applied-math-tree]]) to properly eliminate the arc parameter and land
+directly on a codim-(\<ge>1) submanifold of X-SPACE ALONE (not needing \<omega> in the
+final description).  Once that's available pointwise, `V`'s presumed
+boundedness (it's `interior(Ffeas(...))`, inside a ball of radius `R`) plus
+Heine-Borel should give a FINITE subcover, mirroring exactly the assembly
+strategy `Appendix/Robust4Cover/D3_Curve_Cover.thy` already used successfully
+for the (much simpler, 2D-\<omega>-only) `d3_crossTheta` locus.
+
+Presented this scoping honestly to the user (multi-session undertaking,
+comparable to or larger than the existing ~3650-line `D3_Curve_Cover.thy`)
+with three options; user chose to commit to building it now, incrementally.
+Plan for the next concrete steps: (1) confirm `V`'s boundedness; (2) build a
+GENERIC reusable corank-k chart-core-data engine (the direct higher-corank
+generalization of `chart_core_data_of_functional_cuts`'s psi-transform trick:
+project via `L_W^{-1}` where `L_W` is the restriction of the cut's derivative
+to a k-dimensional slot subspace, assumed invertible as a map to `R^k`); (3)
+attempt to wire ONE geodesic-branch rank-3 branch (likely `Jac3_H0cub`, since
+its side condition is "hypothesis-free" per [[new-applied-math-tree]]) through
+this engine as a proof of concept.
+
+Step (1) confirmed cheaply: `V` (in every Robust4 capstone use,
+`V = interior (Ffeas ...)`) has COMPACT CLOSURE for free.
+`Ffeas_compact` (Nonemptiness_Robust1.thy:83) already proves `Ffeas` itself
+is compact (closed constraints intersected with `cball 0 R`); since
+`closure (interior S) \<subseteq> closure S = S` for any compact (hence closed) `S`,
+`closure V \<subseteq> Ffeas`, a closed subset of a compact set, hence compact.  So
+`V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>` sits inside a compact set, setting up the
+Heine-Borel finite-subcover step exactly as needed once the local corank-3
+chart data is available --- no new work required for boundedness itself.

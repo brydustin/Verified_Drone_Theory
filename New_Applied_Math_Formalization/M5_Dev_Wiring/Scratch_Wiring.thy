@@ -413,7 +413,7 @@ lemma d3_s2_perp_slot_value:
            * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
                * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x k)"
   unfolding d3_s2_perp_slot_def d3_s2_global_factor_def
-  by (simp add: Phi2_perp_slot_value[OF perp2_orth])
+  by (simp only: Phi2_perp_slot_value[OF perp2_orth])
 
 definition D3H0_slicable_branch ::
   "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> ((real^2)^'n) set" where
@@ -2733,6 +2733,189 @@ next
   hence facnz2: "d3_s2_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0" by simp
   show ?thesis
     by (rule fixed_omega_H0core_chart_core_of_angle_conditions[OF cnz facnz2 card2])
+qed
+
+subsection \<open>At the Robust4 design point, EVERY angle in the box is regular\<close>
+
+text \<open>Sharper than the generic-conditions theorem: at the literal Robust4
+  design values, the two factors vanishing SIMULTANEOUSLY (given the box's
+  own \<open>0 < \<omega>\<^sub>1 < \<pi>\<close> constraint) forces \<open>\<omega> = \<omega>0\<close> itself, i.e. forces
+  \<open>cvec_dip = 0\<close> --- which already makes the whole bad fibre empty by
+  definition, needing no chart at all.  So there is NO exceptional angle:
+  every \<open>\<omega>\<close> with \<open>0 < \<omega>\<^sub>1 < \<pi>\<close> (in particular every \<open>\<omega>\<close> in the design box,
+  by the pre-existing \<open>pf\<close> fact) is individually regular.\<close>
+
+lemma d3_s1_s2_both_zero_forces_cvec_zero_robust4:
+  fixes \<omega> :: "real^2"
+  assumes w1lo: "0 < vec_nth \<omega> 1" and w1hi: "vec_nth \<omega> 1 < pi"
+    and f1z: "d3_s1_global_factor (vector [pi / 2, 0]) (vector [0, 0]) \<omega> = 0"
+    and f2z: "d3_s2_global_factor (vector [pi / 2, 0]) (vector [0, 0]) \<omega> = 0"
+  shows "cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega> = 0"
+proof -
+  have sinw1: "0 < sin (vec_nth \<omega> 1)"
+    by (rule sin_gt_zero[OF w1lo w1hi])
+  have gnz: "gain_dip \<omega> \<noteq> 0"
+    by (rule gain_dip_nonzero_of_sin) (use sinw1 in force)
+  have trig_collapse: "cos (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+      + sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+      = sin (vec_nth \<omega> 2)"
+  proof -
+    have "cos (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+        + sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+        = ((cos (vec_nth \<omega> 1)) * (cos (vec_nth \<omega> 1))
+            + (sin (vec_nth \<omega> 1)) * (sin (vec_nth \<omega> 1))) * sin (vec_nth \<omega> 2)"
+      by (simp only: mult.assoc distrib_right)
+    also have "\<dots> = sin (vec_nth \<omega> 2)"
+      by (simp only: sin_cos_squared_add3)
+    finally show ?thesis .
+  qed
+  have D1eq: "Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega> (axis 1 1)
+      \<bullet> perp2 (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega>)
+      = sin (vec_nth \<omega> 2) * (1 - cos (vec_nth \<omega> 1))"
+    by (simp add: Dcvec_dip_def cvec_dip_def perp2_def kx_def ky_def kz_def
+        axis_def inner_vec_def sum_2 vector_2 sin_pi_half cos_pi_half algebra_simps
+        trig_collapse)
+  have trig_collapse2: "sin (vec_nth \<omega> 1)
+      * (sin (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 2) * cos (vec_nth \<omega> 2)))
+    + sin (vec_nth \<omega> 1)
+      * (sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 2) * sin (vec_nth \<omega> 2)))
+    = sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 1)"
+  proof -
+    have "sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 2) * cos (vec_nth \<omega> 2)))
+        + sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 2) * sin (vec_nth \<omega> 2)))
+        = (sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 1))
+            * (cos (vec_nth \<omega> 2) * cos (vec_nth \<omega> 2) + sin (vec_nth \<omega> 2) * sin (vec_nth \<omega> 2))"
+      by (simp only: mult.assoc distrib_left)
+    also have "\<dots> = sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 1)"
+      by (simp only: sin_cos_squared_add3)
+    finally show ?thesis .
+  qed
+  have D2eq: "Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega> (axis 2 1)
+      \<bullet> perp2 (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega>)
+      = sin (vec_nth \<omega> 1)
+          * (sin (vec_nth \<omega> 1) + cos (vec_nth \<omega> 2) * (cos (vec_nth \<omega> 1) - 1))"
+    using trig_collapse2
+    by (simp add: Dcvec_dip_def cvec_dip_def perp2_def kx_def ky_def kz_def
+        axis_def inner_vec_def sum_2 vector_2 sin_pi_half cos_pi_half algebra_simps
+        trig_collapse)
+  have f1z': "sin (vec_nth \<omega> 2) * (1 - cos (vec_nth \<omega> 1)) = 0"
+    using f1z gnz D1eq unfolding d3_s1_global_factor_def by (simp add: mult_eq_0_iff)
+  have f2z': "sin (vec_nth \<omega> 1) + cos (vec_nth \<omega> 2) * (cos (vec_nth \<omega> 1) - 1) = 0"
+    using f2z gnz D2eq sinw1 unfolding d3_s2_global_factor_def by (simp add: mult_eq_0_iff)
+  have c_lt1: "cos (vec_nth \<omega> 1) < 1"
+  proof -
+    have h0: "0 < vec_nth \<omega> 1 / 2" using w1lo by simp
+    have h2: "vec_nth \<omega> 1 / 2 < 2" using w1hi pi_less_4 by linarith
+    have "cos (2 * (vec_nth \<omega> 1 / 2)) < 1"
+      by (rule cos_double_less_one[OF h0 h2])
+    thus ?thesis by simp
+  qed
+  have sinw2z: "sin (vec_nth \<omega> 2) = 0"
+    using f1z' c_lt1 by auto
+  have cosw2pm: "\<bar>cos (vec_nth \<omega> 2)\<bar> = 1"
+    by (rule sin_zero_abs_cos_one[OF sinw2z])
+  have c1eq: "vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega>) 1
+      = sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2) + cos (vec_nth \<omega> 1) - 1"
+    by (simp add: cvec_dip_def kx_def ky_def kz_def axis_def vector_2
+        sin_pi_half cos_pi_half algebra_simps)
+  have c2eq: "vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega>) 2
+      = sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2)"
+    by (simp add: cvec_dip_def kx_def ky_def kz_def axis_def vector_2
+        sin_pi_half cos_pi_half algebra_simps)
+  show ?thesis
+  proof (cases "cos (vec_nth \<omega> 2) = 1")
+    case True
+    have sumeq1: "sin (vec_nth \<omega> 1) + cos (vec_nth \<omega> 1) = 1"
+      using f2z' True by simp
+    have sq: "sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 1) = 0"
+    proof -
+      have "1 = (sin (vec_nth \<omega> 1) + cos (vec_nth \<omega> 1))\<^sup>2"
+        using sumeq1 by simp
+      also have "\<dots> = (sin (vec_nth \<omega> 1))\<^sup>2 + (cos (vec_nth \<omega> 1))\<^sup>2
+          + 2 * (sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 1))"
+        by (simp add: power2_eq_square algebra_simps)
+      also have "\<dots> = 1 + 2 * (sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 1))"
+        using sin_cos_squared_add[of "vec_nth \<omega> 1"] by simp
+      finally show ?thesis by simp
+    qed
+    have cosz: "cos (vec_nth \<omega> 1) = 0"
+      using sq sinw1 by simp
+    have sinw1eq1: "sin (vec_nth \<omega> 1) = 1"
+      using sumeq1 cosz by simp
+    have "vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega>) 1 = 0"
+      unfolding c1eq using True cosz
+      by (simp add: sinw1eq1)
+    moreover have "vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega>) 2 = 0"
+      unfolding c2eq using sinw2z by simp
+    ultimately show ?thesis
+      by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2)
+  next
+    case False
+    hence cosw2m1: "cos (vec_nth \<omega> 2) = - 1"
+      using cosw2pm by (simp add: abs_if split: if_splits)
+    have eqn: "sin (vec_nth \<omega> 1) - cos (vec_nth \<omega> 1) + 1 = 0"
+      using f2z' cosw2m1 by simp
+    have contra: "2 * sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 1) + 1) = 0"
+    proof -
+      have s1: "sin (vec_nth \<omega> 1) + 1 = cos (vec_nth \<omega> 1)"
+        using eqn by simp
+      have "(sin (vec_nth \<omega> 1) + 1)\<^sup>2 = (cos (vec_nth \<omega> 1))\<^sup>2"
+        using s1 by simp
+      also have "(cos (vec_nth \<omega> 1))\<^sup>2 = 1 - (sin (vec_nth \<omega> 1))\<^sup>2"
+        using sin_cos_squared_add[of "vec_nth \<omega> 1"]
+        using cos_squared_eq by blast
+      finally have "(sin (vec_nth \<omega> 1))\<^sup>2 + 2 * sin (vec_nth \<omega> 1) + 1
+          = 1 - (sin (vec_nth \<omega> 1))\<^sup>2"
+        using c_lt1 s1 sinw1 by argo
+      hence "2 * (sin (vec_nth \<omega> 1))\<^sup>2 + 2 * sin (vec_nth \<omega> 1) = 0"
+        by argo
+      thus ?thesis
+        using c_lt1 s1 sinw1 by argo
+    qed
+    have "sin (vec_nth \<omega> 1) + 1 \<noteq> 0" using sinw1 by simp
+    hence False using contra sinw1 by auto
+    thus ?thesis ..
+  qed
+qed
+
+theorem fixed_omega_H0core_chart_core_robust4_all_angles:
+  fixes V :: "((real^2)^'n::finite) set" and \<omega> :: "real^2"
+  assumes w1lo: "0 < vec_nth \<omega> 1" and w1hi: "vec_nth \<omega> 1 < pi"
+    and card2: "2 \<le> CARD('n)"
+  shows "d3_detHess_arc_chart_core V (vector [pi / 2, 0]) (vector [0, 0]) {\<omega>}"
+proof (cases "cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega> = 0")
+  case True
+  have empty: "(V \<inter> D3BadXG_H0core (vector [pi / 2, 0]) (vector [0, 0]) {\<omega>}
+      :: ((real^2)^'n) set) = {}"
+    using True unfolding D3BadXG_H0core_def by auto
+  show ?thesis
+    unfolding d3_detHess_arc_chart_core_def empty
+    by (rule chart_core_data_of_functional_cuts
+          [of "{} :: ((real^2)^'n) set" "\<lambda>i::nat. ({} :: ((real^2)^'n) set)"
+              "\<lambda>(i::nat) (x::(real^2)^'n). (0::real)"
+              "\<lambda>(i::nat) (x::(real^2)^'n) (v::(real^2)^'n). (0::real)"
+              "\<lambda>(i::nat) (x::(real^2)^'n). x"];
+        simp)
+next
+  case False
+  hence cnz: "cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega> \<noteq> 0" .
+  show ?thesis
+  proof (cases "d3_s2_global_factor (vector [pi / 2, 0]) (vector [0, 0]) \<omega> = 0")
+    case True
+    have f1nz: "d3_s1_global_factor (vector [pi / 2, 0]) (vector [0, 0]) \<omega> \<noteq> 0"
+    proof
+      assume f1z: "d3_s1_global_factor (vector [pi / 2, 0]) (vector [0, 0]) \<omega> = 0"
+      have "cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega> = 0"
+        by (rule d3_s1_s2_both_zero_forces_cvec_zero_robust4[OF w1lo w1hi f1z True])
+      thus False using cnz by simp
+    qed
+    show ?thesis
+      by (rule fixed_omega_H0core_chart_core_of_angle_conditions1[OF cnz f1nz card2])
+  next
+    case False
+    show ?thesis
+      by (rule fixed_omega_H0core_chart_core_of_angle_conditions[OF cnz False card2])
+  qed
 qed
 
 end
