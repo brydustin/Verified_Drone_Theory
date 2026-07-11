@@ -5532,3 +5532,54 @@ empty) locus where BOTH radial directions fail still needs handling --- untouche
 so far); (b) even once local rank-2 chart data exists for a fixed \<omega>, the
 Heine-Borel compactness assembly across the whole arc \<gamma> is still a
 separate, unbuilt step.
+
+## 2026-07-11, continued: the real wall --- chart-core's type has no room for \<open>t\<close>
+
+Attempted (b) above: assemble the rank-2 x-space argument into an ACTUAL
+arc-level chart.  Hit what looks like a genuine structural wall, not just
+"more work of the same kind" --- worth recording precisely so nobody
+re-derives this the hard way.
+
+`d3_detHess_arc_chart_core`'s type is `charts : X \<Rightarrow> X \<times> real^2`,
+`Crit \<subseteq> X` --- a PURE X-SPACE object, with NO \<omega>/arc-parameter \<open>t\<close> anywhere
+in the signature.  The rank-2 construction (perp direction \<open>v_perp\<close> + radial
+direction \<open>v_rad\<close>, both PURE \<open>x\<close>-directions) eliminates 2 degrees of
+freedom from the JOINT \<open>(x,t)\<close> system (dimension \<open>dim(x)+1\<close>, since \<open>t\<close> is
+still a free coordinate on it after using ONLY x-directions to eliminate 2
+of the \<open>dim(x)\<close> x-coordinates), leaving a graph PARAMETRIZED BY
+\<open>(x_rest, t)\<close> --- a \<open>(dim(x)-1)\<close>-dimensional object still living in the
+JOINT space, with \<open>t\<close> still explicitly present as a free coordinate.
+
+To get an X-SPACE-ONLY chart (matching the required type), \<open>t\<close> itself must
+be ELIMINATED --- solved as a function of \<open>x\<close> --- and THAT requires a THIRD
+transversality condition, this time genuinely in the \<open>t\<close>-direction (e.g.
+using \<open>gradU\<close>'s OWN \<open>t\<close>-derivative, built from \<open>HessU\<close>'s action on the
+arc's tangent vector).  This is EXACTLY the x-dependent,
+no-existing-analogue quantity flagged as the wall two entries above.  So:
+however many clever x-direction tricks are found (the rank-2 reframing
+correctly avoids the wall for the PURELY-x-space PART of the argument), NONE
+of them can, by themselves, convert "critical at SOME angle on this arc"
+into an x-space-only chart --- the arc parameter has to be eliminated
+somehow, and the only elimination route found so far (a \<open>t\<close>-derivative
+condition) reintroduces exactly the x-dependent obstruction.
+
+CONCLUSION: closing `d3_detHess_arc_chart_core_all` genuinely needs one of:
+(a) a DIFFERENT \<open>t\<close>-elimination route not yet found (a \<open>t\<close>-derivative
+quantity that ISN'T x-dependent the way `HessU`'s row is --- unclear if one
+exists); or (b) the FULL local-C\<^sup>1-graph + invariance-of-domain +
+compactness construction, mirroring
+`Appendix/Robust4Cover/D3_Curve_Cover.thy`'s treatment of the (much simpler,
+purely 2D-\<omega>-space) `d3_crossTheta` locus, adapted to this much
+higher-dimensional joint \<open>(x,\<omega>)\<close> setting --- realistically the
+~3650-line-scale undertaking flagged at the start of this whole thread, not
+a translation exercise.
+
+What SURVIVES from this push, as genuinely reusable scaffolding for whoever
+tackles (b) next: `chart_core_data_of_vector_cuts` (the generic corank-k
+engine, commit `c4a0ff7`) and
+`Phi_par_uslot_radial_nowhere_dense_disjunction` (commit `360d470`) --- both
+independently useful, verified, and NOT wasted effort, even though they did
+not by themselves close the gap.  The \"HessU range direction vs \<open>e_par\<close>\"
+and \"\<open>t\<close>-derivative transversality\" difficulties identified in this and
+the prior entry are the SAME underlying obstruction seen from two angles ---
+worth remembering as ONE fact, not two, when picking this back up.
