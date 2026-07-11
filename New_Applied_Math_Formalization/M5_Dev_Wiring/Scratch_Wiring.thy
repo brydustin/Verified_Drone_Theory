@@ -2918,4 +2918,132 @@ next
   qed
 qed
 
+section \<open>The corank-k functional cut engine: joint vector-valued cuts\<close>
+
+text \<open>Generalizes @{thm chart_core_data_of_functional_cuts} from a single
+  scalar cut (corank 1) to a VECTOR-valued cut \<open>f : 'a \<Rightarrow> 'b\<close> (corank
+  \<open>DIM('b)\<close>), given a pointwise bounded-linear RIGHT INVERSE \<open>W\<close> of the
+  cut's derivative \<open>L\<close> (i.e. \<open>L (W t) = t\<close> for all \<open>t\<close>).  The same
+  \<psi>-transform trick applies: \<open>\<psi>(w) = w - W (f w)\<close> equals the identity on
+  the cut (where \<open>f \<equiv> 0\<close>, using \<open>W\<close> linear so \<open>W 0 = 0\<close>) and has full
+  derivative the projection \<open>P(v) = v - W (L v)\<close> onto \<open>ker L\<close>, which is
+  proper since \<open>L\<close> maps ONTO the nontrivial space \<open>'b\<close> (\<open>DIM('b) \<ge> 1\<close> for
+  any @{class euclidean_space}, via @{thm nonempty_Basis}) --- so \<open>P\<close> is
+  automatically non-surjective, with NO \<epsilon>-\<delta>, no IFT.  This is exactly the
+  engine \<open>Appendix/Wiring/D3_Chart_Wiring.thy\<close> calls "the next tier": the
+  intended eventual target is the geodesic-branch \<open>(Phi_par, Phi2, G11)\<close>
+  triple with its \<open>Jac3_*\<close> rank-3 side conditions (\<open>'b\<close> a 3-dimensional
+  space there), but the engine itself is fully generic in the corank.\<close>
+
+lemma vector_cut_projection_bounded_linear:
+  fixes L :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_vector"
+    and W :: "'b \<Rightarrow> 'a"
+  assumes lL: "bounded_linear L" and lW: "bounded_linear W"
+  shows "bounded_linear (\<lambda>v. v - W (L v))"
+  by (intro bounded_linear_sub bounded_linear_ident
+        bounded_linear_compose[OF lW lL])
+
+lemma vector_cut_projection_not_surj:
+  fixes L :: "'a::real_normed_vector \<Rightarrow> 'b::euclidean_space"
+    and W :: "'b \<Rightarrow> 'a"
+  assumes lin_L: "linear L"
+    and right_inv: "\<And>t. L (W t) = t"
+  shows "\<not> surj (\<lambda>v. v - W (L v))"
+proof
+  assume s: "surj (\<lambda>v. v - W (L v))"
+  obtain b :: 'b where bB: "b \<in> Basis" using nonempty_Basis by blast
+  have bnz: "b \<noteq> 0" using norm_Basis[OF bB] by auto
+  have "\<exists>v. W b = v - W (L v)" using s unfolding surj_def by blast
+  then obtain v where veq: "W b = v - W (L v)" by blast
+  have chain: "L (W b) = 0"
+  proof -
+    have "L (W b) = L (v - W (L v))" using veq by simp
+    also have "\<dots> = L v - L (W (L v))" by (rule linear_diff[OF lin_L])
+    also have "\<dots> = L v - L v" using right_inv by simp
+    also have "\<dots> = 0" by simp
+    finally show ?thesis .
+  qed
+  have "b = 0" using chain right_inv[of b] by simp
+  thus False using bnz by simp
+qed
+
+lemma vector_cut_id_within_derivative:
+  fixes C :: "'a::real_normed_vector set" and x :: 'a
+    and f :: "'a \<Rightarrow> 'b::euclidean_space" and L :: "'a \<Rightarrow> 'b" and W :: "'b \<Rightarrow> 'a"
+  assumes xC: "x \<in> C"
+    and df: "(f has_derivative L) (at x)"
+    and blW: "bounded_linear W"
+    and f0: "\<And>y. y \<in> C \<Longrightarrow> f y = 0"
+  shows "((\<lambda>w. w) has_derivative (\<lambda>v. v - W (L v))) (at x within C)"
+proof -
+  have d0: "((\<lambda>w. W (f w)) has_derivative (\<lambda>v. W (L v))) (at x)"
+    by (rule bounded_linear.has_derivative[OF blW df])
+  have hpsi: "((\<lambda>w. w - W (f w)) has_derivative (\<lambda>v. v - W (L v))) (at x within C)"
+    by (rule has_derivative_at_withinI[OF has_derivative_diff[OF has_derivative_ident d0]])
+  have eq_on_C: "\<And>w. w \<in> C \<Longrightarrow> w = w - W (f w)"
+    using f0 linear_0[OF bounded_linear.linear[OF blW]] by fastforce
+  show ?thesis
+    by (rule has_derivative_transform[OF xC eq_on_C hpsi])
+qed
+
+theorem chart_core_data_of_vector_cuts:
+  fixes S :: "((real^2)^'n::finite) set"
+    and C :: "nat \<Rightarrow> ((real^2)^'n) set"
+    and f :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> 'b::euclidean_space"
+    and L :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> ((real^2)^'n) \<Rightarrow> 'b"
+    and W :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> 'b \<Rightarrow> (real^2)^'n"
+  assumes cover: "S \<subseteq> (\<Union>i. C i)"
+    and closedC: "\<And>i. closed (C i)"
+    and cut0: "\<And>i y. y \<in> C i \<Longrightarrow> f i y = 0"
+    and cutd: "\<And>i x. x \<in> C i \<Longrightarrow> (f i has_derivative L i x) (at x)"
+    and Wbl: "\<And>i x. x \<in> C i \<Longrightarrow> bounded_linear (W i x)"
+    and Wright: "\<And>i x t. x \<in> C i \<Longrightarrow> L i x (W i x t) = t"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         S \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+proof -
+  define P where "P = (\<lambda>i x v. v - W i x (L i x v))"
+  define D where "D = (\<lambda>i x. Blinfun (P i x))"
+  define charts where "charts = (\<lambda>(i::nat) (w :: (real^2)^'n). (w, 0::real^2))"
+  have fst_id: "(fst \<circ> charts i) = (\<lambda>w. w)" for i
+    unfolding charts_def by (simp add: o_def)
+  have blL: "bounded_linear (L i x)" if "x \<in> C i" for i x
+    by (rule has_derivative_bounded_linear[OF cutd[OF that]])
+  have blP: "bounded_linear (P i x)" if "x \<in> C i" for i x
+    unfolding P_def
+    by (rule vector_cut_projection_bounded_linear[OF blL[OF that] Wbl[OF that]])
+  have appD: "blinfun_apply (D i x) = P i x" if "x \<in> C i" for i x
+    unfolding D_def
+    by (rule bounded_linear_Blinfun_apply) (rule blP[OF that])
+  have cov: "S \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (C i))"
+    using cover unfolding fst_id by simp
+  have der: "\<forall>i x. x \<in> C i \<longrightarrow>
+      ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within C i)"
+  proof (intro allI impI)
+    fix i x assume xC: "x \<in> C i"
+    have "((\<lambda>w. w) has_derivative (P i x)) (at x within C i)"
+      unfolding P_def
+      by (rule vector_cut_id_within_derivative[OF xC cutd[OF xC] Wbl[OF xC] cut0])
+    thus "((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within C i)"
+      unfolding fst_id appD[OF xC] .
+  qed
+  have nsurj: "\<forall>i x. x \<in> C i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+  proof (intro allI impI)
+    fix i x assume xC: "x \<in> C i"
+    show "\<not> surj (blinfun_apply (D i x))"
+      unfolding appD[OF xC] P_def
+      by (rule vector_cut_projection_not_surj
+            [OF bounded_linear.linear[OF blL[OF xC]] Wright[OF xC]])
+  qed
+  have cls: "\<forall>i. closed ((fst \<circ> charts i) ` (C i))"
+    unfolding fst_id using closedC by simp
+  show ?thesis
+    by (intro exI[of _ charts] exI[of _ C] exI[of _ D] conjI cov der nsurj cls)
+qed
+
 end

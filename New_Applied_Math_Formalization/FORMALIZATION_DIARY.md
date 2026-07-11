@@ -5380,3 +5380,62 @@ is compact (closed constraints intersected with `cball 0 R`); since
 `V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>` sits inside a compact set, setting up the
 Heine-Borel finite-subcover step exactly as needed once the local corank-3
 chart data is available --- no new work required for boundedness itself.
+
+Step (2) DONE: built the generic corank-\<open>k\<close> engine, the direct
+higher-corank generalization of `chart_core_data_of_functional_cuts`'s
+\<psi>-transform trick.  New material in `M5_Dev_Wiring/Scratch_Wiring.thy`
+(new final section, "The corank-k functional cut engine: joint vector-valued
+cuts"):
+
+```isabelle
+lemma vector_cut_projection_bounded_linear   (* P(v)=v-W(L v) is bounded linear *)
+lemma vector_cut_projection_not_surj         (* range(P)=ker L is proper, given
+                                                 L a RIGHT-INVERTIBLE (via W)
+                                                 map onto a nontrivial
+                                                 euclidean_space 'b *)
+lemma vector_cut_id_within_derivative        (* the psi-transform: w-W(f w)
+                                                 equals id on the cut, has full
+                                                 derivative P *)
+theorem chart_core_data_of_vector_cuts       (* the assembler: countably many
+                                                 closed pieces, each inside a
+                                                 vector-valued cut f_i:'a->'b
+                                                 with a pointwise bounded-linear
+                                                 RIGHT INVERSE W_i(x) of the
+                                                 cut's derivative L_i(x), give
+                                                 chart-core data *)
+```
+
+Key design point: rather than requiring the cut's derivative to be
+INVERTIBLE on a specific fixed \<open>k\<close>-dimensional slot subspace (the way the
+geodesic branch's `Jac3_*` rank-3 criteria are stated, via an explicit
+determinant), the engine only needs a POINTWISE bounded-linear RIGHT
+INVERSE \<open>W\<close> with \<open>L (W t) = t\<close> --- this is logically equivalent (any
+right-invertible map onto \<open>'b\<close> restricts to an iso on a complementary
+subspace) but avoids committing to a specific slot-subspace formalism,
+leaving that translation for whoever wires up a specific rank-3 criterion
+(e.g. `Jac3_H0cub`) to this engine.  `'b` is fully generic
+(`'b::euclidean_space`), not hard-coded to `real^3`, so the SAME engine
+lemma serves any corank once instantiated.
+
+Non-surjectivity proof is a clean 4-line contradiction (assume surj, hit
+the point `W b` for `b` a nonzero basis vector of `'b` via `nonempty_Basis`,
+apply `L`, use the right-inverse identity twice to get `b=0`) --- shorter
+than the k=1 case's proof once the pattern is set up, since it doesn't need
+an explicit `g \<bullet> g \<noteq> 0` nonzero-norm side condition (linearity + the
+right-inverse identity alone suffice).
+
+Verification: ML_process reload green on the FIRST attempt (no debugging
+iterations needed, unlike most of this session's other proofs); confirmed
+independently by a full batch `isabelle build`
+(`Finished Applied_Math_M5_Wiring`).  Zero `sorry`/`oops`.
+
+Status: this is a self-contained, reusable piece of infrastructure, NOT yet
+wired to any actual D3 use.  The next concrete step (not yet started) is
+step (3) of the plan: translate ONE geodesic-branch rank-3 criterion
+(candidate: `Jac3_H0cub`, hypothesis-free per
+[[new-applied-math-tree]]) into the `f`/`L`/`W` shape this engine expects,
+producing the first ACTUAL corank-3 chart-core-data instance --- still
+short of closing `d3_detHess_arc_chart_core_all` itself, which additionally
+needs the compactness/Heine-Borel assembly step (mirroring
+`Appendix/Robust4Cover/D3_Curve_Cover.thy`'s
+`collinear_locus_d3_crossTheta_finite_arc_cover`) on top of that.
