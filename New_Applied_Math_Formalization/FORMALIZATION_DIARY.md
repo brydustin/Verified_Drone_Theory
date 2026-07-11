@@ -8,6 +8,131 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-07-10 — Functional-cut wiring engine staged in scratch
+
+Staged the checked functional-cut generalization in
+`M5_Dev_Wiring/Scratch_Wiring.thy`, as a child of the heap-backed
+`Applied_Math_D3_Wiring.D3_Chart_Wiring`.  The parent theory
+`Appendix/Wiring/D3_Chart_Wiring.thy` is part of the `Applied_Math_D3_Wiring`
+heap image and should stay unchanged until deliberately rebuilding that heap.
+Scratch facts:
+- `functional_cut_projection_bounded_linear`
+- `functional_cut_projection_not_surj`
+- `functional_cut_id_within_derivative`
+- `chart_core_data_of_functional_cuts`
+- `has_derivative_gradU_dip_component2_x_frechet`
+- `slice_chart_core_data`
+- `fixed_omega_slice_d3_chart_core`
+- `fixed_omega_core_pieces_d3_chart_core`
+- `d3_chart_core_of_fixed_omega_piece_cover`
+- `d3_chart_core_all_of_fixed_omega_piece_covers`
+- `d3_s2_perp_slot`
+- `D3H0_slicable_branch`
+- `D3H0_all_s2_zero_residual`
+- `fixed_omega_H0core_slicable_residual_decomp`
+- `fixed_omega_slicable_branch_chart_core_data`
+
+This generalizes the scalar inner-product cut engine to an arbitrary derivative
+functional `L` with a witness direction `r` satisfying `L r ≠ 0`.  The fixed-omega
+slice theorem instantiates it for the `gradU_2` configuration derivative and the
+perp-slot witness `slot k (perp2 (cvec_dip ω0 ωs ω))`.  Net effect: closed
+fixed-omega slice pieces with the `s_k` nonvanishing side condition now produce the
+same `charts/Crit/D` rank-deficient chart-core data required downstream.
+The singleton bridge lemmas now package this directly as
+`d3_detHess_arc_chart_core V ω0 ωs {ω}` for fixed-angle pieces.
+
+Pushed the boundary one layer further: `d3_chart_core_of_fixed_omega_piece_cover`
+packages an arbitrary arc fibre `V ∩ D3BadXG_H0core ω0 ωs γ` from a countable
+closed cover whose pieces are each tagged by a fixed angle `om i` and a
+perp-slot witness `ki i`.  `d3_chart_core_all_of_fixed_omega_piece_covers`
+then reduces the actual `d3_detHess_arc_chart_core_all` frontier predicate to
+producing those covers for every analytic arc inside `OmegaPF ctr δ`.
+The next D3 work is therefore sharply stated: construct these countable closed
+fixed-angle pieces and prove the corresponding nonzero `gradU_2` derivative
+side condition, rather than redoing chart packaging.
+
+Pushing that cover construction exposed the sound boundary: a countable cover by
+singleton fixed angles cannot be assumed for an arbitrary arc fibre, because the
+witness angle may vary over a continuum.  The checked replacement is the
+fixed-angle decomposition
+`fixed_omega_H0core_slicable_residual_decomp`: at a fixed `ω`, the `H0core`
+splits into the slicible branch where some `s_k` is nonzero and the residual
+where all `s_k` vanish.  The slicible branch is now packaged by
+`fixed_omega_slicable_branch_chart_core_data`, using closed inverse-threshold
+pieces over the finite slot index and the derivative functional
+`d3_s2_perp_slot`.  The remaining mathematical frontier is therefore the
+all-`s_k`-zero residual, plus any later bridge from fixed-angle fibres to arcs
+that avoids a continuum-to-countable leap.
+
+Pushed the fixed-angle residual boundary using the checked H0-residual branch
+facts from `Applied_Math_D34_Analytic.D34_H0res_Branch`, still only in
+`M5_Dev_Wiring/Scratch_Wiring.thy`.  New scratch definitions split the
+all-`s_k` residual into:
+- `D3H0_residual_Bzero_branch`
+- `D3H0_residual_Bnonzero_residual`
+
+The `B_dip = 0` side is now chart-core packaged by
+`fixed_omega_residual_Bzero_branch_chart_core_data`, using
+`has_derivative_B_dip_x_frechet`, `continuous_on_B_dip_x`,
+`closed_B_dip_zero`, and the checked transversal law
+`B_dip_uslot_transversal`.  A small reusable union packager
+`chart_core_data_union` then combines the old slicible branch with this
+`B_dip = 0` residual branch into
+`fixed_omega_slicable_or_Bzero_branch_chart_core_data`.  The decomposition
+`fixed_omega_H0core_slicable_or_Bzero_decomp` states the new exact frontier:
+for fixed `ω`, the whole `H0core` fibre is covered by the resolved branch plus
+the residual where all `s_k = 0` and all `B_dip k ≠ 0`.
+
+The current sharp reduction is
+`fixed_omega_H0core_chart_core_from_Bnonzero_residual`: under
+`cvec_dip ω0 ωs ω ≠ 0`, any chart-core treatment of
+`D3H0_residual_Bnonzero_residual V ω0 ωs ω` upgrades to the full singleton
+`d3_detHess_arc_chart_core V ω0 ωs {ω}`.  The empty-residual corollary
+`fixed_omega_H0core_chart_core_if_no_Bnonzero_residual` is also checked.  Thus
+the next fixed-angle task is no longer the slicible branch or the
+`B_dip = 0` H0-res branch; it is precisely the all-`s_k`-zero,
+all-`B_dip`-nonzero residual, plus the later fixed-angle-to-arc bridge.
+
+Pushed that residual frontier one algebraic layer further.  The slot derivative
+now has the checked factorization `d3_s2_perp_slot_value` through the
+angle-only scalar `d3_s2_global_factor`:
+`d3_s2_perp_slot = d3_s2_global_factor * Im (cnj A * phase_k)`.  This splits
+the remaining all-`B_dip`-nonzero branch into:
+- `D3H0_Bnonzero_factorzero_residual`, where `d3_s2_global_factor ω0 ωs ω = 0`
+- `D3H0_Bnonzero_phase_aligned_residual`, where every
+  `Im (cnj (vec_nth (M_paper x (cvec_dip ω0 ωs ω)) 1) * phase (...) x k)`
+  vanishes
+
+The exact decomposition is
+`fixed_omega_Bnonzero_residual_factor_phase_decomp`, with the useful special
+case `fixed_omega_Bnonzero_residual_phase_alignment_if_factor_nonzero`: when the
+global factor is nonzero, the entire nonzero-`B_dip` residual is phase-aligned.
+The chart-core handoff is also checked:
+`fixed_omega_H0core_chart_core_from_factor_phase_residuals` reduces the fixed
+singleton fibre to chart-core data for the factor-zero and phase-aligned pieces,
+and `fixed_omega_H0core_chart_core_from_phase_aligned_residual` removes the
+factor-zero side entirely under `d3_s2_global_factor ≠ 0`.  The next practical
+boundary is therefore one of these two sharper branches: either prove an
+angle-only treatment of the factor-zero locus, or chart-core cover the
+phase-aligned nonzero-`B_dip` locus.
+
+Verification note: a normal `isabelle build` may attempt to rewrite the
+read-only global session SQLite database in this sandbox.  Use the
+`Applied_Math_D3_Wiring` heap and reload only `M5_Dev_Wiring/Scratch_Wiring.thy`
+when checking this staged work.  Reload checked:
+`d3_chart_core_of_fixed_omega_piece_cover`,
+`d3_chart_core_all_of_fixed_omega_piece_covers`,
+`fixed_omega_H0core_slicable_residual_decomp`, and
+`fixed_omega_slicable_branch_chart_core_data`.  The residual-branch reload also
+checked `fixed_omega_residual_Bzero_branch_chart_core_data`,
+`fixed_omega_slicable_or_Bzero_branch_chart_core_data`,
+`fixed_omega_H0core_slicable_or_Bzero_decomp`,
+`fixed_omega_H0core_chart_core_from_Bnonzero_residual`, and
+`fixed_omega_H0core_chart_core_if_no_Bnonzero_residual`.  The factor/phase
+reload additionally checked `fixed_omega_Bnonzero_residual_factor_phase_decomp`,
+`fixed_omega_H0core_chart_core_from_factor_phase_residuals`, and
+`fixed_omega_H0core_chart_core_from_phase_aligned_residual`.
+
 ## 2026-06-06 (cont.) — Brick 5 + **leaf [E] `DM_paper_x_regular_point_exists` CLOSED** (commit 4e4e437)
 
 First proof hole of `F0_dip_nonempty` eliminated (Robust2 7 → 6 proof holes). Three new lemmas:
@@ -4897,3 +5022,66 @@ countably many CLOSED pieces covering `V \<inter> D3BadXG_H0core \<omega>0 \<ome
 inside a scalar cut with nonvanishing gradient. The cut functions and their
 explicit gradient fields come from the geodesic branch (slot values +
 genericity); the arc-direction countability is the remaining joint step.
+
+## 2026-07-10 (Claude): the phase-alignment cut — fixed-omega D3 chart core closed under angle-only conditions
+
+Appended to `M5_Dev_Wiring/Scratch_Wiring.thy` (now 1339 lines, zero
+admissions), directly on top of the staged functional-cut engine and the
+factor/phase split from the parallel Codex session (see the
+"Functional-cut wiring engine staged in scratch" entry above and
+`UPDATE_FOR_CLAUDE.md`). Build: `Applied_Math_M5_Wiring` BUILD_EXIT=0 —
+this also batch-verifies that session's staged work, which had only been
+checked by heap reload.
+
+THE DESIGN INSIGHT: the phase-aligned residual (all `s_k = 0`, all
+`B_dip k \<noteq> 0`, every `Im (cnj A \<cdot> phase_k) = 0` with
+`A = A_moment x c`) is covered by using the alignment functional
+`g_k x = Im (cnj (A_moment x c) * phase c x k)` as ITS OWN functional cut.
+Two facts make it work:
+
+1. SLOT DERIVATIVE (`phase_align_slot_self_value`): the x-derivative of
+   `g_k` in direction `slot k u` evaluates to
+   `(c \<bullet> u) \<cdot> (1 - Re (cnj A \<cdot> phase_k))` — the `dA` term contributes
+   `+ (c \<bullet> u)` because `cnj(i P) P = -i |P|^2 = -i`, and the `d_phase`
+   term contributes `-(c \<bullet> u) Re (cnj A P)`. Witness direction `slot k c`
+   gives `(c \<bullet> c) \<cdot> defect \<noteq> 0`.
+2. DEFECT WITNESS (`phase_aligned_defect_witness`): on the aligned locus
+   the defects `1 - Re (cnj A \<cdot> phase_k)` cannot all vanish when
+   `CARD('n) \<ge> 2`: alignment + zero defect forces `cnj A \<cdot> phase_k = 1`
+   for every k, hence `|A| = 1` (unit phases), while summing over k gives
+   `cnj A \<cdot> A = CARD('n)` — so `CARD('n) = 1`. Clean norm contradiction,
+   no analyticity needed.
+
+Machine-checked names: `has_derivative_cnjA_phase_x`,
+`has_derivative_phase_align_x`, `phase_align_slot_self_value`,
+`continuous_on_phase_align_x`, `continuous_on_phase_align_defect_x`,
+`closed_phase_align_zero`, `phase_aligned_defect_witness`,
+`fixed_omega_phase_aligned_residual_chart_core_data` (pieces indexed by
+`prod_encode (to_nat k, m)`: alignment-zero set \<inter> inverse-threshold defect
+set, cut = `g_k`, witness = `slot k c`), and the two capstones:
+
+- `fixed_omega_H0core_chart_core_from_factorzero_residual`: under
+  `cvec \<noteq> 0` + `CARD \<ge> 2`, the fixed-omega singleton chart core reduces to
+  covering ONLY the factor-zero residual (phase side now unconditional).
+- **`fixed_omega_H0core_chart_core_of_angle_conditions`**: under
+  `cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0`, `d3_s2_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0`, and
+  `2 \<le> CARD('n)`, `d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}` holds with NO
+  x-space hypotheses whatsoever. The fixed-angle D3 problem is CLOSED
+  except for the angle-only factor-zero locus.
+
+Debugging notes (2 iterations):
+1. `Re (cnj A * P)` in a rewrite rule never fires under `simp add:` — the
+   complex `Re`-of-product simp rules expand the goal's redex first (the
+   same race as `vec_nth (a+b) i` / `vector_add_component`). Chain the
+   facts (`using re1[of k] aligned[of k]`) so simp normalizes them along
+   with the goal, instead of passing them as rewrite rules.
+2. The final `(c \<bullet> u) - (c \<bullet> u) * X = (c \<bullet> u) * (1 - X)` step needs
+   `ring_distribs` added to the closing simp.
+
+STATUS: what remains for D3 is (a) the angle-only factor-zero locus
+`d3_s2_global_factor \<omega>0 \<omega>s \<omega> = 0` (independent of x; belongs to the
+arc-level analysis, where analytic-arc structure should make such \<omega>
+countable/isolated), and (b) the fixed-angle-to-arc bridge for
+`d3_detHess_arc_chart_core_all` (the solve-the-parameter IFT branch).
+Splicing the scratch layers into `Appendix/Wiring/D3_Chart_Wiring.thy` and
+rebuilding the wiring heap is now worth doing as a consolidation step.
