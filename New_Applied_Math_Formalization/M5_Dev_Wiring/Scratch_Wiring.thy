@@ -3046,4 +3046,140 @@ proof -
     by (intro exI[of _ charts] exI[of _ C] exI[of _ D] conjI cov der nsurj cls)
 qed
 
+section \<open>The arc-bridge: x-space rank-2 via a perp direction and a radial direction\<close>
+
+text \<open>\<^bold>\<open>Strategy for the still-open arc-packaging problem.\<close>  Rather than
+  eliminating the arc parameter \<open>t\<close> via the OMEGA-Hessian (which is exactly
+  singular on the D3 locus, and whose rank-1 range direction is genuinely
+  \<open>x\<close>-dependent --- a dead end), use TWO purely \<open>x\<close>-space directions:
+  \<open>v\<^sub>perp = slot k (perp2 c)\<close> (already known transversal for gradU's component
+  2, via @{thm d3_s2_perp_slot_value} / the "all angles regular" ladder) and
+  \<open>v\<^sub>rad = slot m c\<close> (a RADIAL direction, i.e. NOT perpendicular to \<open>c\<close>).  By
+  @{thm Phi_par_perp_slot_zero}, the perp column
+  \<open>(\<partial>gradU\<^sub>1/\<partial>v\<^sub>perp, \<partial>gradU\<^sub>2/\<partial>v\<^sub>perp)\<close> is ALWAYS exactly parallel to
+  \<open>perp2(e_par)\<close> (zero \<open>e_par\<close>-component).  The radial column has
+  \<open>e_par\<close>-component EXACTLY \<open>Phi_par\<close>'s radial derivative (since
+  \<open>Phi_par = gradU \<bullet> e_par\<close>).  A vector with zero \<open>e_par\<close>-component can never
+  be parallel to one with nonzero \<open>e_par\<close>-component (unless both vanish), so
+  \<open>v\<^sub>perp \<noteq> 0\<close>-transversality PLUS \<open>Phi_par\<close>'s radial derivative \<open>\<noteq> 0\<close> TOGETHER
+  give gradU's full \<open>2 \<times> 2\<close> \<open>x\<close>-Jacobian (restricted to \<open>v\<^sub>perp, v\<^sub>rad\<close>) full
+  RANK 2 --- with NO reference to \<open>\<omega>\<close>-derivatives or the arc tangent at all.
+  This is the key new fact needed: \<open>Phi_par\<close>'s radial derivative is not an
+  angle-only quantity (it depends on the actual antenna configuration \<open>x\<close>),
+  so --- exactly as for every other transversality quantity in this
+  development (@{thm gradU2_perp_slot_zeros_nowhere_dense}) --- the best
+  available fact is GENERICITY (nowhere-dense zero set), established via a
+  two-bump witness plus @{thm real_analytic_nowhere_dense_zeros}.  The
+  two-bump computation below reuses @{thm Phi_par_uslot_radial} and the
+  \<open>two_bump_row_sum_i/j\<close> machinery already built for
+  @{thm Lambda_rad_two_bump_witness}, extracting just the \<open>Phi_par\<close> part (not
+  the full \<open>Hrad2\<close>/\<open>Lambda_rad_ij\<close> Wronskian) --- and, mirroring the
+  component-1-or-2 disjunction trick, shows that of TWO antenna indices
+  \<open>i \<noteq> j\<close>, AT LEAST ONE gives a nowhere-dense zero set, UNCONDITIONALLY (no
+  extra angle-side hypothesis beyond the standing \<open>gain \<noteq> 0\<close>, \<open>cvec \<noteq> 0\<close>,
+  \<open>det Dcvec \<noteq> 0\<close>, \<open>CARD('n) \<ge> 4\<close>).\<close>
+
+theorem Phi_par_uslot_radial_nowhere_dense_disjunction:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2" and i j :: "'n::finite"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and ij: "i \<noteq> j"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and N4: "4 \<le> CARD('n)"
+  shows "interior (closure {x::(real^2)^'n.
+            frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+              (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)) = 0}) = {}
+       \<or> interior (closure {x::(real^2)^'n.
+            frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+              (slot j (cvec_dip \<omega>0 \<omega>s \<omega>)) = 0}) = {}"
+proof -
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  define q where "q = c \<bullet> c"
+  define A where "A = deriv gdip (vec_nth \<omega> 1) * vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1"
+  define g0 where "g0 = gain_dip \<omega>"
+  define Phi' where "Phi' = (\<lambda>u. A * (- sin u) + g0 * (- (sin u + u * cos u)))"
+  define w1 where "w1 = (pi / q) *\<^sub>R c"
+  define w2 where "w2 = (pi / (2 * q)) *\<^sub>R c"
+  define x0 where "x0 = slot i w1 + slot j w2"
+  define N where "N = real (CARD('n))"
+  have qnz: "q \<noteq> 0"
+    unfolding q_def c_def using cnz by (simp add: dot_square_norm)
+  have t1: "c \<bullet> w1 = pi"
+    unfolding w1_def by (simp add: inner_scaleR_right q_def[symmetric] qnz)
+  have t2: "c \<bullet> w2 = pi / 2"
+    unfolding w2_def by (simp add: inner_scaleR_right q_def[symmetric] qnz)
+  have Phi'0: "Phi' 0 = 0"
+    unfolding Phi'_def by simp
+  have Phi'odd: "Phi' (- u) = - Phi' u" for u :: real
+    unfolding Phi'_def by (simp add: algebra_simps)
+  have phi_val: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot m c)
+      = 2 * q * (\<Sum>p\<in>UNIV. Phi' (c \<bullet> (vec_nth x0 m - vec_nth x0 p)))" for m :: 'n
+    using Phi_par_uslot_radial[OF detnz, of x0 m]
+    unfolding c_def[symmetric] q_def[symmetric] Phi'_def A_def g0_def by simp
+  have row_Phi_i: "(\<Sum>p\<in>UNIV. Phi' (c \<bullet> (vec_nth x0 i - vec_nth x0 p)))
+      = Phi' (pi / 2) + (N - 2) * Phi' pi"
+    using two_bump_row_sum_i[of i j Phi' c w1 w2, OF ij Phi'0] t1 t2
+    unfolding x0_def N_def by simp
+  have row_Phi_j: "(\<Sum>p\<in>UNIV. Phi' (c \<bullet> (vec_nth x0 j - vec_nth x0 p)))
+      = - Phi' (pi / 2) + (N - 2) * Phi' (pi / 2)"
+    using two_bump_row_sum_j[of i j Phi' c w1 w2, OF ij Phi'0] t1 t2
+    unfolding x0_def N_def
+    by (simp add: Phi'odd[of "pi/2", symmetric])
+  have phi_i: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot i c)
+      = 2 * q * (Phi' (pi / 2) + (N - 2) * Phi' pi)"
+    unfolding phi_val[of i] row_Phi_i ..
+  have phi_j: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot j c)
+      = 2 * q * (- Phi' (pi / 2) + (N - 2) * Phi' (pi / 2))"
+    unfolding phi_val[of j] row_Phi_j ..
+  have PhiPi: "Phi' pi = pi * g0"
+    unfolding Phi'_def by simp
+  have PhiHalf: "Phi' (pi / 2) = - (A + g0)"
+    unfolding Phi'_def by simp
+  have N3: "N - 3 \<noteq> 0" and N2: "N - 2 \<noteq> 0"
+    using N4 unfolding N_def by simp_all
+  have gnz': "g0 \<noteq> 0" unfolding g0_def using gnz .
+  show ?thesis
+  proof (cases "A + g0 = 0")
+    case True
+    have phi_i_val: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot i c)
+        = 2 * q * ((N - 2) * (pi * g0))"
+      unfolding phi_i PhiPi PhiHalf using True by simp
+    have phi_i_nz: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot i c) \<noteq> 0"
+      unfolding phi_i_val using qnz N2 gnz' by simp
+    have ex: "\<exists>x\<in>UNIV. frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+        (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+      using phi_i_nz unfolding c_def by blast
+    have "interior (closure {x \<in> UNIV.
+        frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+          (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)) = 0}) = {}"
+      by (rule real_analytic_nowhere_dense_zeros[OF real_analytic_on_Phi_par_uslot
+            connected_UNIV ex])
+    hence "interior (closure {x::(real^2)^'n.
+        frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+          (slot i (cvec_dip \<omega>0 \<omega>s \<omega>)) = 0}) = {}"
+      by simp
+    thus ?thesis by blast
+  next
+    case False
+    have phi_j_val: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot j c)
+        = 2 * q * ((A + g0) * (3 - N))"
+      unfolding phi_j PhiHalf by (simp add: algebra_simps)
+    have phi_j_nz: "frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x0) (slot j c) \<noteq> 0"
+      unfolding phi_j_val using qnz N3 False by simp
+    have ex: "\<exists>x\<in>UNIV. frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+        (slot j (cvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+      using phi_j_nz unfolding c_def by blast
+    have "interior (closure {x \<in> UNIV.
+        frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+          (slot j (cvec_dip \<omega>0 \<omega>s \<omega>)) = 0}) = {}"
+      by (rule real_analytic_nowhere_dense_zeros[OF real_analytic_on_Phi_par_uslot
+            connected_UNIV ex])
+    hence "interior (closure {x::(real^2)^'n.
+        frechet_derivative (\<lambda>y. Phi_par y \<omega> \<omega>0 \<omega>s) (at x)
+          (slot j (cvec_dip \<omega>0 \<omega>s \<omega>)) = 0}) = {}"
+      by simp
+    thus ?thesis by blast
+  qed
+qed
+
 end

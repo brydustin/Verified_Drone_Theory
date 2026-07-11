@@ -5439,3 +5439,96 @@ short of closing `d3_detHess_arc_chart_core_all` itself, which additionally
 needs the compactness/Heine-Borel assembly step (mirroring
 `Appendix/Robust4Cover/D3_Curve_Cover.thy`'s
 `collinear_locus_d3_crossTheta_finite_arc_cover`) on top of that.
+
+## 2026-07-11, continued: the x-space-only rank-2 reframing (user-suggested) and its price
+
+User asked: does closing "step 3" (Jac3_H0cub) actually close D3?  Answer:
+NO, and moreover step 3 as scoped was likely the WRONG next move --- dispatched
+a research check confirming `Jac3`/`Delta_ij`/`Jac3_H0cub` treat \<omega> ENTIRELY
+as a fixed parameter (every differentiation is in `x` alone, via
+`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy:3807-3814`,
+`D34_Geodesic_Branch.thy:2308-2322`); the only joint \<open>(x,\<omega>)\<close> construction
+anywhere in either file, `dip_critical_graph_dichotomy`
+(`D34_Analytic_Bridge.thy:881-950`), explicitly needs `det HessU \<noteq> 0` --- the
+REGULAR case, i.e. NOT D3.  So wiring up Jac3_H0cub would have reproven
+something the simpler ladder already fully closes, not touched the actual
+arc-packaging gap.
+
+Attempted the genuine fix: eliminate the arc parameter \<open>t\<close> via a joint
+`(x,t)` rank-2 argument using BOTH `gradU` components.  Hit a real wall:
+the natural approach (one x-direction column + a t/`HessU`-direction column)
+needs `HessU`'s (x-DEPENDENT, since `HessU` is built from the full
+moment-sum potential, not just `Dcvec`) rank-1 range direction to differ
+from `perp2(e_par)` --- an x-dependent fact with no existing analogue
+anywhere in the codebase, comparable in difficulty to rederiving the whole
+geodesic branch from scratch.  Reported this honestly rather than grinding
+on an unproven premise.
+
+USER'S KEY SUGGESTION: treat \<omega> as free and look at the FULL joint
+Jacobian rather than decomposing into "x-part" + "t-part".  This unlocked a
+CLEANER path avoiding `HessU`/the arc tangent entirely: use TWO PURELY
+X-SPACE directions instead of one x-direction plus t.
+- `v_perp = slot k (perp2 c)`: by `Phi_par_perp_slot_zero`, the column
+  `(\<partial>gradU\<^sub>1/\<partial>v_perp, \<partial>gradU\<^sub>2/\<partial>v_perp)` is ALWAYS exactly parallel to
+  `perp2(e_par)` (zero `e_par`-component) --- already known nonzero via the
+  "all angles regular" ladder.
+- `v_rad = slot m c` (radial, not perpendicular to `c`): its column has
+  `e_par`-component EXACTLY `Phi_par`'s radial derivative (since
+  `Phi_par = gradU \<bullet> e_par`).
+A vector with zero `e_par`-component can never be parallel to one with
+nonzero `e_par`-component --- so `v_perp`-transversality PLUS `Phi_par`'s
+radial derivative \<noteq> 0 TOGETHER give gradU's FULL `2\<times>2` x-Jacobian rank 2,
+using ONLY x-directions --- no `HessU`, no arc tangent, no x-dependent
+comparison against `e_par` needed at all.  This sidesteps the wall entirely.
+
+The price: `Phi_par`'s radial derivative is ALSO x-dependent (a moment-sum
+over antenna positions, per `Phi_par_uslot_radial`,
+`D34_Geodesic_Branch.thy:1718`), so (exactly like every other transversality
+quantity in this development) the best available fact is GENERICITY
+(nowhere-dense zero set), not an always-true identity.
+
+NEW THEOREM (`M5_Dev_Wiring/Scratch_Wiring.thy`, new final section "The
+arc-bridge: x-space rank-2 via a perp direction and a radial direction"):
+
+```isabelle
+theorem Phi_par_uslot_radial_nowhere_dense_disjunction:
+  assumes "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0" "i \<noteq> j"
+    "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0" "gain_dip \<omega> \<noteq> 0" "4 \<le> CARD('n)"
+  shows "interior (closure {x. Phi_par's radial deriv at slot i = 0}) = {}
+       \<or> interior (closure {x. Phi_par's radial deriv at slot j = 0}) = {}"
+```
+
+proved by extracting just the `Phi_par` half of `Lambda_rad_two_bump_witness`'s
+existing two-bump computation (reusing `two_bump_row_sum_i/j`,
+`Phi_par_uslot_radial`, WITHOUT the `Hrad2`/`Lambda_rad_ij` Wronskian
+machinery) --- giving closed-form witness values
+`\<phi>_i = 2q((N-2)\<pi>g_0)` (when `A+g_0=0`) and `\<phi>_j = 2q(A+g_0)(3-N)` (when
+`A+g_0\<noteq>0`), where `A = deriv gdip(\<omega>_1)\<cdot>e_par$1`, `g_0 = gain_dip \<omega>`.  Exactly
+one of these two cases always applies, and in each the OTHER witness value
+is clearly nonzero (given the standing `gain\<noteq>0`, `cvec\<noteq>0`,
+`4\<le>CARD('n)`) --- mirroring the SAME "component-1-or-2" disjunction pattern
+from `d3_s1_or_s2_global_factor_nonzero` earlier this session, but now one
+level up, for genericity (nowhere-density) rather than a plain nonzero fact.
+Feeds `real_analytic_on_Phi_par_uslot` (already existing,
+`D34_Geodesic_Branch.thy:1400`) into `real_analytic_nowhere_dense_zeros`.
+
+Debugging note: `real_analytic_nowhere_dense_zeros`'s conclusion pattern
+matches `{x \<in> UNIV. P x}`, not the syntactically-different (though
+definitionally equal) `{x. P x}` --- `rule` needs the exact shape; fixed by
+deriving the `{x\<in>UNIV. ...}` form first via the rule, then `hence ... by
+simp` to the plain form, mirroring the exact pattern the pre-existing
+`gradU2_perp_slot_zeros_nowhere_dense` already used for the same reason.
+
+Verification: ML_process reload green (one intermediate failure, fixed as
+above); full batch build `Finished Applied_Math_M5_Wiring`; zero
+`sorry`/`oops`.
+
+Status: this closes the "which antenna direction is generically transversal
+for the radial column" question, needed for the x-space rank-2 argument.
+NOT yet done: (a) actually ASSEMBLE the rank-2 argument into chart-core data
+(feed the two columns into `chart_core_data_of_vector_cuts`, or a corank-2
+specialization of it, for the NONZERO case; the exceptional (meager, not
+empty) locus where BOTH radial directions fail still needs handling --- untouched
+so far); (b) even once local rank-2 chart data exists for a fixed \<omega>, the
+Heine-Borel compactness assembly across the whole arc \<gamma> is still a
+separate, unbuilt step.
