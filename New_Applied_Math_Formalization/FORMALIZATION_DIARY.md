@@ -5094,3 +5094,166 @@ factor is `2 \<cdot> gain \<cdot> (Dcvec(axis 2 1) \<bullet> perp2 c) = -2 \<cdo
 the NEGATIVE of side condition (3) — with `gain = gdip(\<pi>/2) = 1`. So
 `d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}` holds at the capstone design point
 under `2 \<le> CARD('n)` alone. First-iteration green; scratch now 1386 lines.
+
+## 2026-07-11 (Codex): capstone-facing D3 frontier reductions appended
+
+Added only new material at the end of `M5_Dev_Wiring/Scratch_Wiring.thy`;
+the existing staged proof of `d3_chart_core_of_countable_fixed_omega_cover`
+was left unchanged.
+
+New theorem names:
+
+- `F0_dip_nonempty_from_countable_fixed_omega_angle_covers`
+- `F0_dip_nonempty_from_fixed_omega_piece_covers`
+
+These are the capstone-facing wrappers for the current D3 frontier.  They
+instantiate the D3 hypothesis of `F0_dip_nonempty` from, respectively:
+
+1. the countable fixed-\<omega> angle-cover interface
+   (`d3_chart_core_all_of_countable_fixed_omega_angle_cover`), and
+2. the more flexible fixed-\<omega> piece-cover/scalar-cut interface
+   (`d3_chart_core_all_of_fixed_omega_piece_covers`).
+
+Both still leave the Branch-P/D4 predicate
+`branchP_indep_closed_cover_core_all` as an independent frontier hypothesis.
+So the end-to-end nonemptiness theorem is now wired to the new D3 piece-cover
+frontier without requiring the old global D3 assumption as a black box.
+
+Verification follow-up: the old solver-backed extraction in
+`d3_chart_core_of_countable_fixed_omega_cover` is gone.  The countable-union
+chart data are now unpacked by explicit `exE`/`conjunct1`/`conjunct2` steps
+after `chart_core_data_countable_UN`, avoiding the former `smt (verit)` and a
+later broad `blast` bottleneck.
+
+ADDENDUM: pushed the capstone wrapper one layer closer to the actual theorem
+statement by specializing away the unnecessary global-angle assumptions.  New
+scratch theorem names:
+
+- `F0_dip_nonempty_from_robust4_design_cores`
+- `F0_dip_nonempty_from_robust4_piece_covers`
+
+The first repeats the concrete Robust4 design construction from
+`F0_dip_nonempty`, but assumes D3 and Branch-P only at the actual design
+`\<omega>0 = (\<pi>/2,0)`, `\<omega>s = 0`, `\<delta> = \<pi>/4`, instead of for all steering
+parameters.  The second derives that design-specific D3 core from the
+fixed-\<omega> piece-cover frontier.  Thus the live end-to-end target is now
+exactly:
+
+1. Robust4-design D3 piece covers for every analytic arc in
+   `OmegaPF (vector [pi/2,0]) (pi/4)`;
+2. Robust4-design Branch-P/D4 closed negligible covers.
+
+Local batch replay now succeeds in a deterministic sequential configuration:
+
+```bash
+../../Isabelle2025-2/bin/isabelle ML_process -r \
+  -o threads=1 -o parallel_proofs=0 -o parallel_print=false -o show_states=false \
+  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
+  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
+  -d . -C M5_Dev_Wiring -l Applied_Math_D3_Wiring \
+  -e 'Thy_Info.use_thy_legacy "Scratch_Wiring";
+      val thy = Thy_Info.get_theory "Draft.Scratch_Wiring";
+      val _ = Global_Theory.get_thm thy "F0_dip_nonempty_from_robust4_piece_covers";
+      val _ = writeln "Scratch_Wiring tail reload ok";
+      val _ = OS.Process.exit OS.Process.success;'
+```
+
+The log printed `Scratch_Wiring tail reload ok`; `git diff --check` also
+passed.
+
+## 2026-07-11 (Claude): the component-1 twin factor, eliminating the ad-hoc angle condition
+
+Picked up the frontier idea flagged at the end of the previous Claude session
+(before compaction): the fixed-\<open>\<omega>\<close> chart-core result
+(`fixed_omega_H0core_chart_core_of_angle_conditions`) needed
+`d3_s2_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0` as a hypothesis, checked only
+pointwise at the Robust4 design witness (`fixed_omega_H0core_chart_core_robust4_witness`).
+The goal: eliminate that ad-hoc condition in favor of ordinary non-degeneracy
+that plausibly holds throughout the whole design box.
+
+Key facts found in `Appendix/AnalyticBridge/D34_Analytic_Bridge.thy`:
+`gradU_dip_xderiv_perp_slot` already computes the perp-slot derivative for
+BOTH gradU components \<open>j=1,2\<close> with the identical phase factor
+`Im (cnj (M_paper x c $ 1) * phase c x m)` --- only the linear coefficient
+`Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> v` differs.  `Phi2_perp_slot_value`
+projects out \<open>j=2\<close>; a `Phi1_perp_slot_value`-style projection at \<open>j=1\<close>
+was already latent in `gradU_dip_xderiv_perp_slot`'s own statement (used
+inline, unnamed, inside `Phi_par_perp_slot_zero`'s proof at line ~4000).
+
+New scratch definition/lemma (`M5_Dev_Wiring/Scratch_Wiring.thy`):
+
+```isabelle
+definition d3_s1_global_factor \<omega>0 \<omega>s \<omega> =
+  2 * gain_dip \<omega> * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))
+
+lemma d3_s1_or_s2_global_factor_nonzero:
+  assumes "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0" "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0" "gain_dip \<omega> \<noteq> 0"
+  shows "d3_s1_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0 \<or> d3_s2_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0"
+```
+
+Proof: if both vanish, `perp2 c` is orthogonal to `Dcvec (axis 1 1)` and
+`Dcvec (axis 2 1)`, hence (linearity) to the whole range of `Dcvec`; since
+`det (matrix Dcvec) \<noteq> 0` makes `Dcvec` a bijection of `real^2`, its range is
+everything, forcing `perp2 c = 0`, hence `c = 0` (`perp2_nz`) --- contradicting
+`cvec \<noteq> 0`.  All three hypotheses are angle-only, none reference \<open>x\<close>.
+
+This only pays off if there is a way to USE `d3_s1_global_factor \<noteq> 0` to
+close the fixed-angle chart core when the component-2 factor happens to
+vanish.  That required mirroring the ENTIRE component-2 slicable/Bzero/
+Bnonzero-residual ladder for component 1 --- `has_derivative_gradU_dip_component1_x_frechet`,
+`d3_s1_perp_slot`(+`_value`), `real_analytic_on_gradU1_slot`,
+`continuous_on_d3_s1_perp_slot`, `closed_gradU1_component_zero`,
+`D3H0_slicable_branch1`/`D3H0_all_s1_zero_residual`/`D3H0_residual_Bzero_branch1`/
+`D3H0_residual_Bnonzero_residual1`/`D3H0_Bnonzero_phase_aligned_residual1` and
+their chart-core-data theorems, up through
+`fixed_omega_H0core_chart_core_of_angle_conditions1`.  The ONE piece that did
+NOT need mirroring: the phase-alignment-cut subsection
+(`phase_align_slot_self_value`, `phase_aligned_defect_witness`,
+`fixed_omega_phase_aligned_residual_chart_core_data`, etc.) is already
+component-independent, since it only ever references `M_paper x c $ 1` (the
+SAME complex value for both gradU components) --- reused unchanged, just
+targeting the new `D3H0_Bnonzero_phase_aligned_residual1` set.
+
+Capstone of this session's work:
+
+```isabelle
+theorem fixed_omega_H0core_chart_core_of_generic_conditions:
+  assumes "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0" "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    "gain_dip \<omega> \<noteq> 0" "2 \<le> CARD('n)"
+  shows "d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}"
+```
+
+proved by case-splitting on `d3_s2_global_factor = 0`, applying
+`d3_s1_or_s2_global_factor_nonzero` in the zero case, and dispatching to
+whichever of `fixed_omega_H0core_chart_core_of_angle_conditions` /
+`..._of_angle_conditions1` applies.  The ad-hoc, pointwise-checked
+`d3_s2_global_factor \<noteq> 0` hypothesis is now GONE from the fixed-angle
+capstone; only ordinary non-degeneracy remains.
+
+Verification: `git diff --check` passed; single ML_process reload of
+`fixed_omega_H0core_chart_core_of_generic_conditions` succeeded on the first
+full write (one intermediate bug: forgot to actually state the
+`d3_s1_perp_slot` definition before using `d3_s1_perp_slot_def` --- caught by
+"Undefined fact" on reload, fixed by adding the definition, second reload
+green).  Independently confirmed by a full batch `isabelle build` of
+`Applied_Math_M5_Wiring` (`Finished Applied_Math_M5_Wiring`, no FAILED) and by
+a live jEdit session opened on `Scratch_Wiring.thy` reporting a full compile.
+Zero `sorry`/`oops`/`axiomatization` anywhere in the file.
+
+Status / what's NOT yet done: this closes the FIXED-angle case generically,
+but does not by itself close `d3pieces`/`F0_dip_nonempty_from_robust4_piece_covers`'s
+remaining obligation --- covering `V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>` for an
+arc `\<gamma>` (a continuum of angles) by COUNTABLY many fixed-angle pieces.  Even
+if every angle in the Robust4 design box is now "regular" (chart-coverable
+individually, assuming `det Dcvec \<noteq> 0` and `gain \<noteq> 0` hold throughout the
+box, not yet checked), packaging that into a genuine arc-level countable
+cover is a separate, still-open problem, comparable in scope to the existing
+`Appendix/Robust4Cover/D3_Curve_Cover.thy` (~3650 lines) built for the
+phase-collinear locus.  Next concrete steps: (a) check whether
+`det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0` and `gain_dip \<omega> \<noteq> 0` hold
+identically throughout `OmegaPF (vector [pi/2,0]) (pi/4)` (likely, by the same
+elementary trig technique already used for `d3_collinear_nsing_all`); (b) if
+so, decide whether to attempt the joint-chart (varying with \<open>\<omega>\<close>) construction
+needed to close the arc-cover, or scope it as a separate multi-session
+project.  The entire D4/`branchP_indep_closed_cover_core_all` program remains
+completely untouched.

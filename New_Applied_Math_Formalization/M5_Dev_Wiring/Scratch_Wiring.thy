@@ -1010,7 +1010,7 @@ proof -
         = -(c \<bullet> u) *\<^sub>R ((cnj \<i> * cnj (phase c x k)) * phase c x k)"
       by (simp add: dA)
     also have "\<dots> = -(c \<bullet> u) *\<^sub>R (cnj \<i> * (cnj (phase c x k) * phase c x k))"
-      by (simp add: mult.assoc)
+      by (simp only: mult.assoc)
     also have "\<dots> = -(c \<bullet> u) *\<^sub>R (- \<i>)"
       by (simp add: unitP)
     also have "\<dots> = (c \<bullet> u) *\<^sub>R \<i>"
@@ -1088,10 +1088,10 @@ proof (rule ccontr)
         = (\<Sum>k\<in>(UNIV::'n set). cnj (A_moment x c) * phase c x k)"
       unfolding A_moment_def by (simp add: sum_distrib_left)
     also have "\<dots> = (\<Sum>k\<in>(UNIV::'n set). 1)"
-      by (simp add: unit)
+      by (simp only: unit)
     also have "\<dots> = of_nat (CARD('n))"
       by simp
-    finally show ?thesis .
+    finally show ?thesis.
   qed
   have "cmod (cnj (A_moment x c) * A_moment x c) = 1"
     by (simp add: norm_mult modA)
@@ -1248,7 +1248,7 @@ proof (rule fixed_omega_H0core_chart_core_of_angle_conditions)
   show "2 \<le> CARD('n)"
     by (rule card2)
   have gain: "gain_dip (vector [pi / 2, pi / 3]) = 1"
-    unfolding gain_dip_def by (simp add: vector_2 gdip_pi_half)
+    unfolding gain_dip_def by (simp only: vector_2 gdip_pi_half)
   have key: "vec_nth (Dcvec_dip (vector [pi / 2, 0]) (vector [0, 0])
           (vector [pi / 2, pi / 3]) (axis (2::2) 1)) 1
       * vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])
@@ -1278,6 +1278,325 @@ proof (rule fixed_omega_H0core_chart_core_of_angle_conditions)
 qed
 
 subsection \<open>Arc chart core from countably many fixed-\<open>\<omega>\<close> pieces\<close>
+
+lemma chart_core_data_countable_UN:
+  fixes S :: "nat \<Rightarrow> ((real^2)^'n::finite) set"
+  assumes data: "\<And>i. \<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         S i \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow>
+            ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         (\<Union>i. S i) \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow>
+            ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+proof -
+    have h0:
+    "\<forall>i. \<exists>(charts_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit_i :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+       S i \<subseteq> (\<Union>j. (fst \<circ> charts_i j) ` (Crit_i j)) \<and>
+       (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+          ((fst \<circ> charts_i j) has_derivative
+            (blinfun_apply (D_i j x))) (at x within Crit_i j)) \<and>
+       (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+          \<not> surj (blinfun_apply (D_i j x))) \<and>
+       (\<forall>j. closed ((fst \<circ> charts_i j) ` (Crit_i j)))"
+    using data by blast
+
+  obtain charts ::
+      "nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+    where hcharts:
+      "\<forall>i. \<exists>(Crit_i :: nat \<Rightarrow> ((real^2)^'n) set)
+              (D_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+                (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit_i j)) \<and>
+         (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+            ((fst \<circ> charts i j) has_derivative
+              (blinfun_apply (D_i j x))) (at x within Crit_i j)) \<and>
+         (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+            \<not> surj (blinfun_apply (D_i j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit_i j)))"
+  proof -
+    have "\<exists>charts ::
+        nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)).
+        \<forall>i. \<exists>(Crit_i :: nat \<Rightarrow> ((real^2)^'n) set)
+                (D_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+                  (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+           S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit_i j)) \<and>
+           (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+              ((fst \<circ> charts i j) has_derivative
+                (blinfun_apply (D_i j x))) (at x within Crit_i j)) \<and>
+           (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+              \<not> surj (blinfun_apply (D_i j x))) \<and>
+           (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit_i j)))"
+      using assms by (subst choice, auto)
+      then obtain charts' ::
+        "nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+      where hcharts':
+        "\<forall>i. \<exists>(Crit_i :: nat \<Rightarrow> ((real^2)^'n) set)
+                (D_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+                  (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+           S i \<subseteq> (\<Union>j. (fst \<circ> charts' i j) ` (Crit_i j)) \<and>
+           (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+              ((fst \<circ> charts' i j) has_derivative
+                (blinfun_apply (D_i j x))) (at x within Crit_i j)) \<and>
+           (\<forall>j x. x \<in> Crit_i j \<longrightarrow>
+              \<not> surj (blinfun_apply (D_i j x))) \<and>
+           (\<forall>j. closed ((fst \<circ> charts' i j) ` (Crit_i j)))"
+      by blast
+    show ?thesis
+      by (rule that[OF hcharts'])
+  qed
+
+  obtain Crit :: "nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) set"
+    where hCrit:
+      "\<forall>i. \<exists>(D_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+                (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit i j)) \<and>
+         (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+            ((fst \<circ> charts i j) has_derivative
+              (blinfun_apply (D_i j x))) (at x within Crit i j)) \<and>
+         (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+            \<not> surj (blinfun_apply (D_i j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit i j)))"
+  proof -
+    have "\<exists>Crit :: nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) set.
+        \<forall>i. \<exists>(D_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+                  (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+           S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit i j)) \<and>
+           (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+              ((fst \<circ> charts i j) has_derivative
+                (blinfun_apply (D_i j x))) (at x within Crit i j)) \<and>
+           (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+              \<not> surj (blinfun_apply (D_i j x))) \<and>
+           (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit i j)))"
+      using hcharts
+      by (subst choice, auto)
+    then obtain Crit' :: "nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) set"
+      where hCrit':
+        "\<forall>i. \<exists>(D_i :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+                  (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+           S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit' i j)) \<and>
+           (\<forall>j x. x \<in> Crit' i j \<longrightarrow>
+              ((fst \<circ> charts i j) has_derivative
+                (blinfun_apply (D_i j x))) (at x within Crit' i j)) \<and>
+           (\<forall>j x. x \<in> Crit' i j \<longrightarrow>
+              \<not> surj (blinfun_apply (D_i j x))) \<and>
+           (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit' i j)))"
+      by blast
+    show ?thesis
+      by (rule that[OF hCrit'])
+  qed
+
+  obtain D ::
+      "nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+        (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+    where hall:
+      "\<forall>i.
+         S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit i j)) \<and>
+         (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+            ((fst \<circ> charts i j) has_derivative
+              (blinfun_apply (D i j x))) (at x within Crit i j)) \<and>
+         (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+            \<not> surj (blinfun_apply (D i j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit i j)))"
+  proof -
+    have "\<exists>D ::
+        nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+          (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n)).
+        \<forall>i.
+           S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit i j)) \<and>
+           (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+              ((fst \<circ> charts i j) has_derivative
+                (blinfun_apply (D i j x))) (at x within Crit i j)) \<and>
+           (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+              \<not> surj (blinfun_apply (D i j x))) \<and>
+           (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit i j)))"
+      using hCrit
+      by (subst choice, auto)
+    then obtain D' ::
+        "nat \<Rightarrow> nat \<Rightarrow> ((real^2)^'n) \<Rightarrow>
+          (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+      where hall':
+        "\<forall>i.
+           S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit i j)) \<and>
+           (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+              ((fst \<circ> charts i j) has_derivative
+                (blinfun_apply (D' i j x))) (at x within Crit i j)) \<and>
+           (\<forall>j x. x \<in> Crit i j \<longrightarrow>
+              \<not> surj (blinfun_apply (D' i j x))) \<and>
+           (\<forall>j. closed ((fst \<circ> charts i j) ` (Crit i j)))"
+      by blast
+    show ?thesis
+      by (rule that[OF hall'])
+  qed
+
+
+  have cov: "\<And>i. S i \<subseteq> (\<Union>j. (fst \<circ> charts i j) ` (Crit i j))"
+    using hall by presburger
+
+  have der: "\<And>i. \<forall>j x. x \<in> Crit i j \<longrightarrow>
+      ((fst \<circ> charts i j) has_derivative (blinfun_apply (D i j x))) (at x within Crit i j)"
+    using hall by blast
+
+  have nsurj: "\<And>i. \<forall>j x. x \<in> Crit i j \<longrightarrow> \<not> surj (blinfun_apply (D i j x))"
+    using hall by blast
+
+  have cls: "\<And>i. \<forall>j. closed ((fst \<circ> charts i j) ` (Crit i j))"
+    using hall by blast
+  define i_of :: "nat \<Rightarrow> nat" where "i_of n = fst (prod_decode n)" for n
+  define j_of :: "nat \<Rightarrow> nat" where "j_of n = snd (prod_decode n)" for n
+  define charts' where "charts' = (\<lambda>n. charts (i_of n) (j_of n))"
+  define Crit' where "Crit' = (\<lambda>n. Crit (i_of n) (j_of n))"
+  define D' where "D' = (\<lambda>n. D (i_of n) (j_of n))"
+  have cover: "(\<Union>i. S i) \<subseteq> (\<Union>n. (fst \<circ> charts' n) ` (Crit' n))"
+  proof
+    fix x assume "x \<in> (\<Union>i. S i)"
+    then obtain i where xS: "x \<in> S i"
+      by blast
+    then obtain j y where yC: "y \<in> Crit i j"
+      and xeq: "x = (fst \<circ> charts i j) y"
+      using cov[of i] by blast
+    define n where "n = prod_encode (i, j)"
+    have io: "i_of n = i"
+      unfolding i_of_def n_def by simp
+    have jo: "j_of n = j"
+      unfolding j_of_def n_def by simp
+    have "y \<in> Crit' n"
+      unfolding Crit'_def io jo using yC .
+    moreover have "x = (fst \<circ> charts' n) y"
+      unfolding charts'_def io jo using xeq .
+    ultimately show "x \<in> (\<Union>n. (fst \<circ> charts' n) ` (Crit' n))"
+      by blast
+  qed
+  have der': "\<forall>n x. x \<in> Crit' n \<longrightarrow>
+      ((fst \<circ> charts' n) has_derivative (blinfun_apply (D' n x))) (at x within Crit' n)"
+    unfolding charts'_def Crit'_def D'_def using der by blast
+  have nsurj': "\<forall>n x. x \<in> Crit' n \<longrightarrow> \<not> surj (blinfun_apply (D' n x))"
+    unfolding Crit'_def D'_def using nsurj by blast
+  have cls': "\<forall>n. closed ((fst \<circ> charts' n) ` (Crit' n))"
+    unfolding charts'_def Crit'_def using cls by blast
+  show ?thesis
+    by (intro exI[of _ charts'] exI[of _ Crit'] exI[of _ D'] conjI cover der' nsurj' cls')
+qed
+
+theorem d3_chart_core_of_countable_fixed_omega_cover:
+  fixes V :: "((real^2)^'n::finite) set"
+    and om :: "nat \<Rightarrow> real^2"
+    and \<gamma> :: "(real^2) set"
+    and \<omega>0 \<omega>s :: "real^2"
+  assumes cover: "(V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+        \<subseteq> (\<Union>i. V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {om i})"
+    and core: "\<And>i. d3_detHess_arc_chart_core V \<omega>0 \<omega>s {om i}"
+  shows "d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma>"
+proof -
+  define S where "S = (\<lambda>i. V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {om i} :: ((real^2)^'n) set)"
+  have data: "\<And>i. \<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         S i \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow>
+            ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+    using core unfolding S_def d3_detHess_arc_chart_core_def by blast
+  obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+    and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+    and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+    where all_data:
+      "(\<Union>i. S i) \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j)) \<and>
+       (\<forall>j x. x \<in> Crit j \<longrightarrow>
+          ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)) \<and>
+       (\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+       (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+  proof -
+    have ex_data: "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         (\<Union>i. S i) \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow>
+            ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+      by (rule chart_core_data_countable_UN[OF data])
+    then show ?thesis
+    proof (elim exE)
+      fix charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+        and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+        and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+      assume all_data:
+        "(\<Union>i. S i) \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow>
+            ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)) \<and>
+         (\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+         (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+      show ?thesis
+        by (rule that[OF all_data])
+    qed
+  qed
+  from all_data have cov: "(\<Union>i. S i) \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j))"
+    by (rule conjunct1)
+  from all_data have rest_data1: "(\<forall>j x. x \<in> Crit j \<longrightarrow>
+          ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)) \<and>
+       (\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+       (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+    by (rule conjunct2)
+  from rest_data1 have der: "\<forall>j x. x \<in> Crit j \<longrightarrow>
+        ((fst \<circ> charts j) has_derivative (blinfun_apply (D j x))) (at x within Crit j)"
+    by (rule conjunct1)
+  from rest_data1 have rest_data2:
+      "(\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))) \<and>
+       (\<forall>j. closed ((fst \<circ> charts j) ` (Crit j)))"
+    by (rule conjunct2)
+  from rest_data2 have nsurj: "\<forall>j x. x \<in> Crit j \<longrightarrow> \<not> surj (blinfun_apply (D j x))"
+    by (rule conjunct1)
+  from rest_data2 have cls: "\<forall>j. closed ((fst \<circ> charts j) ` (Crit j))"
+    by (rule conjunct2)
+  have cover': "(V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+      \<subseteq> (\<Union>j. (fst \<circ> charts j) ` (Crit j))"
+    using cover cov unfolding S_def by blast
+  show ?thesis
+    unfolding d3_detHess_arc_chart_core_def
+    by (intro exI[of _ charts] exI[of _ Crit] exI[of _ D] conjI cover' der nsurj cls)
+qed
+
+theorem d3_chart_core_all_of_countable_fixed_omega_angle_cover:
+  fixes V :: "((real^2)^'n::finite) set"
+  assumes card2: "2 \<le> CARD('n)"
+    and cover: "\<And>\<gamma>. analytic_arc \<gamma> \<Longrightarrow> \<gamma> \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow>
+      \<exists>om :: nat \<Rightarrow> real^2.
+        (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+          \<subseteq> (\<Union>i. V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {om i})
+        \<and> (\<forall>i. cvec_dip \<omega>0 \<omega>s (om i) \<noteq> 0)
+        \<and> (\<forall>i. d3_s2_global_factor \<omega>0 \<omega>s (om i) \<noteq> 0)"
+  shows "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+  unfolding d3_detHess_arc_chart_core_all_def
+proof (intro allI impI)
+  fix \<gamma>
+  assume arc: "analytic_arc \<gamma>"
+    and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+  obtain om :: "nat \<Rightarrow> real^2"
+    where cov: "(V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: ((real^2)^'n) set)
+        \<subseteq> (\<Union>i. V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {om i})"
+      and cnz: "\<forall>i. cvec_dip \<omega>0 \<omega>s (om i) \<noteq> 0"
+      and facnz: "\<forall>i. d3_s2_global_factor \<omega>0 \<omega>s (om i) \<noteq> 0"
+    using cover[OF arc gsub] by blast
+  show "d3_detHess_arc_chart_core V \<omega>0 \<omega>s \<gamma>"
+  proof (rule d3_chart_core_of_countable_fixed_omega_cover[OF cov])
+    fix i
+    show "d3_detHess_arc_chart_core V \<omega>0 \<omega>s {om i}"
+      by (rule fixed_omega_H0core_chart_core_of_angle_conditions[OF _ _ card2])
+         (use cnz facnz in auto)
+  qed
+qed
 
 theorem d3_chart_core_of_fixed_omega_piece_cover:
   fixes V :: "((real^2)^'n::finite) set"
@@ -1380,6 +1699,1040 @@ proof (intro allI impI)
           (slot (ki i) (perp2 (cvec_dip \<omega>0 \<omega>s (om i)))) \<noteq> 0"
       using snz by blast
   qed
+qed
+
+subsection \<open>Capstone-facing D3 frontier reductions\<close>
+
+theorem F0_dip_nonempty_from_countable_fixed_omega_angle_covers:
+  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and d3covers: "\<And>(V::(planar^'n) set) ctr \<delta> \<omega>0 \<omega>s \<gamma>.
+      analytic_arc \<gamma> \<Longrightarrow> \<gamma> \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow>
+      \<exists>om :: nat \<Rightarrow> real^2.
+        (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: (planar^'n) set)
+          \<subseteq> (\<Union>i. V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {om i})
+        \<and> (\<forall>i. cvec_dip \<omega>0 \<omega>s (om i) \<noteq> 0)
+        \<and> (\<forall>i. d3_s2_global_factor \<omega>0 \<omega>s (om i) \<noteq> 0)"
+    and branchcore: "\<And>(V::(planar^'n) set) ctr \<delta> \<omega>0 \<omega>s.
+      branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
+  shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr \<delta> R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
+            0 < \<delta> \<and> 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr
+              (OmegaPF ctr \<delta>) \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
+proof (rule F0_dip_nonempty[OF c6 oddN])
+  fix V :: "(planar^'n) set" and ctr \<omega>0 \<omega>s :: planar and \<delta> :: real
+  show "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+  proof (rule d3_chart_core_all_of_countable_fixed_omega_angle_cover)
+    show "2 \<le> CARD('n)"
+      using c6 by simp
+    show "\<And>\<gamma>. analytic_arc \<gamma> \<Longrightarrow> \<gamma> \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow>
+      \<exists>om :: nat \<Rightarrow> real^2.
+        (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: (planar^'n) set)
+          \<subseteq> (\<Union>i. V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {om i})
+        \<and> (\<forall>i. cvec_dip \<omega>0 \<omega>s (om i) \<noteq> 0)
+        \<and> (\<forall>i. d3_s2_global_factor \<omega>0 \<omega>s (om i) \<noteq> 0)"
+      by (rule d3covers)
+  qed
+next
+  fix V :: "(planar^'n) set" and ctr \<omega>0 \<omega>s :: planar and \<delta> :: real
+  show "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
+    by (rule branchcore)
+qed
+
+theorem F0_dip_nonempty_from_fixed_omega_piece_covers:
+  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and d3pieces: "\<And>(V::(planar^'n) set) ctr \<delta> \<omega>0 \<omega>s \<gamma>.
+      analytic_arc \<gamma> \<Longrightarrow> \<gamma> \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow>
+      \<exists>(Cp :: nat \<Rightarrow> (planar^'n) set) (om :: nat \<Rightarrow> real^2) (ki :: nat \<Rightarrow> 'n).
+        (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: (planar^'n) set) \<subseteq> (\<Union>i. Cp i)
+      \<and> (\<forall>i. closed (Cp i))
+      \<and> (\<forall>i. Cp i \<subseteq> D3BadXG_H0core \<omega>0 \<omega>s {om i})
+      \<and> (\<forall>i x. x \<in> Cp i \<longrightarrow>
+          frechet_derivative
+            (\<lambda>y::planar^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y (om i)) 2) (at x)
+            (slot (ki i) (perp2 (cvec_dip \<omega>0 \<omega>s (om i)))) \<noteq> 0)"
+    and branchcore: "\<And>(V::(planar^'n) set) ctr \<delta> \<omega>0 \<omega>s.
+      branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
+  shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr \<delta> R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
+            0 < \<delta> \<and> 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr
+              (OmegaPF ctr \<delta>) \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
+proof (rule F0_dip_nonempty[OF c6 oddN])
+  fix V :: "(planar^'n) set" and ctr \<omega>0 \<omega>s :: planar and \<delta> :: real
+  show "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+  proof (rule d3_chart_core_all_of_fixed_omega_piece_covers)
+    fix \<gamma>
+    assume arc: "analytic_arc \<gamma>" and gsub: "\<gamma> \<subseteq> OmegaPF ctr \<delta>"
+    show "\<exists>(Cp :: nat \<Rightarrow> (planar^'n) set) (om :: nat \<Rightarrow> real^2) (ki :: nat \<Rightarrow> 'n).
+        (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma> :: (planar^'n) set) \<subseteq> (\<Union>i. Cp i)
+      \<and> (\<forall>i. closed (Cp i))
+      \<and> (\<forall>i. Cp i \<subseteq> D3BadXG_H0core \<omega>0 \<omega>s {om i})
+      \<and> (\<forall>i x. x \<in> Cp i \<longrightarrow>
+          frechet_derivative
+            (\<lambda>y::planar^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y (om i)) 2) (at x)
+            (slot (ki i) (perp2 (cvec_dip \<omega>0 \<omega>s (om i)))) \<noteq> 0)"
+      by (rule d3pieces[OF arc gsub])
+  qed
+next
+  fix V :: "(planar^'n) set" and ctr \<omega>0 \<omega>s :: planar and \<delta> :: real
+  show "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
+    by (rule branchcore)
+qed
+
+subsection \<open>Robust4-design capstone reductions\<close>
+
+theorem F0_dip_nonempty_from_robust4_design_cores:
+  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and d3core: "\<And>V::(planar^'n) set.
+      d3_detHess_arc_chart_core_all V (vector [pi / 2, 0]) (pi / 4)
+        (vector [pi / 2, 0]) (vector [0, 0])"
+    and branchcore: "\<And>V::(planar^'n) set.
+      branchP_indep_closed_cover_core_all V (vector [pi / 2, 0]) (pi / 4)
+        (vector [pi / 2, 0]) (vector [0, 0])"
+  shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr \<delta> R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
+            0 < \<delta> \<and> 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr
+              (OmegaPF ctr \<delta>) \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
+proof -
+  define \<omega>0 :: planar where "\<omega>0 = vector [pi/2, 0]"
+  define \<omega>s :: planar where "\<omega>s = vector [0, 0]"
+  define \<omega>null :: planar where "\<omega>null = vector [pi, 0]"
+  have hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    by (simp add: \<omega>s_def \<omega>0_def kz_def)
+  have kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+    by (simp add: \<omega>0_def \<omega>s_def kx_def sin_pi_half)
+  have d0: "(0::real) < pi/4" by simp
+  have dpi: "(pi::real)/4 \<le> pi" by simp
+  have pf: "\<forall>\<omega>\<in>OmegaPF \<omega>0 (pi/4). sin (vec_nth \<omega> 1) \<noteq> 0"
+  proof
+    fix \<omega> :: planar assume "\<omega> \<in> OmegaPF \<omega>0 (pi/4)"
+    hence mb: "vec_nth (\<omega>0 - vector [pi/4, pi]) 1 \<le> vec_nth \<omega> 1 \<and>
+        vec_nth \<omega> 1 \<le> vec_nth (\<omega>0 + vector [pi/4, pi]) 1"
+      unfolding OmegaPF_def mem_box_cart by blast
+    have l1: "vec_nth (\<omega>0 - vector [pi/4, pi]) 1 = pi/4"
+      by (simp add: \<omega>0_def vector_minus_component vector_2)
+    have l2: "vec_nth (\<omega>0 + vector [pi/4, pi]) 1 = 3*pi/4"
+      by (simp add: \<omega>0_def vector_add_component vector_2)
+    have lo: "0 < vec_nth \<omega> 1" and hi: "vec_nth \<omega> 1 < pi"
+      using mb l1 l2 pi_gt_zero by linarith+
+    have "0 < sin (vec_nth \<omega> 1)" by (rule sin_gt_zero[OF lo hi])
+    thus "sin (vec_nth \<omega> 1) \<noteq> 0" by simp
+  qed
+  have nsing: "d3_collinear_nsing_all \<omega>0 (pi/4) \<omega>0 \<omega>s"
+  proof (unfold d3_collinear_nsing_all_def, intro ballI)
+    fix \<omega> :: planar
+    assume wL: "\<omega> \<in> {\<omega> \<in> OmegaPF \<omega>0 (pi/4). d3_crossTheta \<omega>0 \<omega>s \<omega> = 0}"
+    hence wO: "\<omega> \<in> OmegaPF \<omega>0 (pi/4)"
+      and z: "d3_crossTheta \<omega>0 \<omega>s \<omega> = 0" by auto
+    have mb: "vec_nth (\<omega>0 - vector [pi/4, pi]) 1 \<le> vec_nth \<omega> 1
+        \<and> vec_nth \<omega> 1 \<le> vec_nth (\<omega>0 + vector [pi/4, pi]) 1"
+      using wO unfolding OmegaPF_def mem_box_cart by blast
+    have l1: "vec_nth (\<omega>0 - vector [pi/4, pi]) 1 = pi/4"
+      by (simp only: \<omega>0_def vector_minus_component vector_2)
+    have l2: "vec_nth (\<omega>0 + vector [pi/4, pi]) 1 = 3*pi/4"
+      by (simp add: \<omega>0_def vector_add_component vector_2)
+    have lo: "0 < vec_nth \<omega> 1" and hi: "vec_nth \<omega> 1 < pi"
+      using mb l1 l2 pi_gt_zero by linarith+
+    have c_lt1: "cos (vec_nth \<omega> 1) < 1"
+    proof -
+      have h0: "0 < vec_nth \<omega> 1 / 2" using lo by simp
+      have h2: "vec_nth \<omega> 1 / 2 < 2" using hi pi_less_4 by linarith
+      have "cos (2 * (vec_nth \<omega> 1 / 2)) < 1"
+        by (rule cos_double_less_one[OF h0 h2])
+      thus ?thesis by simp
+    qed
+    have cne: "cos (vec_nth \<omega> 1) - 1 \<noteq> 0" using c_lt1 by linarith
+    have trig_collapse: "cos (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+        + sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+        = sin (vec_nth \<omega> 2)"
+    proof -
+      have "cos (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+          + sin (vec_nth \<omega> 1) * (sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 2))
+          = (cos (vec_nth \<omega> 1) * cos (vec_nth \<omega> 1)
+              + sin (vec_nth \<omega> 1) * sin (vec_nth \<omega> 1)) * sin (vec_nth \<omega> 2)"
+        by (simp only: mult.assoc distrib_right)
+      also have "\<dots> = sin (vec_nth \<omega> 2)"
+        by (simp only: sin_cos_squared_add3)
+      finally show ?thesis .
+    qed
+    have theta_eq: "d3_crossTheta \<omega>0 \<omega>s \<omega> = (cos (vec_nth \<omega> 1) - 1) * sin (vec_nth \<omega> 2)"
+      by (simp add: d3_crossTheta_def cvec_dip_def Dcvec_dip_def
+          \<omega>0_def \<omega>s_def kx_def ky_def kz_def axis_def vector_2
+          sin_pi_half cos_pi_half algebra_simps trig_collapse)
+    have s2z: "sin (vec_nth \<omega> 2) = 0" using z theta_eq cne by auto
+    have c2nz: "cos (vec_nth \<omega> 2) \<noteq> 0"
+    proof
+      assume c2z: "cos (vec_nth \<omega> 2) = 0"
+      have "\<bar>cos (vec_nth \<omega> 2)\<bar> = (1::real)" by (rule sin_zero_abs_cos_one[OF s2z])
+      thus False using c2z by simp
+    qed
+    have d2eq: "d3_collinear_d2 \<omega>0 \<omega>s \<omega> =
+        (cos (vec_nth \<omega> 1) - 1) * cos (vec_nth \<omega> 2)"
+      by (simp add: d3_collinear_d2_def d3_crossA_def d3_crossB_def
+          \<omega>0_def \<omega>s_def kx_def ky_def kz_def vector_2
+          sin_pi_half cos_pi_half algebra_simps)
+    have "d3_collinear_d2 \<omega>0 \<omega>s \<omega> \<noteq> 0"
+      using cne c2nz d2eq by simp
+    thus "d3_collinear_d2 \<omega>0 \<omega>s \<omega> \<noteq> 0
+       \<or> d3_collinear_d1 \<omega>0 \<omega>s \<omega> \<noteq> 0" by blast
+  qed
+  have cn: "cvec_dip \<omega>0 \<omega>s \<omega>null \<noteq> 0"
+  proof -
+    have "vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>null) 1 = - 2"
+      by (simp add: cvec_dip_def \<omega>0_def \<omega>s_def \<omega>null_def kx_def ky_def kz_def
+          sin_pi_half cos_pi_half axis_def)
+    hence "vec_nth (cvec_dip \<omega>0 \<omega>s \<omega>null) 1 \<noteq> 0" by simp
+    thus ?thesis by (metis zero_index)
+  qed
+  have N1: "CARD('n) > 1" using c6 by simp
+  have spos: "(0::real) < 1" by simp
+  obtain x :: "planar^'n"
+    where afz: "af (cvec_dip \<omega>0 \<omega>s) x \<omega>null = 0"
+      and spac0: "\<forall>m m'. m \<noteq> m' \<longrightarrow>
+        (1::real) \<le> spdist 0 0 1 (vec_nth x m) (vec_nth x m')"
+    using feasible_witness_exists[OF N1 cn spos] by meson
+  define R :: real where "R = norm x + 1"
+  have g0pos: "0 < gain_dip \<omega>0"
+  proof -
+    have "sin (vec_nth \<omega>0 1) \<noteq> 0" by (simp add: \<omega>0_def sin_pi_half)
+    hence "gain_dip \<omega>0 \<noteq> 0" by (rule gain_dip_nonzero_of_sin)
+    moreover have "0 \<le> gain_dip \<omega>0" by (rule gain_dip_nonneg)
+    ultimately show ?thesis by simp
+  qed
+  have feasible: "interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0
+                    :: (planar^'n) set) \<noteq> {}"
+  proof -
+    have spac: "\<forall>p\<in>{p. fst p \<noteq> snd p}.
+        (1/2::real) < spdist 0 0 1 (vec_nth x (fst p)) (vec_nth x (snd p))"
+      using spac0 by fastforce
+    have Nlt: "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>null < 1"
+      using afz by (simp add: Upow_def)
+    have Pgt: "(0::real) < Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0"
+    proof -
+      have "Upow (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>0 = gain_dip \<omega>0 * (real CARD('n))\<^sup>2"
+        by (rule Upow_at_main[OF hsep])
+      moreover have "0 < (real CARD('n))\<^sup>2" using N1 by simp
+      ultimately show ?thesis using mult_pos_pos[OF g0pos] by simp
+    qed
+    have inR: "x \<in> ball 0 R" by (simp add: R_def dist_norm)
+    obtain \<rho> where \<rho>: "0 < \<rho>"
+        and sub: "ball x \<rho> \<subseteq> Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0"
+      using ball_inside_Ffeas[OF gain_dip_nonneg gain_dip_nonneg spac Nlt Pgt inR] by blast
+    have "ball x \<rho> \<subseteq> interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0)"
+      by (rule interior_maximal[OF sub open_ball])
+    moreover have "x \<in> ball x \<rho>" using \<rho> by simp
+    ultimately show ?thesis by blast
+  qed
+  have cap: "\<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0
+              (OmegaPF \<omega>0 (pi/4)) 1 0 \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
+  proof -
+    have d3core_feas: "d3_detHess_arc_chart_core_all
+        (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0
+           :: (planar^'n) set)) \<omega>0 (pi/4) \<omega>0 \<omega>s"
+      unfolding \<omega>0_def \<omega>s_def by (rule d3core)
+    have branchcore_feas: "branchP_indep_closed_cover_core_all
+        (interior (Ffeas (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0 1 0
+           :: (planar^'n) set)) \<omega>0 (pi/4) \<omega>0 \<omega>s"
+      unfolding \<omega>0_def \<omega>s_def by (rule branchcore)
+    show ?thesis
+      using regular_feasible_witness_dip[
+          OF c6 oddN hsep kdiff d0 dpi pf nsing feasible d3core_feas branchcore_feas]
+      by (blast intro: F0_nonempty_of_witness OmegaPF_compact)
+  qed
+  then obtain \<xi> \<kappa> \<epsilon>
+    where xipos: "0 < \<xi>"
+      and kappapos: "0 < \<kappa>"
+      and epspos: "0 < \<epsilon>"
+      and F0nz: "F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R (1/2) 0 0 1 \<omega>null \<omega>0
+          (OmegaPF \<omega>0 (pi/4)) 1 0 \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
+    by blast
+  show ?thesis
+    apply (rule_tac x="0::real" in exI)
+    apply (rule_tac x="0::real" in exI)
+    apply (rule_tac x="1::real" in exI)
+    apply (rule_tac x="\<omega>0" in exI)
+    apply (rule_tac x="\<omega>s" in exI)
+    apply (rule_tac x="\<omega>null" in exI)
+    apply (rule_tac x="\<omega>0" in exI)
+    apply (rule_tac x="pi/4" in exI)
+    apply (rule_tac x="R" in exI)
+    apply (rule_tac x="1/2::real" in exI)
+    apply (rule_tac x="1::real" in exI)
+    apply (rule_tac x="0::real" in exI)
+    apply (rule_tac x="\<xi>" in exI)
+    apply (rule_tac x="\<kappa>" in exI)
+    apply (rule_tac x="\<epsilon>" in exI)
+    apply (intro conjI)
+       apply (rule d0)
+      apply (rule xipos)
+     apply (rule kappapos)
+    apply (rule epspos)
+    apply (rule F0nz)
+    done
+qed
+
+theorem F0_dip_nonempty_from_robust4_piece_covers:
+  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+    and d3pieces: "\<And>(V::(planar^'n) set) \<gamma>.
+      analytic_arc \<gamma> \<Longrightarrow> \<gamma> \<subseteq> OmegaPF (vector [pi / 2, 0]) (pi / 4) \<Longrightarrow>
+      \<exists>(Cp :: nat \<Rightarrow> (planar^'n) set) (om :: nat \<Rightarrow> real^2) (ki :: nat \<Rightarrow> 'n).
+        (V \<inter> D3BadXG_H0core (vector [pi / 2, 0]) (vector [0, 0]) \<gamma> :: (planar^'n) set)
+          \<subseteq> (\<Union>i. Cp i)
+      \<and> (\<forall>i. closed (Cp i))
+      \<and> (\<forall>i. Cp i \<subseteq> D3BadXG_H0core (vector [pi / 2, 0]) (vector [0, 0]) {om i})
+      \<and> (\<forall>i x. x \<in> Cp i \<longrightarrow>
+          frechet_derivative
+            (\<lambda>y::planar^'n. vec_nth (gradU (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]))
+              gain_dip y (om i)) 2) (at x)
+            (slot (ki i) (perp2 (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (om i)))) \<noteq> 0)"
+    and branchcore: "\<And>V::(planar^'n) set.
+      branchP_indep_closed_cover_core_all V (vector [pi / 2, 0]) (pi / 4)
+        (vector [pi / 2, 0]) (vector [0, 0])"
+  shows "\<exists>A B D \<omega>0 \<omega>s \<omega>null ctr \<delta> R dmin \<delta>null pmin \<xi> \<kappa> \<epsilon>.
+            0 < \<delta> \<and> 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon>
+          \<and> F0 (cvec_dip \<omega>0 \<omega>s) gain_dip R dmin A B D \<omega>null ctr
+              (OmegaPF ctr \<delta>) \<delta>null pmin \<xi> \<kappa> \<epsilon> \<noteq> ({}::(planar^'n) set)"
+proof (rule F0_dip_nonempty_from_robust4_design_cores[OF c6 oddN])
+  fix V :: "(planar^'n) set"
+  show "d3_detHess_arc_chart_core_all V (vector [pi / 2, 0]) (pi / 4)
+      (vector [pi / 2, 0]) (vector [0, 0])"
+  proof (rule d3_chart_core_all_of_fixed_omega_piece_covers)
+    fix \<gamma>
+    assume arc: "analytic_arc \<gamma>"
+      and gsub: "\<gamma> \<subseteq> OmegaPF (vector [pi / 2, 0]) (pi / 4)"
+    show "\<exists>(Cp :: nat \<Rightarrow> (planar^'n) set) (om :: nat \<Rightarrow> real^2) (ki :: nat \<Rightarrow> 'n).
+        (V \<inter> D3BadXG_H0core (vector [pi / 2, 0]) (vector [0, 0]) \<gamma> :: (planar^'n) set)
+          \<subseteq> (\<Union>i. Cp i)
+      \<and> (\<forall>i. closed (Cp i))
+      \<and> (\<forall>i. Cp i \<subseteq> D3BadXG_H0core (vector [pi / 2, 0]) (vector [0, 0]) {om i})
+      \<and> (\<forall>i x. x \<in> Cp i \<longrightarrow>
+          frechet_derivative
+            (\<lambda>y::planar^'n. vec_nth (gradU (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]))
+              gain_dip y (om i)) 2) (at x)
+            (slot (ki i) (perp2 (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (om i)))) \<noteq> 0)"
+      by (rule d3pieces[OF arc gsub])
+  qed
+next
+  fix V :: "(planar^'n) set"
+  show "branchP_indep_closed_cover_core_all V (vector [pi / 2, 0]) (pi / 4)
+      (vector [pi / 2, 0]) (vector [0, 0])"
+    by (rule branchcore)
+qed
+
+subsection \<open>The component-1 twin factor: at most one of the two can vanish\<close>
+
+text \<open>@{const d3_s2_global_factor} is one of two mirror invariants arising from
+  @{thm gradU_dip_xderiv_perp_slot}, which gives the SAME perp-slot phase
+  structure for both gradU components \<open>j = 1, 2\<close> --- only the linear
+  coefficient \<open>Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 c\<close> differs.  The
+  component-1 twin is defined identically with \<open>j = 1\<close>.\<close>
+
+definition d3_s1_global_factor :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "d3_s1_global_factor \<omega>0 \<omega>s \<omega> =
+     2 * gain_dip \<omega>
+       * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))"
+
+text \<open>Both factors vanishing would force \<open>perp2 c\<close> orthogonal to BOTH basis
+  vectors under the linear map \<open>Dcvec_dip \<omega>0 \<omega>s \<omega>\<close>, hence (by linearity)
+  orthogonal to its entire range; if that map is a bijection of \<open>real^2\<close>
+  (\<open>det (matrix Dcvec) \<noteq> 0\<close>) the range is all of \<open>real^2\<close>, forcing
+  \<open>perp2 c = 0\<close>, hence \<open>c = 0\<close> (@{thm perp2_nz}) --- contradicting
+  \<open>cvec \<noteq> 0\<close>.  So under the non-degeneracy conditions \<open>cvec \<noteq> 0\<close>,
+  \<open>det (matrix Dcvec) \<noteq> 0\<close>, \<open>gain_dip \<omega> \<noteq> 0\<close> --- all purely angle-only,
+  none referring to any specific \<open>x\<close> --- at least one of the two factors is
+  nonzero.  This is the frontier-push beyond the Robust4-witness result: it
+  replaces the ad-hoc pointwise fact \<open>d3_s2_global_factor \<noteq> 0\<close> with a
+  disjunction of two angle-only conditions that together are implied by
+  ordinary non-degeneracy alone.\<close>
+
+lemma d3_s1_or_s2_global_factor_nonzero:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+  shows "d3_s1_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0 \<or> d3_s2_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0"
+proof (rule ccontr)
+  assume contra: "\<not> ?thesis"
+  define v where "v = perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)"
+  from contra have f1z: "d3_s1_global_factor \<omega>0 \<omega>s \<omega> = 0"
+    and f2z: "d3_s2_global_factor \<omega>0 \<omega>s \<omega> = 0"
+    by simp_all
+  have d1z: "Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> v = 0"
+    using f1z gnz unfolding d3_s1_global_factor_def v_def by (simp add: mult_eq_0_iff)
+  have d2z: "Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) \<bullet> v = 0"
+    using f2z gnz unfolding d3_s2_global_factor_def v_def by (simp add: mult_eq_0_iff)
+  have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
+  have decomp: "\<And>h::real^2. h = vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1"
+  proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+    fix h :: "real^2" and i :: 2
+    show "vec_nth h i = vec_nth (vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1) i"
+      using exhaust_2[of i] by (auto simp: axis_def)
+  qed
+  have split: "Dcvec_dip \<omega>0 \<omega>s \<omega> h
+      = vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)
+      + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)" for h :: "real^2"
+    using decomp[of h] linear_add[OF lin] linear_cmul[OF lin] by metis
+  have allz: "Dcvec_dip \<omega>0 \<omega>s \<omega> h \<bullet> v = 0" for h :: "real^2"
+    unfolding split[of h] by (simp add: inner_add_left d1z d2z)
+  have mv: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h = Dcvec_dip \<omega>0 \<omega>s \<omega> h" for h :: "real^2"
+  proof -
+    have expand: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h
+        = vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)
+        + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+    proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+      fix i :: 2
+      show "vec_nth (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h) i
+          = vec_nth (vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)
+                   + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) i"
+        by (simp add: matrix_def matrix_vector_mult_def sum_2 algebra_simps)
+    qed
+    with split[of h] show ?thesis by simp
+  qed
+  have bij: "bij ((*v) (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)))"
+    by (rule bij_matrix_vector_mult[OF detnz])
+  have surjmv: "\<forall>y. \<exists>x. y = matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v x"
+    using bij_is_surj[OF bij] unfolding surj_def .
+  obtain h where hv: "v = matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h" using surjmv by blast
+  hence hv': "v = Dcvec_dip \<omega>0 \<omega>s \<omega> h" using mv by simp
+  have "v \<bullet> v = 0"
+    using allz[of h] hv' by simp
+  hence "v = 0" by simp
+  hence "perp2 (cvec_dip \<omega>0 \<omega>s \<omega>) = 0"
+    unfolding v_def .
+  moreover have "perp2 (cvec_dip \<omega>0 \<omega>s \<omega>) \<noteq> 0"
+    by (rule perp2_nz[OF cnz])
+  ultimately show False by simp
+qed
+
+subsection \<open>The component-1 mirror ladder\<close>
+
+text \<open>Everything in the fixed-\<open>\<omega>\<close> chart-core ladder above (the slicable branch,
+  the \<open>B_dip\<close>-zero residual, the factor/phase split) was built from gradU's
+  component 2.  @{thm gradU_dip_xderiv_perp_slot} gives the IDENTICAL perp-slot
+  phase structure for component 1 --- same \<open>M_paper x c $ 1\<close> phase factor,
+  only the linear coefficient \<open>Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 c\<close>
+  changes with \<open>j\<close>.  So the phase-alignment-cut subsection above is reused
+  UNCHANGED; only the slicable/Bzero/Bnonzero layer needs a mirror, built
+  from gradU's component 1.\<close>
+
+lemma has_derivative_gradU_dip_component1_x_frechet:
+  fixes x :: "(real^2)^'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2"
+  shows "((\<lambda>y::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) has_derivative
+      frechet_derivative
+        (\<lambda>y::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) (at x)) (at x)"
+proof -
+  have h: "((\<lambda>y::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) has_derivative
+        (dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (1::2) 1) 1)) (gain_dip \<omega>)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (1::2) 1)) 1)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (1::2) 1)) 2)
+             (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+         \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at x)"
+    by (rule has_derivative_gradU_dip_component_x)
+  show ?thesis
+    using h frechet_derivative_at[OF h] by simp
+qed
+
+definition d3_s1_perp_slot ::
+  "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> 'n::finite \<Rightarrow> ((real^2)^'n) \<Rightarrow> real" where
+  "d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x =
+     frechet_derivative
+       (\<lambda>y::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) (at x)
+       (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))"
+
+lemma d3_s1_perp_slot_value:
+  fixes x :: "(real^2)^'n::finite" and \<omega> \<omega>0 \<omega>s :: "real^2"
+  shows "d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x
+       = d3_s1_global_factor \<omega>0 \<omega>s \<omega>
+           * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+               * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x k)"
+proof -
+  have hd1: "((\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) has_derivative
+       (\<lambda>h. vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                  (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                  (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                  (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) h)) 1)) (at x)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_gradU_dip_x_explicit])
+  have val: "d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x
+      = vec_nth (\<chi> j. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis j 1) 1))
+                  (gain_dip \<omega>) (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 1)
+                  (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) 2)
+                  (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+                  (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>)
+                    (slot k (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))) 1"
+    unfolding d3_s1_perp_slot_def
+    by (rule fun_cong[OF frechet_derivative_at[OF hd1, symmetric]])
+  show ?thesis
+    unfolding val d3_s1_global_factor_def
+    using arg_cong[where f = "\<lambda>V. vec_nth V 1", OF gradU_dip_xderiv_perp_slot[OF perp2_orth]]
+    by simp
+qed
+
+definition D3H0_slicable_branch1 ::
+  "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> ((real^2)^'n) set" where
+  "D3H0_slicable_branch1 V \<omega>0 \<omega>s \<omega> =
+     {x \<in> V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {\<omega>}. \<exists>k. d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x \<noteq> 0}"
+
+definition D3H0_all_s1_zero_residual ::
+  "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> ((real^2)^'n) set" where
+  "D3H0_all_s1_zero_residual V \<omega>0 \<omega>s \<omega> =
+     {x \<in> V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {\<omega>}. \<forall>k. d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x = 0}"
+
+lemma fixed_omega_H0core_slicable_residual_decomp1:
+  "(V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {\<omega>} :: ((real^2)^'n::finite) set)
+   = D3H0_slicable_branch1 V \<omega>0 \<omega>s \<omega> \<union> D3H0_all_s1_zero_residual V \<omega>0 \<omega>s \<omega>"
+  unfolding D3H0_slicable_branch1_def D3H0_all_s1_zero_residual_def by blast
+
+lemma real_analytic_on_gradU1_slot:
+  fixes \<omega> \<omega>0 \<omega>s v :: "real^2" and k :: "'n::finite"
+  shows "real_analytic_on (\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) (at x)
+        (slot k v)) UNIV"
+proof -
+  have fd_eq: "frechet_derivative
+      (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) (at x)
+      = (dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (1::2) 1) 1)) (gain_dip \<omega>)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 1)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 2)
+             (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+         \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))" for x :: "(real^2)^'n"
+  proof -
+    have hd: "((\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) has_derivative
+        (dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (1::2) 1) 1)) (gain_dip \<omega>)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 1)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 2)
+             (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+         \<circ> DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))) (at x)"
+      by (rule has_derivative_gradU_dip_component_x)
+    show ?thesis
+      by (rule frechet_derivative_at[OF hd, symmetric])
+  qed
+  have eq: "(\<lambda>x::(real^2)^'n.
+      frechet_derivative (\<lambda>y. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1) (at x)
+        (slot k v))
+      = (\<lambda>x. dEjm (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth (axis (1::2) 1) 1))
+             (gain_dip \<omega>)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 1)
+             (vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 2)
+             (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>))
+             (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>) (slot k v)))"
+    by (metis (no_types, lifting) comp_def fd_eq)
+  show ?thesis
+    unfolding eq by (rule real_analytic_on_dEjm_moment)
+qed
+
+lemma continuous_on_d3_s1_perp_slot:
+  "continuous_on UNIV (\<lambda>x::(real^2)^'n::finite. d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x)"
+proof (rule continuous_at_imp_continuous_on, rule ballI)
+  fix x :: "(real^2)^'n"
+  assume "x \<in> UNIV"
+  have ana: "real_analytic_on (\<lambda>x::(real^2)^'n. d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x) UNIV"
+    unfolding d3_s1_perp_slot_def by (rule real_analytic_on_gradU1_slot)
+  show "continuous (at x) (\<lambda>x::(real^2)^'n. d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x)"
+    by (rule real_analytic_on_imp_continuous[OF ana UNIV_I])
+qed
+
+lemma closed_gradU1_component_zero:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2"
+  shows "closed {x::(real^2)^'n::finite.
+      vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) 1 = 0}"
+proof -
+  have cont: "continuous_on UNIV
+      (\<lambda>x::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) 1)"
+  proof (rule has_derivative_continuous_on)
+    fix x :: "(real^2)^'n"
+    show "((\<lambda>x::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) 1)
+        has_derivative
+        frechet_derivative
+          (\<lambda>x::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) 1) (at x))
+        (at x within UNIV)"
+      by (rule has_derivative_at_withinI[OF has_derivative_gradU_dip_component1_x_frechet])
+  qed
+  show ?thesis
+    by (rule closed_Collect_eq[OF cont continuous_on_const])
+qed
+
+theorem fixed_omega_slicable_branch_chart_core_data1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_slicable_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+proof -
+  define k_of :: "nat \<Rightarrow> 'n" where
+    "k_of n = from_nat (fst (prod_decode n))" for n
+  define m_of :: "nat \<Rightarrow> nat" where
+    "m_of n = snd (prod_decode n)" for n
+  define f1 where "f1 = (\<lambda>y::(real^2)^'n. vec_nth (gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) 1)"
+  define Lf where "Lf = (\<lambda>x::(real^2)^'n. frechet_derivative f1 (at x))"
+  define r where "r = (\<lambda>n (x::(real^2)^'n). slot (k_of n) (perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))"
+  define C where "C = (\<lambda>n. {x::(real^2)^'n. f1 x = 0}
+      \<inter> {x. inverse (real (Suc (m_of n))) \<le> \<bar>d3_s1_perp_slot \<omega>0 \<omega>s \<omega> (k_of n) x\<bar>})"
+
+  have cutd: "(f1 has_derivative Lf x) (at x)" for x :: "(real^2)^'n"
+    unfolding f1_def Lf_def by (rule has_derivative_gradU_dip_component1_x_frechet)
+
+  have closedC: "closed (C n)" for n
+  proof -
+    have c0: "closed {x::(real^2)^'n. f1 x = 0}"
+      unfolding f1_def by (rule closed_gradU1_component_zero)
+    have ct: "closed {x::(real^2)^'n.
+        inverse (real (Suc (m_of n))) \<le> \<bar>d3_s1_perp_slot \<omega>0 \<omega>s \<omega> (k_of n) x\<bar>}"
+      by (rule closed_abs_ge_threshold[OF continuous_on_d3_s1_perp_slot])
+    show ?thesis
+      unfolding C_def by (intro closed_Int c0 ct)
+  qed
+
+  have cover: "D3H0_slicable_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq> (\<Union>n. C n)"
+  proof
+    fix x assume xB: "x \<in> D3H0_slicable_branch1 V \<omega>0 \<omega>s \<omega>"
+    then obtain k :: 'n where sk: "d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x \<noteq> 0"
+      unfolding D3H0_slicable_branch1_def by blast
+    define q where "q = to_nat k"
+    have q: "from_nat q = k"
+      unfolding q_def by simp
+    have pos: "0 < \<bar>d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x\<bar>"
+      using sk by simp
+    obtain m where m: "inverse (real (Suc m)) < \<bar>d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x\<bar>"
+      using reals_Archimedean[OF pos] by blast
+    define n where "n = prod_encode (q, m)"
+    have kd: "k_of n = k"
+      unfolding k_of_def n_def using q by simp
+    have md: "m_of n = m"
+      unfolding m_of_def n_def by simp
+    have fzero: "f1 x = 0"
+    proof -
+      have "x \<in> D3BadXG_H0core \<omega>0 \<omega>s {\<omega>}"
+        using xB unfolding D3H0_slicable_branch1_def by blast
+      then obtain \<omega>' where "\<omega>' \<in> {\<omega>}"
+        and gz: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>' = 0"
+        unfolding D3BadXG_H0core_def by blast
+      hence "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+        by simp
+      thus ?thesis
+        unfolding f1_def by simp
+    qed
+    have "x \<in> C n"
+      unfolding C_def kd md using fzero m sk by auto
+    thus "x \<in> (\<Union>n. C n)"
+      by blast
+  qed
+
+  have cut0: "f1 y = 0" if "y \<in> C n" for n y
+    using that unfolding C_def by simp
+  have rnz: "Lf x (r n x) \<noteq> 0" if "x \<in> C n" for n x
+  proof -
+    have ge: "inverse (real (Suc (m_of n))) \<le> \<bar>d3_s1_perp_slot \<omega>0 \<omega>s \<omega> (k_of n) x\<bar>"
+      using that unfolding C_def by simp
+    have pos: "0 < inverse (real (Suc (m_of n)))"
+      by simp
+    have "d3_s1_perp_slot \<omega>0 \<omega>s \<omega> (k_of n) x \<noteq> 0"
+      using ge pos by fastforce
+    thus ?thesis
+      unfolding d3_s1_perp_slot_def f1_def Lf_def r_def by simp
+  qed
+
+  show ?thesis
+    by (rule chart_core_data_of_functional_cuts[OF cover closedC cut0 cutd rnz])
+qed
+
+definition D3H0_residual_Bzero_branch1 ::
+  "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> ((real^2)^'n) set" where
+  "D3H0_residual_Bzero_branch1 V \<omega>0 \<omega>s \<omega> =
+     {x \<in> D3H0_all_s1_zero_residual V \<omega>0 \<omega>s \<omega>. \<exists>k. B_dip k x \<omega> \<omega>0 \<omega>s = 0}"
+
+definition D3H0_residual_Bnonzero_residual1 ::
+  "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> ((real^2)^'n) set" where
+  "D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega> =
+     {x \<in> D3H0_all_s1_zero_residual V \<omega>0 \<omega>s \<omega>. \<forall>k. B_dip k x \<omega> \<omega>0 \<omega>s \<noteq> 0}"
+
+lemma fixed_omega_all_s1_residual_Bzero_decomp:
+  "D3H0_all_s1_zero_residual V \<omega>0 \<omega>s \<omega>
+   = D3H0_residual_Bzero_branch1 V \<omega>0 \<omega>s \<omega>
+     \<union> D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega>"
+  unfolding D3H0_residual_Bzero_branch1_def D3H0_residual_Bnonzero_residual1_def
+  by blast
+
+theorem fixed_omega_residual_Bzero_branch_chart_core_data1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_residual_Bzero_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+proof -
+  define k_of :: "nat \<Rightarrow> 'n" where
+    "k_of n = from_nat n" for n
+  define C where "C = (\<lambda>n. {x::(real^2)^'n. B_dip (k_of n) x \<omega> \<omega>0 \<omega>s = 0})"
+  define f where "f = (\<lambda>n (x::(real^2)^'n). B_dip (k_of n) x \<omega> \<omega>0 \<omega>s)"
+  define L where "L = (\<lambda>n (x::(real^2)^'n).
+      frechet_derivative (\<lambda>y::(real^2)^'n. B_dip (k_of n) y \<omega> \<omega>0 \<omega>s) (at x))"
+  define r where "r = (\<lambda>n (x::(real^2)^'n). slot (k_of n) (cvec_dip \<omega>0 \<omega>s \<omega>))"
+
+  have closedC: "closed (C n)" for n
+    unfolding C_def by (rule closed_B_dip_zero)
+
+  have cover: "D3H0_residual_Bzero_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq> (\<Union>n. C n)"
+  proof
+    fix x assume xB: "x \<in> D3H0_residual_Bzero_branch1 V \<omega>0 \<omega>s \<omega>"
+    then obtain k :: 'n where bk: "B_dip k x \<omega> \<omega>0 \<omega>s = 0"
+      unfolding D3H0_residual_Bzero_branch1_def by blast
+    define n where "n = to_nat k"
+    have "k_of n = k"
+      unfolding k_of_def n_def by simp
+    hence "x \<in> C n"
+      unfolding C_def using bk by simp
+    thus "x \<in> (\<Union>n. C n)"
+      by blast
+  qed
+
+  have cut0: "f n y = 0" if "y \<in> C n" for n y
+    using that unfolding C_def f_def by simp
+  have cutd: "(f n has_derivative L n x) (at x)" for n x
+    unfolding f_def L_def by (rule has_derivative_B_dip_x_frechet)
+  have rnz: "L n x (r n x) \<noteq> 0" if "x \<in> C n" for n x
+  proof -
+    have bz: "B_dip (k_of n) x \<omega> \<omega>0 \<omega>s = 0"
+      using that unfolding C_def by simp
+    show ?thesis
+      unfolding L_def r_def
+      by (rule B_dip_uslot_transversal[OF cnz bz])
+  qed
+
+  show ?thesis
+    by (rule chart_core_data_of_functional_cuts[OF cover closedC cut0 cutd rnz])
+qed
+
+definition D3H0_slicable_or_Bzero_branch1 ::
+  "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> ((real^2)^'n) set" where
+  "D3H0_slicable_or_Bzero_branch1 V \<omega>0 \<omega>s \<omega> =
+     D3H0_slicable_branch1 V \<omega>0 \<omega>s \<omega>
+     \<union> D3H0_residual_Bzero_branch1 V \<omega>0 \<omega>s \<omega>"
+
+lemma fixed_omega_H0core_slicable_or_Bzero_decomp1:
+  "(V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {\<omega>} :: ((real^2)^'n::finite) set)
+   = D3H0_slicable_or_Bzero_branch1 V \<omega>0 \<omega>s \<omega>
+     \<union> D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega>"
+  unfolding D3H0_slicable_or_Bzero_branch1_def
+  using fixed_omega_H0core_slicable_residual_decomp1[of V \<omega>0 \<omega>s \<omega>]
+    fixed_omega_all_s1_residual_Bzero_decomp[of V \<omega>0 \<omega>s \<omega>]
+  by blast
+
+theorem fixed_omega_slicable_or_Bzero_branch_chart_core_data1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_slicable_or_Bzero_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq>
+           (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+proof -
+  have slicible: "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_slicable_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+    by (rule fixed_omega_slicable_branch_chart_core_data1)
+  have bzero: "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_residual_Bzero_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+    by (rule fixed_omega_residual_Bzero_branch_chart_core_data1[OF cnz])
+  show ?thesis
+    unfolding D3H0_slicable_or_Bzero_branch1_def
+    by (rule chart_core_data_union[OF slicible bzero])
+qed
+
+theorem fixed_omega_H0core_chart_core_from_Bnonzero_residual1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and residual: "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega> \<subseteq>
+           (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+  shows "d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}"
+proof -
+  have resolved: "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_slicable_or_Bzero_branch1 V \<omega>0 \<omega>s \<omega> \<subseteq>
+           (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+    by (rule fixed_omega_slicable_or_Bzero_branch_chart_core_data1[OF cnz])
+  obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+    and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+    and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+    where cov: "D3H0_slicable_or_Bzero_branch1 V \<omega>0 \<omega>s \<omega>
+          \<union> D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega>
+        \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
+        ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
+      and nsurj: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      and cls: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+    using chart_core_data_union[OF resolved residual] by blast
+  have cover: "(V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {\<omega>} :: ((real^2)^'n) set)
+      \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+    using cov fixed_omega_H0core_slicable_or_Bzero_decomp1[of V \<omega>0 \<omega>s \<omega>] by blast
+  show ?thesis
+    unfolding d3_detHess_arc_chart_core_def
+    by (intro exI[of _ charts] exI[of _ Crit] exI[of _ D] conjI cover der nsurj cls)
+qed
+
+definition D3H0_Bnonzero_phase_aligned_residual1 ::
+  "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> ((real^2)^'n) set" where
+  "D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega> =
+     {x \<in> D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega>.
+        \<forall>k. Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+             * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x k) = 0}"
+
+lemma fixed_omega_Bnonzero_residual_phase_alignment_if_factor_nonzero1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+    and x :: "(real^2)^'n"
+  assumes facnz: "d3_s1_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and xres: "x \<in> D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega>"
+  shows "x \<in> D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega>"
+proof -
+  have s0: "d3_s1_perp_slot \<omega>0 \<omega>s \<omega> k x = 0" for k :: 'n
+    using xres unfolding D3H0_residual_Bnonzero_residual1_def D3H0_all_s1_zero_residual_def
+    by blast
+  have aligned: "\<forall>k. Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+         * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x k) = 0"
+  proof
+    fix k :: 'n
+    have "d3_s1_global_factor \<omega>0 \<omega>s \<omega>
+         * Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+             * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x k) = 0"
+      using s0[of k] unfolding d3_s1_perp_slot_value .
+    thus "Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+         * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x k) = 0"
+      using facnz by simp
+  qed
+  thus ?thesis
+    using xres unfolding D3H0_Bnonzero_phase_aligned_residual1_def by blast
+qed
+
+theorem fixed_omega_H0core_chart_core_from_phase_aligned_residual1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and facnz: "d3_s1_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and phase_data: "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega> \<subseteq>
+           (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+  shows "d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}"
+proof -
+  obtain charts :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2))"
+    and Crit :: "nat \<Rightarrow> ((real^2)^'n) set"
+    and D :: "nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))"
+    where cov: "D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega>
+        \<subseteq> (\<Union>i. (fst \<circ> charts i) ` (Crit i))"
+      and der: "\<forall>i x. x \<in> Crit i \<longrightarrow>
+        ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)"
+      and nsurj: "\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))"
+      and cls: "\<forall>i. closed ((fst \<circ> charts i) ` (Crit i))"
+    using phase_data by blast
+  have residual_data:
+    "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+        (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+        (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+       D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega> \<subseteq>
+         (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+       (\<forall>i x. x \<in> Crit i \<longrightarrow>
+          ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+       (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+       (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+  proof (intro exI[of _ charts] exI[of _ Crit] exI[of _ D] conjI der nsurj cls)
+    show "D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega>
+        \<subseteq> (\<Union>i. (fst \<circ> charts i) ` Crit i)"
+    proof
+      fix x assume xres: "x \<in> D3H0_residual_Bnonzero_residual1 V \<omega>0 \<omega>s \<omega>"
+      have "x \<in> D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega>"
+        by (rule fixed_omega_Bnonzero_residual_phase_alignment_if_factor_nonzero1[OF facnz xres])
+      thus "x \<in> (\<Union>i. (fst \<circ> charts i) ` Crit i)"
+        using cov by blast
+    qed
+  qed
+  show ?thesis
+    by (rule fixed_omega_H0core_chart_core_from_Bnonzero_residual1[OF cnz residual_data])
+qed
+
+theorem fixed_omega_phase_aligned_residual_chart_core_data1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and card2: "2 \<le> CARD('n)"
+  shows "\<exists>(charts :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<times> (real^2)))
+            (Crit :: nat \<Rightarrow> ((real^2)^'n) set)
+            (D :: nat \<Rightarrow> ((real^2)^'n) \<Rightarrow> (((real^2)^'n) \<Rightarrow>\<^sub>L ((real^2)^'n))).
+         D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega> \<subseteq>
+           (\<Union>i. (fst \<circ> charts i) ` (Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow>
+            ((fst \<circ> charts i) has_derivative (blinfun_apply (D i x))) (at x within Crit i)) \<and>
+         (\<forall>i x. x \<in> Crit i \<longrightarrow> \<not> surj (blinfun_apply (D i x))) \<and>
+         (\<forall>i. closed ((fst \<circ> charts i) ` (Crit i)))"
+proof -
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  define k_of :: "nat \<Rightarrow> 'n" where
+    "k_of n = from_nat (fst (prod_decode n))" for n
+  define m_of :: "nat \<Rightarrow> nat" where
+    "m_of n = snd (prod_decode n)" for n
+  define f where "f = (\<lambda>n (x::(real^2)^'n).
+      Im (cnj (A_moment x c) * phase c x (k_of n)))"
+  define L where "L = (\<lambda>n (x::(real^2)^'n) (h::(real^2)^'n).
+      Im (cnj (A_moment x c) * d_phase c x h (k_of n)
+        + cnj (d_A_moment_x x c h) * phase c x (k_of n)))"
+  define r where "r = (\<lambda>n (x::(real^2)^'n). slot (k_of n) c)"
+  define C where "C = (\<lambda>n. {x::(real^2)^'n.
+        Im (cnj (A_moment x c) * phase c x (k_of n)) = 0}
+      \<inter> {x. inverse (real (Suc (m_of n)))
+             \<le> \<bar>1 - Re (cnj (A_moment x c) * phase c x (k_of n))\<bar>})"
+
+  have cutd: "(f n has_derivative L n x) (at x)" for n x
+    unfolding f_def L_def by (rule has_derivative_phase_align_x)
+
+  have closedC: "closed (C n)" for n
+  proof -
+    have c0: "closed {x::(real^2)^'n.
+        Im (cnj (A_moment x c) * phase c x (k_of n)) = 0}"
+      by (rule closed_phase_align_zero)
+    have ct: "closed {x::(real^2)^'n.
+        inverse (real (Suc (m_of n)))
+          \<le> \<bar>1 - Re (cnj (A_moment x c) * phase c x (k_of n))\<bar>}"
+      by (rule closed_abs_ge_threshold[OF continuous_on_phase_align_defect_x])
+    show ?thesis
+      unfolding C_def by (intro closed_Int c0 ct)
+  qed
+
+  have cut0: "f n y = 0" if "y \<in> C n" for n y
+    using that unfolding C_def f_def by simp
+
+  have cnz': "c \<bullet> c \<noteq> 0"
+    using cnz unfolding c_def by simp
+
+  have rnz: "L n x (r n x) \<noteq> 0" if "x \<in> C n" for n x
+  proof -
+    have ge: "inverse (real (Suc (m_of n)))
+        \<le> \<bar>1 - Re (cnj (A_moment x c) * phase c x (k_of n))\<bar>"
+      using that unfolding C_def by simp
+    have "1 - Re (cnj (A_moment x c) * phase c x (k_of n)) \<noteq> 0"
+      using ge by fastforce
+    moreover have "L n x (r n x)
+        = (c \<bullet> c) * (1 - Re (cnj (A_moment x c) * phase c x (k_of n)))"
+      unfolding L_def r_def by (rule phase_align_slot_self_value)
+    ultimately show ?thesis
+      using cnz' by simp
+  qed
+
+  have cover: "D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega> \<subseteq> (\<Union>n. C n)"
+  proof
+    fix x assume xR: "x \<in> D3H0_Bnonzero_phase_aligned_residual1 V \<omega>0 \<omega>s \<omega>"
+    have aligned: "Im (cnj (A_moment x c) * phase c x k) = 0" for k :: 'n
+    proof -
+      have "Im (cnj (vec_nth (M_paper x (cvec_dip \<omega>0 \<omega>s \<omega>)) 1)
+          * phase (cvec_dip \<omega>0 \<omega>s \<omega>) x k) = 0"
+        using xR unfolding D3H0_Bnonzero_phase_aligned_residual1_def by blast
+      thus ?thesis
+        unfolding c_def by simp
+    qed
+    obtain k :: 'n where defect: "1 - Re (cnj (A_moment x c) * phase c x k) \<noteq> 0"
+      using phase_aligned_defect_witness[OF card2 aligned] by blast
+    have pos: "0 < \<bar>1 - Re (cnj (A_moment x c) * phase c x k)\<bar>"
+      using defect by simp
+    obtain m where m: "inverse (real (Suc m))
+        < \<bar>1 - Re (cnj (A_moment x c) * phase c x k)\<bar>"
+      using reals_Archimedean[OF pos] by blast
+    define n where "n = prod_encode (to_nat k, m)"
+    have kd: "k_of n = k"
+      unfolding k_of_def n_def by simp
+    have md: "m_of n = m"
+      unfolding m_of_def n_def by simp
+    have "x \<in> C n"
+      unfolding C_def kd md using aligned[of k] m by auto
+    thus "x \<in> (\<Union>n. C n)"
+      by blast
+  qed
+
+  show ?thesis
+    by (rule chart_core_data_of_functional_cuts[OF cover closedC cut0 cutd rnz])
+qed
+
+theorem fixed_omega_H0core_chart_core_of_angle_conditions1:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and facnz: "d3_s1_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and card2: "2 \<le> CARD('n)"
+  shows "d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}"
+  by (rule fixed_omega_H0core_chart_core_from_phase_aligned_residual1[OF cnz facnz
+        fixed_omega_phase_aligned_residual_chart_core_data1[OF cnz card2]])
+
+subsection \<open>The generic fixed-\<open>\<omega>\<close> chart core: dropping the ad-hoc factor hypothesis\<close>
+
+text \<open>Combining both mirror branches with @{thm d3_s1_or_s2_global_factor_nonzero}:
+  the fixed-\<open>\<omega>\<close> chart core holds under PURELY generic non-degeneracy
+  (\<open>cvec \<noteq> 0\<close>, \<open>det (matrix Dcvec) \<noteq> 0\<close>, \<open>gain_dip \<omega> \<noteq> 0\<close>), with no reference
+  to either \<open>d3_s1_global_factor\<close> or \<open>d3_s2_global_factor\<close> individually.  This
+  is the frontier-push beyond @{thm fixed_omega_H0core_chart_core_robust4_witness}:
+  it replaces a pointwise-checked witness fact with a condition that plausibly
+  holds throughout the whole Robust4 design box, not just at one design point.\<close>
+
+theorem fixed_omega_H0core_chart_core_of_generic_conditions:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and card2: "2 \<le> CARD('n)"
+  shows "d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<omega>}"
+proof (cases "d3_s2_global_factor \<omega>0 \<omega>s \<omega> = 0")
+  case True
+  have facnz1: "d3_s1_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    using d3_s1_or_s2_global_factor_nonzero[OF cnz detnz gnz] True by blast
+  show ?thesis
+    by (rule fixed_omega_H0core_chart_core_of_angle_conditions1[OF cnz facnz1 card2])
+next
+  case False
+  hence facnz2: "d3_s2_global_factor \<omega>0 \<omega>s \<omega> \<noteq> 0" by simp
+  show ?thesis
+    by (rule fixed_omega_H0core_chart_core_of_angle_conditions[OF cnz facnz2 card2])
 qed
 
 end
