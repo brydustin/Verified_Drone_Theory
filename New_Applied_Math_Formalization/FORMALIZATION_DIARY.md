@@ -5583,3 +5583,91 @@ not by themselves close the gap.  The \"HessU range direction vs \<open>e_par\<c
 and \"\<open>t\<close>-derivative transversality\" difficulties identified in this and
 the prior entry are the SAME underlying obstruction seen from two angles ---
 worth remembering as ONE fact, not two, when picking this back up.
+
+## 2026-07-11, continued: SELF-CORRECTION --- the "wall" does NOT need new 3rd-order theory
+
+User asked whether hunting for a cleverer \<open>t\<close>-elimination was reasonable to
+expect; answer given: no, recommend the reliable (bigger) path.  User chose
+the reliable path anyway.  Scoped it by checking whether `HessU`'s
+own \<open>\<omega>\<close>-derivative had ANY existing foundation --- confirmed via research
+that NOTHING exists (no `D3cvec_dip`, no `Ck_on 3` usage anywhere, the only
+order-3 abstract framework `SMOOTH3` in `Morse/Hadamard_2D.thy` is unrelated
+and never hooked to `U_cart`).  This looked like it required rebuilding a
+sixth of the codebase (a genuine third-order theory) before even starting
+the compactness assembly.
+
+CAUGHT AN ERROR while starting to act on that (before writing any code):
+the "wall" (comparing `HessU`'s x-dependent rank-1 range direction to
+`e_par`) does NOT actually require differentiating `HessU` further at all.
+`HessU`'s VALUE is ALREADY fully explicit
+(`has_derivative_gradU_dip_component`/`HessU_dip_eq_componentderiv`,
+Nonemptiness_Robust1.thy:2665-2726, built from `Dcvec_dip`, `D2cvec_dip`,
+`Hcmat`, `gdip'`/`gdip''` --- all SECOND-order, already fully available).
+The quantity actually needed --- `e_par \<bullet> (HessU's column j)` for a FIXED
+\<omega>-coordinate axis \<open>j\<close> (NOT the arc's own tangent direction, which was the
+framing that led to the earlier false wall) --- is a PLUG-IN computation
+using this existing formula, needing NO new derivative order.  The
+"\<open>t\<close>-derivative wall" was a confusion between "differentiate `HessU` w.r.t.
+\<open>\<omega>\<close> further" (genuinely third-order, doesn't exist) and "use `HessU`'s
+EXISTING value dotted against a direction" (zero new theory, already
+available) --- these are different objects and only the second is needed.
+Verified algebraically: at a critical point (\<open>gradU=0\<close>), `e_par \<bullet> (HessU's
+column j) = \<partial>Phi_par/\<partial>\<omega>_j` EXACTLY (product-rule cross term vanishes since
+`gradU=0`) --- so the target reduces to `Phi_par`'s own \<open>\<omega>\<close>-derivative,
+computable via ALREADY-EXISTING dictionaries.
+
+REVISED CONSTRUCTION SKETCH (not yet formalized, this is the plan): use ONE
+FIXED \<open>\<omega>\<close>-coordinate (\<open>\<omega>_j\<close>, \<open>j=1\<close> or \<open>2\<close>) together with the established
+perp-slot \<open>x\<close>-direction as the 2 elimination directions for
+`gradU_1=0 \<and> gradU_2=0` --- giving a graph in the FULL joint \<open>(x,\<Omega>)\<close> space
+(not restricted to the arc), valid whenever
+`e_par \<bullet> (HessU's column j) \<noteq> 0` for that \<open>j\<close> (same "zero vs nonzero
+`e_par`-component" independence argument as the `Phi_par`-radial case, just
+one column now coming from `HessU`'s value instead of an x-derivative).  A
+SECOND implicit-function step then intersects this graph with the actual
+arc \<open>\<gamma>\<close> (a horizontal/vertical case split on the arc's own local shape,
+mirroring `D3_Curve_Cover.thy`'s `graph`/`graph_vert` pattern), eliminating
+the remaining \<open>\<Omega>\<close>-coordinate down to a pure \<open>x\<close>-space description.  Neither
+step needs third-order theory --- both are IFT bookkeeping on top of
+EXISTING first/second-order facts.
+
+Found the LIKELY cleanest route to `e_par \<bullet> (HessU's column j)`'s closed
+form: rather than expanding the raw `has_derivative_gradU_dip_component`
+formula (messy, built on `Hcmat` which is defined via `Mcfun`/`M2cfun`
+moment functions, NOT directly connected to the `Wc`/`Wc_d1` pair-phase-sum
+machinery the geodesic branch actually uses --- no existing bridge lemma
+found), DIFFERENTIATE `Phi_par`'s OWN existing closed-form dictionary
+(`Phi_par_radial_dictionary`, Tier 2a: `Phi_par = deriv(gdip)(\<omega>_1)\<cdot>e_par\<^sub>1\<cdot>Wc(x,c)
++ gain_dip(\<omega>)\<cdot>Wc_d1(x,c,c)`) directly with respect to \<open>\<omega>_j\<close>, via the product/
+chain rule through: `gdip'`/`gdip''` (already available), `Wc`/`Wc_d1`'s
+dependence on \<open>c=cvec_dip(\<omega>)\<close> (chain rule via `Dcvec_dip`, mirroring
+`Wc_curve_d1`/`Wc_curve_d2`'s existing technique), `gain_dip`'s derivative
+(already available), and CRUCIALLY `e_par`'s OWN \<open>\<omega>\<close>-derivative --- which
+is NOT yet established but IS derivable via IMPLICIT DIFFERENTIATION of the
+defining identity `Dcvec_dip(\<omega>)(e_par(\<omega>)) = cvec_dip(\<omega>)`: differentiating
+both sides gives `D2cvec_dip(\<omega>)(h)(e_par(\<omega>)) + Dcvec_dip(\<omega>)(De_par(\<omega>)(h))
+= Dcvec_dip(\<omega>)(h)`, solvable for `De_par(\<omega>)(h)` by applying the (already
+available, via `Dcvec_dip_e_par`/`bij_matrix_vector_mult`) inverse of
+`Dcvec_dip(\<omega>)` to both sides --- needs a small generalization of `e_par`'s
+own inverse-map construction to an ARBITRARY vector argument (not just
+`cvec_dip(\<omega>)` itself), but nothing beyond what's already built.
+
+STATUS: this is a corrected, more optimistic, but still NOT-YET-STARTED-IN-
+CODE plan.  Genuinely tractable (multi-day, not multi-week), built entirely
+from existing second-order facts, but nothing here has been verified via
+compilation yet --- it is hand-derived algebra, and this session already
+made and caught one real error doing exactly this kind of reasoning
+un-compiled, so treat every formula above as a CONJECTURE to verify
+step-by-step in Isabelle, not a established fact.  Concrete next
+action for whoever continues: (1) formalize \<open>e_par\<close>'s \<open>\<omega>\<close>-derivative via the
+implicit-differentiation argument above (first concrete, checkable lemma);
+(2) differentiate `Phi_par_radial_dictionary` using it plus `Wc_curve_d1`/
+`Wc_curve_d2`'s chain-rule technique to get `\<partial>Phi_par/\<partial>\<omega>_j`'s closed form;
+(3) the disjunction-over-\<open>j\<close> argument (mirroring
+`Phi_par_uslot_radial_nowhere_dense_disjunction`'s pattern) to establish
+nonvanishing generically; (4) the actual nested-IFT chart construction
+(genuinely new, no existing template for combining two applications of IFT
+across mixed \<open>x\<close>/\<open>\<Omega>\<close> directions like this); (5) the arc-intersection
+horizontal/vertical case split; (6) the final Heine-Borel compactness
+assembly.  Steps 4-6 have no existing formalized precedent in this specific
+mixed-space form and are the genuine remaining research risk.
