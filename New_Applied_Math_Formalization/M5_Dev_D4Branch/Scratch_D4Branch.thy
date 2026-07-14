@@ -5907,6 +5907,55 @@ proof -
         Ck_on_pow Ck_on_scaleR_fun Ck_on_const open_UNIV; simp add: RImix)
 qed
 
+text \<open>
+  \<open>branch2_radial_scalar_reduced_eq\<close>'s smooth form still needs a JOINT
+  (both \<open>\<omega>\<close> \<^emph>\<open>and\<close> \<open>ell\<close> varying) version of \<open>branch2_ell_combo\<close> /
+  \<open>branch2_ell_gain_deriv\<close>, since the reduced-base chart residuals feed in
+  \<open>ell = ell_chart1/2 (branch2_base_param_a r)\<close>, which varies with \<open>r\<close> too.
+\<close>
+
+lemma vec_nth_compose_Ck_on_n:
+  fixes f :: "'a::real_normed_vector \<Rightarrow> real^'k::finite" and j :: 'k
+  assumes "Ck_on n f U"
+  shows "Ck_on n (\<lambda>x. vec_nth (f x) j) U"
+proof (rule Ck_on_compose[OF vec_nth_Ck_on_n assms])
+  show "\<And>x. x \<in> U \<Longrightarrow> f x \<in> (UNIV :: (real^'k) set)" by simp
+qed
+
+lemma branch2_ell_combo_joint_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+    and \<omega>f :: "'a::real_normed_vector \<Rightarrow> real^2" and ellf :: "'a \<Rightarrow> real^2"
+  assumes om: "Ck_on n \<omega>f UNIV" and ellm: "Ck_on n ellf UNIV"
+  shows "Ck_on n (\<lambda>x. branch2_ell_combo \<omega>0 \<omega>s (\<omega>f x) (ellf x)) UNIV"
+proof -
+  have g1: "Ck_on n (\<lambda>x. Dcvec_dip \<omega>0 \<omega>s (\<omega>f x) (axis (1::2) 1)) UNIV"
+    by (rule Ck_on_compose[OF Dcvec_dip_dir_Ck_on om]) simp
+  have g2: "Ck_on n (\<lambda>x. Dcvec_dip \<omega>0 \<omega>s (\<omega>f x) (axis (2::2) 1)) UNIV"
+    by (rule Ck_on_compose[OF Dcvec_dip_dir_Ck_on om]) simp
+  show ?thesis
+    unfolding branch2_ell_combo_def
+    by (intro Ck_on_add Ck_on_scaleR_fun vec_nth_compose_Ck_on_n[OF ellm] g1 g2 open_UNIV)
+qed
+
+lemma branch2_ell_gain_deriv_joint_Ck_on_n:
+  fixes \<omega>f :: "'a::real_normed_vector \<Rightarrow> real^2" and ellf :: "'a \<Rightarrow> real^2"
+  assumes om: "Ck_on n \<omega>f UNIV" and ellm: "Ck_on n ellf UNIV"
+  shows "Ck_on n (\<lambda>x. branch2_ell_gain_deriv (\<omega>f x) (ellf x)) UNIV"
+proof -
+  have eq: "\<And>x. branch2_ell_gain_deriv (\<omega>f x) (ellf x) =
+      vec_nth (ellf x) 1 * frechet_derivative gdip (at (vec_nth (\<omega>f x) 1)) 1
+      + vec_nth (ellf x) 2 * frechet_derivative gdip (at (vec_nth (\<omega>f x) 1)) 0"
+    unfolding branch2_ell_gain_deriv_def
+    by (simp add: inner_vec_def sum_2 axis_def)
+  have p1: "Ck_on n (\<lambda>x. frechet_derivative gdip (at (vec_nth (\<omega>f x) 1)) 1) UNIV"
+    by (rule Ck_on_compose[OF frechet_derivative_gdip_dir_proj_Ck_on_n om]) simp
+  have p2: "Ck_on n (\<lambda>x. frechet_derivative gdip (at (vec_nth (\<omega>f x) 1)) 0) UNIV"
+    by (rule Ck_on_compose[OF frechet_derivative_gdip_dir_proj_Ck_on_n om]) simp
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_add Ck_on_mult vec_nth_compose_Ck_on_n[OF ellm] p1 p2)
+qed
+
 lemma branch2_reduced_gradU_scalar_eq_gradU_cross:
   fixes t u :: "real^'n::finite"
   assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
