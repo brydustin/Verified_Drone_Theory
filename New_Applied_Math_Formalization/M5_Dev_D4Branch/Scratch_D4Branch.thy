@@ -5956,6 +5956,94 @@ proof -
     by (intro Ck_on_add Ck_on_mult vec_nth_compose_Ck_on_n[OF ellm] p1 p2)
 qed
 
+lemma branch2_special_coeffs_term_joint_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+    and \<omega>f :: "'a::real_normed_vector \<Rightarrow> real^2" and ellf :: "'a \<Rightarrow> real^2"
+  assumes om: "Ck_on n \<omega>f UNIV" and ellm: "Ck_on n ellf UNIV"
+  shows "Ck_on n (\<lambda>x. ellf x \<bullet> branch2_special_coeffs \<omega>0 \<omega>s (\<omega>f x)) UNIV"
+proof -
+  have eq: "\<And>x. ellf x \<bullet> branch2_special_coeffs \<omega>0 \<omega>s (\<omega>f x) =
+      branch2_ell_combo \<omega>0 \<omega>s (\<omega>f x) (ellf x) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s (\<omega>f x))"
+    by (rule branch2_ell_combo_perp_eq_special[symmetric])
+  have pc: "Ck_on n (\<lambda>x. perp2 (cvec_dip \<omega>0 \<omega>s (\<omega>f x))) UNIV"
+    by (rule Ck_on_compose[OF perp2_cvec_dip_Ck_on_n om]) simp
+  show ?thesis
+    unfolding eq
+    by (rule Ck_on_inner[OF branch2_ell_combo_joint_Ck_on_n[OF om ellm] pc])
+qed
+
+lemma branch2_radial_scalar_reduced_eq_joint_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2" and m :: "'n::finite"
+    and \<omega>f :: "'a::real_normed_vector \<Rightarrow> real^2"
+    and tf :: "'a \<Rightarrow> real^'n" and ellf :: "'a \<Rightarrow> real^2"
+  assumes om: "Ck_on n \<omega>f UNIV" and tm: "Ck_on n tf UNIV" and ellm: "Ck_on n ellf UNIV"
+  shows "Ck_on n (\<lambda>x. branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (\<omega>f x) (tf x) (ellf x) m) UNIV"
+proof -
+  have cvf: "Ck_on n (\<lambda>x. cvec_dip \<omega>0 \<omega>s (\<omega>f x)) UNIV"
+    by (rule Ck_on_compose[OF cvec_dip_Ck_on_n om]) simp
+  have cc: "Ck_on n (\<lambda>x. cvec_dip \<omega>0 \<omega>s (\<omega>f x) \<bullet> cvec_dip \<omega>0 \<omega>s (\<omega>f x)) UNIV"
+    by (rule Ck_on_inner[OF cvf cvf])
+  have Lc: "Ck_on n (\<lambda>x. branch2_ell_combo \<omega>0 \<omega>s (\<omega>f x) (ellf x) \<bullet> cvec_dip \<omega>0 \<omega>s (\<omega>f x)) UNIV"
+    by (rule Ck_on_inner[OF branch2_ell_combo_joint_Ck_on_n[OF om ellm]
+        Ck_on_compose[OF cvec_dip_Ck_on_n om]]) simp
+  have egd: "Ck_on n (\<lambda>x. branch2_ell_gain_deriv (\<omega>f x) (ellf x)) UNIV"
+    by (rule branch2_ell_gain_deriv_joint_Ck_on_n[OF om ellm])
+  have gd: "Ck_on n (\<lambda>x. gain_dip (\<omega>f x)) UNIV"
+    by (rule Ck_on_compose[OF gain_dip_Ck_on_n om]) simp
+  have tm_comp: "Ck_on n (\<lambda>x. vec_nth (tf x) m) UNIV"
+    by (rule vec_nth_compose_Ck_on_n[OF tm])
+  have Am: "Ck_on n (\<lambda>x. A_t_moment (tf x)) UNIV"
+    by (rule Ck_on_compose[OF A_t_moment_Ck_on_n tm]) simp
+  have AWm: "Ck_on n (\<lambda>x. A_t_weighted_moment (tf x)) UNIV"
+    by (rule Ck_on_compose[OF A_t_weighted_moment_Ck_on_n tm]) simp
+  have phm: "Ck_on n (\<lambda>x. phase_t (tf x) m) UNIV"
+    by (rule Ck_on_compose[OF phase_t_Ck_on_n tm]) simp
+  have ReA: "Ck_on n (\<lambda>x. Re (A_t_moment (tf x))) UNIV"
+    by (rule Ck_on_compose[OF Re_Ck_on_n Am]) simp
+  have ImA: "Ck_on n (\<lambda>x. Im (A_t_moment (tf x))) UNIV"
+    by (rule Ck_on_compose[OF Im_Ck_on_n Am]) simp
+  have ReAW: "Ck_on n (\<lambda>x. Re (A_t_weighted_moment (tf x))) UNIV"
+    by (rule Ck_on_compose[OF Re_Ck_on_n AWm]) simp
+  have ImAW: "Ck_on n (\<lambda>x. Im (A_t_weighted_moment (tf x))) UNIV"
+    by (rule Ck_on_compose[OF Im_Ck_on_n AWm]) simp
+  have Reph: "Ck_on n (\<lambda>x. Re (phase_t (tf x) m)) UNIV"
+    by (rule Ck_on_compose[OF Re_Ck_on_n phm]) simp
+  have Imph: "Ck_on n (\<lambda>x. Im (phase_t (tf x) m)) UNIV"
+    by (rule Ck_on_compose[OF Im_Ck_on_n phm]) simp
+  have term1: "Ck_on n (\<lambda>x. Re (A_t_moment (tf x)) * Im (phase_t (tf x) m)
+      - Im (A_t_moment (tf x)) * Re (phase_t (tf x) m)) UNIV"
+    by (rule Ck_on_sub[OF Ck_on_mult[OF ReA Imph] Ck_on_mult[OF ImA Reph]])
+  have term2: "Ck_on n (\<lambda>x. Re (phase_t (tf x) m) * Re (A_t_weighted_moment (tf x))
+      + Im (phase_t (tf x) m) * Im (A_t_weighted_moment (tf x))) UNIV"
+    by (rule Ck_on_add[OF Ck_on_mult[OF Reph ReAW] Ck_on_mult[OF Imph ImAW]])
+  have term3: "Ck_on n (\<lambda>x. Re (A_t_moment (tf x)) * Re (phase_t (tf x) m)
+      + Im (A_t_moment (tf x)) * Im (phase_t (tf x) m)) UNIV"
+    by (rule Ck_on_add[OF Ck_on_mult[OF ReA Reph] Ck_on_mult[OF ImA Imph]])
+  have eq: "\<And>x. branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (\<omega>f x) (tf x) (ellf x) m =
+      branch2_ell_gain_deriv (\<omega>f x) (ellf x)
+        * (2 * (cvec_dip \<omega>0 \<omega>s (\<omega>f x) \<bullet> cvec_dip \<omega>0 \<omega>s (\<omega>f x))
+            * (Re (A_t_moment (tf x)) * Im (phase_t (tf x) m)
+              - Im (A_t_moment (tf x)) * Re (phase_t (tf x) m)))
+      + gain_dip (\<omega>f x)
+          * (2 * (branch2_ell_combo \<omega>0 \<omega>s (\<omega>f x) (ellf x) \<bullet> cvec_dip \<omega>0 \<omega>s (\<omega>f x))
+              * (Re (phase_t (tf x) m) * Re (A_t_weighted_moment (tf x))
+                + Im (phase_t (tf x) m) * Im (A_t_weighted_moment (tf x)))
+            + 2 * (branch2_ell_combo \<omega>0 \<omega>s (\<omega>f x) (ellf x) \<bullet> cvec_dip \<omega>0 \<omega>s (\<omega>f x))
+                * (Re (A_t_moment (tf x)) * Im (phase_t (tf x) m)
+                  - Im (A_t_moment (tf x)) * Re (phase_t (tf x) m))
+            - 2 * vec_nth (tf x) m
+                * (branch2_ell_combo \<omega>0 \<omega>s (\<omega>f x) (ellf x) \<bullet> cvec_dip \<omega>0 \<omega>s (\<omega>f x))
+                * (Re (A_t_moment (tf x)) * Re (phase_t (tf x) m)
+                  + Im (A_t_moment (tf x)) * Im (phase_t (tf x) m)))"
+    unfolding branch2_radial_scalar_reduced_eq_smooth_form Let_def
+    by simp
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_add Ck_on_sub Ck_on_mult
+        cc Lc egd gd tm_comp term1 term2 term3 Ck_on_const open_UNIV;
+        simp add: term1 term2 term3)
+qed
+
 lemma branch2_reduced_gradU_scalar_eq_gradU_cross:
   fixes t u :: "real^'n::finite"
   assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
