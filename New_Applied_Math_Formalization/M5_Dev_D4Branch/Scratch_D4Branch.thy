@@ -5186,6 +5186,34 @@ definition branch2_chart_param_bounded_det ::
     \<and> 1 / real (Suc j)
         \<le> abs (det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_chart_param_omega q))))"
 
+lemma branch2_base_param_bounded_det_imp_cvec_nonzero:
+  assumes bounded: "branch2_base_param_bounded_det \<omega>0 \<omega>s r j"
+  shows "cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0"
+proof -
+  have cpos: "0 < cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r)
+      \<bullet> cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r)"
+    using bounded
+    unfolding branch2_base_param_bounded_det_def branch2_base_param_bounded_def
+    by (smt (verit, best) divide_pos_pos of_nat_0_less_iff zero_less_Suc
+        less_le_trans)
+  show ?thesis
+    using cpos by auto
+qed
+
+lemma branch2_base_param_bounded_det_imp_Dcvec_det_nonzero:
+  assumes bounded: "branch2_base_param_bounded_det \<omega>0 \<omega>s r j"
+  shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0"
+proof -
+  have detpos:
+    "0 < abs (det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))))"
+    using bounded
+    unfolding branch2_base_param_bounded_det_def
+    by (smt (verit, best) divide_pos_pos of_nat_0_less_iff zero_less_Suc
+        less_le_trans)
+  show ?thesis
+    using detpos by auto
+qed
+
 lemma branch2_chart_param_bounded_det_imp_base_u_bounded_det:
   fixes q :: "(((real^2) \<times> ((real^'n::finite) \<times> (real^'n))) \<times> real)"
   assumes bounded: "branch2_chart_param_bounded_det \<omega>0 \<omega>s q j"
@@ -6903,6 +6931,41 @@ definition branch2_repaired_reduced_base_compact_IFT_parametrizations_all ::
 
 subsection \<open>\<section>7ag: C1 regular-rank interface for the repaired IFT bridge\<close>
 
+text \<open>
+Informal sketch for the remaining C1 regular-rank theorem.
+
+For each repaired chart we need one global derivative field \<open>G'\<close> for the
+IFT residual
+\<open>branch2_chart?_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s\<close>.  This is a
+smoothness problem, not a covering problem: after reassociating the variables,
+each residual component is built from projections, the chart map
+\<open>ell_chart?\<close>, the moment/phase expressions in \<open>t\<close>, elementary real and
+complex algebra, \<open>cvec_dip\<close>/\<open>Dcvec_dip\<close>, and the first derivative of
+\<open>gdip\<close>.  The intended construction is to take \<open>G' z\<close> to be the Frechet
+derivative of that residual at \<open>z\<close>.  The derivative proof should follow the
+same pattern as the earlier joint-C1 arguments: prove the two coordinate
+partials with the existing smoothness facts for \<open>gdip\<close>, \<open>cvec_dip\<close>, and the
+moment maps, assemble them with \<open>has_derivative_partialsI\<close>, and use the
+second differentiability/continuity facts for \<open>gdip\<close> to discharge
+\<open>continuous_on UNIV G'\<close>.
+
+The only genuinely geometric part is pointwise surjectivity.  At a system point
+\<open>r\<close>, the defining bounded-det condition supplies both \<open>cvec_dip \<noteq> 0\<close> and
+\<open>det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0\<close>.  The
+unrepaired radial rows give the expected independent directions except at the
+old bad slot; the repaired row replaces that slot by the cross-form residual
+\<open>branch2_reduced_gradU_scalar\<close>.  The rank algebra should show that the row
+family consisting of the special-coefficient row, the unrepaired radial rows
+away from \<open>branch2_repair_slot\<close>, and this cross row spans
+\<open>(real^'n) \<times> real\<close>.  Chart 1 and chart 2 have the same rank argument after
+expanding \<open>ell_chart1\<close> or \<open>ell_chart2\<close>; only the affine chart expression for
+\<open>ell\<close> changes.
+
+The formal lemmas immediately below separate these two inputs.  Once the global
+C1 fields and the two pointwise surjectivity facts are proved, the all-level
+regular-rank theorem follows by definition unfolding.
+\<close>
+
 definition branch2_chart1_repaired_reduced_base_C1_regular_rank ::
   "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow>
     (real^2) set \<Rightarrow> nat \<Rightarrow> bool" where
@@ -6935,6 +6998,346 @@ definition branch2_repaired_reduced_base_C1_regular_rank_all ::
       (\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>) \<longrightarrow>
       branch2_chart1_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j
       \<and> branch2_chart2_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j)"
+
+lemma branch2_chart1_repaired_reduced_base_C1_regular_rankI_from_field:
+  fixes V :: "((real^2)^'n::finite) set"
+    and G' :: "((real^2) \<times> ((real^'n) \<times> real))
+      \<Rightarrow> (((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow>\<^sub>L ((real^'n) \<times> real))"
+  assumes der: "\<And>z. (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply (G' z)) (at z)"
+    and cont: "continuous_on UNIV G'"
+    and reg: "\<And>r. r \<in> branch2_chart1_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j
+      \<Longrightarrow> surj (blinfun_apply (G' (branch2_base_assoc r)))"
+  shows "branch2_chart1_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
+  unfolding branch2_chart1_repaired_reduced_base_C1_regular_rank_def
+  by (intro exI[where x = G'] conjI allI ballI der cont reg)
+
+lemma branch2_chart2_repaired_reduced_base_C1_regular_rankI_from_field:
+  fixes V :: "((real^2)^'n::finite) set"
+    and G' :: "((real^2) \<times> ((real^'n) \<times> real))
+      \<Rightarrow> (((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow>\<^sub>L ((real^'n) \<times> real))"
+  assumes der: "\<And>z. (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply (G' z)) (at z)"
+    and cont: "continuous_on UNIV G'"
+    and reg: "\<And>r. r \<in> branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j
+      \<Longrightarrow> surj (blinfun_apply (G' (branch2_base_assoc r)))"
+  shows "branch2_chart2_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
+  unfolding branch2_chart2_repaired_reduced_base_C1_regular_rank_def
+  by (intro exI[where x = G'] conjI allI ballI der cont reg)
+
+theorem branch2_repaired_reduced_base_C1_regular_rank_allI_from_fields:
+  fixes V :: "((real^2)^'n::finite) set"
+    and G1' :: "((real^2) \<times> ((real^'n) \<times> real))
+      \<Rightarrow> (((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow>\<^sub>L ((real^'n) \<times> real))"
+    and G2' :: "((real^2) \<times> ((real^'n) \<times> real))
+      \<Rightarrow> (((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow>\<^sub>L ((real^'n) \<times> real))"
+  assumes der1: "\<And>z. (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply (G1' z)) (at z)"
+    and cont1: "continuous_on UNIV G1'"
+    and reg1: "\<And>\<Gamma> j r. \<Gamma> \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow>
+      (\<And>\<omega>. \<omega> \<in> \<Gamma> \<Longrightarrow> \<not> gamma_par_c \<omega>0 \<omega>s \<omega>) \<Longrightarrow>
+      r \<in> branch2_chart1_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j
+      \<Longrightarrow> surj (blinfun_apply (G1' (branch2_base_assoc r)))"
+    and der2: "\<And>z. (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply (G2' z)) (at z)"
+    and cont2: "continuous_on UNIV G2'"
+    and reg2: "\<And>\<Gamma> j r. \<Gamma> \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow>
+      (\<And>\<omega>. \<omega> \<in> \<Gamma> \<Longrightarrow> \<not> gamma_par_c \<omega>0 \<omega>s \<omega>) \<Longrightarrow>
+      r \<in> branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j
+      \<Longrightarrow> surj (blinfun_apply (G2' (branch2_base_assoc r)))"
+  shows "branch2_repaired_reduced_base_C1_regular_rank_all V ctr \<delta> \<omega>0 \<omega>s"
+  unfolding branch2_repaired_reduced_base_C1_regular_rank_all_def
+proof (intro allI impI conjI)
+  fix \<Gamma> :: "(real^2) set" and j :: nat
+  assume Gsub: "\<Gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and Gindep0: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
+  have Gindep: "\<And>\<omega>. \<omega> \<in> \<Gamma> \<Longrightarrow> \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
+    using Gindep0 by blast
+  show "branch2_chart1_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
+    by (rule branch2_chart1_repaired_reduced_base_C1_regular_rankI_from_field
+        [OF der1 cont1]) (rule reg1[OF Gsub Gindep])
+  show "branch2_chart2_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
+    by (rule branch2_chart2_repaired_reduced_base_C1_regular_rankI_from_field
+        [OF der2 cont2]) (rule reg2[OF Gsub Gindep])
+qed
+
+lemma Ck1_on_imp_has_derivative_blinfun_rnv:
+  fixes G :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_vector"
+  assumes C1: "Ck_on (Suc 0) G W"
+  shows "\<And>z. z \<in> W \<Longrightarrow> (G has_derivative blinfun_apply (Dblinfun G z)) (at z)"
+proof -
+  fix z assume zW: "z \<in> W"
+  have "Ck_at (Suc 0) G z"
+    using C1 zW by (simp add: Ck_on_def)
+  hence diff: "G differentiable (at z)"
+    by (rule Ck1_atD)
+  show "(G has_derivative blinfun_apply (Dblinfun G z)) (at z)"
+    using diff by (simp add: blinfun_apply_Dblinfun frechet_derivative_works)
+qed
+
+lemma Ck1_on_imp_continuous_Dblinfun_branch2_base:
+  fixes G :: "((real^2) \<times> ((real^'n::finite) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)"
+  assumes C1: "Ck_on (Suc 0) G W"
+  shows "continuous_on W (Dblinfun G)"
+proof (rule continuous_on_blinfun_componentwise)
+  fix i :: "((real^2) \<times> ((real^'n) \<times> real))"
+  assume i: "i \<in> Basis"
+  have W_open: "open W"
+    using C1 by (simp add: Ck_on_def)
+  have cont_dir: "continuous_on W (\<lambda>z. frechet_derivative G (at z) i)"
+  proof (rule continuous_at_imp_continuous_on, rule ballI)
+    fix z assume zW: "z \<in> W"
+    have "Ck_at (Suc 0) G z"
+      using C1 zW by (simp add: Ck_on_def)
+    thus "continuous (at z) (\<lambda>z. frechet_derivative G (at z) i)"
+      by (rule Ck1_atD(2))
+  qed
+  have eq: "\<And>z. z \<in> W \<Longrightarrow> blinfun_apply (Dblinfun G z) i =
+      frechet_derivative G (at z) i"
+  proof -
+    fix z assume zW: "z \<in> W"
+    have "Ck_at (Suc 0) G z"
+      using C1 zW by (simp add: Ck_on_def)
+    hence "G differentiable (at z)"
+      by (rule Ck1_atD)
+    thus "blinfun_apply (Dblinfun G z) i = frechet_derivative G (at z) i"
+      by (simp add: blinfun_apply_Dblinfun)
+  qed
+  show "continuous_on W (\<lambda>z. blinfun_apply (Dblinfun G z) i)"
+    using cont_dir eq by (simp cong: continuous_on_cong)
+qed
+
+lemma branch2_chart1_repaired_reduced_base_C1_field_from_Ck1:
+  assumes C1: "Ck_on (Suc 0)
+    (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+      ((real^2) \<times> ((real^'n::finite) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+  shows "(\<And>(z :: ((real^2) \<times> ((real^'n::finite) \<times> real))).
+      (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z))"
+    and "continuous_on UNIV
+      (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)))"
+proof -
+  show "\<And>(z :: ((real^2) \<times> ((real^'n) \<times> real))).
+      (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z)"
+  proof -
+    fix z :: "((real^2) \<times> ((real^'n) \<times> real))"
+    show "(branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        has_derivative blinfun_apply
+          (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z)"
+      by (rule Ck1_on_imp_has_derivative_blinfun_rnv
+          [where G = "branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+              ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)"
+             and W = UNIV, OF C1]) simp
+  qed
+  show "continuous_on UNIV
+      (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)))"
+    by (rule Ck1_on_imp_continuous_Dblinfun_branch2_base
+        [where G = "branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)"
+           and W = UNIV, OF C1])
+qed
+
+lemma branch2_chart2_repaired_reduced_base_C1_field_from_Ck1:
+  assumes C1: "Ck_on (Suc 0)
+    (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+      ((real^2) \<times> ((real^'n::finite) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+  shows "(\<And>(z :: ((real^2) \<times> ((real^'n::finite) \<times> real))).
+      (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z))"
+    and "continuous_on UNIV
+      (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)))"
+proof -
+  show "\<And>(z :: ((real^2) \<times> ((real^'n) \<times> real))).
+      (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z)"
+  proof -
+    fix z :: "((real^2) \<times> ((real^'n) \<times> real))"
+    show "(branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        has_derivative blinfun_apply
+          (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z)"
+      by (rule Ck1_on_imp_has_derivative_blinfun_rnv
+          [where G = "branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+              ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)"
+             and W = UNIV, OF C1]) simp
+  qed
+  show "continuous_on UNIV
+      (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)))"
+    by (rule Ck1_on_imp_continuous_Dblinfun_branch2_base
+        [where G = "branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)"
+           and W = UNIV, OF C1])
+qed
+
+lemma branch2_chart1_repaired_reduced_base_system_cvec_nonzero:
+  assumes rin: "r \<in> branch2_chart1_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+  shows "cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0"
+proof -
+  have "branch2_base_param_bounded_det \<omega>0 \<omega>s r j"
+    using rin unfolding branch2_chart1_repaired_reduced_base_system_def by blast
+  thus ?thesis
+    by (rule branch2_base_param_bounded_det_imp_cvec_nonzero)
+qed
+
+lemma branch2_chart2_repaired_reduced_base_system_cvec_nonzero:
+  assumes rin: "r \<in> branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+  shows "cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0"
+proof -
+  have "branch2_base_param_bounded_det \<omega>0 \<omega>s r j"
+    using rin unfolding branch2_chart2_repaired_reduced_base_system_def by blast
+  thus ?thesis
+    by (rule branch2_base_param_bounded_det_imp_cvec_nonzero)
+qed
+
+lemma branch2_chart1_repaired_reduced_base_system_Dcvec_det_nonzero:
+  assumes rin: "r \<in> branch2_chart1_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+  shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0"
+proof -
+  have "branch2_base_param_bounded_det \<omega>0 \<omega>s r j"
+    using rin unfolding branch2_chart1_repaired_reduced_base_system_def by blast
+  thus ?thesis
+    by (rule branch2_base_param_bounded_det_imp_Dcvec_det_nonzero)
+qed
+
+lemma branch2_chart2_repaired_reduced_base_system_Dcvec_det_nonzero:
+  assumes rin: "r \<in> branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+  shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0"
+proof -
+  have "branch2_base_param_bounded_det \<omega>0 \<omega>s r j"
+    using rin unfolding branch2_chart2_repaired_reduced_base_system_def by blast
+  thus ?thesis
+    by (rule branch2_base_param_bounded_det_imp_Dcvec_det_nonzero)
+qed
+
+theorem branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank:
+  fixes V :: "((real^2)^'n::finite) set"
+    and G1' :: "((real^2) \<times> ((real^'n) \<times> real))
+      \<Rightarrow> (((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow>\<^sub>L ((real^'n) \<times> real))"
+    and G2' :: "((real^2) \<times> ((real^'n) \<times> real))
+      \<Rightarrow> (((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow>\<^sub>L ((real^'n) \<times> real))"
+  assumes der1: "\<And>z. (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply (G1' z)) (at z)"
+    and cont1: "continuous_on UNIV G1'"
+    and reg1: "\<And>r. branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply (G1' (branch2_base_assoc r)))"
+    and der2: "\<And>z. (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply (G2' z)) (at z)"
+    and cont2: "continuous_on UNIV G2'"
+    and reg2: "\<And>r. branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply (G2' (branch2_base_assoc r)))"
+  shows "branch2_repaired_reduced_base_C1_regular_rank_all V ctr \<delta> \<omega>0 \<omega>s"
+proof (rule branch2_repaired_reduced_base_C1_regular_rank_allI_from_fields
+    [OF der1 cont1 _ der2 cont2])
+  fix \<Gamma> :: "(real^2) set" and j :: nat
+    and r :: "(((real^2) \<times> (real^'n)) \<times> real)"
+  assume rin: "r \<in> branch2_chart1_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+  have zero: "branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      (branch2_base_assoc r) = (0, 0)"
+    using rin branch2_chart1_repaired_reduced_base_system_assoc_iff[of r \<omega>0 \<omega>s \<Gamma> j]
+    by blast
+  show "surj (blinfun_apply (G1' (branch2_base_assoc r)))"
+    by (rule reg1[OF zero
+          branch2_chart1_repaired_reduced_base_system_cvec_nonzero[OF rin]
+          branch2_chart1_repaired_reduced_base_system_Dcvec_det_nonzero[OF rin]])
+next
+  fix \<Gamma> :: "(real^2) set" and j :: nat
+    and r :: "(((real^2) \<times> (real^'n)) \<times> real)"
+  assume rin: "r \<in> branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+  have zero: "branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      (branch2_base_assoc r) = (0, 0)"
+    using rin branch2_chart2_repaired_reduced_base_system_assoc_iff[of r \<omega>0 \<omega>s \<Gamma> j]
+    by blast
+  show "surj (blinfun_apply (G2' (branch2_base_assoc r)))"
+    by (rule reg2[OF zero
+          branch2_chart2_repaired_reduced_base_system_cvec_nonzero[OF rin]
+          branch2_chart2_repaired_reduced_base_system_Dcvec_det_nonzero[OF rin]])
+qed
+
+theorem branch2_repaired_reduced_base_C1_regular_rank_allI_from_Ck1_and_pointwise_rank:
+  fixes V :: "((real^2)^'n::finite) set"
+  assumes C1_1: "Ck_on (Suc 0)
+      (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+    and C1_2: "Ck_on (Suc 0)
+      (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+    and reg1: "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+    and reg2: "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  shows "branch2_repaired_reduced_base_C1_regular_rank_all V ctr \<delta> \<omega>0 \<omega>s"
+proof (rule branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank
+    [where G1' = "Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))"
+       and G2' = "Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))"])
+  show "\<And>(z :: ((real^2) \<times> ((real^'n) \<times> real))).
+      (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z)"
+    by (rule branch2_chart1_repaired_reduced_base_C1_field_from_Ck1(1)[OF C1_1])
+  show "continuous_on UNIV
+      (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)))"
+    by (rule branch2_chart1_repaired_reduced_base_C1_field_from_Ck1(2)[OF C1_1])
+  show "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+    branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+    cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+    det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0 \<Longrightarrow>
+    surj (blinfun_apply
+      (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+          ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+        (branch2_base_assoc r)))"
+    by (rule reg1)
+  show "\<And>(z :: ((real^2) \<times> ((real^'n) \<times> real))).
+      (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      has_derivative blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s) z)) (at z)"
+    by (rule branch2_chart2_repaired_reduced_base_C1_field_from_Ck1(1)[OF C1_2])
+  show "continuous_on UNIV
+      (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)))"
+    by (rule branch2_chart2_repaired_reduced_base_C1_field_from_Ck1(2)[OF C1_2])
+  show "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+    branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+      (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+    cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+    det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0 \<Longrightarrow>
+    surj (blinfun_apply
+      (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+          ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+        (branch2_base_assoc r)))"
+    by (rule reg2)
+qed
 
 lemma branch2_chart1_repaired_reduced_base_C1_regular_rankD:
   fixes V :: "((real^2)^'n::finite) set"
@@ -7451,6 +7854,242 @@ next
   qed
 qed
 
+lemma branch2_chart2_repaired_reduced_base_compact_IFT_parametrizations_of_C1_regular_rank:
+  fixes V :: "((real^2)^'n::finite) set"
+    and \<omega>0 \<omega>s :: "real^2"
+    and \<Gamma> :: "(real^2) set"
+    and j :: nat
+  assumes c1: "branch2_chart2_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
+  shows "branch2_chart2_repaired_reduced_base_compact_IFT_parametrizations V \<omega>0 \<omega>s \<Gamma> j"
+proof (cases "branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j
+    = ({} :: ((((real^2) \<times> (real^'n)) \<times> real)) set)")
+  case True
+  have empty_cover: "branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j
+      \<subseteq> (\<Union>i::nat. ((\<lambda>_. undefined)
+          :: real^2 \<Rightarrow> (((real^2) \<times> (real^'n)) \<times> real)) ` ({} :: (real^2) set))"
+    using True by simp
+  show ?thesis
+    unfolding branch2_chart2_repaired_reduced_base_compact_IFT_parametrizations_def
+    by (intro exI[where x = "\<lambda>_. {}"]
+        exI[where x = "\<lambda>_ _. undefined"] conjI empty_cover) auto
+next
+  case False
+  define S :: "(((real^2) \<times> (real^'n)) \<times> real) set"
+    where "S = branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+  define Z :: "((real^2) \<times> ((real^'n) \<times> real)) set"
+    where "Z = {z. branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s z = (0, 0)}"
+  define A :: "((real^2) \<times> ((real^'n) \<times> real)) set"
+    where "A = branch2_base_assoc ` S"
+  define \<F> :: "(((real^2) \<times> ((real^'n) \<times> real)) set) set"
+    where "\<F> =
+    {A \<inter> (\<phi> ` ball u0 \<rho>) |(u0 :: real^2) \<rho> \<phi> D\<phi> r.
+      r \<in> S \<and>
+      0 < \<rho> \<and> \<phi> u0 = branch2_base_assoc r \<and>
+      (\<forall>u\<in>cball u0 \<rho>.
+        branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s (\<phi> u) = (0, 0)
+        \<and> (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)) \<and>
+      continuous_on (cball u0 \<rho>) \<phi> \<and>
+      branch2_base_assoc r \<in> \<phi> ` ball u0 \<rho> \<and>
+      openin (top_of_set Z) (\<phi> ` ball u0 \<rho>)}"
+  have S_ne: "S \<noteq> {}"
+    using False unfolding S_def by simp
+  have A_ne: "A \<noteq> {}"
+    using S_ne unfolding A_def by blast
+  have A_sub_Z: "A \<subseteq> Z"
+  proof
+    fix z assume "z \<in> A"
+    then obtain r where rS: "r \<in> S" and z: "z = branch2_base_assoc r"
+      unfolding A_def by blast
+    have "branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0)"
+      using rS unfolding S_def
+      using branch2_chart2_repaired_reduced_base_system_assoc_iff[of r \<omega>0 \<omega>s \<Gamma> j]
+      by blast
+    thus "z \<in> Z"
+      unfolding Z_def z by simp
+  qed
+  have openF: "\<And>U. U \<in> \<F> \<Longrightarrow> openin (top_of_set A) U"
+  proof -
+    fix U assume "U \<in> \<F>"
+    then obtain u0 :: "real^2"
+      and \<rho> :: real
+      and \<phi> :: "real^2 \<Rightarrow> ((real^2) \<times> ((real^'n) \<times> real))" where
+      U_def: "U = A \<inter> \<phi> ` ball u0 \<rho>"
+      and openU: "openin (top_of_set Z) (\<phi> ` ball u0 \<rho>)"
+      unfolding \<F>_def mem_Collect_eq by (elim exE conjE) metis
+    have "openin (top_of_set A) (A \<inter> (\<phi> ` ball u0 \<rho>))"
+      using openU A_sub_Z
+      by (simp only: inf.absorb_iff2 openin_subtopology_Int2, 
+          metis openin_subtopology_Int2 subtopology_subtopology)
+    thus "openin (top_of_set A) U"
+      unfolding U_def .
+  qed
+  have coverF: "A \<subseteq> \<Union>\<F>"
+  proof
+    fix z assume zA: "z \<in> A"
+    then obtain r where rS: "r \<in> S" and z: "z = branch2_base_assoc r"
+      unfolding A_def by blast
+    have rin: "r \<in> branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j"
+      using rS unfolding S_def .
+    obtain u0 :: "real^2"
+      and \<rho> :: real
+      and \<phi> :: "real^2 \<Rightarrow> ((real^2) \<times> ((real^'n) \<times> real))"
+      and D\<phi> :: "real^2 \<Rightarrow> (real^2, ((real^2) \<times> ((real^'n) \<times> real))) blinfun" where
+      rho: "0 < \<rho>" and phi0: "\<phi> u0 = branch2_base_assoc r"
+      and der: "\<forall>u\<in>cball u0 \<rho>.
+          branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s (\<phi> u) = (0, 0)
+          \<and> (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)"
+      and cont: "continuous_on (cball u0 \<rho>) \<phi>"
+      and image: "branch2_base_assoc r \<in> \<phi> ` ball u0 \<rho>"
+      and open_set: "openin (top_of_set Z) (\<phi> ` ball u0 \<rho>)"
+      using branch2_chart2_repaired_reduced_base_C1_regular_rank_cball_chart
+        [OF c1 rin]
+      unfolding Z_def by (elim exE conjE) metis
+    have Uin: "A \<inter> \<phi> ` ball u0 \<rho> \<in> \<F>"
+      unfolding \<F>_def mem_Collect_eq
+      by (rule exI[of _ u0], rule exI[of _ \<rho>], rule exI[of _ \<phi>],
+          rule exI[of _ D\<phi>], rule exI[of _ r], intro conjI,
+          rule refl, rule rS, rule rho, rule phi0, rule der, rule cont,
+          rule image, rule open_set)
+    have "z \<in> A \<inter> \<phi> ` ball u0 \<rho>"
+      using zA z image by blast
+    thus "z \<in> \<Union>\<F>"
+      using Uin by blast
+  qed
+  obtain fs where fs_sub: "fs \<subseteq> \<F>" and fs_cnt: "countable fs" and fs_cover: "A \<subseteq> \<Union>fs"
+    by (rule countable_subcover_of_openin_cover[OF openF coverF])
+  have fs_ne: "fs \<noteq> {}"
+    using A_ne fs_cover by blast
+  define U where "U = from_nat_into fs"
+  have UinF: "U i \<in> \<F>" for i
+    using from_nat_into[OF fs_ne, of i] fs_sub unfolding U_def by blast
+  have Urange: "fs \<subseteq> range U"
+    unfolding U_def
+    by (metis fs_cnt subset_range_from_nat_into top1_countable_nonempty_eq_image_nat uncountable_def) 
+  have witness_ex: "\<forall>i.
+      \<exists>u0 :: real^2. \<exists>\<rho> :: real.
+      \<exists>\<phi> :: real^2 \<Rightarrow> ((real^2) \<times> ((real^'n) \<times> real)).
+      \<exists>D\<phi> :: real^2 \<Rightarrow> (real^2, ((real^2) \<times> ((real^'n) \<times> real))) blinfun.
+      \<exists>r :: ((real^2) \<times> (real^'n)) \<times> real.
+      r \<in> S \<and>
+      0 < \<rho> \<and> \<phi> u0 = branch2_base_assoc r \<and>
+      (\<forall>u\<in>cball u0 \<rho>.
+        branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s (\<phi> u) = (0, 0)
+        \<and> (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)) \<and>
+      continuous_on (cball u0 \<rho>) \<phi> \<and>
+      branch2_base_assoc r \<in> \<phi> ` ball u0 \<rho> \<and>
+      openin (top_of_set Z) (\<phi> ` ball u0 \<rho>) \<and>
+      U i = A \<inter> \<phi> ` ball u0 \<rho>"
+  proof
+    fix i
+    show "\<exists>u0 :: real^2. \<exists>\<rho> :: real.
+      \<exists>\<phi> :: real^2 \<Rightarrow> ((real^2) \<times> ((real^'n) \<times> real)).
+      \<exists>D\<phi> :: real^2 \<Rightarrow> (real^2, ((real^2) \<times> ((real^'n) \<times> real))) blinfun.
+      \<exists>r :: ((real^2) \<times> (real^'n)) \<times> real.
+      r \<in> S \<and>
+      0 < \<rho> \<and> \<phi> u0 = branch2_base_assoc r \<and>
+      (\<forall>u\<in>cball u0 \<rho>.
+        branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s (\<phi> u) = (0, 0)
+        \<and> (\<phi> has_derivative blinfun_apply (D\<phi> u)) (at u)) \<and>
+      continuous_on (cball u0 \<rho>) \<phi> \<and>
+      branch2_base_assoc r \<in> \<phi> ` ball u0 \<rho> \<and>
+      openin (top_of_set Z) (\<phi> ` ball u0 \<rho>) \<and>
+      U i = A \<inter> \<phi> ` ball u0 \<rho>"
+      using UinF[of i] unfolding \<F>_def mem_Collect_eq
+      by (elim exE conjE) (intro exI conjI; assumption)
+  qed
+  then obtain u0 :: "nat \<Rightarrow> real^2"
+    and \<rho> :: "nat \<Rightarrow> real"
+    and \<phi> :: "nat \<Rightarrow> real^2 \<Rightarrow> ((real^2) \<times> ((real^'n) \<times> real))"
+    and D\<phi> :: "nat \<Rightarrow> real^2 \<Rightarrow> (real^2, ((real^2) \<times> ((real^'n) \<times> real))) blinfun"
+    and r :: "nat \<Rightarrow> ((real^2) \<times> (real^'n)) \<times> real" where wit:
+    "\<And>i. r i \<in> S \<and>
+      0 < \<rho> i \<and> \<phi> i (u0 i) = branch2_base_assoc (r i) \<and>
+      (\<forall>u\<in>cball (u0 i) (\<rho> i).
+        branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s (\<phi> i u) = (0, 0)
+        \<and> (\<phi> i has_derivative blinfun_apply (D\<phi> i u)) (at u)) \<and>
+      continuous_on (cball (u0 i) (\<rho> i)) (\<phi> i) \<and>
+      branch2_base_assoc (r i) \<in> \<phi> i ` ball (u0 i) (\<rho> i) \<and>
+      openin (top_of_set Z) (\<phi> i ` ball (u0 i) (\<rho> i)) \<and>
+      U i = A \<inter> \<phi> i ` ball (u0 i) (\<rho> i)"
+    by metis
+  define i_of where "i_of n = fst (prod_decode n)" for n
+  define k_of where "k_of n = snd (prod_decode n)" for n
+  define C where "C n =
+    (cball (u0 (i_of n)) (\<rho> (i_of n)) \<inter>
+      {s. 1 / real (Suc (k_of n)) \<le>
+        cvec_dip \<omega>0 \<omega>s (fst (\<phi> (i_of n) s)) \<bullet>
+        cvec_dip \<omega>0 \<omega>s (fst (\<phi> (i_of n) s))})" for n
+  define psi where "psi n s = branch2_base_unassoc (\<phi> (i_of n) s)" for n s
+  have coverC: "S \<subseteq> (\<Union>n. psi n ` C n)"
+  proof
+    fix x assume xS: "x \<in> S"
+    have zA: "branch2_base_assoc x \<in> A"
+      using xS unfolding A_def by blast
+    then obtain Ob where Ofs: "Ob \<in> fs" and zO: "branch2_base_assoc x \<in> Ob"
+      using fs_cover by blast
+    obtain i where Oeq: "Ob = U i"
+      using Urange Ofs by blast
+    have zUi: "branch2_base_assoc x \<in> U i"
+      using zO Oeq by simp
+    then obtain s where sball: "s \<in> ball (u0 i) (\<rho> i)"
+      and phis: "\<phi> i s = branch2_base_assoc x"
+      using wit[of i]
+      by auto 
+    have xbounded: "branch2_base_param_bounded_det \<omega>0 \<omega>s x j"
+      using xS unfolding S_def branch2_chart2_repaired_reduced_base_system_def by blast
+    have thresh: "1 / real (Suc j) \<le>
+        cvec_dip \<omega>0 \<omega>s (fst (\<phi> i s)) \<bullet> cvec_dip \<omega>0 \<omega>s (fst (\<phi> i s))"
+      using xbounded phis
+      unfolding branch2_base_param_bounded_det_def branch2_base_assoc_def
+        branch2_base_param_omega_def
+      by (metis branch2_base_param_bounded_def branch2_base_param_omega_def fst_conv)
+      
+    define n where "n = prod_encode (i, j)"
+    have i_n: "i_of n = i"
+      unfolding i_of_def n_def by simp
+    have k_n: "k_of n = j"
+      unfolding k_of_def n_def by simp
+    have sC: "s \<in> C n"
+      using sball thresh unfolding C_def i_n k_n by auto
+    have "x = psi n s"
+      using phis unfolding psi_def i_n by simp
+    thus "x \<in> (\<Union>n. psi n ` C n)"
+      using sC by blast
+  qed
+  have compactC: "compact (C n)" for n
+    unfolding C_def
+    by (rule compact_cball_cvec_threshold_of_continuous_chart)
+       (use wit in blast)
+  have diffC: "branch2_lifted_base_chart_x_map \<omega>0 \<omega>s (psi n)
+      differentiable_on (C n \<times> branch2_u_slice_domain j)" for n
+  proof -
+    have der: "\<And>s. s \<in> C n \<Longrightarrow> \<phi> (i_of n) differentiable (at s)"
+      unfolding C_def differentiable_def
+      using wit[of "i_of n"] by blast
+    have cnz: "\<And>s. s \<in> C n \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (fst (\<phi> (i_of n) s)) \<bullet>
+      cvec_dip \<omega>0 \<omega>s (fst (\<phi> (i_of n) s)) \<noteq> 0"
+      unfolding C_def by auto
+    show ?thesis
+      unfolding psi_def
+      by (rule branch2_lifted_base_chart_x_map_differentiable_on_cvec_nonzero
+          [OF der cnz])
+  qed
+  show ?thesis
+    unfolding branch2_chart2_repaired_reduced_base_compact_IFT_parametrizations_def
+  proof (intro exI[where x = C] exI[where x = psi] conjI)
+    show "branch2_chart2_repaired_reduced_base_system \<omega>0 \<omega>s \<Gamma> j
+        \<subseteq> (\<Union>i. psi i ` C i)"
+      using coverC unfolding S_def .
+    show "\<forall>i. compact (C i)"
+      by (rule allI, rule compactC)
+    show "\<forall>i. branch2_lifted_base_chart_x_map \<omega>0 \<omega>s (psi i)
+        differentiable_on (C i \<times> branch2_u_slice_domain j)"
+      by (rule allI, rule diffC)
+  qed
+qed
+
 theorem branchP_indep_closed_cover_core_all_of_repaired_reduced_base_compact_chart_parametrizations:
   fixes V :: "((real^2)^'n::finite) set"
   assumes card4: "4 \<le> CARD('n)"
@@ -7595,16 +8234,40 @@ theorem branchP_indep_closed_cover_core_all_of_repaired_reduced_base_regular_ran
     [OF card4 pf], rule rank_to_compact_ift[OF regular_rank])
 
 
+theorem branch2_repaired_reduced_base_compact_IFT_parametrizations_all_of_C1_regular_rank:
+  fixes V :: "((real^2)^'n::finite) set"
+  assumes c1: "branch2_repaired_reduced_base_C1_regular_rank_all V ctr \<delta> \<omega>0 \<omega>s"
+  shows "branch2_repaired_reduced_base_compact_IFT_parametrizations_all V ctr \<delta> \<omega>0 \<omega>s"
+  unfolding branch2_repaired_reduced_base_compact_IFT_parametrizations_all_def
+proof (intro allI impI)
+  fix \<Gamma> :: "(real^2) set" and j :: nat
+  assume Gsub: "\<Gamma> \<subseteq> OmegaPF ctr \<delta>"
+    and Gindep: "\<forall>\<omega>\<in>\<Gamma>. \<not> gamma_par_c \<omega>0 \<omega>s \<omega>"
+  have c1_chart1: "branch2_chart1_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
+    using c1 Gsub Gindep
+    unfolding branch2_repaired_reduced_base_C1_regular_rank_all_def
+    by blast
+  have c1_chart2: "branch2_chart2_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
+    using c1 Gsub Gindep
+    unfolding branch2_repaired_reduced_base_C1_regular_rank_all_def
+    by blast
+  show "branch2_chart1_repaired_reduced_base_compact_IFT_parametrizations V \<omega>0 \<omega>s \<Gamma> j
+      \<and> branch2_chart2_repaired_reduced_base_compact_IFT_parametrizations V \<omega>0 \<omega>s \<Gamma> j"
+    by (intro conjI
+        branch2_chart1_repaired_reduced_base_compact_IFT_parametrizations_of_C1_regular_rank
+        branch2_chart2_repaired_reduced_base_compact_IFT_parametrizations_of_C1_regular_rank
+        c1_chart1 c1_chart2)
+qed
+
 theorem branchP_indep_closed_cover_core_all_of_repaired_reduced_base_C1_regular_rank_and_compact_IFT_chart_theorem:
   fixes V :: "((real^2)^'n::finite) set"
   assumes card4: "4 \<le> CARD('n)"
     and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and c1_regular_rank: "branch2_repaired_reduced_base_C1_regular_rank_all V ctr \<delta> \<omega>0 \<omega>s"
-    and c1_rank_to_compact_ift:
-      "branch2_repaired_reduced_base_C1_regular_rank_all V ctr \<delta> \<omega>0 \<omega>s \<Longrightarrow>
-        branch2_repaired_reduced_base_compact_IFT_parametrizations_all V ctr \<delta> \<omega>0 \<omega>s"
   shows "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
   by (rule branchP_indep_closed_cover_core_all_of_repaired_reduced_base_compact_IFT_parametrizations
-    [OF card4 pf], rule c1_rank_to_compact_ift[OF c1_regular_rank])
+    [OF card4 pf],
+    rule branch2_repaired_reduced_base_compact_IFT_parametrizations_all_of_C1_regular_rank
+      [OF c1_regular_rank])
 
 end

@@ -8105,3 +8105,46 @@ C1-regular-rank hypotheses is formally verified.  Remaining:
   and surjectivity at every bounded-det system point (numerics: 7/7 full
   rank at sampled repaired-system points).
 - splice `branchP_indep_closed_cover_core_all` into `m5_D34_D4_branchP`.
+
+## 2026-07-13/14: mechanical hour done + C1-regular-rank reduced to two crisp facts
+
+The chart2 twin of `..._compact_IFT_parametrizations_of_C1_regular_rank` and
+the `_all` glue landed (mechanically cloned from chart1, same proof shape),
+discharging `c1_rank_to_compact_ift` outright. `Scratch_D4Branch.thy` is now
+8273 lines, still **zero sorrys**, `Finished Applied_Math_M5_D4Branch`
+independently reverified (batch build, EXIT:0).
+
+The file goes further than "mechanical": it reduces the remaining open
+hypothesis `branch2_repaired_reduced_base_C1_regular_rank_all` to a clean
+two-fact-per-chart form via a new chain
+
+```isabelle
+branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank
+branch2_repaired_reduced_base_C1_regular_rank_allI_from_Ck1_and_pointwise_rank
+```
+
+so the *only* remaining open mathematical content for D4 is, for each of the
+two charts' `branch2_chartK_repaired_reduced_base_IFT_residual`:
+
+1. **Ck1 global smoothness** (`Ck_on (Suc 0) residual UNIV`) — should follow
+   from `gdip` being twice-differentiable on the heap plus the residual being
+   built from polynomial/trig combinations of it (same shape as the A5 joint-C1
+   proof, `has_derivative_partialsI`).
+2. **Pointwise surjectivity of the derivative** at every system zero with
+   `cvec ω0 ωs ω ≠ 0` and `det (matrix (Dcvec_dip ω0 ωs ω)) ≠ 0` — the actual
+   regular-rank mathematics (numerics: 7/7 full rank at sampled repaired-system
+   points; one 5/7 in-box point still unclassified, likely excluded by the
+   det bound).
+
+D4 is **not** yet unconditionally closed — the final capstone
+`branchP_indep_closed_cover_core_all_of_repaired_reduced_base_C1_regular_rank_and_compact_IFT_chart_theorem`
+still takes `branch2_repaired_reduced_base_C1_regular_rank_all` as a hypothesis
+— but everything else (BadXGW split, aligned cover, branch-2 dichotomy,
+reduced base, slot-swap repair, det threading, Lindelof/compact IFT bridge) is
+now fully verified, and the remaining gap is exactly facts 1-2 above, per
+chart. Semi-formal next step: symbolically check the Jacobian of the repaired
+residual (sympy) to confirm Ck1 and to locate the precise rank-defect
+condition before attempting fact 2 in Isar.
+
+Splice into `m5_D34_D4_branchP` in the Robust3 consolidation still remains
+once facts 1-2 (or the whole `C1_regular_rank_all`) are proven.
