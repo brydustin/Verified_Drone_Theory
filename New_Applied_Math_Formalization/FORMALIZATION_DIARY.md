@@ -8,6 +8,89 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-07-14 — D4 reg1/reg2 pointwise-rank fact: found a probable genuine
+## counterexample at n=4 (t-collision solution branch), not yet fixed
+
+**Context.** After the previous session closed D4's Ck1 (global smoothness)
+fact unconditionally, D4 (`branchP_indep_closed_cover_core_all`) was reduced
+to exactly `reg1`/`reg2`: pointwise surjectivity of each repaired chart's
+derivative at every `r` with (chart-residual = 0) ∧ (`cvec_dip ≠ 0`) ∧
+(`det(Dcvec_dip) ≠ 0`) — see `branchP_indep_closed_cover_core_all_of_pointwise_rank_only`
+in `M5_Dev_D4Branch/Scratch_D4Branch.thy`. The prior session's memory
+(`d4-ck1-closed-pointwise-rank-only`) reported "15/15 sampled system points
+show full Jacobian rank" as encouraging evidence this was true. **That sample
+only used `n = 6`.** This session re-ran the same check at the theorem's
+actual worst case, `n = 4` (recall `card4: 4 ≤ CARD('n)` — the theorem must
+hold at `n = 4`), using a harness whose `cvec_dip`/`gdip`/`Dcvec_dip` were
+re-verified line-for-line against the real definitions in
+`Appendix/Nonemptiness_Robust1.thy` (not just carried over from before).
+
+**Finding.** Among 60 genuine system zeros found by unconstrained
+Levenberg-Marquardt root-finding at `n=4` (residual norm `< 1e-7`, `cvec≠0`,
+`|det Dcvec| > 5e-2`, robust across finite-difference step sizes `1e-3`..`1e-7`),
+only **33/60 (55%) have full rank**; the other **27/60 (45%)** are rank
+4 of the required 5 (output dimension is `n+1=5` at `n=4`; one dimension
+short), always in the same pattern: **two of the `t`-components coincide
+almost exactly**
+(e.g. `t mod 2π = [0.6316, 0.6316, 3.7732, 3.7733]`). At `n=6` the same sweep
+(1500 trials) found 0/32 deficient — but this is very likely just because
+collision branches are proportionally rarer to hit at random for larger `n`,
+not because they don't exist; `n=4` is the case that actually matters for the
+theorem.
+
+**Why this isn't a fluke (unlike the earlier "t-submatrix" false alarm from
+2026-07-13/14):** the vector-part residual entries are, for `m ≠ slot`,
+```
+radial(m) = 2·egd·cc·Im(cnj(A)·ph_m)
+          + 2·g·Lc·[Re(cnj(ph_m)·AW) + Im(cnj(A)·ph_m) - t_m·Re(cnj(A)·ph_m)]
+```
+where `egd, cc, g, Lc, A, AW` are all *global* (independent of the index
+`m`), and `ph_m = exp(-i·t_m)`. So **for any two non-slot indices `i,j`,
+`t_i = t_j` forces `radial(i) = radial(j)` identically**, for *any* value of
+`Lc` (any `ell`, hence chart-independently — verified: `ell_chart1 a = (1,a)`,
+`ell_chart2 a = (a,1)`, differing only by which coordinate is pinned to 1,
+so `Lc` is just a rescaled scalar in either case, and the collapse argument
+doesn't care what that scalar is). Consequently permuting the non-slot
+`t`-indices is an exact symmetry of the whole residual system: if `t` solves
+it, so does every permutation of its non-slot entries. This makes
+"collision" solutions (`t_i = t_j` for some pair) a *bona fide branch* of the
+solution variety organized by that symmetry, not a probability-zero
+coincidence — consistent with hitting it in 45% of random restarts at `n=4`,
+where there are only `C(3,2)=3` non-slot pairs versus `n=6`'s `C(5,2)=10`.
+
+A companion check confirmed forcing a bare `t_i=t_j` collision at a
+*non-zero, arbitrary* point does **not** by itself cause rank loss (Jacobian
+stayed full rank in that control) — the degeneracy is specifically a
+property of collision solutions that also satisfy the *rest* of the zero
+system, exactly the situation `reg1`/`reg2` must handle.
+
+**What this means, unresolved:** `reg1`/`reg2` as currently, minimally
+stated (only `residual=0 ∧ cvec≠0 ∧ det≠0`, no constraint on `t`) look
+genuinely false at `n=4`, on a real (not measure-zero-and-avoidable, not
+harness-artifact) branch of solutions. `branch2_base_param_t r = snd (fst r)`
+is a bare projection with no distinctness hypothesis anywhere in this file.
+Three ways this could resolve, none attempted yet:
+  (a) It's possible (not checked) that genuine BadXGW/branch-2 points arising
+      from the *original* upstream M5 problem always have distinct `t`
+      components for some reason not visible at this reduced-base level —
+      would need tracing `branch2_base_param_t`'s ultimate origin back
+      through the base-reduction pipeline.
+  (b) Add an explicit `t`-distinctness (or "collision-avoiding") hypothesis
+      to `reg1`/`reg2`, weakening the final `branchP_indep_closed_cover_core_all`
+      guarantee — a genuine scope change to what D4 proves, not a free fix.
+  (c) Redesign the `branch2_repair_slot` mechanism (currently one fixed slot
+      carries `R*`, everything else carries `radial`) to be collision-robust
+      — real new mathematical content, comparable in size to the R*
+      division-by-zero fix from the prior session, possibly larger.
+
+This is a genuine "needs a human call" fork, not a tactic gap — (a)/(b)/(c)
+change what gets proved or require nontrivial new upstream archaeology.
+Flagging here rather than picking one unilaterally. Scripts:
+`d4_big_sweep.py`, `d4_confirm_mechanism.py`, `d4_verify_lowrank.py`,
+`d4_symmetry_forced_check.py` (all in scratchpad) reproduce the above.
+
+---
+
 ## 2026-07-10 — Functional-cut wiring engine staged in scratch
 
 Staged the checked functional-cut generalization in
