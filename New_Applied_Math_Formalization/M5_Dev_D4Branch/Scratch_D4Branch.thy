@@ -5665,6 +5665,64 @@ proof -
     by (intro Ck_on_sum Ck_on_scaleR_fun CkF Ck_on_const oU) auto
 qed
 
+lemma Ck_on_fst: "Ck_on k (fst :: 'a::real_normed_vector \<times> 'b::real_normed_vector \<Rightarrow> 'a) UNIV"
+proof -
+  have "(UNIV :: ('a \<times> 'b) set) = (UNIV :: 'a set) \<times> (UNIV :: 'b set)"
+    by simp
+  thus ?thesis
+    using higher_differentiable_on_fst[of "UNIV::'a set" "UNIV::'b set" k]
+    by (simp add: Ck_on_iff_higher_differentiable_on)
+qed
+
+lemma Ck_on_snd: "Ck_on k (snd :: 'a::real_normed_vector \<times> 'b::real_normed_vector \<Rightarrow> 'b) UNIV"
+proof -
+  have "(UNIV :: ('a \<times> 'b) set) = (UNIV :: 'a set) \<times> (UNIV :: 'b set)"
+    by simp
+  thus ?thesis
+    using higher_differentiable_on_snd[of "UNIV::'a set" "UNIV::'b set" k]
+    by (simp add: Ck_on_iff_higher_differentiable_on)
+qed
+
+lemma branch2_base_param_omega_Ck_on_n:
+  "Ck_on n (branch2_base_param_omega :: (((real^2) \<times> (real^'n::finite)) \<times> real) \<Rightarrow> real^2) UNIV"
+  unfolding branch2_base_param_omega_def
+proof (rule Ck_on_compose[OF Ck_on_fst Ck_on_fst])
+  show "\<And>y :: (((real^2) \<times> (real^'n)) \<times> real). y \<in> UNIV \<Longrightarrow>
+      fst y \<in> (UNIV :: ((real^2) \<times> (real^'n)) set)" by simp
+qed
+
+lemma branch2_base_param_t_Ck_on_n:
+  "Ck_on n (branch2_base_param_t :: (((real^2) \<times> (real^'n::finite)) \<times> real) \<Rightarrow> real^'n) UNIV"
+  unfolding branch2_base_param_t_def
+proof (rule Ck_on_compose[OF Ck_on_snd Ck_on_fst])
+  show "\<And>y :: (((real^2) \<times> (real^'n)) \<times> real). y \<in> UNIV \<Longrightarrow>
+      fst y \<in> (UNIV :: ((real^2) \<times> (real^'n)) set)" by simp
+qed
+
+lemma branch2_base_param_a_Ck_on_n:
+  "Ck_on n (branch2_base_param_a :: (((real^2) \<times> (real^'n::finite)) \<times> real) \<Rightarrow> real) UNIV"
+  unfolding branch2_base_param_a_def by (rule Ck_on_snd)
+
+lemma ell_chart1_Ck_on_n: "Ck_on n ell_chart1 UNIV"
+proof -
+  have eq: "\<And>a. ell_chart1 a = a *\<^sub>R (axis (2::2) 1) + (axis (1::2) 1 :: real^2)"
+    unfolding ell_chart1_def
+    using exhaust_2 by (auto simp: Finite_Cartesian_Product.vec_eq_iff axis_def)
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_add Ck_on_scaleR_fun Ck_on_id[OF open_UNIV] Ck_on_const open_UNIV)
+qed
+
+lemma ell_chart2_Ck_on_n: "Ck_on n ell_chart2 UNIV"
+proof -
+  have eq: "\<And>a. ell_chart2 a = a *\<^sub>R (axis (1::2) 1) + (axis (2::2) 1 :: real^2)"
+    unfolding ell_chart2_def
+    using exhaust_2 by (auto simp: Finite_Cartesian_Product.vec_eq_iff axis_def)
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_add Ck_on_scaleR_fun Ck_on_id[OF open_UNIV] Ck_on_const open_UNIV)
+qed
+
 lemma det_matrix_Dcvec_dip_Ck_on_n:
   fixes \<omega>0 \<omega>s :: "real^2"
   shows "Ck_on n (\<lambda>\<omega>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
