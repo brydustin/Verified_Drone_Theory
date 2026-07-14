@@ -8301,3 +8301,38 @@ Lesson re-logged for the obvious reason: always re-apply the SAME validity
 filters when re-probing a specific numeric solution outside the original
 batch loop, or you will "rediscover" a false structural collapse at what is
 actually a rejected degenerate point.
+
+**A genuine closed-form lead for the t-submatrix (sympy, fixed ω so
+`egd, cc, g, Lc` are treated as constants):** for `m` not the repair slot,
+
+```
+radial(m) = 2·Lc·g · Σ_{k≠m} [(t_m−t_k)·cos(t_m−t_k) + sin(t_m−t_k)]
+          + 2·cc·egd · Σ_{k≠m} sin(t_m−t_k)
+```
+
+(sign convention to be double-checked against the file's exact
+`branch2_radial_scalar_reduced_eq_smooth_form`, but the STRUCTURE — a sum of
+pairwise `t_m − t_k` terms via `cos`/`sin` of the difference, i.e. exactly a
+DFT/Vandermonde-of-`phase_t`-type expression, matching that `A_t_moment` and
+`A_t_weighted_moment` are literally discrete Fourier-type moments of the
+`t`-vector — is confirmed symbolically for `n=4` and should hold for general
+`n` by the same derivation, since nothing in the derivation used `n=4`
+specifically). This gives explicit closed forms for the whole
+`(n-1)x(n-1)` Jacobian block:
+
+```
+∂radial(m)/∂t_k  (k≠m) = 2·Lc·g·[(t_m−t_k)·sin(t_m−t_k) − 2·cos(t_m−t_k)]
+                          − 2·cc·egd·cos(t_m−t_k)
+∂radial(m)/∂t_m         = 2·Lc·g·Σ_{k≠m}[2·cos(t_m−t_k) − (t_m−t_k)·sin(t_m−t_k)]
+                          + 2·cc·egd·Σ_{k≠m} cos(t_m−t_k)
+```
+
+This is now a concrete, general-`n`, closed-form matrix — the natural next
+semi-formal step is checking whether this specific matrix family has a known
+closed-form determinant (it resembles a circulant/Toeplitz-adjacent
+structure via the pairwise-difference dependence, though it is NOT literally
+circulant since the `t_k` are not equally spaced) or whether a cleaner
+genericity argument (e.g. via the `Lc`, `cc`, `egd`, `g` prefactors alone,
+independent of the specific `t`-values) suffices. Not resolved this session;
+flagging as the concrete entry point for the next continuation rather than
+starting fact 2 from scratch.
