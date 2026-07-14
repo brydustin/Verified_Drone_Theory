@@ -6385,6 +6385,173 @@ definition branch2_chart2_repaired_reduced_base_IFT_residual ::
       (branch2_chart2_repaired_reduced_base_residual \<omega>0 \<omega>s
         (branch2_base_unassoc z))"
 
+text \<open>
+  Final assembly: the two full repaired residuals, then the
+  \<open>_IFT_residual\<close> wrappers, are Ck\<open>_on n\<close> UNIV for every \<open>n\<close> --- in
+  particular for \<open>n = 1\<close>, which is exactly the \<open>C1_1\<close>/\<open>C1_2\<close> hypothesis
+  \<open>branch2_repaired_reduced_base_C1_regular_rank_allI_from_Ck1_and_pointwise_rank\<close>
+  needs.
+\<close>
+
+lemma branch2_chart1_repaired_reduced_base_residual_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (branch2_chart1_repaired_reduced_base_residual \<omega>0 \<omega>s ::
+      (((real^2) \<times> (real^'n::finite)) \<times> real) \<Rightarrow> (real \<times> (real^'n))) UNIV"
+proof -
+  let ?\<omega>f = "branch2_base_param_omega :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real^2"
+  let ?tf = "branch2_base_param_t :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real^'n"
+  let ?af = "branch2_base_param_a :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real"
+  let ?ellf = "\<lambda>r. ell_chart1 (?af r)"
+  have om: "Ck_on n ?\<omega>f UNIV" by (rule branch2_base_param_omega_Ck_on_n)
+  have tm: "Ck_on n ?tf UNIV" by (rule branch2_base_param_t_Ck_on_n)
+  have am: "Ck_on n ?af UNIV" by (rule branch2_base_param_a_Ck_on_n)
+  have ellm: "Ck_on n ?ellf UNIV"
+    by (rule Ck_on_compose[OF ell_chart1_Ck_on_n am]) simp
+  have first: "Ck_on n (\<lambda>r. ?ellf r \<bullet> branch2_special_coeffs \<omega>0 \<omega>s (?\<omega>f r)) UNIV"
+    by (rule branch2_special_coeffs_term_joint_Ck_on_n[OF om ellm])
+  have comp: "\<And>m. Ck_on n (\<lambda>r. if m = branch2_repair_slot
+      then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+      else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m) UNIV"
+  proof -
+    fix m :: 'n
+    show "Ck_on n (\<lambda>r. if m = branch2_repair_slot
+        then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+        else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m) UNIV"
+    proof (cases "m = branch2_repair_slot")
+      case True
+      thus ?thesis
+        using branch2_reduced_gradU_scalar_Ck_on_n[of n \<omega>0 \<omega>s]
+        by simp
+    next
+      case False
+      thus ?thesis
+        using branch2_radial_scalar_reduced_eq_joint_Ck_on_n[OF om tm ellm, where m = m]
+        by simp
+    qed
+  qed
+  have second: "Ck_on n (\<lambda>r. (\<chi> m. if m = branch2_repair_slot
+      then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+      else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m)
+      :: real^'n) UNIV"
+    by (rule Ck_on_vec_lambda[OF comp open_UNIV])
+  have eq: "\<And>r. branch2_chart1_repaired_reduced_base_residual \<omega>0 \<omega>s r =
+      (?ellf r \<bullet> branch2_special_coeffs \<omega>0 \<omega>s (?\<omega>f r),
+       (\<chi> m. if m = branch2_repair_slot
+         then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+         else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m))"
+    unfolding branch2_chart1_repaired_reduced_base_residual_def Let_def ..
+  show ?thesis
+    unfolding eq
+    by (rule Ck_on_Pair[OF first second])
+qed
+
+lemma branch2_chart2_repaired_reduced_base_residual_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (branch2_chart2_repaired_reduced_base_residual \<omega>0 \<omega>s ::
+      (((real^2) \<times> (real^'n::finite)) \<times> real) \<Rightarrow> (real \<times> (real^'n))) UNIV"
+proof -
+  let ?\<omega>f = "branch2_base_param_omega :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real^2"
+  let ?tf = "branch2_base_param_t :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real^'n"
+  let ?af = "branch2_base_param_a :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real"
+  let ?ellf = "\<lambda>r. ell_chart2 (?af r)"
+  have om: "Ck_on n ?\<omega>f UNIV" by (rule branch2_base_param_omega_Ck_on_n)
+  have tm: "Ck_on n ?tf UNIV" by (rule branch2_base_param_t_Ck_on_n)
+  have am: "Ck_on n ?af UNIV" by (rule branch2_base_param_a_Ck_on_n)
+  have ellm: "Ck_on n ?ellf UNIV"
+    by (rule Ck_on_compose[OF ell_chart2_Ck_on_n am]) simp
+  have first: "Ck_on n (\<lambda>r. ?ellf r \<bullet> branch2_special_coeffs \<omega>0 \<omega>s (?\<omega>f r)) UNIV"
+    by (rule branch2_special_coeffs_term_joint_Ck_on_n[OF om ellm])
+  have comp: "\<And>m. Ck_on n (\<lambda>r. if m = branch2_repair_slot
+      then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+      else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m) UNIV"
+  proof -
+    fix m :: 'n
+    show "Ck_on n (\<lambda>r. if m = branch2_repair_slot
+        then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+        else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m) UNIV"
+    proof (cases "m = branch2_repair_slot")
+      case True
+      thus ?thesis
+        using branch2_reduced_gradU_scalar_Ck_on_n[of n \<omega>0 \<omega>s]
+        by simp
+    next
+      case False
+      thus ?thesis
+        using branch2_radial_scalar_reduced_eq_joint_Ck_on_n[OF om tm ellm, where m = m]
+        by simp
+    qed
+  qed
+  have second: "Ck_on n (\<lambda>r. (\<chi> m. if m = branch2_repair_slot
+      then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+      else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m)
+      :: real^'n) UNIV"
+    by (rule Ck_on_vec_lambda[OF comp open_UNIV])
+  have eq: "\<And>r. branch2_chart2_repaired_reduced_base_residual \<omega>0 \<omega>s r =
+      (?ellf r \<bullet> branch2_special_coeffs \<omega>0 \<omega>s (?\<omega>f r),
+       (\<chi> m. if m = branch2_repair_slot
+         then branch2_reduced_gradU_scalar \<omega>0 \<omega>s r
+         else branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s (?\<omega>f r) (?tf r) (?ellf r) m))"
+    unfolding branch2_chart2_repaired_reduced_base_residual_def Let_def ..
+  show ?thesis
+    unfolding eq
+    by (rule Ck_on_Pair[OF first second])
+qed
+
+lemma branch2_base_unassoc_Ck_on_n:
+  "Ck_on n (branch2_base_unassoc ::
+      ((real^2) \<times> ((real^'n::finite) \<times> real)) \<Rightarrow> (((real^2) \<times> (real^'n)) \<times> real)) UNIV"
+proof -
+  have eq: "\<And>z. branch2_base_unassoc z = ((fst z, fst (snd z)), snd (snd z))"
+    unfolding branch2_base_unassoc_def ..
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_Pair Ck_on_fst Ck_on_snd
+        Ck_on_compose[OF Ck_on_fst Ck_on_snd] Ck_on_compose[OF Ck_on_snd Ck_on_snd]; simp)
+qed
+
+lemma branch2_residual_to_IFT_range_Ck_on_n:
+  "Ck_on n (branch2_residual_to_IFT_range ::
+      (real \<times> (real^'n::finite)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+proof -
+  have eq: "\<And>y. branch2_residual_to_IFT_range y = (snd y, fst y)"
+    unfolding branch2_residual_to_IFT_range_def ..
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_Pair Ck_on_fst Ck_on_snd)
+qed
+
+lemma branch2_chart1_repaired_reduced_base_IFT_residual_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+      ((real^2) \<times> ((real^'n::finite) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+  unfolding branch2_chart1_repaired_reduced_base_IFT_residual_def
+proof (rule Ck_on_compose[OF branch2_residual_to_IFT_range_Ck_on_n
+    Ck_on_compose[OF branch2_chart1_repaired_reduced_base_residual_Ck_on_n
+      branch2_base_unassoc_Ck_on_n]])
+  show "\<And>y :: (real^2) \<times> ((real^'n) \<times> real). y \<in> UNIV \<Longrightarrow>
+      branch2_chart1_repaired_reduced_base_residual \<omega>0 \<omega>s (branch2_base_unassoc y)
+        \<in> (UNIV :: (real \<times> (real^'n)) set)" by simp
+next
+  show "\<And>y :: (real^2) \<times> ((real^'n) \<times> real). y \<in> UNIV \<Longrightarrow>
+      branch2_base_unassoc y \<in> (UNIV :: (((real^2) \<times> (real^'n)) \<times> real) set)" by simp
+qed
+
+lemma branch2_chart2_repaired_reduced_base_IFT_residual_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+      ((real^2) \<times> ((real^'n::finite) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+  unfolding branch2_chart2_repaired_reduced_base_IFT_residual_def
+proof (rule Ck_on_compose[OF branch2_residual_to_IFT_range_Ck_on_n
+    Ck_on_compose[OF branch2_chart2_repaired_reduced_base_residual_Ck_on_n
+      branch2_base_unassoc_Ck_on_n]])
+  show "\<And>y :: (real^2) \<times> ((real^'n) \<times> real). y \<in> UNIV \<Longrightarrow>
+      branch2_chart2_repaired_reduced_base_residual \<omega>0 \<omega>s (branch2_base_unassoc y)
+        \<in> (UNIV :: (real \<times> (real^'n)) set)" by simp
+next
+  show "\<And>y :: (real^2) \<times> ((real^'n) \<times> real). y \<in> UNIV \<Longrightarrow>
+      branch2_base_unassoc y \<in> (UNIV :: (((real^2) \<times> (real^'n)) \<times> real) set)" by simp
+qed
+
 definition branch2_chart1_repaired_reduced_base_regular_rank ::
   "((real^2)^'n::finite) set \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow>
     (real^2) set \<Rightarrow> nat \<Rightarrow> bool" where
