@@ -5290,6 +5290,85 @@ lemma branch2_cross_combo_inner_c_eq_det:
 definition A_t_weighted_moment :: "real^('n::finite) \<Rightarrow> complex" where
   "A_t_weighted_moment t = (\<Sum>m\<in>UNIV. of_real (vec_nth t m) * phase_t t m)"
 
+text \<open>
+  The unconditional (no \<open>c \<noteq> 0\<close> needed!) division-free identity: multiplying
+  \<open>M12_tu_special_moment\<close> by the very \<open>(c \<bullet> c)\<close> that appears in its own raw
+  \<open>t\<^sub>m/(c \<bullet> c)\<close> denominator cancels it for \<^emph>\<open>any\<close> \<open>L\<close>, not just
+  \<open>branch2_cross_combo\<close> --- at \<open>c = 0\<close> both sides are \<open>0\<close> trivially
+  (\<open>L \<bullet> 0 = 0\<close> regardless of \<open>L\<close>).  This is exactly what makes
+  \<open>branch2_radial_scalar_reduced_eq\<close> (whose \<open>M12\<close> term already carries an
+  explicit outer \<open>(c \<bullet> c)\<close> factor) smooth everywhere without needing to
+  touch its definition at all.
+\<close>
+
+lemma cc_times_M12_tu_special_moment_eq:
+  fixes t :: "real^('n::finite)" and c L :: "real^2"
+  shows "of_real (c \<bullet> c) * M12_tu_special_moment c t L
+    = of_real (L \<bullet> c) * A_t_weighted_moment t"
+proof (cases "c \<bullet> c = 0")
+  case True
+  hence c0: "c = 0" by simp
+  hence "L \<bullet> c = 0" by simp
+  moreover have "M12_tu_special_moment c t L = 0"
+    unfolding M12_tu_special_moment_def using c0 by simp
+  ultimately show ?thesis using True by simp
+next
+  case False
+  have step: "of_real (c \<bullet> c) * (of_real ((vec_nth t m / (c \<bullet> c)) * (L \<bullet> c)) * phase_t t m)
+      = of_real (L \<bullet> c) * (of_real (vec_nth t m) * phase_t t m)" for m
+  proof -
+    have "(c \<bullet> c) * ((vec_nth t m / (c \<bullet> c)) * (L \<bullet> c)) = vec_nth t m * (L \<bullet> c)"
+      using cc_times_div_times_Lc_eq[of c "vec_nth t m" L] by (simp add: mult.assoc)
+    hence "of_real ((c \<bullet> c) * ((vec_nth t m / (c \<bullet> c)) * (L \<bullet> c)))
+        = of_real (vec_nth t m * (L \<bullet> c))"
+      by simp
+    thus ?thesis
+      by (simp add: of_real_mult mult.assoc)
+  qed
+  have "of_real (c \<bullet> c) * M12_tu_special_moment c t L
+      = (\<Sum>m\<in>UNIV. of_real (c \<bullet> c) * (of_real ((vec_nth t m / (c \<bullet> c)) * (L \<bullet> c)) * phase_t t m))"
+    unfolding M12_tu_special_moment_def
+    by (simp only: sum_distrib_left)
+  also have "\<dots> = (\<Sum>m\<in>UNIV. of_real (L \<bullet> c) * (of_real (vec_nth t m) * phase_t t m))"
+    by (rule sum.cong[OF refl], rule step)
+  also have "\<dots> = of_real (L \<bullet> c) * A_t_weighted_moment t"
+    unfolding A_t_weighted_moment_def by (simp only: sum_distrib_left)
+  finally show ?thesis .
+qed
+
+lemma branch2_radial_scalar_reduced_eq_smooth_form:
+  fixes t :: "real^('n::finite)" and ell :: "real^2"
+  shows "branch2_radial_scalar_reduced_eq \<omega>0 \<omega>s \<omega> t ell m =
+    (let c = cvec_dip \<omega>0 \<omega>s \<omega>;
+         L = branch2_ell_combo \<omega>0 \<omega>s \<omega> ell;
+         A = A_t_moment t;
+         AW = A_t_weighted_moment t;
+         ph = phase_t t m
+     in branch2_ell_gain_deriv \<omega> ell * (2 * (c \<bullet> c) * Im (cnj A * ph))
+        + gain_dip \<omega> * (2 * (L \<bullet> c) * Re (cnj ph * AW)
+            + 2 * (L \<bullet> c) * Im (cnj A * ph)
+            - 2 * vec_nth t m * (L \<bullet> c) * Re (cnj A * ph)))"
+proof -
+  let ?c = "cvec_dip \<omega>0 \<omega>s \<omega>"
+  let ?L = "branch2_ell_combo \<omega>0 \<omega>s \<omega> ell"
+  let ?A = "A_t_moment t"
+  let ?AW = "A_t_weighted_moment t"
+  let ?ph = "phase_t t m"
+  let ?ML = "M12_tu_special_moment ?c t ?L"
+  have cc_ML: "(?c \<bullet> ?c) * ?ML = of_real (?L \<bullet> ?c) * ?AW"
+    by (rule cc_times_M12_tu_special_moment_eq)
+  have cc_ML_Re: "(?c \<bullet> ?c) * Re ?ML = (?L \<bullet> ?c) * Re ?AW"
+    using arg_cong[OF cc_ML, of Re] by simp
+  have cc_ML_Im: "(?c \<bullet> ?c) * Im ?ML = (?L \<bullet> ?c) * Im ?AW"
+    using arg_cong[OF cc_ML, of Im] by simp
+  have div_term: "(?c \<bullet> ?c) * ((vec_nth t m / (?c \<bullet> ?c)) * (?L \<bullet> ?c)) = vec_nth t m * (?L \<bullet> ?c)"
+    using cc_times_div_times_Lc_eq[of ?c "vec_nth t m" ?L] by (simp add: mult.assoc)
+  show ?thesis
+    unfolding branch2_radial_scalar_reduced_eq_def Let_def
+    by (simp add: cc_ML_Re cc_ML_Im div_term algebra_simps
+        del: div_by_1 mult_cancel_left mult_cancel_left1 mult_cancel_left2)
+qed
+
 lemma M12_tu_special_moment_cross_combo_eq:
   fixes t :: "real^('n::finite)"
   assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
