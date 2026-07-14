@@ -5548,6 +5548,85 @@ proof -
     using oU by (simp add: Ck_on_iff_higher_differentiable_on)
 qed
 
+text \<open>
+  The complex-valued primitives (\<open>phase_t\<close>, \<open>A_t_moment\<close>,
+  \<open>A_t_weighted_moment\<close>) are all built from \<open>cis\<close>, \<open>complex_of_real\<close>, and
+  finite sums, so they need no Re/Im decomposition at all: \<open>complex_of_real\<close>
+  and \<open>cnj\<close> are \<open>bounded_linear\<close> (hence \<open>Ck_on\<close> for every \<open>n\<close>, everywhere),
+  and \<open>cis \<theta> = complex_of_real (cos \<theta>) + \<i> * complex_of_real (sin \<theta>)\<close> composes
+  directly with \<open>sin_cos_higher_differentiable_on\<close>.
+\<close>
+
+lemma complex_of_real_Ck_on_n: "Ck_on n complex_of_real UNIV"
+  using bounded_linear.higher_differentiable_on[OF bounded_linear_of_real, of UNIV n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma cnj_Ck_on_n: "Ck_on n cnj UNIV"
+  using bounded_linear.higher_differentiable_on[OF bounded_linear_cnj, of UNIV n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma sin_Ck_on_n: "Ck_on n (sin :: real \<Rightarrow> real) UNIV"
+  using sin_cos_higher_differentiable_on[of n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma cos_Ck_on_n: "Ck_on n (cos :: real \<Rightarrow> real) UNIV"
+  using sin_cos_higher_differentiable_on[of n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma cis_Ck_on_n: "Ck_on n cis UNIV"
+proof -
+  have eq: "\<And>\<theta>. cis \<theta> = complex_of_real (cos \<theta>) + \<i> * complex_of_real (sin \<theta>)"
+    by (simp add: complex_eq_iff)
+  have c1: "Ck_on n (\<lambda>\<theta>. complex_of_real (cos \<theta>)) UNIV"
+  proof (rule Ck_on_compose[OF complex_of_real_Ck_on_n cos_Ck_on_n])
+    show "\<And>y :: real. y \<in> UNIV \<Longrightarrow> cos y \<in> UNIV" by simp
+  qed
+  have c2: "Ck_on n (\<lambda>\<theta>. \<i> * complex_of_real (sin \<theta>)) UNIV"
+  proof -
+    have s: "Ck_on n (\<lambda>\<theta>. complex_of_real (sin \<theta>)) UNIV"
+    proof (rule Ck_on_compose[OF complex_of_real_Ck_on_n sin_Ck_on_n])
+      show "\<And>y :: real. y \<in> UNIV \<Longrightarrow> sin y \<in> UNIV" by simp
+    qed
+    show ?thesis
+      by (rule Ck_on_mult_alg[OF Ck_on_const[OF open_UNIV] s])
+  qed
+  show ?thesis
+    unfolding eq
+    by (rule Ck_on_add[OF c1 c2])
+qed
+
+lemma phase_t_Ck_on_n:
+  fixes m :: "'n::finite"
+  shows "Ck_on n (\<lambda>t :: real^'n. phase_t t m) UNIV"
+proof -
+  have eq: "\<And>t :: real^'n. phase_t t m = cis (- vec_nth t m)"
+    unfolding phase_t_def ..
+  have neg: "Ck_on n (\<lambda>t :: real^'n. - vec_nth t m) UNIV"
+    using Ck_on_neg[OF vec_nth_Ck_on_n[where 'k = 'n]] .
+  show ?thesis
+    unfolding eq
+  proof (rule Ck_on_compose[OF cis_Ck_on_n neg])
+    show "\<And>t :: real^'n. t \<in> UNIV \<Longrightarrow> - vec_nth t m \<in> (UNIV :: real set)" by simp
+  qed
+qed
+
+lemma A_t_moment_Ck_on_n:
+  fixes t :: "real^('n::finite)"
+  shows "Ck_on n (A_t_moment :: real^'n \<Rightarrow> complex) UNIV"
+  unfolding A_t_moment_def
+  by (intro Ck_on_sum phase_t_Ck_on_n) auto
+
+lemma A_t_weighted_moment_Ck_on_n:
+  fixes t :: "real^('n::finite)"
+  shows "Ck_on n (A_t_weighted_moment :: real^'n \<Rightarrow> complex) UNIV"
+proof -
+  have coord: "\<And>m :: 'n. Ck_on n (\<lambda>t :: real^'n. complex_of_real (vec_nth t m)) UNIV"
+    by (rule Ck_on_compose[OF complex_of_real_Ck_on_n vec_nth_Ck_on_n[where 'k = 'n]]) simp
+  show ?thesis
+    unfolding A_t_weighted_moment_def
+    by (intro Ck_on_sum Ck_on_mult_alg[OF coord phase_t_Ck_on_n]) auto
+qed
+
 lemma det_matrix_Dcvec_dip_Ck_on_n:
   fixes \<omega>0 \<omega>s :: "real^2"
   shows "Ck_on n (\<lambda>\<omega>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
