@@ -5398,6 +5398,193 @@ proof -
     by (simp only: of_real_mult sum_distrib_left mult.assoc)
 qed
 
+subsection \<open>\<section>7ai: the Ck_on smoothness toolkit for the repaired residuals\<close>
+
+text \<open>
+  Every primitive the two repaired residuals are built from is globally
+  \<open>C\<^sup>\<infinity>\<close> (in fact real-analytic): \<open>gdip\<close>, \<open>gain_dip\<close>, \<open>cvec_dip\<close> are already
+  \<open>higher_differentiable_on UNIV \<dots> n\<close> for every \<open>n\<close> on the heap
+  (\<open>gdip_higher_differentiable_on\<close>, \<open>gain_dip_higher_differentiable_on\<close>,
+  \<open>cvec_dip_higher_differentiable_on\<close>); \<open>Dcvec_dip\<close> and directional derivatives
+  of \<open>gdip\<close> inherit this by peeling one \<open>Ck_at (Suc n)\<close> layer via
+  @{thm Ck_at.simps(2)}.  Combined with the existing \<open>Ck_on\<close> calculus
+  (\<open>Ck_on_add/sub/mult/inner/compose/sum\<close>), this gives Ck\<open>_on\<close> for every
+  composite quantity (\<open>branch2_ell_combo\<close>, \<open>branch2_cross_combo\<close>,
+  \<open>branch2_special_coeffs\<close>, \<open>det (matrix (Dcvec_dip \<dots>))\<close>,
+  \<open>branch2_ell_gain_deriv\<close>, \<open>phase_t\<close>, \<open>A_t_moment\<close>, \<open>A_t_weighted_moment\<close>).
+\<close>
+
+lemma gdip_Ck_on_n: "Ck_on n gdip UNIV"
+  using gdip_higher_differentiable_on[of n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma gain_dip_Ck_on_n: "Ck_on n gain_dip UNIV"
+  using gain_dip_higher_differentiable_on[of n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma cvec_dip_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (cvec_dip \<omega>0 \<omega>s) UNIV"
+  using cvec_dip_higher_differentiable_on[of \<omega>0 \<omega>s n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma frechet_derivative_gdip_dir_Ck_on:
+  fixes v :: real
+  shows "Ck_on n (\<lambda>\<theta>. frechet_derivative gdip (at \<theta>) v) UNIV"
+proof -
+  have Cat: "Ck_at (Suc n) gdip x" for x
+    using gdip_Ck_on_n[of "Suc n"] unfolding Ck_on_def by blast
+  have unfold: "Ck_at (Suc n) gdip x =
+      ((\<exists>A. open A \<and> x \<in> A \<and> (\<forall>y\<in>A. Ck_at n gdip y))
+       \<and> gdip differentiable (at x)
+       \<and> (\<forall>v. Ck_at n (\<lambda>y. frechet_derivative gdip (at y) v) x))" for x
+    by (rule Ck_at.simps(2))
+  have step: "Ck_at n (\<lambda>y. frechet_derivative gdip (at y) v) x" for x
+    using Cat[of x] unfold[of x] by blast
+  show ?thesis
+    unfolding Ck_on_def using step open_UNIV by blast
+qed
+
+lemma Dcvec_dip_dir_Ck_on:
+  fixes \<omega>0 \<omega>s h :: "real^2"
+  shows "Ck_on n (\<lambda>\<omega>. Dcvec_dip \<omega>0 \<omega>s \<omega> h) UNIV"
+proof -
+  have Cat: "Ck_at (Suc n) (cvec_dip \<omega>0 \<omega>s) x" for x
+    using cvec_dip_Ck_on_n[of "Suc n" \<omega>0 \<omega>s]
+    unfolding Ck_on_def by blast
+  have unfold: "Ck_at (Suc n) (cvec_dip \<omega>0 \<omega>s) x =
+      ((\<exists>A. open A \<and> x \<in> A \<and> (\<forall>y\<in>A. Ck_at n (cvec_dip \<omega>0 \<omega>s) y))
+       \<and> (cvec_dip \<omega>0 \<omega>s) differentiable (at x)
+       \<and> (\<forall>v. Ck_at n (\<lambda>y. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at y) v) x))" for x
+    by (rule Ck_at.simps(2))
+  have step: "Ck_at n (\<lambda>y. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at y) h) x" for x
+    using Cat[of x] unfold[of x] by blast
+  hence step2: "Ck_at n (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) x" for x
+    using frechet_derivative_cvec_dip by (simp add: fun_eq_iff)
+  show ?thesis
+    unfolding Ck_on_def using step2 open_UNIV by blast
+qed
+
+lemma vec_nth_Ck_on_n:
+  fixes j :: "'k::finite"
+  shows "Ck_on n (\<lambda>x :: real^'k. vec_nth x j) UNIV"
+proof -
+  have "(\<lambda>x :: real^'k. vec_nth x j) = (\<lambda>x. inner x (axis j 1))"
+    by (rule ext) (simp add: inner_axis)
+  thus ?thesis
+    using Ck_on_inner[OF Ck_on_id[OF open_UNIV] Ck_on_const[where c = "axis j 1" and U = UNIV, OF open_UNIV]]
+    by simp
+qed
+
+lemma perp2_Ck_on_n: "Ck_on n perp2 UNIV"
+  using bounded_linear.higher_differentiable_on[OF bounded_linear_perp2, of UNIV n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma branch2_ell_combo_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2" and ell :: "real^2"
+  shows "Ck_on n (\<lambda>\<omega>. branch2_ell_combo \<omega>0 \<omega>s \<omega> ell) UNIV"
+  unfolding branch2_ell_combo_def
+  by (intro Ck_on_add Ck_on_scaleR Dcvec_dip_dir_Ck_on Ck_on_const open_UNIV)
+
+lemma Dcvec_dip_dir_component_Ck_on_n:
+  fixes \<omega>0 \<omega>s h :: "real^2" and j :: 2
+  shows "Ck_on n (\<lambda>\<omega>. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> h) j) UNIV"
+proof (rule Ck_on_compose[OF vec_nth_Ck_on_n Dcvec_dip_dir_Ck_on])
+  show "\<And>y :: real^2. y \<in> UNIV \<Longrightarrow> Dcvec_dip \<omega>0 \<omega>s y h \<in> UNIV" by simp
+qed
+
+lemma frechet_derivative_gdip_dir_proj_Ck_on_n:
+  fixes v :: real
+  shows "Ck_on n (\<lambda>\<omega>::real^2. frechet_derivative gdip (at (vec_nth \<omega> 1)) v) UNIV"
+proof (rule Ck_on_compose[OF frechet_derivative_gdip_dir_Ck_on vec_nth_Ck_on_n[where 'k = 2]])
+  show "\<And>\<omega> :: real^2. \<omega> \<in> UNIV \<Longrightarrow> vec_nth \<omega> 1 \<in> (UNIV :: real set)" by simp
+qed
+
+lemma perp2_cvec_dip_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (\<lambda>\<omega>. perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)) UNIV"
+proof (rule Ck_on_compose[OF perp2_Ck_on_n cvec_dip_Ck_on_n])
+  show "\<And>y :: real^2. y \<in> UNIV \<Longrightarrow> cvec_dip \<omega>0 \<omega>s y \<in> UNIV" by simp
+qed
+
+text \<open>
+  The project's \<open>Ck_on_scaleR\<close>/\<open>Ck_on_mult\<close> wrappers only cover a
+  \<^emph>\<open>constant\<close> scalar / real-valued factors.  The underlying AFP fact
+  \<open>bounded_bilinear.higher_differentiable_on\<close> is fully general (any bounded
+  bilinear operator, including a \<^emph>\<open>varying\<close> real scalar times a vector, or
+  multiplication in any \<open>real_normed_algebra\<close> such as \<open>complex\<close>); these two
+  wrappers expose that generality for \<open>Ck_on\<close>.
+\<close>
+
+lemma Ck_on_scaleR_fun:
+  fixes c :: "'a::real_normed_vector \<Rightarrow> real" and f :: "'a \<Rightarrow> 'b::real_normed_vector"
+  assumes "Ck_on k c U" and "Ck_on k f U"
+  shows "Ck_on k (\<lambda>y. c y *\<^sub>R f y) U"
+proof -
+  have oU: "open U" using assms(1) by (simp add: Ck_on_def)
+  have hc: "higher_differentiable_on U c k"
+    using assms(1) oU by (simp add: Ck_on_iff_higher_differentiable_on)
+  have hf: "higher_differentiable_on U f k"
+    using assms(2) oU by (simp add: Ck_on_iff_higher_differentiable_on)
+  have "higher_differentiable_on U (\<lambda>y. c y *\<^sub>R f y) k"
+    using higher_differentiable_on_scaleR[OF hc hf oU] .
+  thus ?thesis
+    using oU by (simp add: Ck_on_iff_higher_differentiable_on)
+qed
+
+lemma Ck_on_mult_alg:
+  fixes f g :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_algebra"
+  assumes "Ck_on k f U" and "Ck_on k g U"
+  shows "Ck_on k (\<lambda>y. f y * g y) U"
+proof -
+  have oU: "open U" using assms(1) by (simp add: Ck_on_def)
+  have hf: "higher_differentiable_on U f k"
+    using assms(1) oU by (simp add: Ck_on_iff_higher_differentiable_on)
+  have hg: "higher_differentiable_on U g k"
+    using assms(2) oU by (simp add: Ck_on_iff_higher_differentiable_on)
+  have "higher_differentiable_on U (\<lambda>y. f y * g y) k"
+    using higher_differentiable_on_mult[OF hf hg oU] .
+  thus ?thesis
+    using oU by (simp add: Ck_on_iff_higher_differentiable_on)
+qed
+
+lemma det_matrix_Dcvec_dip_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (\<lambda>\<omega>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
+proof -
+  have eq: "\<And>\<omega>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) =
+      vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (1::2) 1)) 1
+        * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 2
+      - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (2::2) 1)) 1
+        * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis (1::2) 1)) 2"
+    by (simp add: det_2 matrix_def)
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_sub Ck_on_mult Dcvec_dip_dir_component_Ck_on_n)
+qed
+
+lemma branch2_cross_combo_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (\<lambda>\<omega>. branch2_cross_combo \<omega>0 \<omega>s \<omega>) UNIV"
+  unfolding branch2_cross_combo_def Let_def
+  by (intro Ck_on_sub Ck_on_scaleR_fun Ck_on_inner Dcvec_dip_dir_Ck_on
+      perp2_cvec_dip_Ck_on_n; simp)
+
+lemma branch2_ell_gain_deriv_Ck_on_n:
+  fixes ell :: "real^2"
+  shows "Ck_on n (\<lambda>\<omega>. branch2_ell_gain_deriv \<omega> ell) UNIV"
+proof -
+  have eq: "\<And>\<omega>. branch2_ell_gain_deriv \<omega> ell =
+      vec_nth ell 1 * frechet_derivative gdip (at (vec_nth \<omega> 1)) 1
+      + vec_nth ell 2 * frechet_derivative gdip (at (vec_nth \<omega> 1)) 0"
+    unfolding branch2_ell_gain_deriv_def
+    by (simp add: inner_vec_def sum_2 axis_def)
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_add Ck_on_mult Ck_on_const frechet_derivative_gdip_dir_proj_Ck_on_n
+        open_UNIV)
+qed
+
 text \<open>
   \<^bold>\<open>Division-free by construction.\<close>  The raw \<open>M12_tu_special_moment c t L\<close>
   formula (with \<open>L = branch2_cross_combo\<close>) hides a genuine \<open>0/0\<close> at
