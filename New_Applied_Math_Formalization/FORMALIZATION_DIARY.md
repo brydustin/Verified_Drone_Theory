@@ -8277,3 +8277,27 @@ supported, not-yet-symbolically-analyzed hypothesis (`reg1`/`reg2`), with
 every other piece — including full global C¹ smoothness, previously the
 other half of the obligation — unconditionally verified. This is the
 tightest D4 has ever been.
+
+**Correction/refinement (same session, immediately after the above):** the
+"block-repeated, rank-deficient (n-1)x(n-1) t-only submatrix" numeric example
+noted above was a RED HERRING from sloppy filtering, not a structural finding
+— that specific sampled root had `det(matrix(Dcvec_dip))≈-4.5e-7` (i.e. it
+was NOT actually a valid det-bounded system point; the earlier batch loop's
+own filters had correctly rejected it and moved to a later trial, but a
+follow-up ad hoc script skipped the filters). Redone properly (first trial
+that genuinely passes `cc>1e-2` and `|detD|>5e-2`, `n=6`): the
+`(n-1)x(n-1)` submatrix `∂F_m/∂t_k` for `m,k ≠ slot` alone has singular
+values `[4.20, 2.18, 0.24, 0.24, 0.04]` — full rank 5/5, well short of
+numerically singular. This is a MUCH more promising structural lead than
+first feared: it suggests the natural proof strategy is (a) show the
+`(n-1)x(n-1)` non-slot t-block is generically invertible in closed form
+(plausibly a DFT/Vandermonde-like determinant in the `phase_t t m = e^{-i t_m}`
+values — NOT yet derived symbolically), giving `n-1` independent directions
+outright, then (b) find 2 more independent directions (natural candidates:
+the special-coeffs row's `ω`-dependence via `det(Dcvec)≠0`, and the R*/slot
+row) to reach the full `n+1`. Still not attempted symbolically — the sympy
+closed-form determinant of that block is the concrete next semi-formal step.
+Lesson re-logged for the obvious reason: always re-apply the SAME validity
+filters when re-probing a specific numeric solution outside the original
+batch loop, or you will "rediscover" a false structural collapse at what is
+actually a rejected degenerate point.
