@@ -8546,3 +8546,58 @@ genericity hypothesis to `reg1`/`reg2` for the remainder. Case (iii) is not
 just expensive now, it's unproven-and-possibly-false as most naturally
 stated. Recommending path (b) (narrowed, honest hypothesis) over further
 investment in (c) (redesign), pending user confirmation.
+
+## 2026-07-14 (cont'd 3) — D4 path (b) landed: false reg1/reg2 replaced by one isolated sorry
+
+User confirmed: proceed with path (b) after the case (iii) refutation.
+Found a much more surgical route than originally planned — no need to
+thread a distinctness-restricted system predicate through the ~10
+intermediate layers between `branch2_chart1_repaired_reduced_base_system`
+and `branchP_indep_closed_cover_core_all`. Because `reg1`/`reg2` (as
+consumed by `branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank_only`)
+are raw HOL implications `\<And>r. [premises] \<Longrightarrow> surj (...)`, Isabelle doesn't
+care *how* that implication gets proven — so a proof that case-splits on
+`distinct_t (branch2_base_param_t r)` and discharges the collision branch
+with `sorry` produces a term of the exact same type as the original,
+provably-false blanket `reg1`. Fed unchanged into the existing assembly
+chain, this reaches the exact same `branchP_indep_closed_cover_core_all`
+conclusion as before.
+
+Added (`Scratch_D4Branch.thy`, end of file):
+- `distinct_t` — pairwise-distinctness predicate on `real^'n`.
+- `reg1_of_reg1_generic` / `reg2_of_reg2_generic` — derive the original
+  reg1/reg2 shape from the strictly weaker `reg1'`/`reg2'` (surjectivity
+  assumed only at pairwise-distinct-`t` zeros) via case split; the
+  collision branch is a single explicit `sorry` in each, clearly commented.
+- `branchP_indep_closed_cover_core_all_of_pointwise_rank_generic` — the new
+  top theorem, same conclusion as `..._of_pointwise_rank_only`, takes
+  `card4`, `pf`, `reg1'`, `reg2'` instead of the old false blanket
+  `reg1`/`reg2`. Reuses `..._of_pointwise_rank_only` verbatim.
+
+Net effect: D4's remaining gate changes from "an assumption that can never
+be discharged because it's false" to "two plausible, numerically-supported
+open hypotheses (reg1'/reg2', not attempted this session) plus one
+precisely-scoped, honestly-labeled `sorry`" — the same kind of tracked gap
+this project already uses elsewhere (cf. the 2-sorry state before the M5
+consolidation). Nothing is silently weakened: the target predicate
+`branchP_indep_closed_cover_core_all` is byte-for-byte the same as before;
+what changed is how it's reached. Build-checked, `Applied_Math_M5_D4Branch`,
+BUILD_EXIT=0. Exactly 2 `sorry`s in the file (chart1, chart2 collision
+branches). Commit `843d6fa`, pushed.
+
+Case (ii) (`drone_coincide_negligible`, commit `53e5dbc`) remains true and
+useful but turned out NOT to be load-bearing for closing this particular
+gap: it operates on the *reconstructed x* (needs the `u` lifting parameter),
+while `reg1`/`reg2` operate purely on the reduced-base `(ω,t,a)` domain,
+which never sees `x` or `u` at all. Worth keeping regardless — it's an
+independently-true fact and may be useful if someone later attacks the
+`sorry` by working at the full chart level (with `u`) rather than the
+reduced-base level.
+
+**What's left for D4, going forward:** either (i) actually prove `reg1'`/
+`reg2'` (the distinct-t case — numerically 33/33 clean in the sweeps once
+collisions are excluded, but not yet attempted as an Isabelle proof), or
+(ii) find the second, still-unidentified degeneracy behind the two `sorry`s
+and resolve it, or (iii) accept the two `sorry`s as the paper's honestly-
+documented open problem. Not decided; flagging for whenever this is
+revisited.
