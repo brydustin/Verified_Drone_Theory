@@ -5627,6 +5627,44 @@ proof -
     by (intro Ck_on_sum Ck_on_mult_alg[OF coord phase_t_Ck_on_n]) auto
 qed
 
+text \<open>
+  Two remaining structural pieces let the final residual composition go
+  through purely by Ck\<open>_on\<close> calculus: pairing (\<open>branch2_base_unassoc\<close>,
+  \<open>branch2_residual_to_IFT_range\<close>, and the residual's own \<open>(real, real^'n)\<close>
+  pair codomain) and vec-lambda reconstruction (the repair-slot's
+  if-then-else component vector).
+\<close>
+
+lemma Ck_on_Pair:
+  fixes f :: "'a::real_normed_vector \<Rightarrow> 'b::real_normed_vector"
+    and g :: "'a \<Rightarrow> 'c::real_normed_vector"
+  assumes "Ck_on k f U" and "Ck_on k g U"
+  shows "Ck_on k (\<lambda>x. (f x, g x)) U"
+proof -
+  have oU: "open U" using assms(1) by (simp add: Ck_on_def)
+  have hf: "higher_differentiable_on U f k"
+    using assms(1) oU by (simp add: Ck_on_iff_higher_differentiable_on)
+  have hg: "higher_differentiable_on U g k"
+    using assms(2) oU by (simp add: Ck_on_iff_higher_differentiable_on)
+  have "higher_differentiable_on U (\<lambda>x. (f x, g x)) k"
+    by (rule higher_differentiable_on_Pair[OF oU hf hg])
+  thus ?thesis
+    using oU by (simp add: Ck_on_iff_higher_differentiable_on)
+qed
+
+lemma Ck_on_vec_lambda:
+  fixes F :: "'m::finite \<Rightarrow> 'a::real_normed_vector \<Rightarrow> real"
+  assumes CkF: "\<And>i. Ck_on k (F i) U" and oU: "open U"
+  shows "Ck_on k (\<lambda>x. (\<chi> i. F i x) :: real^'m) U"
+proof -
+  have eq: "\<And>x. (\<chi> i. F i x) = (\<Sum>i\<in>UNIV. F i x *\<^sub>R (axis i 1 :: real^'m))"
+    by (simp add: Finite_Cartesian_Product.vec_eq_iff axis_def if_distrib
+        cong: if_cong)
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_sum Ck_on_scaleR_fun CkF Ck_on_const oU) auto
+qed
+
 lemma det_matrix_Dcvec_dip_Ck_on_n:
   fixes \<omega>0 \<omega>s :: "real^2"
   shows "Ck_on n (\<lambda>\<omega>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
