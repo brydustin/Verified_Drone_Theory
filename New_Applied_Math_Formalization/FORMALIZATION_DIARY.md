@@ -8148,3 +8148,132 @@ condition before attempting fact 2 in Isar.
 
 Splice into `m5_D34_D4_branchP` in the Robust3 consolidation still remains
 once facts 1-2 (or the whole `C1_regular_rank_all`) are proven.
+
+## 2026-07-13/14 (autonomous, no-check-in session): fact 1 (Ck1) CLOSED unconditionally
+
+Long autonomous session (per "make appropriate edits... ultrathink" then "keep
+working until you run out of tokens"). Fact 1 above is now **fully and
+unconditionally proven** — `Scratch_D4Branch.thy` grew from 8273 to 9292 lines
+across 12 verified commits (`c103b59`..`c5392d7`), every one independently
+BUILD_EXIT=0 with zero sorrys before committing.
+
+**The real find:** while trying to prove `Ck_on (Suc 0) residual UNIV`, the
+semi-formal-first discipline caught a genuine bug, not just a hard proof.
+`branch2_reduced_gradU_scalar` (R*, the repair-slot term) computed
+`M12_tu_special_moment c t L` RAW (no outer `(c∙c)` factor to cancel the
+`t_m/(c∙c)` division inside), and at ω with `cvec_dip ω0 ωs ω = 0`, this
+evaluates to `0` by HOL's `x/0=0` convention — but the true (removable-limit)
+value is `det(matrix(Dcvec_dip ω0 ωs ω)) · t_m`, generically **nonzero**. A
+genuine jump discontinuity, meaning `Ck_on (Suc 0) residual UNIV` was FALSE
+for the as-written R*, not merely hard to prove.
+
+**The fix:** a 2D Binet-Cauchy identity,
+`branch2_cross_combo ω0 ωs ω ∙ c = det(matrix(Dcvec_dip ω0 ωs ω)) * (c∙c)`
+(proven via `det_2`/`perp2_def` component algebra), generalized to an
+UNCONDITIONAL identity `of_real(c∙c) * M12_tu_special_moment c t L =
+of_real(L∙c) * A_t_weighted_moment t` (new moment `Σ t_m · phase_t t m`) that
+holds even at `c=0` (both sides trivially 0, since `L∙0=0` for any L). This
+gave a division-free, everywhere-smooth closed form for R* (definition
+literally rewritten in place — the one-time-only, carefully-scoped exception
+to append-only discipline this session, verified to have exactly one affected
+downstream proof via grep before editing), and — for the OTHER residual term
+`branch2_radial_scalar_reduced_eq`, which already had a safe outer `(c∙c)`
+factor — an unconditional equal-everywhere rewrite lemma with NO definition
+change needed at all.
+
+**The smoothness toolkit built from scratch:** ~15 new `Ck_on` lemmas
+generalizing the project's constant-scalar-only `Ck_on_scaleR` and real-only
+`Ck_on_mult` to the fully general underlying AFP fact
+`bounded_bilinear.higher_differentiable_on` (any bounded bilinear op,
+including varying-scalar `*R` and complex multiplication — no Re/Im
+decomposition needed anywhere), plus `Ck_on_Pair`/`Ck_on_vec_lambda`
+(reconstructing a `real^m`-valued function from real components, needed for
+the repair-slot if-then-else vector) and `Ck_on_fst`/`Ck_on_snd`/`Ck_on_compose`
+wrappers for every primitive (`gdip`, `gain_dip`, `cvec_dip`, `Dcvec_dip`,
+`cis`/`phase_t`/`A_t_moment`/`A_t_weighted_moment`, `det(matrix(Dcvec_dip))`,
+`branch2_ell_combo`/`branch2_ell_gain_deriv` — both generalized to a JOINT
+(ω, ell)-varying form since `ell = ell_chart1/2(branch2_base_param_a r)`
+varies with the base point too).
+
+**Endpoint:** `branch2_chart1/2_repaired_reduced_base_IFT_residual_Ck_on_n`
+proves `Ck_on n (...) UNIV` for BOTH charts, for every `n` (specializes to
+`Suc 0`). Two new capstones wire this into the existing machinery, discharging
+`C1_1`/`C1_2` automatically:
+- `branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank_only`
+- `branchP_indep_closed_cover_core_all_of_pointwise_rank_only` — **the true
+  final theorem**: given `card4` and the design's `sin`-nonvanishing
+  condition, `branchP_indep_closed_cover_core_all` (hence D4) follows from
+  ONLY `reg1`/`reg2` (pointwise derivative surjectivity at det-bounded system
+  zeros). This is the sole remaining mathematical content of D4.
+
+**Recurring debug traps worth remembering for the next session** (several cost
+a full build-cycle each, all now first-hit-free in memory):
+1. `have term: "..."` — `term` is a reserved Isar keyword; corrupts outer
+   syntax parsing far downstream with a confusing phantom EOF error, not at
+   the real line. (User caught this one; hit it TWICE.)
+2. Real-times-complex multiplication auto-inserts a `complex_of_real`
+   coercion; default `simp`'s `of_real_divide`-driven case-splitting then
+   corrupts naive rewrites of the raw division sum unless the coercion is
+   explicit and `sum_distrib_left` is invoked via `simp only` (not `add:`).
+3. `simp add: <eq-fact>` eagerly expands `Re(cnj z1 * z2)` into Re/Im
+   component form BEFORE a same-shaped named fact can pattern-match — derive
+   the ALREADY-expanded component version directly (`arg_cong ... of Re/Im`)
+   rather than fighting simp's expansion order; feed it via the trailing
+   `simp add:` (not just the `intro` list — `intro X Y Z; simp` runs `simp`
+   with ONLY the default set, X/Y/Z are invisible to it, a genuinely
+   surprising Isar semantics point).
+4. `intro` with many candidate rules can get stuck deep in a subterm needing
+   `Ck_on_compose` to peel a wrapper (e.g. bare `Re(...)`) if that rule isn't
+   in the list, then silently falls through to the trailing bare `simp`.
+5. `[of ...]`/`[where ...]` instantiation order follows the theorem's OWN
+   first-occurrence variable order, not the order variables appear in your
+   own proof context — got this wrong three separate times (`cvec_dip_Ck_on_n`,
+   `Ck_on_const`, `branch2_radial_scalar_reduced_eq_joint_Ck_on_n`), each
+   producing a confusing type-clash error naming an unrelated variable.
+   Positional `of` after an `OF`-prefix is especially fragile; prefer named
+   `where` for anything beyond the trivial case, but even named `where` can
+   fail with "No such variable" if the target's schematic name doesn't match
+   — when in doubt, positional `[of ...]` in DECLARATION order is safest.
+6. `exhaust_2`'s disjunctive form (`?x=1 ∨ ?x=2`) is not `dest:`-shaped
+   ("Ill-formed destruction rule"); supply as a plain `using`-fact.
+7. A `python3` marker-based block-move script matched the WRONG occurrence of
+   a repeated text marker once, silently relocating a lemma to before its own
+   dependencies (or even before the definition it names) — always grep-verify
+   the new position of BOTH ends of a moved block immediately after moving,
+   never trust the move blind.
+8. Backticks inside a `git commit -m "..."` heredoc-free string trigger bash
+   command substitution and mangle/truncate the message (harmless to the
+   code, but do a `git log -1 --format=%B` sanity check after any commit
+   message containing backticks — or just never use backticks in commit
+   messages).
+
+**Semi-formal validation of the remaining fact 2** (numerics script
+`d4_pointwise_rank_verified_form.py` in scratchpad, built against the EXACT
+verified closed forms now in the file, not the earlier heuristic version):
+15/15 in-box system points (cvec≠0, det(Dcvec)≠0, n=6) sampled via
+least-squares root-finding show FULL RANK (7/7) of the residual's Jacobian —
+strictly better than the earlier 7/7-with-one-unclassified result. This
+confirms `reg1`/`reg2` are almost certainly TRUE, not just hard. A single
+sampled Jacobian's raw numeric printout showed a superficially-degenerate
+block-repeated pattern that turned out to be a coincidental artifact of that
+one random `t`-configuration (SVD rank was still 7 there) — this is a red
+herring, not evidence against the claim; don't over-read one noisy sample.
+
+**What fact 2 will actually need:** an explicit choice of n+3 → n+1
+directions (or an explicit adjugate/Cramer argument) showing the Jacobian's
+row space is everything, presumably exploiting: (a) the `ω`-partials already
+carry the `det(matrix(Dcvec_dip))≠0` nondegeneracy for a 2D block, (b) the
+`t_m`-partials for `m ≠ slot` are close to diagonal (each `radial(...,m)`
+depends on `t_m` fairly directly via the smooth-form's own `-2·t_m·(L∙c)·Re(...)`
+term), (c) the `a`-partial and the R*-row need to be shown independent of
+that block. This has NOT been attempted symbolically yet (only numeric SVD
+rank checks) — the natural next step is a sympy symbolic Jacobian at a
+GENERIC point (not a solved root) to find the clean structural argument,
+mirroring the semi-formal-first cycle used successfully for facts 1 and the
+earlier (b4)/Σ-identity findings.
+
+State: D4 is not yet closed, but reduced to exactly ONE precise, numerically-
+supported, not-yet-symbolically-analyzed hypothesis (`reg1`/`reg2`), with
+every other piece — including full global C¹ smoothness, previously the
+other half of the obligation — unconditionally verified. This is the
+tightest D4 has ever been.
