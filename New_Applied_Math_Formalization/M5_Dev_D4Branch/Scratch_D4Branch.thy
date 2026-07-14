@@ -5565,6 +5565,14 @@ lemma cnj_Ck_on_n: "Ck_on n cnj UNIV"
   using bounded_linear.higher_differentiable_on[OF bounded_linear_cnj, of UNIV n]
   by (simp add: Ck_on_iff_higher_differentiable_on)
 
+lemma Re_Ck_on_n: "Ck_on n Re UNIV"
+  using bounded_linear.higher_differentiable_on[OF bounded_linear_Re, of UNIV n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
+lemma Im_Ck_on_n: "Ck_on n Im UNIV"
+  using bounded_linear.higher_differentiable_on[OF bounded_linear_Im, of UNIV n]
+  by (simp add: Ck_on_iff_higher_differentiable_on)
+
 lemma sin_Ck_on_n: "Ck_on n (sin :: real \<Rightarrow> real) UNIV"
   using sin_cos_higher_differentiable_on[of n]
   by (simp add: Ck_on_iff_higher_differentiable_on)
@@ -5723,6 +5731,12 @@ proof -
     by (intro Ck_on_add Ck_on_scaleR_fun Ck_on_id[OF open_UNIV] Ck_on_const open_UNIV)
 qed
 
+text \<open>
+  Composing every named quantity of \<open>branch2_reduced_gradU_scalar\<close>
+  (\<open>R\<^sup>*\<close>) and \<open>branch2_radial_scalar_reduced_eq\<close> as a function of the base
+  point \<open>r\<close> (or of \<open>(\<omega>, t, ell)\<close>), via \<open>branch2_base_param_omega/t\<close>.
+\<close>
+
 lemma det_matrix_Dcvec_dip_Ck_on_n:
   fixes \<omega>0 \<omega>s :: "real^2"
   shows "Ck_on n (\<lambda>\<omega>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))) UNIV"
@@ -5759,6 +5773,7 @@ proof -
     by (intro Ck_on_add Ck_on_mult Ck_on_const frechet_derivative_gdip_dir_proj_Ck_on_n
         open_UNIV)
 qed
+
 
 text \<open>
   \<^bold>\<open>Division-free by construction.\<close>  The raw \<open>M12_tu_special_moment c t L\<close>
@@ -5835,6 +5850,61 @@ proof -
   show ?thesis
     unfolding branch2_reduced_gradU_scalar_def Let_def Re_eq
     by simp
+qed
+
+lemma branch2_reduced_gradU_scalar_Ck_on_n:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "Ck_on n (branch2_reduced_gradU_scalar \<omega>0 \<omega>s ::
+      (((real^2) \<times> (real^'n::finite)) \<times> real) \<Rightarrow> real) UNIV"
+proof -
+  let ?\<omega>f = "branch2_base_param_omega :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real^2"
+  let ?tf = "branch2_base_param_t :: (((real^2) \<times> (real^'n)) \<times> real) \<Rightarrow> real^'n"
+  have om: "Ck_on n ?\<omega>f UNIV" by (rule branch2_base_param_omega_Ck_on_n)
+  have tm: "Ck_on n ?tf UNIV" by (rule branch2_base_param_t_Ck_on_n)
+  have g1: "Ck_on n (\<lambda>r. Dcvec_dip \<omega>0 \<omega>s (?\<omega>f r) (axis (1::2) 1)) UNIV"
+    by (rule Ck_on_compose[OF Dcvec_dip_dir_Ck_on om]) simp
+  have g2: "Ck_on n (\<lambda>r. Dcvec_dip \<omega>0 \<omega>s (?\<omega>f r) (axis (2::2) 1)) UNIV"
+    by (rule Ck_on_compose[OF Dcvec_dip_dir_Ck_on om]) simp
+  have pc: "Ck_on n (\<lambda>r. perp2 (cvec_dip \<omega>0 \<omega>s (?\<omega>f r))) UNIV"
+    by (rule Ck_on_compose[OF perp2_cvec_dip_Ck_on_n om]) simp
+  have p1: "Ck_on n (\<lambda>r. frechet_derivative gdip (at (vec_nth (?\<omega>f r) 1)) 1) UNIV"
+    by (rule Ck_on_compose[OF frechet_derivative_gdip_dir_proj_Ck_on_n om]) simp
+  have p2: "Ck_on n (\<lambda>r. frechet_derivative gdip (at (vec_nth (?\<omega>f r) 1)) 0) UNIV"
+    by (rule Ck_on_compose[OF frechet_derivative_gdip_dir_proj_Ck_on_n om]) simp
+  have gd: "Ck_on n (\<lambda>r. gain_dip (?\<omega>f r)) UNIV"
+    by (rule Ck_on_compose[OF gain_dip_Ck_on_n om]) simp
+  have det: "Ck_on n (\<lambda>r. det (matrix (Dcvec_dip \<omega>0 \<omega>s (?\<omega>f r)))) UNIV"
+    by (rule Ck_on_compose[OF det_matrix_Dcvec_dip_Ck_on_n om]) simp
+  have Am: "Ck_on n (\<lambda>r. A_t_moment (?tf r)) UNIV"
+    by (rule Ck_on_compose[OF A_t_moment_Ck_on_n tm]) simp
+  have AWm: "Ck_on n (\<lambda>r. A_t_weighted_moment (?tf r)) UNIV"
+    by (rule Ck_on_compose[OF A_t_weighted_moment_Ck_on_n tm]) simp
+  have ReA: "Ck_on n (\<lambda>r. Re (A_t_moment (?tf r))) UNIV"
+    by (rule Ck_on_compose[OF Re_Ck_on_n Am]) simp
+  have ImA: "Ck_on n (\<lambda>r. Im (A_t_moment (?tf r))) UNIV"
+    by (rule Ck_on_compose[OF Im_Ck_on_n Am]) simp
+  have ReAW: "Ck_on n (\<lambda>r. Re (A_t_weighted_moment (?tf r))) UNIV"
+    by (rule Ck_on_compose[OF Re_Ck_on_n AWm]) simp
+  have ImAW: "Ck_on n (\<lambda>r. Im (A_t_weighted_moment (?tf r))) UNIV"
+    by (rule Ck_on_compose[OF Im_Ck_on_n AWm]) simp
+  have RImix: "Ck_on n (\<lambda>r. Re (A_t_moment (?tf r)) * Im (A_t_weighted_moment (?tf r))
+      - Im (A_t_moment (?tf r)) * Re (A_t_weighted_moment (?tf r))) UNIV"
+    by (rule Ck_on_sub[OF Ck_on_mult[OF ReA ImAW] Ck_on_mult[OF ImA ReAW]])
+  have eq: "\<And>r. branch2_reduced_gradU_scalar \<omega>0 \<omega>s r =
+      ((Dcvec_dip \<omega>0 \<omega>s (?\<omega>f r) (axis (2::2) 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s (?\<omega>f r)))
+          * frechet_derivative gdip (at (vec_nth (?\<omega>f r) 1)) 1
+        - (Dcvec_dip \<omega>0 \<omega>s (?\<omega>f r) (axis (1::2) 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s (?\<omega>f r)))
+          * frechet_derivative gdip (at (vec_nth (?\<omega>f r) 1)) 0)
+        * ((Re (A_t_moment (?tf r)))\<^sup>2 + (Im (A_t_moment (?tf r)))\<^sup>2)
+      + gain_dip (?\<omega>f r) * (2 * det (matrix (Dcvec_dip \<omega>0 \<omega>s (?\<omega>f r)))
+          * Re (cnj (A_t_moment (?tf r)) * ((- \<i>) * A_t_weighted_moment (?tf r))))"
+    unfolding branch2_reduced_gradU_scalar_def Let_def cmod_power2
+    by (simp add: axis_def)
+  show ?thesis
+    unfolding eq
+    by (intro Ck_on_add Ck_on_sub Ck_on_mult Ck_on_mult_alg
+        Ck_on_inner g1 g2 pc p1 p2 gd det Am AWm ReA ImA ReAW ImAW RImix
+        Ck_on_pow Ck_on_scaleR_fun Ck_on_const open_UNIV; simp add: RImix)
 qed
 
 lemma branch2_reduced_gradU_scalar_eq_gradU_cross:
