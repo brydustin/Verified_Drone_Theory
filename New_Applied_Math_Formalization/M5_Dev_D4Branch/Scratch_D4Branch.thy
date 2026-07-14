@@ -8289,6 +8289,39 @@ proof (rule branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_ra
     by (rule reg2)
 qed
 
+theorem branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank_only:
+  fixes V :: "((real^2)^'n::finite) set"
+  assumes reg1: "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+    and reg2: "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  shows "branch2_repaired_reduced_base_C1_regular_rank_all V ctr \<delta> \<omega>0 \<omega>s"
+proof (rule branch2_repaired_reduced_base_C1_regular_rank_allI_from_Ck1_and_pointwise_rank
+    [OF _ _ reg1 reg2])
+  show "Ck_on (Suc 0)
+      (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+    by (rule branch2_chart1_repaired_reduced_base_IFT_residual_Ck_on_n)
+  show "Ck_on (Suc 0)
+      (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+        ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real)) UNIV"
+    by (rule branch2_chart2_repaired_reduced_base_IFT_residual_Ck_on_n)
+qed
+
 lemma branch2_chart1_repaired_reduced_base_C1_regular_rankD:
   fixes V :: "((real^2)^'n::finite) set"
   assumes c1: "branch2_chart1_repaired_reduced_base_C1_regular_rank V \<omega>0 \<omega>s \<Gamma> j"
@@ -9220,5 +9253,40 @@ theorem branchP_indep_closed_cover_core_all_of_repaired_reduced_base_C1_regular_
     rule branch2_repaired_reduced_base_compact_IFT_parametrizations_all_of_C1_regular_rank
       [OF c1_regular_rank])
 
+text \<open>
+  \<^bold>\<open>D4's final reduction.\<close>  Global \<open>C\<^sup>1\<close> smoothness of both repaired
+  residuals is now UNCONDITIONALLY proven (\<open>branch2_chart1/2_repaired_reduced_base_IFT_residual_Ck_on_n\<close>),
+  so the entire \<open>branchP_indep_closed_cover_core_all\<close> obligation --- and hence
+  D4 --- reduces to exactly the pointwise-rank hypotheses \<open>reg1\<close>/\<open>reg2\<close>:
+  surjectivity of the repaired residual's derivative at every det-bounded
+  system zero.  This is the sole remaining genuine mathematical content of D4.
+\<close>
+
+theorem branchP_indep_closed_cover_core_all_of_pointwise_rank_only:
+  fixes V :: "((real^2)^'n::finite) set"
+  assumes card4: "4 \<le> CARD('n)"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and reg1: "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+    and reg2: "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  shows "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
+  by (rule branchP_indep_closed_cover_core_all_of_repaired_reduced_base_C1_regular_rank_and_compact_IFT_chart_theorem
+      [OF card4 pf
+        branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank_only[OF reg1 reg2]])
 
 end
