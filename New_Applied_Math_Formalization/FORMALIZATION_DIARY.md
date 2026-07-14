@@ -8448,3 +8448,70 @@ genericity argument (e.g. via the `Lc`, `cc`, `egd`, `g` prefactors alone,
 independent of the specific `t`-values) suffices. Not resolved this session;
 flagging as the concrete entry point for the next continuation rather than
 starting fact 2 from scratch.
+
+## 2026-07-14 (cont'd) — reframing the reg1/reg2 t-collision gap: not a weakening, a stratification
+
+Follow-up to the earlier entry today. The user asked the right question: if we
+add a distinctness hypothesis to `reg1`/`reg2`, how would we know that's
+*sufficient* (i.e. doesn't just quietly narrow the final theorem)? Answer:
+`branchP_indep_closed_cover_core_all` doesn't need `reg1`/`reg2` per se — it
+needs a closed-negligible cover of the *entire* `V ∩ BadXGW ω0 ωs Γ`. `reg1`/
+`reg2` are the hypotheses of *one* construction (the chart/IFT route) of that
+cover. So narrowing `reg1`/`reg2` to the non-collision case is sufficient iff
+we separately cover the complementary "collision" locus and union the two
+covers (countable ∪ countable = countable, so composition is mechanical once
+both pieces exist). That's a checkable criterion, not a leap of faith.
+
+The collision locus splits into two sub-cases:
+
+**Case (ii) — `x_i = x_j` (coincident drone positions).** No hypothesis
+anywhere in the repo requires distinct drone positions, so this stratum is
+live and must be covered regardless of what we do with `reg1`/`reg2`. It's
+free: `{x : x$i = x$j}` sits inside a hyperplane `{x : a·x = 0}` (pick
+`a = axis i v - axis j v` with `v = axis 1 1 :: real^2`), independent of `ω`
+entirely, negligible via `negligible_hyperplane` + `negligible_subset`. Added
+as `drone_coincide_negligible` in `Scratch_D4Branch.thy`
+(right after `align_image_negligible`, same file). **Build-checked**:
+`Applied_Math_M5_D4Branch`, BUILD_EXIT=0 (commit `53e5dbc`).
+
+**Case (iii) — `x_i ≠ x_j` but a transient `t_i(ω) = t_j(ω)` collision.**
+My first pass at this (same-day, superseded) proposed a scalar
+regular-value argument on `ω ↦ (x_i-x_j)·cvec_dip(ω)`, using the
+already-available `det(Dcvec_dip ω)≠0` hypothesis inside `BadXGW`. **This was
+wrong as stated** — I hadn't actually checked where `t` lives in the real
+Isabelle chart architecture. Checked now: at the reduced-base-residual level
+(`branch2_chart1_reduced_base_residual`, `Scratch_D4Branch.thy:4071`), the
+domain is literally `r :: (real^2) × (real^'n) × real` = `(ω, t, a)`, with
+`t :: real^'n` a FREE, independent coordinate — not derived from `ω` via
+`cvec_dip` at this level at all (that relation, `t_m = cvec_dip(ω)·x_m`, only
+holds in the *outer* reconstruction from `(ω,t,u,a)` back to a full drone
+configuration `x`, which is a separate, later map). So `{r : t$i = t$j}` is
+just a hyperplane SLICE OF THE DOMAIN, not something needing IFT on
+`cvec_dip` to construct.
+
+The right approach for case (iii): on the slice `t$i=t$j`, the two residual
+equations `radial(i)` and `radial(j)` become identical (that's the whole
+mechanism behind the rank drop found this morning), so the reduced-base
+residual effectively collapses from `n+1` independent equations to `n` on an
+`(n+2)`-dimensional restricted domain (one domain dimension consumed by the
+slice condition). The n=4 numeric evidence (rank drops from 5 to exactly 4,
+never lower, at every deficient sample) is *consistent* with this collapsed
+`n`-equation system still being full rank `n` generically — i.e. the
+degeneracy is exactly and only the redundant equation, nothing deeper. If
+that holds as a theorem, IFT still gives a 2-dimensional local zero-set
+manifold on the slice (same dimension as the generic case), which is
+negligible in the `2·CARD('n)`-dimensional x-space by the same argument
+`reg1`/`reg2` already use elsewhere in the file — just applied to a new,
+explicitly-constructed "collapsed" residual map instead of the original one.
+
+This is a real, well-motivated construction, not hand-waving — but it is
+**substantial new work**: a new residual map, a new Ck1/differentiability
+argument for it (mirroring the session that closed the original `Ck1`), a new
+rank/regular-value lemma for the collapsed system, and rewiring the top-level
+assembly (`branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank`
+and friends, `Scratch_D4Branch.thy:8150`+) to consume three pieces (reg1 on
+non-collision, case (ii), case (iii)) instead of one (reg1 unconditionally).
+Comparable in scope to the original Ck1 closure session (12 commits). Not
+started; case (ii) is the only piece landed today. Flagging this scope
+honestly rather than continuing to freelance-design IFT machinery without a
+checkpoint — surfaced to the user before further investment.
