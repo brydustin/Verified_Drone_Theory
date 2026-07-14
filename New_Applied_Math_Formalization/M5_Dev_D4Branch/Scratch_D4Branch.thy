@@ -8270,4 +8270,70 @@ theorem branchP_indep_closed_cover_core_all_of_repaired_reduced_base_C1_regular_
     rule branch2_repaired_reduced_base_compact_IFT_parametrizations_all_of_C1_regular_rank
       [OF c1_regular_rank])
 
+subsection \<open>\<section>7ah: division-free rewrite toward global C1 smoothness\<close>
+
+text \<open>
+  Both repaired residuals contain terms of the shape
+  \<open>(t\<^sub>m / (c \<bullet> c)) * (L \<bullet> c)\<close>, which is a genuine \<open>0/0\<close> at \<open>c = cvec_dip \<omega>0 \<omega>s \<omega> = 0\<close>
+  under Isabelle's \<open>x/0 = 0\<close> convention.  For \<open>branch2_radial_scalar_reduced_eq\<close> an
+  explicit outer \<open>(c \<bullet> c)\<close> factor cancels this cleanly for *any* \<open>L\<close> (the term is then
+  \<open>0\<close> at \<open>c = 0\<close> on both sides, since \<open>L \<bullet> c = L \<bullet> 0 = 0\<close> there too).  For
+  \<open>branch2_reduced_gradU_scalar\<close> (the repair-slot \<open>R\<^sup>*\<close>) there is no such outer factor,
+  and \<open>L \<bullet> c\<close> for \<open>L = branch2_cross_combo\<close> is a genuine quadratic vanishing at
+  \<open>c = 0\<close> --- the fix is the exact 2D Binet-Cauchy identity
+  \<open>branch2_cross_combo \<omega>0 \<omega>s \<omega> \<bullet> c = det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * (c \<bullet> c)\<close>,
+  which exposes the missing \<open>(c \<bullet> c)\<close> factor and lets the same cancellation apply.
+\<close>
+
+lemma cc_times_div_times_Lc_eq:
+  fixes c L :: "real^2" and x :: real
+  shows "(c \<bullet> c) * (x / (c \<bullet> c)) * (L \<bullet> c) = x * (L \<bullet> c)"
+proof (cases "c \<bullet> c = 0")
+  case True
+  hence "c = 0" by simp
+  hence "L \<bullet> c = 0" by simp
+  with True show ?thesis by simp
+next
+  case False
+  then show ?thesis by simp
+qed
+
+lemma branch2_cross_combo_inner_c_eq_det:
+  "branch2_cross_combo \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega>
+    = det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * (cvec_dip \<omega>0 \<omega>s \<omega> \<bullet> cvec_dip \<omega>0 \<omega>s \<omega>)"
+  unfolding branch2_cross_combo_def Let_def perp2_def
+  by (simp add: det_2 matrix_def inner_vec_def sum_2 algebra_simps)
+
+definition A_t_weighted_moment :: "real^('n::finite) \<Rightarrow> complex" where
+  "A_t_weighted_moment t = (\<Sum>m\<in>UNIV. of_real (vec_nth t m) * phase_t t m)"
+
+lemma M12_tu_special_moment_cross_combo_eq:
+  fixes t :: "real^('n::finite)"
+  assumes cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  shows "M12_tu_special_moment (cvec_dip \<omega>0 \<omega>s \<omega>) t (branch2_cross_combo \<omega>0 \<omega>s \<omega>)
+    = of_real (det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))) * A_t_weighted_moment t"
+proof -
+  let ?c = "cvec_dip \<omega>0 \<omega>s \<omega>"
+  let ?L = "branch2_cross_combo \<omega>0 \<omega>s \<omega>"
+  let ?d = "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))"
+  have cc_ne: "?c \<bullet> ?c \<noteq> 0"
+    using cnz by simp
+  have Lc: "?L \<bullet> ?c = ?d * (?c \<bullet> ?c)"
+    by (rule branch2_cross_combo_inner_c_eq_det)
+  have "(vec_nth t m / (?c \<bullet> ?c)) * (?L \<bullet> ?c) = ?d * vec_nth t m" for m
+  proof -
+    have "(vec_nth t m / (?c \<bullet> ?c)) * (?L \<bullet> ?c)
+        = (vec_nth t m / (?c \<bullet> ?c)) * (?d * (?c \<bullet> ?c))"
+      by (simp add: Lc)
+    also have "\<dots> = ?d * ((?c \<bullet> ?c) * (vec_nth t m / (?c \<bullet> ?c)))"
+      by (simp add: algebra_simps)
+    also have "\<dots> = ?d * vec_nth t m"
+      using cc_ne by simp
+    finally show ?thesis .
+  qed
+  thus ?thesis
+    unfolding M12_tu_special_moment_def A_t_weighted_moment_def
+    by (simp only: of_real_mult sum_distrib_left mult.assoc)
+qed
+
 end
