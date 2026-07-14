@@ -104,6 +104,20 @@ between (b) (weaken `reg1`/`reg2`, shrinking what D4 proves) and (c)
 (redesign `branch2_repair_slot` to be collision-robust, new math). Still a
 call for the user, not something to pick unilaterally.
 
+**One natural (c)-idea checked and ruled out: adaptive slot choice.** `R*`
+(the slot's equation) is a genuinely global function of `A(t), AW(t)` that
+never singles out an index the way `radial(m)` does, so the hope was that
+choosing `branch2_repair_slot` *adaptively* to land on one of the colliding
+indices (instead of the fixed `SOME m. True`) might absorb the degeneracy.
+Checked directly on 5 deficient `n=4` examples, trying every possible slot
+assignment at each: **the minimal singular value is identical to several
+significant figures across every slot choice**, including slots equal to
+either member of the colliding pair. The near-null direction is intrinsic
+to the point, not an artifact of which coordinate carries `R*` vs `radial`.
+So slot choice alone cannot fix this — any (c)-style fix needs to change
+the underlying equations (e.g. the moment system itself), not just their
+assignment to output coordinates.
+
 ---
 
 ## 2026-07-10 — Functional-cut wiring engine staged in scratch
