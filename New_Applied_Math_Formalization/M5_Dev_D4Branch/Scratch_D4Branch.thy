@@ -1859,6 +1859,44 @@ proof (rule negligible_differentiable_image_lowdim)
     by (rule align_param_map_differentiable_on)
 qed
 
+subsection \<open>Case (ii): coincident drone positions are already negligible\<close>
+
+text \<open>No hypothesis anywhere requires distinct drone positions, so the
+  ``two drones occupy the same point'' locus must be covered regardless of
+  what \<open>reg1\<close>/\<open>reg2\<close> end up needing. It costs nothing: the set sits inside
+  a hyperplane, independently of \<open>\<omega>\<close> entirely.\<close>
+
+lemma drone_coincide_negligible:
+  fixes i j :: "'n::finite"
+  assumes ij: "i \<noteq> j"
+  shows "negligible {x :: (real^2)^'n. x $ i = x $ j}"
+proof -
+  define v :: "real^2" where "v = axis (1::2) (1::real)"
+  define a :: "(real^2)^'n" where "a = axis i v - axis j v"
+  have vnz: "v \<noteq> 0" unfolding v_def by simp
+  have ai: "a $ i = v"
+    unfolding a_def by (simp add: axis_def ij)
+  have anz: "a \<noteq> 0"
+    using ai vnz by (metis vec_eq_iff zero_index)
+  have sub: "{x :: (real^2)^'n. x $ i = x $ j} \<subseteq> {x. a \<bullet> x = 0}"
+  proof
+    fix x :: "(real^2)^'n"
+    assume "x \<in> {x. x $ i = x $ j}"
+    then have xij: "x $ i = x $ j" by simp
+    have "a \<bullet> x = inner (axis i v) x - inner (axis j v) x"
+      unfolding a_def by (simp add: inner_diff_left)
+    also have "\<dots> = inner v (x $ i) - inner v (x $ j)"
+      by (simp add: inner_axis')
+    also have "\<dots> = 0"
+      using xij by simp
+    finally show "x \<in> {x. a \<bullet> x = 0}" by simp
+  qed
+  have hyp: "negligible {x :: (real^2)^'n. a \<bullet> x = 0}"
+    by (rule negligible_hyperplane) (auto simp: anz)
+  show ?thesis
+    using negligible_subset[OF hyp sub] .
+qed
+
 lemma aligned_in_align_param_image:
   fixes x :: "(real^2)^'n::finite" and \<omega> :: "real^2"
   assumes wK0: "\<omega> \<in> K0"
