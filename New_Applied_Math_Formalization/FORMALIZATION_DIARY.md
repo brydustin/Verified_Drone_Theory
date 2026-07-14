@@ -8515,3 +8515,34 @@ Comparable in scope to the original Ck1 closure session (12 commits). Not
 started; case (ii) is the only piece landed today. Flagging this scope
 honestly rather than continuing to freelance-design IFT machinery without a
 checkpoint — surfaced to the user before further investment.
+
+## 2026-07-14 (cont'd 2) — case (iii)'s collapsed-residual hypothesis: REFUTED
+
+User asked for a calibrated bet on case (iii) succeeding. Before answering,
+checked the one unverified piece of the plan directly: does the "collapsed"
+residual (drop the redundant radial(j) row, drop the (t_i-t_j) domain
+direction) actually have full rank n at genuine collision zeros?
+
+First pass said yes (25/25 full rank) but had a bug — `t[slot]` was silently
+zeroed instead of held at its fitted value, so the Jacobian was being
+evaluated far from any real zero (residuals of the collapsed system were
+1.4–28, nowhere near 0). Fixed (`d4_collapsed_rank_check.py`, scratchpad) and
+reran: of 25 collision samples, only 11 landed near an actual zero of the
+collapsed system (residual 1e-9–1e-13); the other 14 are noise (residual
+1.3–23, meaningless). Of the 11 trustworthy points: **0/11 full rank**. Rank
+was 3 (corank 1) at 8 points and 2 (corank 2) at 3 points — never 4.
+
+Conclusion: the collision degeneracy is NOT simply "radial(i)=radial(j),
+otherwise generic" — dropping that one redundant equation and the one
+redundant domain direction still leaves the system singular, and sometimes
+more singular (corank 2) than the original corank-1 reading suggested. There
+is a second, unidentified degeneracy on top of the obvious symmetry one.
+Case (iii) as designed does not work. Finding this deeper mechanism would be
+a new investigation, not a known-shape construction — materially worse odds
+than "Ck1-closure-sized effort", closer to open-ended.
+
+**Bet, as asked:** favor stopping at case (ii) and adding a t-distinctness
+genericity hypothesis to `reg1`/`reg2` for the remainder. Case (iii) is not
+just expensive now, it's unproven-and-possibly-false as most naturally
+stated. Recommending path (b) (narrowed, honest hypothesis) over further
+investment in (c) (redesign), pending user confirmation.
