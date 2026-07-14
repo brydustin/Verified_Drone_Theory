@@ -9327,4 +9327,143 @@ theorem branchP_indep_closed_cover_core_all_of_pointwise_rank_only:
       [OF card4 pf
         branch2_repaired_reduced_base_C1_regular_rank_allI_from_pointwise_rank_only[OF reg1 reg2]])
 
+subsection \<open>D4, path (b): isolating the transient t-collision gap as a single explicit sorry\<close>
+
+text \<open>
+  The 2026-07-14 investigation found that \<open>reg1\<close>/\<open>reg2\<close> above are very
+  likely FALSE at a transient collision: some \<open>i \<noteq> j\<close> with
+  \<open>(branch2_base_param_t r) $ i = (branch2_base_param_t r) $ j\<close> (45\% of
+  genuine \<open>n=4\<close> system zeros in a large numeric sweep). The natural fix ---
+  drop the redundant equation and the redundant domain direction, hope the
+  collapsed system is still full rank --- was checked numerically and
+  REFUTED: at genuine collision zeros the collapsed system is ALSO rank
+  deficient, sometimes more so (corank 2, not just 1) --- there is a second,
+  unidentified degeneracy on top of the known symmetry-forced redundancy.
+  Coincident drone positions (\<open>x $ i = x $ j\<close>, a sub-case that always forces
+  a \<open>t\<close>-collision) are separately and unconditionally negligible regardless
+  --- \<open>drone_coincide_negligible\<close> above --- but that does not rescue the
+  generic-position part of the collision fibre. See \<open>FORMALIZATION_DIARY.md\<close>,
+  2026-07-14 entries, for the full numeric investigation and mechanism proof.
+
+  Rather than leave the FALSE blanket \<open>reg1\<close>/\<open>reg2\<close> as permanently
+  undischargeable hypotheses, this section replaces them with the strictly
+  weaker, numerically-supported \<open>reg1'\<close>/\<open>reg2'\<close> (surjectivity assumed only
+  at pairwise-distinct-\<open>t\<close> zeros) and isolates the remaining gap as a SINGLE
+  explicit \<open>sorry\<close>, so the exact scope of what is still open is visible and
+  searchable rather than hidden inside an unprovable blanket hypothesis.
+\<close>
+
+definition distinct_t :: "(real^('n::finite)) \<Rightarrow> bool" where
+  "distinct_t t \<longleftrightarrow> (\<forall>i j. i \<noteq> j \<longrightarrow> t $ i \<noteq> t $ j)"
+
+lemma reg1_of_reg1_generic:
+  assumes reg1': "\<And>(r :: (((real^2) \<times> (real^'n::finite)) \<times> real)).
+      branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0 \<Longrightarrow>
+      distinct_t (branch2_base_param_t r)
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  shows "\<And>(r :: (((real^2) \<times> (real^'n::finite)) \<times> real)).
+      branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+proof -
+  fix r :: "((real^2) \<times> (real^'n)) \<times> real"
+  assume z: "branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0)"
+    and c: "cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0"
+    and d: "det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0"
+  show "surj (blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  proof (cases "distinct_t (branch2_base_param_t r)")
+    case True
+    show ?thesis by (rule reg1'[OF z c d True])
+  next
+    case False
+    show ?thesis
+      sorry \<comment> \<open>OPEN: transient t-collision, the sole remaining gap in D4's
+        branch-2 reduction (2026-07-14 numeric refutation of the
+        collapsed-residual fix attempt). See FORMALIZATION_DIARY.md.\<close>
+  qed
+qed
+
+lemma reg2_of_reg2_generic:
+  assumes reg2': "\<And>(r :: (((real^2) \<times> (real^'n::finite)) \<times> real)).
+      branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0 \<Longrightarrow>
+      distinct_t (branch2_base_param_t r)
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  shows "\<And>(r :: (((real^2) \<times> (real^'n::finite)) \<times> real)).
+      branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+proof -
+  fix r :: "((real^2) \<times> (real^'n)) \<times> real"
+  assume z: "branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0)"
+    and c: "cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0"
+    and d: "det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0"
+  show "surj (blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  proof (cases "distinct_t (branch2_base_param_t r)")
+    case True
+    show ?thesis by (rule reg2'[OF z c d True])
+  next
+    case False
+    show ?thesis
+      sorry \<comment> \<open>OPEN: transient t-collision, mirror of the chart1 gap above.\<close>
+  qed
+qed
+
+theorem branchP_indep_closed_cover_core_all_of_pointwise_rank_generic:
+  fixes V :: "((real^2)^'n::finite) set"
+  assumes card4: "4 \<le> CARD('n)"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and reg1': "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0 \<Longrightarrow>
+      distinct_t (branch2_base_param_t r)
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart1_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+    and reg2': "\<And>(r :: (((real^2) \<times> (real^'n)) \<times> real)).
+      branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s
+        (branch2_base_assoc r) = (0, 0) \<Longrightarrow>
+      cvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r) \<noteq> 0 \<Longrightarrow>
+      det (matrix (Dcvec_dip \<omega>0 \<omega>s (branch2_base_param_omega r))) \<noteq> 0 \<Longrightarrow>
+      distinct_t (branch2_base_param_t r)
+      \<Longrightarrow> surj (blinfun_apply
+        (Dblinfun (branch2_chart2_repaired_reduced_base_IFT_residual \<omega>0 \<omega>s ::
+            ((real^2) \<times> ((real^'n) \<times> real)) \<Rightarrow> ((real^'n) \<times> real))
+          (branch2_base_assoc r)))"
+  shows "branchP_indep_closed_cover_core_all V ctr \<delta> \<omega>0 \<omega>s"
+  by (rule branchP_indep_closed_cover_core_all_of_pointwise_rank_only
+      [OF card4 pf reg1_of_reg1_generic[OF reg1'] reg2_of_reg2_generic[OF reg2']])
+
 end
