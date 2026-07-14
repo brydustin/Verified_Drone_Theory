@@ -5671,3 +5671,2437 @@ across mixed \<open>x\<close>/\<open>\<Omega>\<close> directions like this); (5)
 horizontal/vertical case split; (6) the final Heine-Borel compactness
 assembly.  Steps 4-6 have no existing formalized precedent in this specific
 mixed-space form and are the genuine remaining research risk.
+
+## 2026-07-11, continued: e_par's closed form --- verified, not just hand-derived
+
+Pushed into step (1) of the plan above.  Hand-verified (via a component-wise
+Lagrange-identity check: `(Dc2\<bullet>perp2 c)\<cdot>Dc1 - (Dc1\<bullet>perp2 c)\<cdot>Dc2 = det\<cdot>c`,
+a clean 2D vector identity) that `e_par`'s two COMPONENTS are --- up to a
+common scalar factor --- exactly the ALREADY-ESTABLISHED
+`d3_s2_global_factor`/`d3_s1_global_factor` from earlier this session:
+
+```isabelle
+theorem e_par_closed_form:
+  assumes "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0" "gain_dip \<omega> \<noteq> 0"
+  shows "e_par \<omega>0 \<omega>s \<omega> =
+      vector [d3_s2_global_factor \<omega>0 \<omega>s \<omega> / (2 * gain_dip \<omega> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))),
+            - d3_s1_global_factor \<omega>0 \<omega>s \<omega> / (2 * gain_dip \<omega> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)))]"
+```
+
+Proved via the "guess the closed form, verify it satisfies the SAME defining
+equation as `e_par` (`Dcvec_dip(\<cdot>) = cvec_dip`), invoke injectivity of
+`Dcvec_dip` (from `det\<noteq>0`, mirroring the exact `bij_matrix_vector_mult`/`mv`/
+`decomp` pattern from `d3_s1_or_s2_global_factor_nonzero` earlier this
+session) to conclude equality" technique --- the SAME pattern used
+successfully for `e_par` itself in the pre-existing `Dcvec_dip_e_par`.  New
+supporting lemmas: `cross_perp2_lagrange_identity` (the abstract 2D vector
+identity, GENERAL --- no Robust4-specific values used), `Dcvec_dip_inj`.
+This is a GENERAL fact (any \<omega>0,\<omega>s,\<omega>), not specialized to the Robust4
+design point.
+
+Two debugging iterations (both fixed, standard patterns): (1) `unfolding
+Dc1_def[symmetric]` does the OPPOSITE of what the name suggests --- it FOLDS
+occurrences of `Dcvec_dip(axis 1 1)` INTO `Dc1`, not the reverse; fixed by
+dropping the unfolding and just adding `Dc1_def`/`Dc2_def` to the closing
+`simp` set instead. (2) a division-cancellation step (`(2\<cdot>gain\<cdot>det/D)\<cdot>c = c`
+given `D = 2\<cdot>gain\<cdot>det`) needed restructuring as an explicit `D/D` intermediate
+step rather than unfolding `D_def` directly into the goal (which orphaned
+the `D\<noteq>0` hypothesis, stated in terms of the ABBREVIATION `D`, from the
+now-unfolded goal).
+
+Verification: ML_process reload green (2 debugging iterations); full batch
+build `Finished Applied_Math_M5_Wiring`; zero `sorry`/`oops`.
+
+NEXT (not yet done): differentiate this closed form (via the quotient rule,
+needing `d3_s1_global_factor`'s and `d3_s2_global_factor`'s OWN \<omega>-derivatives
+--- themselves computable via product/chain rule through `D2cvec_dip`,
+`gdip'`, and `perp2\<circ>cvec_dip`'s chain rule, since `d3_s1`/`d3_s2_global_factor`
+are BUILT from `gain_dip`, `Dcvec_dip(axis j)`, and `perp2(cvec_dip(\<omega>))` ---
+all individually already-differentiable) to get `e_par`'s \<open>has_derivative\<close>
+fact, THEN differentiate `Phi_par_radial_dictionary` using it (per the
+2026-07-11 "SELF-CORRECTION" entry's plan) to get `\<partial>Phi_par/\<partial>\<omega>_j`'s closed
+form.
+
+## 2026-07-11, Codex continuation: quotient-rule derivative of the e_par closed form
+
+Read the diary and pushed the next checkable step past the already-verified
+`e_par_closed_form`.  The derivative facts needed by the quotient rule are now
+formalized in `M5_Dev_Wiring/Scratch_Wiring.thy`:
+
+- `bounded_linear_perp2`, `has_derivative_perp2`
+- `has_derivative_d3_s_global_factor`, plus named `d3_s1`/`d3_s2` corollaries
+- `Dd3_s_global_factor` and the `_D` derivative corollaries for compact reuse
+- `Ddet_Dcvec_dip` and `has_derivative_det_matrix_Dcvec_dip`
+- `e_par_denominator`, `De_par_denominator`, and
+  `has_derivative_e_par_denominator`
+- `e_par_closed_form_rhs`, `e_par_closed_form_rhs_eq`, and finally
+  `has_derivative_e_par_closed_form_rhs`
+
+Important caveat: this last theorem is deliberately the derivative of the
+closed-form RHS
+
+```isabelle
+e_par_closed_form_rhs \<omega>0 \<omega>s \<omega>
+```
+
+under the hypothesis
+
+```isabelle
+e_par_denominator \<omega>0 \<omega>s \<omega> \<noteq> 0
+```
+
+It is NOT YET a direct `has_derivative` theorem for
+`\<lambda>\<omega>. e_par \<omega>0 \<omega>s \<omega>`.  To get that direct theorem, use
+`e_par_closed_form_rhs_eq` plus a local transform argument on a neighborhood
+where both `gain_dip` and `det (matrix (Dcvec_dip ...))` remain nonzero
+(continuity/open-preimage route).  After that, the next intended step is still:
+differentiate `Phi_par_radial_dictionary` using the actual `e_par` derivative,
+then identify the fixed-coordinate `\<partial>Phi_par/\<partial>\<omega>_j` with the already-existing
+HessU-column quantity at critical points.
+
+Verification: `ML_process` reload of `Scratch_Wiring` against
+`Applied_Math_D3_Wiring` succeeded and retrieved
+`has_derivative_e_par_closed_form_rhs`.
+
+## 2026-07-11, Codex continuation: local transform gives the actual e_par derivative
+
+Completed the caveat from the previous entry.  Added the denominator-nonzero
+open-neighborhood package:
+
+- `e_par_denominator_nonzero_iff`
+- `continuous_on_e_par_denominator`
+- `open_e_par_denominator_nonzero`
+- `e_par_closed_form_rhs_eq_on_denominator_nonzero`
+- `e_par_closed_form_rhs_local_eq`
+
+The chosen neighborhood is simply
+
+```isabelle
+{\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}
+```
+
+which is open by continuity of the denominator and, via
+`e_par_denominator_nonzero_iff`, is exactly the neighborhood where both
+`gain_dip` and `det (matrix (Dcvec_dip ...))` stay nonzero.  On that
+neighborhood `e_par` equals the closed-form RHS, so
+`has_derivative_transform_within_open` transfers the quotient-rule derivative
+to the actual `e_par` field:
+
+```isabelle
+theorem has_derivative_e_par:
+  assumes "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and "gain_dip \<omega> \<noteq> 0"
+  shows "((\<lambda>\<eta>. e_par \<omega>0 \<omega>s \<eta>) has_derivative
+      De_par_closed_form_rhs \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+```
+
+Verification: `ML_process` reload of `Scratch_Wiring` against
+`Applied_Math_D3_Wiring` succeeded and retrieved `has_derivative_e_par`.
+
+## 2026-07-11, Codex continuation: Phi_par omega derivative and nonzero fixed-coordinate branch
+
+Pushed the newly verified `has_derivative_e_par` into the actual
+`Phi_par` omega derivative.  Since
+
+```isabelle
+Phi_par x \<eta> \<omega>0 \<omega>s =
+  gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> \<bullet> e_par \<omega>0 \<omega>s \<eta>
+```
+
+the product/inner-product rule plus `gradU_dip_has_derivative` gives:
+
+```isabelle
+theorem has_derivative_Phi_par_omega:
+  assumes "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and "gain_dip \<omega> \<noteq> 0"
+  shows "((\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) has_derivative
+      (\<lambda>h. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> \<bullet> De_par_closed_form_rhs \<omega>0 \<omega>s \<omega> h
+          + (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v h) \<bullet> e_par \<omega>0 \<omega>s \<omega>))
+      (at \<omega>)"
+```
+
+At a critical point, the `gradU \<bullet> De_par` term vanishes, giving the exact
+fixed-coordinate identity needed by the corrected plan:
+
+```isabelle
+frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis j 1)
+  = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis j 1) \<bullet> e_par \<omega>0 \<omega>s \<omega>
+```
+
+Also proved the nonzero disjunction:
+
+```isabelle
+theorem Phi_par_omega_axis_critical_nonzero_disjunction:
+  assumes "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and "gain_dip \<omega> \<noteq> 0"
+    and "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  shows "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis 1 1) \<noteq> 0
+      \<or> frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis 2 1) \<noteq> 0"
+```
+
+Support lemmas: `e_par_nonzero` and the generic
+`invertible_matrix_column_inner_nonzero`.  This is the verified version of the
+hand claim that the needed fixed-coordinate derivative is already encoded by
+the existing Hessian value; no third derivative is involved.
+
+Verification: `ML_process` reload of `Scratch_Wiring` against
+`Applied_Math_D3_Wiring` succeeded and retrieved
+`Phi_par_omega_axis_critical_nonzero_disjunction`.
+
+## 2026-07-11, Codex continuation: local fixed-coordinate omega branch
+
+Pushed the fixed-coordinate result from a pointwise disjunction into a local
+branch package.  Added the continuity facts needed for the shrink:
+
+- `continuous_on_e_par_denominator_nonzero`
+- `continuous_on_HessU_col_e_par_omega`
+
+Then wrapped the two-axis disjunction as both an existential and an `obtains`
+interface:
+
+```isabelle
+corollary Phi_par_omega_axis_critical_nonzero_exists:
+  shows "\<exists>j::2. frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis j 1) \<noteq> 0"
+```
+
+Most importantly, proved the local branch theorem:
+
+```isabelle
+theorem Phi_par_omega_axis_critical_nonzero_local:
+  assumes "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and "gain_dip \<omega> \<noteq> 0"
+    and "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  obtains j :: 2 and U where
+    "open U" and "\<omega> \<in> U"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> gain_dip \<eta> \<noteq> 0"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow>
+           (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> *v axis j 1) \<bullet>
+             e_par \<omega>0 \<omega>s \<eta> \<noteq> 0"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> = 0 \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1) \<noteq> 0"
+```
+
+The neighborhood is the intersection of the already-used denominator-nonzero
+set (`gain_dip \<noteq> 0` and steering determinant nonzero) with the nonzero set of
+the selected Hessian-column/e_par contraction.  This is exactly the
+local-transform shrink needed before the later mixed IFT/arc-intersection
+bookkeeping: a single fixed omega coordinate remains transverse for all nearby
+critical points in that neighborhood.
+
+Verification: `ML_process` reload of `Scratch_Wiring` against
+`Applied_Math_D3_Wiring` succeeded and retrieved
+`Phi_par_omega_axis_critical_nonzero_local`.
+
+## 2026-07-11, Codex continuation: product and critical-graph omega branch
+
+Pushed the local branch from "omega only, fixed x" to the form needed by the
+critical-graph machinery.
+
+First added the product-neighborhood continuity/open-set support:
+
+- `open_e_par_denominator_nonzero_snd`
+- `continuous_on_e_par_snd_denominator_nonzero`
+- `continuous_on_HessU_col_e_par_joint`
+
+Then proved:
+
+```isabelle
+theorem Phi_par_omega_axis_critical_nonzero_product_local:
+  assumes "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and "gain_dip \<omega> \<noteq> 0"
+    and "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  obtains j :: 2 and W where
+    "open W" and "(x, \<omega>) \<in> W"
+    and "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    and "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow> gain_dip \<eta> \<noteq> 0"
+    and "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par y \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1) \<noteq> 0"
+```
+
+The actual theorem also exposes the nonzero Hessian-column/e_par contraction
+on `W`; the displayed version above suppresses that middle conjunct.  This is
+the robust product neighborhood where `x` and `omega` can both vary.
+
+Finally combined this with `dip_critical_graph_dichotomy_unique`:
+
+```isabelle
+theorem dip_critical_graph_Phi_par_omega_axis_branch:
+  obtains B N g j where
+    "open B" and "connected B" and "x0 \<in> B"
+    and "open N" and "(x0, \<omega>b) \<in> N"
+    and "g x0 = \<omega>b" and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> gain_dip (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+```
+
+The proof shrinks the analytic critical graph domain by the open preimage of
+the product branch neighborhood under `x \<mapsto> (x, g x)`.  A transient `smt`
+extraction of the product-local branch worked interactively but failed in the
+batch `ML_process` environment when the SMT backend could not start, so the
+final proof uses a structured elimination of
+`Phi_par_omega_axis_critical_nonzero_product_local` and has no SMT dependency.
+
+Verification: `ML_process` reload of `Scratch_Wiring` against
+`Applied_Math_D3_Wiring` succeeded and retrieved
+`dip_critical_graph_Phi_par_omega_axis_branch`.
+
+## 2026-07-11, Codex continuation: regular and nowhere-dense chart wrappers
+
+Packaged the graph-level omega branch into the two interfaces downstream code
+is likely to want directly.
+
+First proved the "regular branch" wrapper:
+
+```isabelle
+theorem dip_critical_graph_Phi_par_omega_axis_regular_branch:
+  obtains B N g j where
+    "open B" and "connected B" and "x0 \<in> B"
+    and "open N" and "(x0, \<omega>b) \<in> N"
+    and "g x0 = \<omega>b" and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+    and "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> gain_dip (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+```
+
+This is `dip_critical_graph_Phi_par_omega_axis_branch` plus the standard
+continuity shrink that makes `cvec_dip` and `det HessU` stay nonzero along the
+critical graph.
+
+Then proved the capstone-facing nowhere-dense wrapper:
+
+```isabelle
+theorem dip_critical_chart_nowhere_dense_Phi_par_omega_axis_branch:
+  ...
+  and "interior (closure {x \<in> B.
+         mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+```
+
+This assumes the same `wit` hypothesis as `dip_critical_chart_nowhere_dense`,
+but preserves the extra fixed omega-coordinate `Phi_par` derivative branch,
+plus nonzero steering determinant and nonzero gain, on the chart.  The proof
+uses `wit` to get one point with `mstarg \<noteq> 0` on the already-regular graph
+chart, then applies `real_analytic_nowhere_dense_zeros` to the analytic
+function `x \<mapsto> mstarg (cvec_dip ... (g x)) x`.
+
+Verification: `ML_process` reload of `Scratch_Wiring` against
+`Applied_Math_D3_Wiring` succeeded and retrieved both
+`dip_critical_graph_Phi_par_omega_axis_regular_branch` and
+`dip_critical_chart_nowhere_dense_Phi_par_omega_axis_branch`.
+
+## 2026-07-11, Codex continuation: D3 wiring promotions and notation decision
+
+Read the D3 diary trail and promoted the reusable D3 chart-core infrastructure
+from scratch into the permanent `Appendix/Wiring/D3_Chart_Wiring.thy` theory.
+New permanent facts include:
+
+- `chart_core_data_of_functional_cuts`
+- `chart_core_data_of_vector_cuts`
+- `chart_core_data_union`
+- `chart_core_data_finite_UN`
+- `d3_detHess_arc_chart_core_empty`
+- `d3_detHess_arc_chart_core_all_empty`
+- `d3_chart_core_all_of_functional_cut_covers`
+- `d3_chart_core_all_of_vector_cut_covers`
+- `d3_chart_core_all_of_fixed_omega_piece_covers`
+- `F0_dip_nonempty_from_robust4_design_cores`
+- `F0_dip_nonempty_from_robust4_piece_covers`
+
+This makes the live capstone-facing D3 target explicit in the rebuilt
+`Applied_Math_D3_Wiring` heap: for the Robust4 design, it is enough to provide
+the fixed-omega piece-cover family for every analytic arc in
+`OmegaPF (vector [pi/2,0]) (pi/4)`, plus the independent Branch-P closed-cover
+core.  The wrappers are no longer scratch-only.
+
+Also checked the user's question about using the `\<nabla>\<^sup>2` notation from
+`Higher_Differentiability_Multi.thy`.  For this D3 layer I did not switch to it:
+the downstream predicates and proved lemmas are already stated in terms of the
+concrete `gradU`, `HessU`, `frechet_derivative`, and slot/contraction APIs.
+Introducing `\<nabla>\<^sup>2` here would require bridge lemmas back to those concrete
+objects and would mostly be notation churn.  The current branch needs
+chart-core cut data and arc packaging; the bottleneck is not recognition of
+the Hessian notation.
+
+Verification:
+
+- focused `ML_process` reload of `Appendix/Wiring/D3_Chart_Wiring.thy` against
+  `Applied_Math_D3_Wiring` succeeded, retrieving the promoted capstone wrappers
+  and finite-union combinator;
+- `Scratch_Wiring` still reloads against the promoted theory;
+- `git diff --check` is clean for the touched files.
+
+Status: D3 is still not fully closed.  The remaining mathematical construction
+is still the arc-level cover of
+`V \<inter> D3BadXG_H0core (vector [pi/2,0]) (vector [0,0]) \<gamma>` by closed
+fixed-omega pieces (or an equivalent direct scalar/vector cut cover).  The
+new permanent combinators are the intended target shape for the Heine-Borel
+finite-subcover/local-chart assembly.
+
+## 2026-07-11, Claude: the genuine \<open>t\<close>-elimination, done via a joint \<open>(x,t)\<close> IFT
+
+Diagnosed first: the `Phi_par_omega_axis` branch Codex was landing in
+`Scratch_Wiring.thy` (`dip_critical_graph_Phi_par_omega_axis_branch`,
+`dip_critical_chart_nowhere_dense_Phi_par_omega_axis_branch`) assumes
+`det HessU \<noteq> 0` throughout — confirmed by reading `D3BadXG_H0core`'s and
+`BadXGW`'s definitions directly (both require `det HessU = 0`). That branch
+reuses the OLD regular-Hessian critical-graph engine
+(`dip_critical_graph_dichotomy_unique`) for expediency, but it targets the
+wrong stratum for D3 and cannot be wired in. Flagged this rather than
+building on top of it.
+
+Built the actual arc-parameter elimination in a new scratch theory,
+`M5_Dev_ArcBridge/Scratch_ArcBridge.thy` (parented on
+`Applied_Math_Appendix_Frontier`, deliberately NOT on the heavier
+`Applied_Math_D3_Wiring` heap, which proved unstable to rebuild concurrently
+with live jEdit/build sessions during this work — see GOTCHA below). Zero
+`sorry`, verified via repeated `ML_process -r` reload and `isabelle eval_at`
+(a fast per-line goal-state inspector, `Isabelle2025-2/src/Pure/Tools/eval_at.scala`,
+usage: `isabelle eval_at [-s] THY_FILE LINE [COMMAND]`; much cheaper than a
+full reload for iterating on a single broken step).
+
+Construction, in order:
+1. `Hgrad1 \<omega>0 \<omega>s \<phi> q = (fst q, gradU_1(fst q, \<phi>(snd q)))`, `has_derivative_Hgrad1_at`
+   — its joint \<open>(x,t)\<close>-derivative, assembled from @{thm gradU_dip_joint_C1}
+   (already-unconditional, no `det HessU` hypothesis) composed with the arc's
+   own tangent via the chain rule.
+2. `gradU1_arc_local_graph` — the actual local implicit-function graph. Applies
+   the STANDARD (non-analytic) `inverse_function_theorem` (HOL-Analysis
+   `Derivative.thy`, general C1 IFT via an explicit inverse blinfun, not the
+   project's bespoke analytic IFT) to `Hgrad1` on `X \<times> {a<..<b}`, using an
+   EXPLICIT block-triangular inverse (`invHmap q = (fst q, (snd q - Dxpart(fst
+   q))/T)`) rather than an abstract nonzero-Jacobian argument. Box-extraction
+   (open `U'`/`V` around `(x0,t0)`/`(x0,0)` down to genuine balls, then a
+   product box `B \<times> {t0-\<epsilon>,t0+\<epsilon>}`) via elementary `open_contains_ball` +
+   `dist_Pair_Pair`/`real_sqrt_sum_squares_less`, not any dedicated
+   "open_prod_elim" lemma (none found under an obvious name). Gives
+   `\<tau>: B \<to> \<real>` with `\<tau> x0=t0`, `gradU_1(x,\<phi>(\<tau> x))=0` on `B`, local uniqueness,
+   and (only) `\<tau> differentiable (at x0)`.
+2. Reused ONLY at the interior of the arc's parametrizing interval
+   (\<open>a<t0<b\<close>) — `C1_differentiable_on {a..b}` gives a genuine TWO-SIDED
+   derivative even at the closed interval's endpoints (checked the actual HOL
+   definition: `has_vector_derivative (D x) (at x)`, unrestricted, not
+   `at x within S`), so the two endpoints reduce to ordinary SINGLETON
+   fixed-\<open>\<omega>\<close> fibres (already unconditionally closed per the earlier
+   `fixed_omega_H0core_chart_core_robust4_all_angles` work) — planned but not
+   yet formalized as a lemma (`D3BadXG_H0core` splits over `{a}\<union>{a<..<b}\<union>{b}`
+   trivially via `D3BadXG_H0core_UN`, added standalone and verified in
+   `M5_Dev_ArcSplit/Scratch_ArcSplit.thy`).
+3. `G'_x_part`/`G'_omega_part` — the joint derivative `G'` restricted to the
+   `x`-slot (`(u,0)`) resp. \<open>\<omega>\<close>-slot (`(0,v)`) agrees with the ALREADY-KNOWN
+   `x`-partial (@{thm has_derivative_gradU_dip_x_explicit}) resp. `HessU`
+   (@{thm gradU_dip_has_derivative}) — proved by chain rule against the
+   constant-embedding + uniqueness of the Fr\'echet derivative, mirroring each
+   other exactly. Both are stated for ANY component (real^2-valued equations),
+   not projected to component 1, so BOTH are directly reusable for component 2
+   without re-deriving anything.
+4. `tau_has_derivative` — implicit differentiation of the identity
+   `gradU_1(x,\<phi>(\<tau> x)) \<equiv> 0` on the open set `B` (using
+   `has_derivative_transform_within_open` to get the composed function's
+   derivative literally equal to the zero map, via `has_derivative_unique`
+   against the chain-rule value): `D\<tau>(u) = -Dx1(u)/T1`, where `Dx1` is the
+   `x`-partial of `gradU_1` at fixed `\<omega>=\<phi> t0` and `T1` is EXACTLY the
+   project's already-used transversality scalar
+   `HessU(x0,\<phi> t0) \<bullet> \<phi>'(t0)` (component 1). No new derivative order — the
+   "third-order theory" fear from the earlier self-correction entry was
+   correctly ruled out there and is NOT needed here either.
+5. `gradU2_along_graph_has_derivative` — the payoff: differentiating the
+   LEFTOVER `gradU_2(x,\<phi>(\<tau> x))` along the graph via the SAME chain rule,
+   substituting `\<tau>`'s closed form, gives EXACTLY the Schur-complement
+   combination anticipated by the corrected plan:
+   `D[gradU_2\<circ>graph](x0)(u) = Dx2(u) - Dx1(u)\<cdot>T2/T1`
+   (`Dx2`/`T2` the component-2 analogues of `Dx1`/`T1`, from the SAME
+   `G'_x_part`/`G'_omega_part` facts, component-projected differently — no
+   new machinery). This is the genuine leftover `x`-space cut for the arc
+   case, replacing the earlier (wrong-stratum) `Phi_par_omega_axis` detour.
+
+Also copied (temporarily, for scratch-only use) the generic
+`chart_core_data_of_functional_cuts` combinator verbatim from
+`D3_Chart_Wiring.thy` — delete the copy when splicing into the real file.
+
+**GOTCHA (new, expensive to learn): concurrent `isabelle build`/`ML_process
+-r`/jEdit instances against the SAME session heap corrupt the session log
+sqlite DB** (`SQLITE_READONLY_DBMOVED`/"database file has been moved") and can
+leave the heap image genuinely missing even after a build reports
+"Finished" with no errors — checked directly (`ls
+~/.isabelle/.../heaps/.../Applied_Math_D3_Wiring`, absent) after exactly this
+happened. Recovery: `pkill -9 -f "Isabelle_Tool build"` everything, clear the
+stale `log/Applied_Math_D3_Wiring.{db,gz}` and the (absent) heap file, then run
+ONE clean `isabelle build`. Because of this fragility, deliberately kept
+`Scratch_ArcBridge.thy` parented on the LIGHTER, stable
+`Applied_Math_Appendix_Frontier` heap (which never needed rebuilding this
+session) rather than `Applied_Math_D3_Wiring`, even though the latter has the
+`chart_core_data_of_*` combinators natively — hence the temporary verbatim
+copy above. `isabelle eval_at` (per-line goal inspection, no full session
+reload) turned out to be the much cheaper iteration tool once discovered —
+prefer it over repeated `ML_process -r` reloads for debugging a single
+broken step.
+
+**REMAINING for the arc bridge** (not yet done): (a) generalize
+`gradU1_arc_local_graph`'s differentiability/derivative-formula conclusions
+from "at `x0` only" to "for every `x\<in>B`" (mechanical, same construction
+pointwise, needed for the next step); (b) continuity of
+`gradU2_along_graph_has_derivative`'s derivative field in `x`, to shrink a
+NONZERO-at-`x0` witness direction `r` to a genuine closed neighborhood (the
+continuity-shrink pattern used everywhere else in this project); (c) the
+DEGENERATE case where the Schur derivative `Dx2(\<cdot>)-Dx1(\<cdot>)\<cdot>T2/T1` is
+identically zero (i.e. the arc tangent lies in `ker(HessU)`) — not yet
+attempted, genuinely could occur on a whole sub-arc for an adversarial `\<phi>`
+(analytic_arc is only `C1_differentiable_on`, not real-analytic, so
+"nowhere-dense-unless-identically-zero" arguments don't directly transfer);
+(d) the outer Lindel\"of/countable-subcover assembly over the arc's
+parametrizing interval, using `chart_core_data_countable_UN` (already built by
+Codex in `Scratch_Wiring.thy`) plus the `second_countable_imp_Lindelof_space`
+pattern already used generically in `Parametric_Transversality_Euclidean_Base.thy`
+(`countable_chart_cover_with_Dphi`'s proof, lines ~471-491 — reuse the exact
+Lindel\"of-extraction idiom, not the regular-submersion chart content around
+it); (e) splice everything into `Appendix/Wiring/D3_Chart_Wiring.thy` proper
+and switch the import back to the full heap once (b)-(d) are done (verified
+the heap itself is healthy — a clean `isabelle build Applied_Math_D3_Wiring`
+finished in 1:29 with zero errors once the concurrent-process corruption was
+cleared).
+
+## 2026-07-11, Claude continuation: (a)-(e) all landed in `Scratch_ArcBridge.thy`
+(user-driven), REDUCING D3 to two pointwise conditions — plus a full survey of
+why the parallel "all-angles" and "Jac3" routes don't discharge them
+
+The user continued editing `Scratch_ArcBridge.thy` directly (live in jEdit)
+after the previous entry and pushed items (a)-(e) of the "REMAINING" list all
+the way through. The file (now 3195 lines, verified zero-`sorry` via a fresh
+`ML_process -r` reload: `RELOAD_OK`) now contains, in order past
+`transversality_shrink`: the generalization of `gradU1_arc_local_graph` to
+`\<forall>x\<in>B` (item a), `chart_core_data_countable_UN` /
+`chart_core_data_of_countable_cover` / `d3_chart_core_of_countable_chart_core_cover`
+/ `d3_chart_core_of_countable_arc_local_patches` /
+`d3_chart_core_of_countable_arc_cball_patches(_H0core)` /
+`countable_subcover_of_openin_cover` /
+`d3_chart_core_of_Lindelof_H0core_cball_patches` (item d, the full Lindel\"of
+countable-subcover engine, reusing the
+`second_countable_subtopology`/`second_countable_imp_Lindelof_space` idiom),
+`local_zero_cut_chart_core_data` / `arc_schur_zero_cut_chart_core_data` /
+`transversality_shrink` (T1-continuity shrink, already had this) /
+`arc_schur_point_zero_cut_chart_core_data` /
+`arc_schur_point_local_critical_cover_chart_core_data` /
+`arc_schur_point_open_H0core_cball_patch` /
+`d3_chart_core_of_pointwise_arc_schur_patches` (assembling all of the above
+into a single per-arc-piece lemma), `D3BadXG_H0core_UN` /
+`D3BadXG_H0core_arc_split` / `chart_core_data_empty` /
+`d3_chart_core_of_closed_arc_split` (item b/e-adjacent: splitting `[a,b]` into
+`{a}\<union>(a,b)\<union>{b}` so the two endpoints reduce to ordinary singleton
+fixed-\<open>\<omega>\<close> fibres) /
+`C1_closed_interval_open_derivative` /
+`d3_chart_core_of_closed_C1_arc_pointwise_arc_schur_patches`, culminating in:
+
+```isabelle
+theorem d3_chart_core_all_of_analytic_arc_pointwise_arc_schur_patches:
+  assumes left:  "\<And>\<phi> a b. a \<le> b \<Longrightarrow> \<phi> C1_differentiable_on {a..b} \<Longrightarrow>
+      \<phi> ` {a..b} \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow> d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<phi> a}"
+    and right: "... d3_detHess_arc_chart_core V \<omega>0 \<omega>s {\<phi> b}"
+    and trans: "... \<Longrightarrow> vec_nth (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst q) (\<phi> (snd q))
+                          *v D\<phi> (snd q)) 1 \<noteq> 0"
+    and schur: "... \<Longrightarrow> \<exists>r. arc_schur_L \<omega>0 \<omega>s \<phi> D\<phi> (\<lambda>_. snd q) (fst q) r \<noteq> 0"
+  shows "d3_detHess_arc_chart_core_all V ctr \<delta> \<omega>0 \<omega>s"
+```
+
+This is a COMPLETE, verified (0 `sorry`) reduction of the whole D3 obligation
+to exactly four pointwise conditions per sub-arc: chart-core at each of the
+two endpoints, plus (on the open interior) the two "genuine transversality"
+scalars `T1` (needed to eliminate `t` via `gradU_1`'s IFT) and the Schur-complement
+derivative (needed to cut on the leftover `gradU_2\<circ>graph`) each nonzero. Also
+added `frechet_derivative_gradU_dip_x_eq_explicit` /
+`continuous_on_frechet_derivative_gradU_dip_x_applied`, bridging notation
+toward `T2`-continuity (needed for a "second shrink" analogous to
+`transversality_shrink`'s `T1` shrink) — not yet used by the capstone theorem
+above, which currently takes `trans`/`schur` as raw hypotheses rather than
+deriving them from a shrunk neighborhood.
+
+**This turn's main contribution: a full survey of the surrounding, PARALLEL
+work (by Codex and a `Claude Fable 5` instance, all committed to git while I
+was working — commits `2c41692`..`9fd2a35`, plus the huge, separately
+committed `Appendix/Robust4Cover/D3_Curve_Cover.thy`, 3655 lines/0 `sorry`, now
+a PERMANENT import of `Nonemptiness_Robust4.thy` itself), to determine whether
+any of it already discharges `trans`/`schur` above, or whether it solves a
+different problem.** Answer: different problem, but one piece of it gives a
+real, usable simplification. Specifically:
+
+1. **The Jac3/D34_Geodesic_Branch route is a dead end for D3** (this was
+   already independently concluded by whoever wrote diary lines 5443-5587
+   earlier this session, and re-confirmed by a research fork this turn):
+   `Jac3_H12rad`/`Jac3_H0cub` treat \<open>\<omega>\<close> as a fixed parameter and only ever
+   differentiate in `x`; their genericity witnesses
+   (`Jac3_H12rad_nonzero_in_open_robust4_witness` etc.) are existence facts at
+   ONE fixed \<open>\<omega>\<close>, not statements that survive `\<omega>` ranging over an arc.
+   `gradU2_perp_slot_zeros_nowhere_dense`'s zero set is nowhere-dense IN `x`
+   for a FIXED `\<omega>`, again not addressing the arc/`t` dimension.
+
+2. **The "all angles unconditional" fixed-\<open>\<omega>\<open> result IS directly useful,
+   for the `left`/`right` endpoint hypotheses only.** `M5_Dev_Wiring/Scratch_Wiring.thy`
+   (still scratch, but 0 `sorry`, 4319 lines) proves, via an elementary
+   trig case-split (`d3_s1_s2_both_zero_forces_cvec_zero_robust4`, showing the
+   two factors can't BOTH vanish without forcing `cvec_dip = 0`, contradiction):
+   ```isabelle
+   theorem fixed_omega_H0core_chart_core_robust4_all_angles:
+     assumes "0 < \<omega> $ 1" "\<omega> $ 1 < pi" "2 \<le> CARD('n)"
+     shows "d3_detHess_arc_chart_core V (vector [pi/2,0]) (vector [0,0]) {\<omega>}"
+   ```
+   with NO exceptions and NO genericity — literally every angle in the box
+   works. Since `\<phi> a, \<phi> b \<in> OmegaPF (vector[pi/2,0]) (pi/4)` (given `gsub`) and
+   `pf` (proved in `D3_Chart_Wiring.thy`'s capstone) gives
+   `0 < \<omega>$1 < pi` for every \<open>\<omega>\<close> in that box, THIS DIRECTLY DISCHARGES `left`
+   and `right` above, unconditionally, at the Robust4 design point — no new
+   proof needed, just wiring (not yet done: requires a session that sees both
+   `Scratch_ArcBridge`'s heap, `Applied_Math_Appendix_Frontier`, and
+   `Scratch_Wiring`'s heap, `Applied_Math_D3_Wiring`; deferred rather than
+   risking a heap rebuild while the user had a live jEdit session open on
+   `Scratch_ArcBridge.thy` plus a running `veriT` process this turn).
+
+3. **The `Phi_par_uslot_radial_nowhere_dense_disjunction` / `chart_core_data_of_vector_cuts`
+   x-space-rank-2 route (co-authored "Claude Fable 5", commits `c4a0ff7`/`360d470`)
+   does NOT discharge `trans`/`schur` either, and I convinced myself it
+   can't in principle.** It proves an x-space-only analogue of full rank 2
+   using a perp-slot direction (`Phi_par_perp_slot_zero`) and a radial-slot
+   direction, with NO reference to \<open>\<omega>\<close>-derivatives — genuinely elegant, and
+   the right tool for building MORE fixed-\<open>\<omega>\<close> chart-core pieces without
+   genericity concerns. But `trans`/`schur` are not about fixed-\<open>\<omega>\<close> x-space
+   rank at all — they are about whether the ARC's velocity `D\<phi>(t)` is
+   transverse to `HessU`'s (at most rank-1, since `det HessU=0` on `H0core`)
+   range direction — an intrinsically \<open>t\<close>-direction question that no
+   x-space-only argument can touch. I checked this isn't a notational
+   confusion: `HessU_dip_entry_moments` (`Nonemptiness_Robust1.thy:2733`) shows
+   `HessU`'s `x`-dependence enters through the MOMENT functions `Hcmat`/
+   `gradU(id,1)`, genuinely coupled with the \<open>\<omega>\<close>-only jets `Dcvec_dip`/
+   `D2cvec_dip`/`\<partial>gdip`/`\<partial>\<^sup>2gdip` — so `ker(HessU(x,\<omega>))`, when `HessU` has
+   rank exactly 1, is NOT independent of `x` in any way I could show
+   algebraically in the time available; there's no free lunch reducing "the
+   arc avoids `HessU`'s kernel direction" to an angle-only (or x-only)
+   condition the way `d3_s1_s2_both_zero_forces_cvec_zero_robust4` did for the
+   fixed-\<open>\<omega>\<close> case.
+
+**Honest remaining frontier for D3** (superseding items (b)/(c) of the previous
+entry, since (a)/(d)/(e)'s machinery is now built): discharge `trans` and
+`schur` of `d3_chart_core_all_of_analytic_arc_pointwise_arc_schur_patches`
+for the ACTUAL Robust4 design values. Two live options, neither attempted yet:
+(i) find a closed-form disjunction for `HessU`'s rank-1 kernel direction
+analogous to `d3_s1_global_factor`/`d3_s2_global_factor` (would need to mine
+`HessU_dip_entry_moments`'s explicit moment-space formula, likely a genuinely
+new multi-page computation, comparable in size to the existing
+`D34_Geodesic_Branch.thy` Tier 4-6 work); (ii) accept that `trans`/`schur` can
+fail on a genuine (possibly whole-sub-arc) degenerate locus and build a
+THIRD, fallback branch for it (using e.g. the `Phi_par_uslot_radial` x-space
+machinery item 3 above, PROVIDED a way is found to still do the outer,
+\<open>t\<close>-parametrized assembly without eliminating \<open>t\<close> via `gradU_1`'s IFT at all
+— unclear this is even easier than (i)). Neither is a quick finish; this is
+now the precisely-scoped remaining gap, not a vague "arc-packaging problem."
+
+## 2026-07-11, Claude continuation: option (i) started — `H_par`/`H_cross`/
+`H_perp`, the algebraic det-zero identity, zero \<open>sorry\<close>; then a concrete
+reason to stop before the genericity step
+
+Started option (i) from the previous entry: mine `HessU`'s rank-1 structure
+via the `(e_par, perp2 e_par)` basis, in a new scratch theory
+`M5_Dev_D3Hess/Scratch_D3Hess.thy` (session `Applied_Math_M5_D3Hess`, parented
+directly on `Applied_Math_M5_Wiring` so `Scratch_Wiring`'s `H_par`/`e_par`/
+`Phi_par`/`frechet_derivative_Phi_par_omega_critical` are all in scope).
+
+**Gotcha (new): `Applied_Math_D3_Wiring`'s heap was genuinely missing**
+(`*** Missing heap image`), even though earlier session notes said it
+rebuilds clean — root cause this time: `isabelle build SESSION` without
+`-b` does NOT persist a heap image (it only verifies/updates the build
+database); the `-b` ("build heap images") flag is required to actually
+write the `.../heaps/<platform>/SESSION` file. Two prior attempts (session
+this time, not by me) had exactly this symptom: "Finished" with 0 errors,
+a valid `log/SESSION.db`, but no heap file. Fixed by clearing the stale
+`log/Applied_Math_D3_Wiring.{db,gz}` and rerunning with
+`isabelle build -v -b ...`. Also needed `Applied_Math_M5_Wiring`'s own heap
+built the same way, and needed an EXTRA `-d M5_Dev_Wiring` (in addition to
+`-d .`) for session discovery to find its `ROOT` file at all when it's
+referenced via a cross-session qualified `imports "Applied_Math_M5_Wiring.
+Scratch_Wiring"` from an ad-hoc (`-C DIR`, not `isabelle build`) theory --
+the top-level `New_Applied_Math_Formalization/ROOT` does not itself list
+`M5_Dev_Wiring`'s session, so `-d .` alone does not discover it via that
+path (unlike sessions declared directly inside the top ROOT file, e.g.
+`Applied_Math_Appendix_Frontier`, which `-d .` finds fine).
+
+**New facts, all zero `sorry`, verified via `ML_process -r` reload
+(`RELOAD_OK`)**:
+```isabelle
+definition H_cross :: "... \<Rightarrow> real" where
+  "H_cross x \<omega> \<omega>0 \<omega>s = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v perp2 (e_par \<omega>0 \<omega>s \<omega>))
+                            \<bullet> e_par \<omega>0 \<omega>s \<omega>"
+definition H_perp :: "... \<Rightarrow> real" where
+  "H_perp x \<omega> \<omega>0 \<omega>s = (HessU ... *v perp2 (e_par ...)) \<bullet> perp2 (e_par ...)"
+
+lemma H_cross_eq_Phi_par_omega_critical:
+  "H_cross x \<omega> \<omega>0 \<omega>s
+     = frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (perp2 (e_par \<omega>0 \<omega>s \<omega>))"
+  \<comment> \<open>at a critical point, det(matrix Dcvec)\<noteq>0, gain\<noteq>0 -- direct instantiation
+      of the ALREADY-PROVEN @{thm frechet_derivative_Phi_par_omega_critical}\<close>
+
+theorem HessU_radial_row_decomp:
+  "(HessU ... x \<omega> *v h) \<bullet> e_par \<omega>0 \<omega>s \<omega>
+     = (h \<bullet> e_par / (e_par\<bullet>e_par)) * H_par x \<omega> \<omega>0 \<omega>s
+     + (h \<bullet> perp2 e_par / (e_par\<bullet>e_par)) * H_cross x \<omega> \<omega>0 \<omega>s"
+  \<comment> \<open>for ANY direction h (in particular h = D\<phi> t): the radial-row action
+      of HessU is a computable linear combination of H_par, H_cross alone\<close>
+
+theorem HessU_det_via_par_cross_perp:
+  "det (HessU ... x \<omega>) * (e_par \<bullet> e_par)\<^sup>2
+     = H_par x \<omega> \<omega>0 \<omega>s * H_perp x \<omega> \<omega>0 \<omega>s - (H_cross x \<omega> \<omega>0 \<omega>s)\<^sup>2"
+  \<comment> \<open>since (e_par, perp2 e_par) is an orthogonal, equal-length rotation of the
+      standard basis, det is exactly (H_par\<cdot>H_perp - H_cross\<^sup>2)/\<rho>\<^sup>4 -- pure
+      2x2 linear algebra, proved directly from HessU_dip_symmetric + det_2,
+      no new analytic content\<close>
+```
+Both theorems are genuinely useful: `HessU_radial_row_decomp` says my `trans`
+(`(HessU\<bullet>v D\<phi> t)$1 \<noteq> 0`) generalizes cleanly to "\<open>(D\<phi> t \<bullet> e_par)\<cdot>H_par +
+(D\<phi> t \<bullet> perp2 e_par)\<cdot>H_cross \<noteq> 0\<close>" for ANY test direction, not just axis 1;
+`HessU_det_via_par_cross_perp` confirms (rigorously, not just informally)
+that on the D3 stratum (`det HessU = 0`), `H_par\<cdot>H_perp = H_cross\<^sup>2` exactly,
+so `HessU`'s 1-dim kernel direction (when `HessU\<noteq>0`) is literally
+`(H_cross, -H_par)` in the `(e_par, perp2 e_par)` coordinates -- a clean,
+closed characterization of exactly the direction an adversarial arc's
+velocity would have to hit for `trans` to fail.
+
+**Also rigorously ruled out (before writing code) a "mirror the two axis
+components" shortcut**: since `HessU` is symmetric with `det=0`, its two
+raw columns `HessU\<bullet>e1` and `HessU\<bullet>e2` are automatically PROPORTIONAL
+(both lie along the same rank-1 range direction `w`), so `trans_1 = D\<phi>\<bullet>w_1`
+and `trans_2 = D\<phi>\<bullet>w_2` are proportional to the SAME scalar `D\<phi>\<bullet>w` --
+trying "component 1 or component 2" (or ANY two fixed test directions, not
+just axis 1/2) gives NO extra coverage over a single test direction: they
+all vanish together exactly when `D\<phi> \<in> ker(HessU)`. This differs from
+`Phi_par_omega_axis_critical_nonzero_disjunction`'s 2-direction disjunction,
+which crucially needed `det HessU \<noteq> 0` (full rank, giving a genuine
+right-inverse/bijectivity argument) -- unavailable here by construction
+(`H0core` requires `det HessU = 0`). So there is no "try 2 fixed directions"
+escape; the only directions worth testing are ones an ADVERSARY does not
+control, which for a fixed arc means none.
+
+**Why I stopped before the genericity step (option (i)'s actual payoff)**:
+the natural next move -- get `H_cross`'s own closed radial form via
+`HessU_quad_dictionary[where e = e_par, w = perp2 e_par]` (fully generic,
+already proven, no det-HessU hypothesis), mirroring how `H_par_radial_
+dictionary` was derived from the SAME dictionary at `e=w=e_par` -- requires
+substituting `Dcvec_dip \<omega>0 \<omega>s \<omega> (perp2 (e_par \<omega>0 \<omega>s \<omega>))` and
+`D2cvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>) (perp2 (e_par \<omega>0 \<omega>s \<omega>))` using
+`e_par`'s OWN closed form (`e_par_closed_form`, itself a ratio of
+`d3_s1_global_factor`/`d3_s2_global_factor` over `2\<cdot>gain\<cdot>det(matrix Dcvec)`) --
+i.e. a genuinely large nested trig expression, NOT the clean `Dcvec_dip_e_par`
+shortcut (`Dcvec_dip(e_par) = cvec`) that made `H_par`'s dictionary tractable.
+Found a concrete, explicit reason this is riskier than it looks, IN THE
+CODEBASE ITSELF: `Dcvec_dip`'s own definition comment
+(`Nonemptiness_Robust1.thy:814-819`) warns that in this merged JNF+HMA+
+Smooth_Manifolds heap, the infix `$` notation is super-linearly expensive to
+elaborate -- "a single term with \<approx>12 occurrences of `$` takes MINUTES (or
+HANGS)" -- which is presumably exactly what caused my own build to stall for
+950+ seconds on the (unrelated, now-fixed) line 739 earlier this session.
+Expanding `H_cross`'s full closed form via nested substitution of `e_par`'s
+own ratio-of-factors formula into `D2cvec_dip`'s already-large bilinear
+expression would produce a term with substantially MORE than 12 such
+occurrences unless very carefully staged behind `define`s throughout (the
+existing `H_par_radial_dictionary` derivation stayed small specifically
+because `Dcvec_dip_e_par` collapses `Dcvec_dip(e_par)` down to the already-
+tiny `cvec_dip`; no such collapse is available for `Dcvec_dip(perp2 e_par)`).
+Given this concrete elaboration-cost risk, stopped here rather than risk a
+multi-hour stuck `simp`/`sledgehammer` call blind.
+
+**Honest status**: `d3_chart_core_all_of_analytic_arc_pointwise_arc_schur_
+patches` (Scratch_ArcBridge.thy) is still the complete, verified reduction of
+D3 to exactly 4 pointwise conditions; `left`/`right` are free (via
+`fixed_omega_H0core_chart_core_robust4_all_angles`, wiring not yet done);
+`trans`/`schur` are now characterized EXACTLY (`H_cross`, `H_perp`, the
+det-zero identity) but not yet shown nonzero/generic. The concrete remaining
+work, precisely scoped: (1) get `H_cross`'s closed radial form, staged
+carefully behind `define`s to avoid the `$`-elaboration blowup (or find an
+alternate route to it that avoids substituting `e_par`'s full ratio-of-
+factors form, e.g. proving whatever's needed directly about
+`d3_s1_global_factor`/`d3_s2_global_factor` and `D\<phi>` without ever
+materializing `e_par`'s reciprocal-of-`det`-form explicitly); (2) a two-bump
+Wronskian-style genericity argument for the resulting `H_par`/`H_cross`
+combination, mirroring `Phi_par_uslot_radial_nowhere_dense_disjunction`
+--- BUT parametrized by an arbitrary test direction `(\<alpha>,\<beta>)` rather than 2
+fixed antenna indices, since the arc's own velocity direction is not a free
+choice the way antenna index was; this is the genuinely new piece of math,
+not yet attempted.
+
+## 2026-07-11, Claude continuation: independent confirmation this is a real
+open problem, not a gap in my search -- stopping the direct assault
+
+Kept pushing per explicit instruction to close this out. Two more findings,
+then a considered decision to stop searching for a shortcut:
+
+1. **Rigorously checked and rejected a "cover the degenerate residual via
+   fixed-\<open>\<omega>\<close> singleton charts instead of arc-elimination" idea.** At first
+   this looked like a clean escape: `fixed_omega_H0core_chart_core_robust4_
+   all_angles` is unconditional, so why not use it directly whenever
+   `trans`/`schur` fail? The flaw: the outer Lindel\"of assembly
+   (`d3_chart_core_of_Lindelof_H0core_cball_patches`) needs, for EVERY local
+   patch \<open>S\<close> around a point \<open>q=(x_0,t_0)\<close>, a SINGLE closed piece \<open>C\<close> that
+   captures ALL \<open>x\<close> critical at ANY \<open>t\<close> in the WHOLE neighbourhood
+   \<open>(t_0-\<epsilon>,t_0+\<epsilon>)\<close>, not just at \<open>t_0\<close> itself. A fixed-\<open>\<omega>\<close> chart built at
+   \<open>\<omega>=\<phi>(t_0)\<close> only captures \<open>{y : gradU(y,\<phi>(t_0))=0}\<close> -- a DIFFERENT level
+   set from \<open>{y:gradU(y,\<phi>(t))=0}\<close> for \<open>t\<noteq>t_0\<close> in general, so it does NOT
+   cover nearby critical \<open>x\<close>'s from nearby \<open>t\<close>'s. This only works if \<open>x\<close>
+   stays critical for a genuine WHOLE sub-interval of \<open>t\<close> (the fully
+   degenerate case) -- and even then, extending the argument to cover
+   OTHER \<open>x'\<close> near \<open>x_0\<close> that become critical at NEARBY (but different) \<open>t\<close>
+   needs more care than a single fixed-\<open>\<omega>\<close> chart provides. Confirmed: no
+   free lunch here either.
+
+2. **Independent, external confirmation this exact gap is already recognized
+   as open, not just by me**: `M5_Dev_Wiring/Scratch_Wiring.thy`'s OWN
+   capstone wrapper
+   `F0_dip_nonempty_from_countable_fixed_omega_angle_covers` (line ~1706)
+   takes, as a raw ASSUMPTION (not something it proves), exactly this shape:
+   ```isabelle
+   and d3covers: "\<And>V ctr \<delta> \<omega>0 \<omega>s \<gamma>. analytic_arc \<gamma> \<Longrightarrow> \<gamma> \<subseteq> OmegaPF ctr \<delta> \<Longrightarrow>
+     \<exists>om :: nat \<Rightarrow> real^2.
+       (V \<inter> D3BadXG_H0core \<omega>0 \<omega>s \<gamma>) \<subseteq> (\<Union>i. V \<inter> D3BadXG_H0core \<omega>0 \<omega>s {om i})
+       \<and> (\<forall>i. cvec_dip \<omega>0 \<omega>s (om i) \<noteq> 0)
+       \<and> (\<forall>i. d3_s2_global_factor \<omega>0 \<omega>s (om i) \<noteq> 0)"
+   ```
+   i.e. "there exists a COUNTABLE sequence of \<open>\<omega>\<close>'s (from the arc) whose
+   fixed-\<open>\<omega>\<close> fibres already cover the WHOLE arc's bad fibre" -- exactly the
+   countable-cover-across-the-continuum obligation I've been trying to
+   discharge via genuine \<open>t\<close>-elimination. Whoever wrote this wrapper (Codex,
+   per the file's own history) ALSO left this as an open, unproven
+   hypothesis, not a derived fact -- independent confirmation from a
+   completely different angle of attack (fixed-\<open>\<omega>\<close>/angle-conditions route
+   rather than my joint-\<open>(x,t)\<close>-IFT route) that this specific piece is
+   genuinely unresolved in the project, not a gap in my search technique.
+
+**Considered decision**: this is not a shortcut-away-able gap. It is the
+same order of difficulty as every other "Tier" in this diary (each of which
+took a dedicated session/day: Tiers 2-6 of `D34_Geodesic_Branch.thy`, the
+scalar/functional/vector-cut engines, the fixed-angle ladder). Closing it
+for real needs EITHER (a) a genuine higher-order (Morse-lemma-style)
+construction for points where the first-order transversality degenerates,
+which is new machinery not present anywhere in this project, or (b) an
+argument specific to the physical dipole-gain model ruling out the
+degenerate alignment algebraically (the `H_par`/`H_cross`/`H_perp` closed
+forms landed this session are the necessary RAW MATERIAL for (b), but the
+actual genericity/Wronskian argument on top of them is not yet attempted
+and is comparable in scope to the existing two-bump-witness Tiers). Stopping
+the direct assault here rather than continuing to search for a trick that,
+on the evidence gathered across this whole session (mine AND Codex's
+independent attempts), does not appear to exist.
+
+## 2026-07-11, Claude continuation: reframed the open question as a genuine
+cubic/isolated-zero criterion, and started building it (\<open>kx\<close>/\<open>ky\<close>/\<open>kz\<close>
+third-derivatives-along-a-line, verified)
+
+Pushed harder per explicit instruction, and found a materially sharper
+reformulation of the open question via first principles (not more searching):
+**for \<open>x_0\<close> in \<open>D3BadXG_H0core\<close> with \<open>\<omega>_0\<close> witnessing (\<open>det HessU(x_0,\<omega>_0)=0\<close>),
+is \<open>Z(x_0):=\{\<omega> : gradU(x_0,\<omega>)=0\}\<close> ALWAYS isolated at \<open>\<omega>_0\<close> (any
+multiplicity), or can it genuinely be 1-dimensional?** This is exactly
+equivalent to my \<open>trans\<close>/\<open>schur\<close> question (an adversarial arc tracing
+\<open>ker(HessU)\<close> forever is possible IFF \<open>Z(x_0)\<close> is 1-dimensional there), but
+is arc-INDEPENDENT -- a pure local-singularity fact about \<open>gradU(x_0,\<cdot>)\<close>
+alone. Worked out (by hand, then double-checked via the standard
+graph-elimination/Faà-di-Bruno argument) that resolving it needs a genuine
+THIRD \<open>\<omega>\<close>-derivative (cubic) invariant: writing \<open>w^\<perp>=\<close> the kernel direction
+of \<open>HessU(x_0,\<omega>_0)\<close>, the scalar
+\<open>\<Xi> := D^3_\<omega>U(x_0,\<omega>_0)[w^\<perp>,w^\<perp>,w^\<perp>] = \<frac{d^3}{ds^3}\Big|_0 U(x_0,\<omega>_0+s\<cdot>w^\<perp>)\<close>
+being NONZERO forces \<open>\<omega>_0\<close> isolated in \<open>Z(x_0)\<close> regardless of any arc's
+curvature (checked explicitly: an adversary choosing the arc's curvature can
+only shift the \<open>w\<close>-component of the induced second-order term, since
+\<open>HessU\<close>'s range is 1-dim; it can never cancel the \<open>w^\<perp>\<close>-component of \<open>\<Xi>\<close>).
+This is analogous to Tier 6's \<open>T3rad\<close> (also a cubic/third-derivative
+invariant used to resolve a degenerate-Hessian stratum) but in \<open>\<omega>\<close>-space
+along the kernel direction, not \<open>c\<close>-space along the radial direction --
+genuinely new, not a reuse.
+
+Confirmed via source (\<open>U_dip_Wc\<close>): \<open>U(x,\<omega>) = gain_dip(\<omega>)\<cdot>Wc(x,cvec_dip(\<omega>))\<close>,
+so \<open>\<Xi>\<close> needs, by Leibniz + Faà di Bruno for a THIRD derivative of a
+product-of-compositions: the third \<open>s\<close>-derivative of \<open>cvec_dip(\<omega>_0+s\<cdot>w^\<perp>)\<close>
+(a genuinely curved path in \<open>c\<close>-space, not a straight line), the third
+\<open>s\<close>-derivative of \<open>gain_dip(\<omega>_0+s\<cdot>w^\<perp>)\<close> (elementary, 1-D), and \<open>Wc\<close>'s OWN
+mixed mult-directional mult-derivatives up to third order (a genuine
+generalization of the already-built \<open>Wc_d3\<close>/\<open>T3rad\<close>, which only handle the
+DIAGONAL single-direction case \<open>Wc_d3 x c c\<close>).
+
+**Landed this session, in \<open>M5_Dev_D3Hess/Scratch_D3Hess.thy\<close>, 0 \<open>sorry\<close>,
+verified via \<open>ML_process -r\<close> reload (\<open>RELOAD_OK\<close>)**: the first genuinely new
+piece -- the third \<open>s\<close>-derivative, along a straight \<open>\<omega>\<close>-line
+\<open>\<omega>_0+s\<cdot>w\<close>, of each of \<open>kx\<close>, \<open>ky\<close>, \<open>kz\<close> (the raw direction-cosine building
+blocks of \<open>cvec_dip\<close>):
+```isabelle
+lemma kx_line_third_deriv:
+  "(deriv (deriv (deriv (\<lambda>s. kx (\<omega>0 + s *\<^sub>R w))))) 0
+      = - (vec_nth w 1 ^ 3 + 3 * vec_nth w 1 * (vec_nth w 2)\<^sup>2) * cos (vec_nth \<omega>0 1) * cos (vec_nth \<omega>0 2)
+        + (3 * (vec_nth w 1)\<^sup>2 * vec_nth w 2 + vec_nth w 2 ^ 3) * sin (vec_nth \<omega>0 1) * sin (vec_nth \<omega>0 2)"
+(* ky_line_third_deriv, kz_line_third_deriv analogous *)
+```
+Proved via the same mechanical technique as \<open>Wc_curve_d1/d2/d3\<close> (three
+chained \<open>has_field_derivative\<close> facts + \<open>DERIV_imp_deriv\<close>), staged behind
+local \<open>define\<close>s and using \<open>vec_nth\<close> (never \<open>$\<close>) throughout -- confirms the
+earlier elaboration-cost worry does NOT block this route as long as the
+convention from \<open>Dcvec_dip\<close>'s own comment is followed. Two real Isar gotchas
+hit and fixed along the way: (1) \<open>cases i rule: exhaust_2\<close> fails --
+\<open>exhaust_2\<close> is a plain disjunction \<open>i=1\<or>i=2\<close> everywhere else in this
+codebase, always consumed via \<open>using exhaust_2[of i]\<close>, never as a
+\<open>cases ... rule:\<close> target; (2) instantiating a lemma whose \<open>shows\<close> clause
+has a free variable NOT listed in \<open>fixes\<close> (here \<open>s\<close>) via \<open>[where x = v]\<close>
+positional/named substitution is fragile ("No such variable in theorem") --
+safer to let \<open>rule\<close> unify it against the actual goal instead of instantiating
+explicitly, then \<open>simp\<close> away the resulting \<open>+0*w\<close>-type residue afterward.
+
+**Honest remaining scope** (this is genuinely a new "Tier", comparable to
+Tier 2b/6's own effort, not a quick finish): (a) assemble \<open>cvec_dip\<close>'s own
+third-derivative-along-the-line from \<open>kx\<close>/\<open>ky\<close>/\<open>kz\<close>'s (easy, linearity --
+\<open>cvec_dip\<close> is a constant-coefficient linear combination of these); (b) the
+hard part -- generalize \<open>Wc_d3\<close> (currently only the diagonal \<open>Wc_d3 x c c\<close>)
+to a genuine mixed trilinear form, and chain it against \<open>cvec_dip\<close>'s line-
+derivatives up to third order via Faà di Bruno for \<open>Wc(x,cvec_dip(\<omega>_0+sw))\<close>;
+(c) Leibniz-combine with \<open>gain_dip\<close>'s third derivative (easy, 1-D, `gdip`
+already has \<open>higher_differentiable_on\<close> for all \<open>n\<close>); (d) express \<open>w=w^\<perp>\<close>
+via \<open>H_cross\<close>/\<open>H_par\<close> (already have, from earlier this session) and get the
+final closed form for \<open>\<Xi>(x_0,\<omega>_0)\<close>; (e) THEN attempt the actual genericity/
+nonzero argument for \<open>\<Xi>\<close> (a two-bump-witness computation, same style as
+\<open>T3rad\<close>'s own genericity, but not yet attempted). Steps (b)-(e) remain.
+
+## 2026-07-12, Claude continuation (session 4, after an unrelated machine
+crash): `R \<noteq> 0` resolved completely via computer algebra, and a jEdit/heap
+diagnosis for a stuck Codex session
+
+Picked this up cold after the user's machine died mid-session; no memory of
+the prior turns, reconstructed state from `Sketch.md`, `UPDATE_FOR_CLAUDE.md`,
+and file mtimes. The user had, independently, already fixed
+`M5_Dev_D3Hess/Scratch_D3Hess.thy` to compile clean (0 `sorry`) in the gap --
+notably the IVT root-existence lemma `phi_sin_eq_B_root_exists_even`
+(Sketch.md \<section>6h/\<section>6i) had landed, which I have no session-local memory of
+proving.
+
+**`R \<noteq> 0`, the one item \<section>6i left open, is now fully resolved -- and far more
+cleanly than anticipated.** Rather than re-deriving `R`'s formula by hand in
+the Robust4 trig variables (the route that produced two errors already,
+\<section>6h correcting \<section>6d), verified it with `sympy` first, in FULL GENERALITY (an
+abstract invertible `2x2` matrix in place of `Dc`, not just Robust4's
+specific steering constants):
+
+    R(w) \<cdot> e_par$1 = w$1                                    (exact, always)
+
+-- literally zero-numerator after clearing denominators, no trig, no
+factoring. Consequence: `R = 0 \<longleftrightarrow> w$1 = 0` (given `e_par$1\<noteq>0`), i.e. the
+single-bump witness's leading coefficient is nonzero exactly when the arc's
+angular velocity has nonzero `\<theta>`-component -- ONE clean linear condition,
+subsuming the whole case-by-case mess of \<section>6d-\<section>6g (`w\<parallel>e_par` "free",
+`w\<parallel>perp2(e_par)` at `\<psi>0=0` "exactly zero"). Found the short structural
+proof by hand afterward (orthogonal decomposition of `w` in the
+`(e_par,perp2 e_par)` basis + the already-proven `pivot_nonzero`), and
+landed it in `Scratch_D3Hess.thy`: `Q_dip`, `R_dip`, `perp2_norm_preserving`,
+`inner_self_eq_zero_iff_vec2`, `orthogonal_decomp_perp2`,
+`R_dip_times_e_par1_eq_w1`, `R_dip_eq_zero_iff`. Two proof gotchas hit and
+fixed along the way (both environment/tactic issues, not math): (1) an
+`smt (verit)` call failed with "Bad bash_process server address" (an
+infrastructure hiccup, not a genuine proof failure) -- replaced with a
+smt-free `linarith`-based argument; (2) combining two fractions over a
+common (still-symbolic) denominator via `field_simps` inside an already
+`inner_vec_def`/`sum_2`-unfolded goal caused `field_simps` to treat the two
+syntactically-different-but-equal denominator expressions as unrelated and
+cross-multiply BOTH, squaring the denominator -- fixed by combining the
+fractions FIRST (while the denominator is still the single opaque term
+`e \<bullet> e`), then unfolding components only in the final division-free
+polynomial step.
+
+Also found and recorded (Sketch.md \<section>6k) a correction to \<section>6e's own numeric
+sweep: `OmegaPF ctr \<delta> = cbox (ctr - [\<delta>,\<pi>]) (ctr+[\<delta>,\<pi>])`
+(`Nonemptiness_Robust2.thy:670`) is a BOX restricting only `\<theta>`, not the disk
+\<section>6e implicitly assumed -- `\<psi>` ranges over essentially all of `[-\<pi>,\<pi>]`. Does
+not invalidate \<section>6e's own finding (`d_perp\<bullet>c0=0` exactly at `\<psi>=0`, confirmed
+independent of the sweep window), but flags the assumption for any future
+numeric sweep in this project.
+
+**Verification status: IN PROGRESS, not yet BUILD_EXIT=0-confirmed.** Two
+consecutive terminal `ML_process -r` reload attempts both died with empty
+output/`Terminated` after their timeouts -- diagnosed as resource
+contention with the live jEdit session I had open on the SAME
+`Applied_Math_M5_Wiring` heap (this project's own established rule: never
+run concurrent `-r`/jEdit instances against the same heap, it corrupts the
+session log). Per user's own choice, verification is being done by the user
+reading jEdit's live PIDE markers directly rather than a competing batch
+check. **Do not report `R_dip_times_e_par1_eq_w1`/`R_dip_eq_zero_iff` as
+verified until BUILD_EXIT=0 or an explicit jEdit all-green confirmation is
+seen** (per `[[never-claim-unverified-builds]]`).
+
+**Diagnosed (not yet fixed) a stuck Codex session on
+`M5_Dev_H0coreArc/Scratch_H0coreArc.thy`.** Root cause: that theory imports
+BOTH `Applied_Math_M5_Wiring.Scratch_Wiring` AND
+`Applied_Math_M5_ArcBridge.Scratch_ArcBridge` -- two SIBLING sessions (both
+branch off `Applied_Math_Appendix_Frontier`, neither is the other's
+ancestor) -- and `Applied_Math_M5_ArcBridge`'s own heap was NEVER built
+with `-b` (confirmed: absent from
+`~/.isabelle/Isabelle2025-2/heaps/polyml-5.9.2_x86_64_32-linux/`). Opening
+this file live in jEdit with `-l Applied_Math_M5_Wiring` alone (the natural
+first guess, matching the `ROOT` file's declared parent) forces jEdit to
+reprocess the entire ~3655-line `Scratch_ArcBridge.thy` from source with no
+heap shortcut -- looks exactly like "won't open" (hangs for minutes).
+Likely fix: `-l Applied_Math_M5_ArcWiring` instead (already-built, already
+merges both `M5_Wiring` and `M5_ArcBridge` since `M5_Dev_ArcWiring/ROOT`
+has the identical parent+`sessions` shape and was built clean, per the
+2026-07-11 diary entry). NOT YET CONFIRMED via a clean reload (blocked by
+the same jEdit contention above) -- flagged as the first thing to verify
+once the D3Hess jEdit session is closed or idle.
+
+**CONFIRMED (2026-07-12, user, jEdit all-green): `M5_Dev_D3Hess/Scratch_D3Hess.thy`
+fully compiles, 0 `sorry`, including `R_dip_times_e_par1_eq_w1` and
+`R_dip_eq_zero_iff`.** The `R\<noteq>0` question from \<section>6i is now genuinely closed.
+
+**Codex hand check of the HessU=0 row-reduction target (2026-07-12; Sketch.md §6m): the
+`H_par` -> `T3rad` reduction is false as stated.** Using the actual
+`Phi_par_radial_dictionary` / `H_par_radial_dictionary`, freeze `omega` and
+write `c=cvec`, `e=e_par`, `q=Dc(axis 2)`, `d2=D2c(e,e)`, `g=gain`,
+`A=gdip' * e$1`, `B=gdip'' * (e$1)^2`. Since `det Dc != 0`, decompose
+`d2 = alpha*c + beta*q`. Then
+
+    Phi_par = A*W + g*W1(c)
+    gradU_2 = g*W1(q)
+    H_par   = 2*A*W1(c) + B*W + g*W1(d2) + g*W2(c,c).
+
+Differentiating in x and reducing modulo `D Phi_par` and `D gradU_2` leaves
+
+    D H_par == (B - A*(2*A+g*alpha)/g) * D W + g * D W2(c,c),
+
+not a multiple of `D T3rad`. The radial-slot phase degrees confirm the
+obstruction: `D W`/`D W1`/`D W2` contain at most the `sin r`,
+`r*cos r`, and `r^2*sin r` profiles, while `D T3rad` contains the new
+`r^3*cos r` profile. Fixed scalar row operations cannot create that term.
+So `Jac3_H0cub` remains a fixed-angle nonflatness/nowhere-dense witness,
+not an IFT level-set row for `(Phi_par, gradU_2, H_par)=0`.
+
+Practical consequence: do not try to formalize the §6j row-reduction.
+The H0coreArc path should continue through the countable bad-angle wrapper
+already in `M5_Dev_H0coreArc/Scratch_H0coreArc.thy` and a separate
+analytic localization/isolation argument, or through a genuinely different
+third vanishing cut. `T3rad` itself is not a cut unless a new theorem first
+shows it is constrained on the HessU=0 fibre.
+
+## 2026-07-12, Codex continuation: next non-conflicting D3 target after H0core row-reduction failed
+
+With `Scratch_H0coreArc.thy` opened in jEdit for review, I did not launch a
+second Isabelle worker. Current process check showed the H0coreArc jEdit/PIDE
+worker is alive using the `Applied_Math_M5_ArcWiring` heap; the earlier bad
+import problem is not showing in the startup log, but I am not claiming a
+batch verification for that leaf.
+
+Inspected the current `M5_Dev_D3Hess/Scratch_D3Hess.thy` rather than relying
+on stale context. It already contains the `R_dip` identity, the C1 IVT root
+lemma, the dipole line third derivative, `D3cvec_dip_line`, the mixed
+`Wc_ddd` jet, and `Wc_cvec_dip_line_third_deriv`; it still does not contain
+`Xi_nonzero_witness_exists`. Per `Sketch.md` section 6l, the next checkable
+piece is the explicit construction of the single-bump point solving the C2
+criticality equation.
+
+Appended `Sketch.md` section 6n with the hand algebra. For
+`c != 0` and `d dot perp2 c != 0`,
+
+    p(phi,y) = (phi/(c dot c))*c
+             + ((y - phi*(d dot c)/(c dot c))/(d dot perp2 c))*perp2 c
+
+satisfies `c dot p = phi` and `d dot p = y`. In the D3 application,
+`d = Dcvec_dip(...)(perp2 e_par)` and `pivot_nonzero` gives
+`d dot perp2 c = det(Dc)*(e_par dot e_par)`, nonzero from `det(Dc) != 0`
+and `c != 0`. Choosing
+
+    y = gdip'(omega_1)*(perp2 e_par)_1
+        *(n1^2 + 1 + 2*n1*cos phi)
+        /(2*n1*gain_dip omega*sin phi)
+
+makes `gradU(slot i p,omega) dot perp2(e_par) = 0` by the existing
+`gradU_dip_dot_perp2_e_par_single_bump` formula, assuming the explicit
+nonzero denominator side conditions. This closes the C2-construction part of
+section 6l item 1, not the full `Xi_nonzero_witness_exists` theorem.
+
+Plan: implement this in a fresh leaf importing
+`Applied_Math_M5_D3Hess.Scratch_D3Hess`, rather than editing the active
+`Scratch_D3Hess.thy` file directly.
+
+Implemented and verified the C1/C2 construction in a new leaf session
+`M5_Dev_D3Xi` (`Applied_Math_M5_D3Xi`). New facts:
+
+- `single_bump_phase_point`, with
+  `single_bump_phase_point_phase` and `single_bump_phase_point_target`.
+- scalar cancellation lemmas `single_bump_C1_rhs_zero` and
+  `single_bump_C2_target_zero`.
+- `dot_e_perp2_zero_imp_zero`.
+- `single_bump_gradU_zero_of_phase_root_and_C2_target`: under
+  `2 <= CARD('n)`, nonzero steering determinant, `cvec_dip != 0`,
+  `gain_dip != 0`, `sin phi != 0`, and the C1 root equation, the explicit
+  `single_bump_phase_point` using the C2 target gives
+  `gradU (cvec_dip omega0 omegas) gain_dip (slot i p) omega = 0`.
+
+While trying to verify the new leaf, the current source of
+`M5_Dev_D3Hess/Scratch_D3Hess.thy` failed first at the new
+`Xi_single_bump_raw` lemma (line 1329). I made a narrowly-scoped proof-shape
+repair there: first establish the `HessU_quad_dictionary` specialization as a
+local `raw` equality, then unfold the single-bump dictionaries. This preserves
+the statement and avoids the large residual algebra goal left by the direct
+`unfolding ... by simp` proof.
+
+Verification: `isabelle build -b` got through proof checking but Poly/ML was
+killed while saving the large `Applied_Math_M5_D3Hess` heap. Re-ran without
+heap saving and with fewer threads:
+
+    /home/dusty/Desktop/Isabelle/Isabelle2025-2/bin/isabelle build -o threads=2 ...
+      Applied_Math_M5_D3Xi
+
+Result: `Finished Applied_Math_M5_D3Hess` and
+`Finished Applied_Math_M5_D3Xi` (0:02:32 elapsed). This verifies the theory
+content, but does not leave a saved `Applied_Math_M5_D3Hess` heap because the
+successful run intentionally omitted `-b`.
+
+## 2026-07-12, Codex continuation: D3Assembly good-phase bridge verified
+
+Continued from `Sketch.md` sections 6p/6q in a fresh assembly leaf:
+`M5_Dev_D3Assembly/Scratch_D3Assembly.thy` with session
+`Applied_Math_M5_D3Assembly`.
+
+Landed the formal bridge from Codex's C2 point construction to Claude's
+`Xi_single_bump_raw` value formula:
+
+- `single_bump_phase_point_closed_form`
+- `single_bump_phase_point_dot_general`
+- `single_bump_phase_point_dot_eq_phi_R`
+- `single_bump_phase_point_dot_eq_phi_S`
+- `single_bump_S_raw`
+- `single_bump_residual`
+- `Xi_at_phase_point_closed`
+- `single_bump_W_bounds`
+- `single_bump_C1_rhs_bound`
+- `single_bump_residual_bound`
+- `single_bump_residual_le_bound`
+- `Xi_nonzero_witness_of_good_phase`
+
+The last theorem is the useful assembly boundary: if a C1 root `phi` has
+nonzero sine and its leading term
+
+    -2*n1*gain_dip omega*R_dip omega0 omegas omega w*phi^2*cos phi
+
+strictly dominates the fixed residual bound, then the explicit single-bump
+configuration has both
+
+    gradU (cvec_dip omega0 omegas) gain_dip x omega = 0
+    Xi x omega0 omegas omega w != 0
+
+Two verification fixes were needed. First, `single_bump_gradU_zero_of_phase_
+root_and_C2_target` exports its root equation in the expanded
+`real CARD('n)-1` form, so passing the local `n1`-folded root through `OF`
+failed; use the original expanded `root` assumption. Second, the
+`Xi_at_phase_point_closed` call needed the expanded `real CARD('n)-1 != 0`
+side condition supplied explicitly from `card2`.
+
+Verification: a focused external build rebuilt and saved
+`Applied_Math_M5_D3Assembly` at 2026-07-12 16:52. `git diff --check` is clean
+for the assembly leaf.
+
+Remaining mathematical/formal step: discharge `Xi_nonzero_witness_of_good_
+phase`'s domination hypothesis from `phi_sin_eq_B_root_exists_even`,
+`R_dip_eq_zero_iff`, and an Archimedean choice of a sufficiently large even
+root window. That is now cleanly isolated from the point construction and the
+closed `Xi` value algebra.
+
+## 2026-07-12, user continuation: D3Assembly Xi witness fully closed
+
+The user substantially edited `M5_Dev_D3Assembly/Scratch_D3Assembly.thy` and
+reported that it now compiles in jEdit. I inspected the resulting boundary and
+recorded the update without launching a competing batch build while the
+jEdit/PIDE worker was active.
+
+The assembly leaf now contains the sin-free radial construction:
+
+- `single_bump_radial_point`
+- `single_bump_radial_point_closed_form`
+- `single_bump_radial_point_dot_general`
+- `single_bump_radial_point_dot_eq_phi_R`
+- `single_bump_radial_point_dot_eq_phi_S`
+- `single_bump_gradU_zero_of_phase_root_radial`
+- `Xi_at_radial_point_closed`
+- `Xi_nonzero_witness_of_good_phase_radial`
+
+Most importantly, the former remaining domination/root-window step is now
+closed by:
+
+```isabelle
+theorem Xi_nonzero_witness_exists:
+  assumes "2 \<le> CARD('n)"
+    and "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and "vec_nth (e_par \<omega>0 \<omega>s \<omega>) 1 \<noteq> 0"
+    and "gain_dip \<omega> \<noteq> 0"
+    and "vec_nth w 1 \<noteq> 0"
+  shows "\<exists>x::(real^2)^'n.
+      gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+    \<and> Xi x \<omega>0 \<omega>s \<omega> w \<noteq> 0"
+```
+
+The proof uses `phi_sin_eq_B_root_exists_even` to obtain a large good phase,
+`R_dip_eq_zero_iff` to turn `w$1 != 0` into `R_dip != 0`, and an Archimedean
+choice of the even window so the leading quadratic term strictly dominates the
+fixed residual bound.
+
+## 2026-07-12, Claude independent review: confirming Xi_nonzero_witness_exists
+and the new D4Branch scaffold
+
+Reviewed, from a fresh eye (not assuming Codex's/the user's own reports),
+both pieces landed since my last checkpoint. Both independently re-verified
+via forced-clean rebuilds (`isabelle build -b -c`, i.e. ignoring any stale
+build-database state):
+
+- `M5_Dev_D3Assembly/Scratch_D3Assembly.thy` (`Applied_Math_M5_D3Assembly`):
+  `Finished`, 0 `sorry`/`oops` (grep-confirmed). `Xi_nonzero_witness_exists`
+  is genuinely unconditional (only `card2`/`detnz`/`cnz`/`e1nz`/`gnz`/
+  `w1nz`), closing D3's rank-1 (`trans`/`schur`) residual's mathematical
+  content entirely -- the target Sketch.md \<section>4 set out to prove.
+- `M5_Dev_D4Branch/Scratch_D4Branch.thy` (`Applied_Math_M5_D4Branch`):
+  `Finished`, 0 `sorry`/`oops`, no `axiomatization`/`Skip_Proof`-style
+  shortcuts. Read the whole file: it is an honest, correctly-scoped
+  REDUCTION (not a finished proof) of `branchP_indep_closed_cover_core_all`
+  down to producing local regular-value patches on the Branch-P stratum,
+  via the pre-existing `charts_core_Nn`/`negligible_singular_image_2n`
+  engine and the bridge `not_surj_omega_deriv_iff_detHess_dip`. The file's
+  own docstring correctly does not overclaim -- the hard remaining step
+  (the local patches themselves) is left explicitly open, matching
+  Sketch.md \<section>7's own framing.
+
+**Net project status after this session** (see Sketch.md's new top-level
+"Current status" section for the full navigational map): D3's rank-1
+residual is DONE. D3's `HessU\<equiv>0` residual and D4's Branch-P patch
+construction are the two remaining open mathematical fronts, both
+genuinely hard (not formalization bookkeeping) and independent of each
+other.
+
+## 2026-07-12, Claude continuation: a promising unexplored lead for
+`HessU\<equiv>0`, found while reviewing
+
+While reviewing \<section>6m's negative result (`T3rad` row-reduction fails),
+noticed `Jac3_H0cub_identity` factors cleanly as `-(perp-slot factor) *
+Lambda_cub_ij` (a 2x2 determinant), and this factorization TECHNIQUE is
+independent of `T3rad` specifically -- the SAME argument could use `H_par`
+(which DOES vanish on the `HessU\<equiv>0` fibre, `H_par_zero_of_HessU_zero`,
+already proven) as the third row instead, entirely avoiding `T3rad`'s
+row-reduction problem. Checked: no `H_par_slot_perp_zero`-shaped fact
+exists yet (needed for the factorization to transfer); a RELATED quantity
+`Hrad2` (already defined, `H_par` minus one term) DOES have this property
+(`Hrad2_slot_perp_zero`, already proven) but it is not yet checked whether
+`Hrad2=0` follows from `HessU\<equiv>0` the way `H_par=0` does. Full writeup with
+the precise two-part open check in Sketch.md \<section>6r. Not formalized --
+this is a hand-analysis flag for the next continuation, genuinely
+unexplored (grepped the whole tree, confirmed absent), not a re-derivation
+of anything already tried and abandoned.
+
+## 2026-07-12, Claude continuation: §6r's lead resolved (negatively), with
+a precise new structural finding for `HessU\<equiv>0`
+
+Worked the two open checks from \<section>6r by hand (no Isabelle, deliberately,
+per \<section>6h/\<section>6m's own lesson about the cost of formalizing something
+plausible-but-wrong). Result: neither candidate from \<section>6r pans out --
+`H_par` lacks the perp-slot-zero property generically (derived the exact
+closed formula, `D_x[H_par](slot k perp2c) = -2g\<cdot>(D\<^sup>2c(e_par,e_par)\<bullet>
+perp2c)\<cdot>\<Sigma>sin(...)`, numerically confirmed nonzero away from `\<psi>0=0`), and
+`Hrad2` (which DOES have that property) does NOT vanish on the `HessU\<equiv>0`
+fibre after all (worked through the full 3-entry critical moment formula;
+`Hrad2` on that fibre reduces EXACTLY to the same free quantity that
+breaks `H_par`'s own perp-slot property -- not a coincidence, the two
+findings are dual). One genuine positive: at `\<psi>0=0` exactly the
+obstruction vanishes symbolically (checked via sympy), matching the
+already-known special structure there (\<section>6e/\<section>6f/\<section>6g), but this only
+covers a thin sub-locus on its own.
+
+Full writeup, including the recommendation to deprioritize the
+`Jac3`-factorization technique in favor of \<section>7's countability/isolation
+fallback (now relatively more attractive given (a)'s confirmed lack of a
+shortcut), is in Sketch.md \<section>6s. Not formalized -- this is intentionally
+hand-analysis only, to avoid repeating the cost already paid twice this
+project (\<section>6h, \<section>6m) for formalizing an idea before checking it holds up.
+
+## 2026-07-12, Claude: semi-formal strategy for D4's `countable_bad` target,
+written for Codex
+
+Reviewed Codex's substantial new D4 progress (`branchP_bad_angles`,
+`branchP_indep_closed_cover_core_all_of_countable_bad_angles`, `M5_Dev_
+D4Branch/Scratch_D4Branch.thy` grown 533\<rightarrow>756 lines, independently
+re-verified clean via forced-clean rebuild). Codex correctly isolated D4
+to exactly one remaining hypothesis (`countable_bad`, the bad-angle set is
+countable for every admissible `\<Gamma>`) but its own Sketch.md write-up
+restated the goal without a concrete attack plan.
+
+Worked a dimension-counting analysis by hand and found: (1) an important
+correction -- `DM_paper_x` maps to `complex^6` (12 real dims), so `\<not>surj
+DM_paper_x` is VACUOUS for any array with `CARD('n)<6`, contributes
+nothing, should not be relied on; (2) the OTHER three conditions
+(`gradU=0` [2], `det HessU=0` [1], `D_x[gradU]` not surjective [heuristic
+codim `2n-1`]) sum EXACTLY to `2n+2`, the ambient joint `(x,\<omega>)` dimension
+-- a strong (not rigorous) signal that the bad locus is generically
+0-dimensional/isolated, hence countable via a regular-value/IFT argument
+(NOT `real_analytic_nowhere_dense_zeros`, which only gives nowhere-dense,
+a strictly weaker conclusion than countable). Gave a concrete next-step
+recipe: characterize "`D_x[gradU]` rank `\<le>1`" via a free covector `\<lambda>`
+(mirroring the existing `Phi_par`-style linear-combination pattern already
+used throughout `D34_Geodesic_Branch.thy`), reusing this session's own
+`D_x[Wc_d1(\<cdot>,c,v)](slot k u)` closed-form derivation (\<section>6s) as the raw
+moment-derivative input. Full writeup in Sketch.md \<section>7a. Not formalized
+by me -- deliberately handed to Codex as strategy per the user's explicit
+request, with an honest flag that step 2 (checking a witness by hand)
+should happen before any more Isabelle is written, per this project's own
+repeated \<section>6h/\<section>6m/\<section>6s lesson.
+
+## 2026-07-12, Claude: §7b -- concrete `\Psi_a` recipe for the two
+projective covector charts, written for Codex
+
+Read Codex's own follow-up formal interface in Scratch_D4Branch.thy
+(`gradU_x_partial_dip`, `gradU_x_rank_defect_dip`'s cokernel-covector
+characterization, `branchP_bad_angles` re-expressed as a projection of
+`branchP_joint_cokernel_bad`) and its correctly-identified next step:
+projectivize the free covector `\<lambda>\<noteq>0` into two affine charts `\<lambda>=(1,a)`,
+`\<lambda>=(a,1)`, since a cokernel covector is scale-free.
+
+Worked out what the chart-A scalar object concretely is: unwinding the
+`\<forall>h. \<lambda>\<bullet>gradU_x_partial_dip \<omega>0 \<omega>s x \<omega> h = 0` condition antenna-by-antenna
+shows it is exactly "`x` is a critical point (full `2n`-dim gradient) of
+`\<Psi>_a(x,\<omega>) := gradU_1(x,\<omega>) + a\<cdot>gradU_2(x,\<omega>)`" -- structurally the same
+pattern as the existing `Phi_par := gradU\<bullet>e_par`, with the `\<omega>`-derived
+direction `e_par` replaced by the free direction `(1,a)`. Chart B is the
+mirror `\<Psi>'_a := a\<cdot>gradU_1+gradU_2`.
+
+Ran a second, independent dimension count on the full chart-A joint system
+(`gradU=0` [2 eqns] + `\<nabla>_x\<Psi>_a=0` [2n eqns], in `(x,\<omega>,a)`, `2n+3`
+unknowns): generically leaves a 1-dimensional solution set, which
+projected onto the 1-dimensional arc `OmegaPF` generically gives ISOLATED
+bad `\<omega>`'s. This agrees with §7a's earlier `2+1+(2n-1)=2n+2` heuristic via
+a different route -- two independent counts agreeing is a good sign the
+target is achievable, not just plausible.
+
+Gave Codex a concrete 4-step recipe in Sketch.md §7b: (1) derive closed
+`Wc`-moment forms for `D_x[gradU_1](slot k u)`/`D_x[gradU_2](slot k u)`,
+reusing §6s's product-rule expansion technique (a template, not a dead
+end -- §6s's negative finding was about `H_par`/`Hrad2` specifically);
+(2) define `Psi_a_dip`/`Psi'_a_dip` and state the two chart systems as
+explicit predicates; (3) hand/sympy-check the joint Jacobian at an
+explicit Robust4 witness (small `n` first) BEFORE formalizing, per this
+project's repeated §6h/§6m/§6s lesson; (4) if positive, the countability
+conclusion is a regular-value/IFT local-discreteness argument, same
+technique already used for `charts_core_Nn` elsewhere. Not formalized by
+me -- handed to Codex as strategy, per the established division of labor.
+
+Also, as of this entry, a forced-clean rebuild of `Applied_Math_M5_D4Branch`
+verifying Codex's `gradU_x_partial_dip`/cokernel round (983-line file) is
+running unusually long (>15 min CPU-bound, vs. ~80-95s for prior rounds of
+this same file) -- not yet confirmed whether this is a genuine slow step
+(candidate: `adjoint`/`surj_adjoint_iff_inj` automation in
+`not_surj_linear_iff_exists_cokernel_vector`) or just a heavier proof that
+needs more wall-clock. Being monitored; no pass/fail claim until it
+actually finishes.
+
+## 2026-07-12, Claude: D4 ownership transferred from Codex; two sorries closed;
+first §7b brick (`Psi_a_dip` perp-slot value) landed, sorry-free
+
+User confirmed `Scratch_D4Branch.thy` fully compiles (jEdit) and asked me to
+take over D4 alone (no more Codex handoffs) and keep using the semi-formal
+\<rightarrow> formal cycle myself.
+
+Closed the two remaining sorries from Codex's round-3 push:
+- `branchP_bad_angles_eq_snd_image_joint_rank_bad`: needed the
+  `BadXGW_x_derivative_failure_iff_rank_defect` rewrite isolated into its own
+  `have key` step before `auto` could close the singleton-Bex unfold (a blanket
+  `auto` mixing both steps got lost).
+- `branchP_joint_rank_bad_eq_fst_image_joint_cokernel_bad`: `rule set_eqI`
+  itself failed to apply (likely shadowed in this session's library stack,
+  same class of issue as the known `vec_eq_iff`/JNF shadowing trap) --
+  rewritten via `subset_antisym` with explicit `image_eqI`/`imageE`, which is
+  robust and avoids `auto` over-expanding the untouched `surj (DM_paper_x...)`
+  conjunct into raw set-builder form (a separate, independent trap: routing
+  that predicate through `image_def`+`auto` produced spurious unresolved
+  residuals even though it appears verbatim, unchanged, on both sides).
+
+Then began the §7b projective-chart plan directly (no Codex round-trip).
+Found the CLOSED-FORM machinery I expected to need to derive from scratch
+(§7b's step 1) already exists, one layer down, in
+`Appendix/AnalyticBridge/D34_Analytic_Bridge.thy`: `gradU_dip_xderiv_perp_slot`
+gives the exact perp-slot (`c\<bullet>v=0`) value of `gradU`'s own `x`-Jacobian in
+invariant form, built on the six-moment machinery (`M_paper`/`DM_paper_x`,
+`dEjm`, `phase`/`d_phase`) that `gradU_x_partial_dip` (Codex's round-3
+interface) is itself assembled from. Confirmed `Applied_Math_D34_Analytic`
+is reachable from this session (`Scratch_Wiring.thy` explicitly imports
+`Applied_Math_D34_Analytic.D34_H0res_Branch`, which imports
+`D34_Analytic_Bridge`).
+
+Added to `Scratch_D4Branch.thy` (all verified, forced rebuild, BUILD_EXIT=0,
+0 sorry): `gradU_dip_component_x_has_derivative`, `Psi_a_dip` (chart-A scalar
+`gradU_1 + a\<cdot>gradU_2`), `Psi_a_x_partial_dip`, `Psi_a_dip_has_derivative`, and
+the main new result `Psi_a_dip_xderiv_perp_slot`: for `v` perpendicular to
+`c=cvec_dip \<omega>0 \<omega>s \<omega>`,
+
+    \<partial>\<^bsub>slot m v\<^esub> \<Psi>\<^sub>a = 2 g \<cdot> ((\<gamma>\<^sub>1+a\<gamma>\<^sub>2)\<bullet>v) \<cdot> Im(cnj A \<cdot> \<phi>\<^sub>m),   \<gamma>\<^sub>j = Dcvec_dip(axis j)
+
+i.e. the perp-slot rank-defect condition splits into the SAME phase-alignment
+dichotomy (`Im(cnj A\<cdot>\<phi>\<^sub>m)=0` for all `m`, vs. `(\<gamma>\<^sub>1+a\<gamma>\<^sub>2)` parallel to `c`)
+already used, and already proven, in the unrelated-looking D3 Bnonzero split
+(`D3H0_Bnonzero_phase_aligned_residual` / `d3_s2_global_factor`) -- a
+genuinely useful structural reuse discovered by working the chain rule
+through, not previously flagged in any Sketch.md entry.
+
+Remaining before this brick is complete: the PARALLEL-slot (`v \<parallel> c`) value
+of `\<partial>\<^bsub>slot m v\<^esub>\<Psi>_a` (not yet derived formally; hand form sketched via
+`dEjm`'s general, non-perp-restricted formula, not yet sympy-checked). Both
+slot values together give the full critical-point characterization needed
+for the (2n+2)-equation joint system from §7b, which still needs the
+Robust4-witness genericity hand-check before any more Isabelle.
+
+## 2026-07-12, Claude: full (non-perp) Psi_a slot-value theorem landed,
+sorry-free -- chart A's critical-point condition now has a complete closed
+form for every antenna/direction
+
+Continued straight from the perp-slot brick. Sympy-verified (script
+`psi_a_parallel.py`, all three `T1,T2,T3` components matched the raw `dEjm`
+expansion exactly) the GENERAL, non-perp-restricted slot value, then
+formalized it in one clean pass: `dEjm_slot_value` (unconditional, no
+`c\<bullet>v=0` hypothesis -- collapses to the already-proven
+`dEjm_perp_slot_value` at `c\<bullet>v=0`, a good consistency check), composed
+into `gradU_dip_xderiv_slot` and the target `Psi_a_dip_xderiv_slot`. This
+SUPERSEDES the originally-planned separate "parallel-slot" lemma (tasks
+\<section>3/\<section>4 merged) -- one general formula covers every `v`, not just the
+perp/parallel split.
+
+Two build-fix rounds, both process notes worth keeping:
+- The first `dEjm_slot_value` proof attempt succeeded on the FIRST try with
+  `unfolding raw by (simp add: inner_vec_def sum_2 complex_eq_iff
+  algebra_simps)` -- i.e. doing the FULL definitional substitution
+  (`dEjm_def`+the three `d_A/M1/M2_moment_x_slot` facts) via a SEPARATE
+  `simp only:` step first, then a SINGLE later `simp add:` for regrouping,
+  avoided the earlier over-expansion trap entirely (confirms the "two-stage,
+  never mix substitution with regrouping" lesson from the perp-slot fix is
+  the right general recipe for this codebase's complex-number algebra).
+- `gradU_dip_xderiv_slot` hit the SAME "decoupled free type variable" trap
+  documented in memory (`decoupled-type-var-in-shows`) a SECOND time this
+  session: `j` appeared free in the `shows` clause without an explicit
+  `fixes j :: 2`, so it elaborated as a fresh schematic type variable `'b`
+  instead of the concrete index type `2`, and a later `have` (`p2`,
+  `frechet_derivative gdip (at ...) (axis 2 1 $ 1) = 0`) silently picked up
+  a MISMATCHED, differently-schematic `axis 2 1`. Fixed by adding `and j ::
+  2` to the lemma's `fixes`, AND separately annotating `axis (2::2) 1`
+  explicitly in `p2`'s own statement (both occurrences needed pinning, not
+  just one) -- worth remembering as: when a bug is exactly this shape,
+  check EVERY occurrence of the ambiguous term, not just the first.
+
+Net: `Scratch_D4Branch.thy` is now 53 lemmas/theorems/definitions, 0 sorry,
+forced-rebuild-verified. `countable_bad`'s remaining path is: (5) hand-check
+genericity of the full chart-A `(2n+2)`-equation joint system at a Robust4
+witness via sympy (small `n` first) -- NOT yet started, this is the next
+semi-formal step before any more Isabelle; (6) formalize the countability
+conclusion; (7) mirror chart B and assemble. Tracked as tasks #5-#7.
+
+## 2026-07-12, Claude: §7d -- NEGATIVE finding, chart-A's (2n+2)-eqn system
+is never a regular value (rank defect of exactly 3, every n tried)
+
+Per the user's request, did the §7b step-3 genericity hand-check (numerical
++ 50-digit-precision, before writing more Isabelle). Built the exact chart-A
+system F(x,ω,a)=(gradU_1,gradU_2,D_x[Ψ_a]) at the Robust4 design constants,
+solved it numerically for many random witnesses at n=2,3,4 antennas, and
+checked the full Jacobian's rank via SVD (one n=3 witness independently
+confirmed at 50-digit mpmath precision to rule out finite-difference noise:
+residual ~1.5e-50, 4 of 8 singular values genuinely ~1e-26 to 1e-51, the
+other 4 at 2.6-14.4 -- unambiguous rank 4, not 8).
+
+The pattern held across EVERY non-degenerate witness found for n=2,3,4: max
+rank achieved was always exactly 2n-1, i.e. a rank defect of EXACTLY 3
+below the needed 2n+2, for every n. Too regular to be a search artifact --
+a genuine algebraic identity among the 2n+2 equations. A structural clue
+(not yet resolved): the near-null left singular vectors always have exactly
+opposite gradU_1/gradU_2 weights, the near-null right singular vectors are
+purely x-direction (zero ω,a component), and the witness itself converged
+to a=-1 exactly, unprompted, from an unconstrained start.
+
+Conclusion: the §7a/§7b "stack gradU=0 and D_x[Ψ_a]=0, hope for a regular
+value" plan does NOT work as stated -- a genuine negative finding, same
+character as §6m/§6s. NOT formalized (would have wasted real Isabelle
+effort on a structurally-impossible regular-value claim). The Ψ_a closed-
+form machinery landed earlier today (dEjm_slot_value, gradU_dip_xderiv_slot,
+Psi_a_dip_xderiv_slot) remains correct and reusable -- only the SPECIFIC
+equation system built from it is the problem. Full writeup, including two
+live next-step options (chase the rank-3 identity to build a corrected
+smaller system, or fall back to §6s's own countability-via-
+fixed_omega_H0core_chart_core_robust4_all_angles recommendation), is in
+Sketch.md §7d.
+
+## 2026-07-12, Claude: §7e -- correction + a genuinely promising positive
+pivot: Codex's round-1 gradU_regular_value reduction (already proven,
+sitting unused) needs a much weaker condition than the dead chart-A system
+
+Went to implement the "fall back to fixed_omega_H0core_chart_core_robust4_
+all_angles" plan and caught my own error before writing Isabelle: that
+lemma is D3's own arc-ENDPOINT result (used in Scratch_ArcWiring.thy for a
+different obligation), not a D4 countable_bad bootstrap.
+
+Re-reading Scratch_D4Branch.thy in full turned up something better already
+sitting there: branchP_indep_closed_cover_core_of_gradU_regular_value
+(Codex's ORIGINAL round-1 work, lines 560-607, predating the gradU_x_
+partial_dip/cokernel detour) reduces the WHOLE problem to `regular_value_on
+gradU (V×Ω) 0` -- 0 being a regular value of gradU on the JOINT (x,ω)
+space. This needs the COMBINED 2×(2n+2) Jacobian (x-block AND ω-block/
+HessU together) to have rank 2 -- a much weaker ask than §7d's dead system,
+since even if BOTH blocks are individually degenerate (matching BadXGW's
+own defining conditions), their combined column space can still span R².
+Traced through why this doesn't conflict with BadXGW: it's a classical
+Sard argument (charts_core_Nn projects the regular-value zero-manifold onto
+x-space and applies Sard to THAT projection's critical set, which is
+exactly det HessU=0/BadXGW's superset) -- not a direct regularity claim at
+BadXGW points themselves.
+
+Numerical check (d4_joint_regvalue.py): solved gradU(x,ω)=0 from random
+starts at the Robust4 design for n=2,3,4, checked the joint Jacobian rank
+via SVD. n=3,4: rank 2 (full) at every one of ~20-22 non-degenerate
+witnesses found. n=2: 13/19. Opposite pattern from §7d -- genericity here
+looks real.
+
+Remaining scope (honestly not started): prove `regular_value_on gradU
+(V×Ω) 0` analytically. Case (a) det HessU≠0: should be a short, easy lemma
+(sub-block surjectivity forces full-matrix surjectivity). Case (b) det
+HessU=0 (the D3BadXG_H0core locus): genuinely open, comparable in spirit
+(not necessarily scope) to D3's own Jac3_H0cub rank-3 work -- next semi-
+formal step is a hand/sympy check of just this sub-case before any more
+Isabelle. Full writeup, including the corrected record on
+fixed_omega_H0core_chart_core_robust4_all_angles's real purpose, in
+Sketch.md §7e. This supersedes the §7a-§7d chart-A route entirely.
+
+## 2026-07-12, Claude: case (a) landed sorry-free (det HessU!=0 implies the
+joint (x,ω) Jacobian is surjective) -- and a process note on trusting jEdit
+
+Added `joint_regular_of_detHessU_nonzero` to Scratch_D4Branch.thy: builds
+the joint (x,ω) derivative explicitly via `has_derivative_partialsI`
+(mirroring `gradU_dip_joint_C1`'s own construction, but keeping the
+formula visible locally instead of going through that lemma's opaque
+existential), then shows surjectivity directly from `det HessU\<noteq>0` via
+`surj_matrix_vector_iff_det` plus the elementary fact that a linear map on
+a product space is surjective if its restriction to one factor already is.
+
+Process note worth keeping: the user reported "Scratch_D4Branch.thy fully
+compiles" after viewing it live in jEdit, but an INDEPENDENT batch rebuild
+(launched right after, per the project's own "never claim unverified
+builds" rule) caught a genuine error at the same lemma -- a `(*v) M` vs
+`M *v v` section-notation mismatch surviving `unfolding surj_def; by auto`
+that PIDE's live check apparently hadn't (yet) flagged when the user
+looked. Two build-fix rounds (first tried `surj_range`, which doesn't
+exist by that name; landed on an explicit `metis surj_def` obtain step
+followed by a separate `simp` to beta/eta-reduce the section) before
+BUILD_EXIT=0. Lesson: a user's live-jEdit "it compiles" is useful signal
+but PIDE state can lag or be viewed mid-check -- an independent forced
+batch rebuild stays the one thing that actually licenses "verified" in
+this project's diary.
+
+Case (a) of Sketch.md §7e is now done and sorry-free. Case (b) (det
+HessU=0, does the x-block supply a non-collinear rank-1 direction) remains
+the genuinely open next step -- semi-formal hand/sympy check first, per
+this project's own repeated discipline.
+
+## 2026-07-12, Claude: §7f -- case (b) numerics point to a deep, unresolved
+structural question (gradU=0 & det HessU=0 may force phase-alignment)
+
+Pushed the case (b) numerical search hard (60+ trials, explicit penalty
+terms trying to force phase-misalignment, at n=2,3,4): could not find a
+single non-degenerate witness with `gradU=0 \<and> det HessU=0` that isn't
+phase-aligned (`Im(cnj A\<cdot>\<phi>_m)=0` for every antenna, to numerical
+precision). Either the solver failed to converge when pushed (suggesting
+no nearby solution) or it snapped back to alignment or a genuine `\<theta>=\<pi>`
+pole. This is NOT the same shape as the earlier `\<theta>=\<phi>=\<pi>/2` solver-attractor
+artifact (that one was resolved by excluding a single degenerate point;
+this one survived deliberate, repeated pushing away).
+
+Checked whether `H_par_zero_of_HessU_zero` (the obvious candidate
+mechanism) explains it: it doesn't directly apply -- that lemma needs the
+FULL `HessU\<equiv>0`, not just `det HessU=0`. Read `HessU_dip_entry_moments`'s
+actual closed form (the `(k,l)` entry, via `Hcmat`/`D2cvec_dip`/`\<nabla>_cV`/`V`,
+the FULL six-moment machinery `A,M1,M2,M11,M12,M22`) -- deriving "det
+HessU=0 \<Rightarrow> phase-alignment" analytically from this would be a substantial
+undertaking, comparable in scope to D3's own `H_par`/`Hrad2`/`Jac3_H0cub`
+investigations (\<section>6r/\<section>6s), not a quick semi-formal spot-check.
+
+Full writeup, including the two live next-step options (chase the
+analytical mechanism, or try to rescue the joint-regular-value route by
+excluding a neighborhood of the phase-aligned locus instead), in Sketch.md
+\<section>7f. Reporting to the user rather than unilaterally committing several
+more hours to either path.
+
+## 2026-07-12, Claude: case (b1) landed -- x-block-already-surjective implies
+joint regularity; case (b)'s numerics reconsidered (the "phase-alignment
+forced" finding was itself a solver-attractor artifact, not structural)
+
+Before formalizing, re-ran the case (b) numerics with omega HELD FIXED
+(removing the joint (x,omega) search's own solver-attractor pathway
+entirely, the same class of artifact as the earlier theta=phi=pi/2 case).
+Result: 26/26 genuinely non-phase-aligned witnesses (max|phase_align|
+ranging 0.04 to 2.2, not near zero) with gradU=0 and det HessU=0 ALSO had
+rank_x=2 (the x-block alone already full rank). This overturns the earlier
+"gradU=0 & det HessU=0 forces phase-alignment" reading entirely -- that
+was an artifact of letting omega float freely in the search, which kept
+collapsing onto the same aligned attractor as before.
+
+Corrected picture (Sketch.md \<section>7f, updated): case (a) [det HessU\<noteq>0] and a
+NEW case (b1) [x-block already surjective] together cover essentially all
+of `D3BadXG_H0core` except the literal `BadXGW` locus itself (where BOTH
+blocks are simultaneously degenerate -- which is exactly `BadXGW`'s own
+defining conjunct). The genuinely hard remaining question is narrowly
+localized to that residual, not smeared across the whole det-HessU=0
+locus as first feared.
+
+Formalized `joint_regular_of_x_partial_surj` (case b1), symmetric to case
+(a)'s construction. Hit the exact same `joint'` proof fragility as case
+(a) had (my original `simp add: ...` attempt doesn't reliably close the
+has_derivative-uniqueness bridge) -- ported the working fix already applied
+to case (a) elsewhere in the file (a `metis` call over
+`has_derivative_unique`/`cond_case_prod_eta`/`prod.collapse` etc.) rather
+than re-deriving from scratch. User confirmed the file compiles in jEdit.
+
+Remaining: the genuine case (b2) -- AT `BadXGW`'s own points (both blocks
+degenerate simultaneously), does joint regularity hold or fail? Original
+(joint x,omega free) search found this locus consistently collinear
+(rank_joint=1) across 11 independent samples, which is NOT obviously a
+search artifact (unlike the fixed-case), since reaching BadXGW's own locus
+at all requires BOTH conditions simultaneously, a much narrower target than
+det-HessU=0 alone -- worth one more fixed-omega-style check before treating
+it as settled either way.
+
+## 2026-07-12, Claude: §7g+§7h -- case (b2) fully mapped: branch-2 appears
+EMPTY (strong seeded numerics); residual narrowed to the gdip'(θ)=0 line;
+two concrete closing paths identified, both on already-proven machinery
+
+Derived the complete analytical mechanism behind every solver-attractor
+artifact this session (§7g): ∂U/∂x_m = 2g·Im(cnj A·φ_m)·c — alignment IS
+the critical locus of U(·,ω), and A=0 sits inside everything. The x-block
+rank-collapse condition splits into branch 1 (generic (λ,μ): forces
+alignment, and then gradU=0 forces A=0 — excluded from BadXGW — or
+gdip'(θ)=0) and branch 2 (the unique B∥c covector: per-antenna equation
+A_m + g·Im_m = 0, no alignment forced).
+
+Branch-2 hunt (d4_branch2_seeded.py, after fixing a real bug — the κ
+coefficient is g, not 1 — and a self-inflicted process kill via pkill -f
+matching its own heredoc): seeded from 8 genuine non-aligned
+{gradU=0,detH=0} witnesses; 0/8 converged, three seeds stalling at the
+SAME nonzero residual — the signature of local inconsistency. Conclusion
+(numerical, strong): branch-2 is empty off the aligned manifold; genuine
+non-aligned A≠0 BadXGW points appear not to exist.
+
+New sub-observation (b3): at A=0 (where gradU≡0 identically), the x-block
+is generically rank 2 on its own, so case (b1)'s formalized lemma already
+covers the huge {A=0} zero manifold. The single structurally unavoidable
+residual: the θ=π/2 line (gdip' vanishes at the design center's own polar
+angle!), where aligned A≠0 branch-1 points can live. Two closing paths
+mapped in §7h — patch route (excise θ=π/2, singleton-engine + 1-variable
+countability there) and residual-regularity route (check whether HessU
+rescues rank 2 on that line) — both entirely on machinery already proven
+in Scratch_D4Branch.thy/Scratch_Wiring.thy. Next: the cheap route-2
+numerical check at ω=(π/2,φ).
+
+Also: new memory entry (a0-aligned-manifold-solver-attractor) so future
+sessions don't re-pay for the three artifacts this one caught.
+
+## 2026-07-12, Claude: §7i -- decisive route-2 numerics: joint Jacobian rank 2
+at EVERY gradU-zero category, including the deepest collinear-aligned locus
+
+Step 1 (θ=π/2 aligned A≠0, no collinearity): 19/19 rank_x=2 → already
+covered by formalized case (b1). Found + fixed a false first pass: under
+exact alignment |A| is QUANTIZED to {n,n-2,...} (all phases equal arg A
+mod π), so the |A|=1.5 constraint was unsatisfiable for n=4.
+
+Step 2 (the true deepest locus: aligned + A≠0 + all ∇_ωIm_m collinear,
+imposed explicitly): NONEMPTY (14 witnesses), rank_x=1 exactly at all of
+them — and rank_joint=2 at ALL 14, second singular value 5.3-11.7. HessU
+rescues the lost direction every time; candidate mechanism for the proof:
+H₁₁ ⊃ gdip''(π/2)·V ≠ 0 at these points.
+
+Conclusion: the global regular-value hypothesis appears TRUE; D4's entire
+remaining formalization gap is ONE well-scoped lemma (case (b4): both
+blocks degenerate ⟹ joint still surjective), everything downstream already
+proven in Scratch_D4Branch.thy. Full writeup §7i.
+
+## 2026-07-12/13, Claude: §7j -- (b4) semi-formal pass FALSIFIED the claim
+(explicit rank-1-joint BadXGW point constructed); replacement plan is a
+fully explicit chart cover of the aligned residual
+
+The semi-formal-first discipline paid off maximally here: working the
+collinear-aligned locus exactly (S-parametrization: φ_m=σ_m e^{iα}, all
+moments real multiples of e^{iα}; Hc = -2S₀Q·ddᵀ exactly;
+H = a·uuᵀ + b·e₁e₁ᵀ with u=Γᵀd) revealed that joint surjectivity FAILS
+whenever the antenna line direction d ⊥ γ₂ — and such points are
+constructible. Built one explicitly (n=6, ω=(π/2,0.4), quantized t_m):
+verified |A|=2, alignment to 8e-15, gradU~2e-10, rank_x=1, rank_joint=1
+(the apparent det H≈2.5e-2 is exactly sv₁×FD-noise; closed form gives
+H₁₂=H₂₂=0). So (b4) as stated is FALSE and the global regular_value_on
+hypothesis is FALSE — §7i's 14/14 optimism was one codimension short.
+Had I formalized (b4) directly from the numerics, it would have been an
+unprovable (false) lemma — the §6h/§6m/§6s lesson again, at higher stakes.
+
+The same exact algebra yields the correct plan: the ENTIRE aligned
+residual (containing all irregular points) is explicitly parametrized by
+countably many smooth maps F_k: ℝ^{n+2}→ℝ^{2n} (quantized phase-lines),
+never-surjective derivative since n+2<2n (CARD≥6), so
+negligible_singular_image_2n gives closed negligible images directly —
+slotting into branchP_indep_closed_cover_core with NO genericity
+hypotheses at all. This is the new main formalization target. The
+non-aligned (branch-2) part stays open: empirically empty; weighted-sum
+identities derived (ΣIm_m≡0 kills the naive sum; the x-weighted sum gives
+a relation in I=Im(cnj A·M)) but no emptiness proof yet. Full writeup
+Sketch.md §7j.
+
+## 2026-07-13, Claude+user: §7j stages A+B verified (BUILD_EXIT=0, 16s, 0 sorry)
+-- aligned-residual cover machinery complete through the per-piece lemmas
+
+Stage A (quantization): aligned_conf, lagrange2 (2D Brahmagupta identity),
+perp2_decomp2 (orthogonality route, no degree-4 grind), aligned_relation,
+aligned_pairwise_sin_zero (case-split-free: rA·sinΔ = iA·sinΔ = 0 by pure
+algebra), aligned_quantization (phase-line quantization with α∈[0,π],
+k::'n⇒int, floor-reduction), A_moment_nz_of_A_cart bridge.
+
+Stage B (cover pieces): align_param_map (the explicit ℝ^{n+3}→ℝ^{2n}
+parametrization), align_dom (compact pieces: ω∈K0, c∙c ≥ 1/(j+1), α∈[0,π],
+s∈cball), bounded_linear_perp2/axis, vec_lambda_eq_sum_axis,
+align_param_map_differentiable_on, compact_align_dom, align_image_closed,
+align_image_negligible (via negligible_differentiable_image_lowdim,
+DIM n+3 < 2n from CARD≥4), aligned_in_align_param_image (containment).
+
+Debugging notes (genuinely collaborative session, user co-editing in jEdit):
+- User's smt (verit) patches to aligned_pairwise_sin_zero compiled in PIDE
+  but are batch-risky (known env issue); replaced with oriented-rewrite calc
+  (`unfolding rs ..`) — deterministic.
+- User CAUGHT the two real blockers: (1) bounded_linear_axis's residual
+  ⋀i. i≠m ⟹ 0+0=0 not closing — root cause the decoupled-type-var trap
+  (lemma had NO type constraints; the 0s sat at an underdetermined type);
+  fixed by pinning every type (specialized to real^2 ⇒ (real^2)^'k) and
+  explicit case splits. (2) The `intro bounded_linear_imp_differentiable
+  bounded_linear_compose ...` steps DIVERGE — bounded_linear_compose's
+  conclusion re-unifies with its own subgoals (HOU), an unbounded search
+  that ate two full 570s build timeouts; replaced ALL intro-search steps in
+  the differentiability proof with explicit [OF]-chains (bl_alph/bl_ss/
+  bl_sm/numer_d/quot_d/sc1_d/sc2_d/core). Build went from >570s timeout to
+  16s. LESSON for the traps list: never put composition/closure rules
+  (bounded_linear_compose, differentiable_*) in an intro search — chain
+  them with [OF] explicitly.
+
+Remaining for task #13: stage C — countable index assembly ((('n⇒int)×nat)
+enumeration via from_nat_into) + the top-level aligned-cover theorem + the
+conditional branchP_indep_closed_cover_core assembly (aligned cover ∪
+task-14 hypothesis for the non-aligned part).
+
+## 2026-07-13, Claude: ★ TASK #13 DONE — the aligned-residual cover is fully
+formalized and verified (stages A+B+C, BUILD_EXIT=0, 16s, 0 sorry)
+
+Stage C landed: `aligned_bad_closed_cover` (countable ('n⇒int)×nat
+enumeration via from_nat_into — NOTE the Munkres `Top1_Ch3.countable`
+SHADOWS the HOL set-countability constant, qualify as
+`Countable_Set.countable`, same trap family as vec_eq_iff),
+`branchP_indep_closed_cover_core_of_nonaligned_cover` (excluded-middle
+split on aligned_conf; aligned side discharged unconditionally by the
+explicit cover, non-aligned side taken as hypothesis; glued via the
+already-proven double-index assembler), and the capstone-facing
+
+    branchP_indep_closed_cover_core_all_of_nonaligned_covers
+
+**D4's ENTIRE remaining obligation is now the single hypothesis NA**: a
+countable closed negligible cover of the NON-aligned part of BadXGW
+(⊆ the §7g branch-2 locus, empirically EMPTY). Everything else — including
+the §7j irregular sub-locus where the joint Jacobian genuinely drops rank,
+which killed the regular-value route — is handled UNCONDITIONALLY by the
+phase-line parametrization, with no genericity/IFT/Sard hypotheses at all.
+
+Also fixed en route: positional [of] misassignment (ωs into δ::real) —
+replaced with goal-pinned have+rule so unification instantiates; new memory
+entry for the intro/composition-rule divergence trap.
+
+Next (task #14): the non-aligned cover. Since branch-2 is empirically
+empty, the most promising analytical target is the "dream identity"
+(branch-2 + gradU=0 ⟹ aligned, making NA's covered set literally empty),
+with the weighted-sum relations in I=Im(cnj A·M) from §7j as the starting
+point; fallback is a thinness/chart argument for the branch-2 equations.
+
+## 2026-07-13, Claude: §7l — the non-aligned dichotomy FORMALIZED (BUILD_EXIT=0,
+15s, 0 sorry); D4's sole remaining hypothesis is now a cover of the explicit
+branch2_locus
+
+Task #14 semi-formal phase produced three §7k discoveries (branch-2 =
+∇_tΦ=0 for one scalar potential; dream identity false — 17/23 non-aligned
+t-solutions; gradU=0 adds exactly one t-equation making the t-sector
+(n+1)-in-n overdetermined — confirmed empirically: 60 trials of the
+combined system at n=6, solutions to 1.6e-15 residual but EVERY one
+aligned or A≈0, zero non-aligned).
+
+Formal phase (all verified): `branch2_locus` (the explicit special-covector
+locus: ℓ≠0, (ℓ₁γ₁+ℓ₂γ₂)⊥perp2c, ℓ·J_x(slot m c)=0 ∀m),
+`gradU_x_partial_perp_slot` (extracted with the j::2 pin),
+`cokernel_perp_slot_alignment_link` (exact factorization
+ℓ·J_x(slot m perp2c) = 2g·((ℓ₁γ₁+ℓ₂γ₂)·perp2c)·Im_m),
+`nonaligned_rank_defect_in_branch2_locus` (ONE non-aligned antenna forces
+the covector special — no case analysis), and the sharpened capstone
+
+    branchP_indep_closed_cover_core_all_of_branch2_covers
+
+whose sole hypothesis NA2 is a countable closed negligible cover of
+{x∈V. ∃ω∈Γ. x∈BadXGW{ω} ∧ x∈branch2_locus ω} — no alignment-negation
+anywhere. (One trivium: \<ell> is not lexically valid here; use `ell`.)
+
+Honest open residual (task #14 continues): covering branch2_locus∩BadXGW.
+Per §7k it is empty at generic ω ((n+1)-in-n overdetermination) but can be
+nonempty on a thin ω-consistency subfamily; the right tools are the
+1-variable-analyticity/analytic-IFT program (§7k option iii) — the
+convergence point with the existing Analytic/ foundation work.
+
+## 2026-07-13, Codex: §7m/§7n `(t,u)` interface pushed one step further
+(PIDE/jEdit check pending; no batch build run because jEdit/Poly is live)
+
+User repaired the first `tu_param_map` edits and reported
+`Scratch_D4Branch.thy` fully compiling.  Treating that as the baseline, Codex
+continued the semi-formal/formal cycle from Sketch.md §7m and added §7n:
+the next conservative bridge is that the radial slot `slot m c` is exactly
+the `m`-th `t`-axis direction under the `(t,u)` map:
+
+    T_c((c·c)e_m, 0) = slot m c,    T_c(0, (c·c)e_m) = slot m (perp2 c)
+
+for `c ≠ 0`.
+
+Formal additions in `Scratch_D4Branch.thy`:
+- `tu_param_map_t_axis`
+- `tu_param_map_u_axis`
+- `branch2_tu_radial_locus`
+- `branch2_locus_imp_branch2_tu_radial_locus`
+- `branch2_tu_system_imp_radial_locus`
+
+This does not yet prove the cover.  It rewrites the already-formalized
+`branch2_locus` equations into the correct `t`-coordinate interface, so the
+next proof cycle can replace those radial derivative equations with the
+closed §7k trigonometric equations (`∇_t Φ = 0`) and then add the reduced
+`gradU=0` scalar plus the one linear `u` constraint.
+
+## 2026-07-13, Codex: §7o radial-slot formula interface added
+(PIDE/jEdit check pending; no batch build run because jEdit/Poly is live)
+
+Continued from the compiling §7m/§7n baseline.  Semi-formal §7o in
+`Sketch.md` says the next conservative step is to name the radial slot vector
+
+    R_m(x,ω) = D_x[gradU(x,ω)](slot m c(ω))
+
+by specializing the already-proven `gradU_dip_xderiv_slot` theorem at
+`v = c(ω)`.  This is not yet the final `∇_t Φ = 0` scalar system, but it
+exposes the closed derivative formula with all `x` occurrences now ready to
+be substituted by `tu_param_map`.
+
+Formal additions:
+- `tu_param_map_inner`: dot product of an arbitrary vector with
+  `T_c(t,u)_m`, exposing the linear `t_m,u_m` dependence.
+- `gradU_radial_slot_rhs`: named closed form for the radial slot derivative.
+- `gradU_x_partial_radial_slot_closed`: `gradU_dip_xderiv_slot` specialized
+  to `slot m (cvec_dip ...)`.
+- `branch2_tu_radial_formula_locus`.
+- `branch2_tu_radial_locus_imp_formula_locus`.
+- `branch2_tu_system_imp_radial_formula_locus`.
+
+Next real proof step: use `tu_param_map_inner` to replace the remaining
+`Dcvec_dip(axis j) · x_m` terms inside `gradU_radial_slot_rhs` by explicit
+linear expressions in `t_m` and `u_m`.  After that, the only nonlinear
+dependence should be the intended trigonometric dependence on `t`.
+
+## 2026-07-13, Codex: §7p/§7q pulled-back radial formula and first moment
+collapse landed (BUILD_EXIT=0, 35s, 0 sorry)
+
+User closed jEdit, so Codex ran the batch build with the required
+`-d M5_Dev_Wiring` parent-session directory.  The prior §7p layer is now
+confirmed by batch build: `gradU_radial_tu_slot_rhs` replaces the remaining
+visible `Dcvec_dip(axis j) · x_m` term in the radial-slot formula by the
+explicit `(t_m,u_m)` expression.
+
+Then §7q landed.  Semi-formally, for `c ≠ 0`:
+
+    phase(c,T_c(t,u),m) = cis(-t_m)
+    A(T_c(t,u),c) = Σ_m cis(-t_m)
+    M_j(T_c(t,u),c) =
+      Σ_m ((t_m/(c·c))c_j + (u_m/(c·c))perp2(c)_j) cis(-t_m),  j=1,2.
+
+Formal additions in `Scratch_D4Branch.thy`:
+- `phase_t`, `A_t_moment`, `tu_coord`, `M1_tu_moment`, `M2_tu_moment`.
+- `phase_t_tu_param_map`, `A_moment_tu_param_map`,
+  `M1_moment_tu_param_map`, `M2_moment_tu_param_map`.
+- `M_paper_tu_components_123`.
+- `gradU_radial_tu_moment_rhs` and
+  `gradU_radial_tu_slot_rhs_moments`.
+- `branch2_tu_radial_moment_formula_locus`.
+- `branch2_tu_system_imp_radial_moment_formula_locus`.
+
+The new branch-2 endpoint no longer contains opaque `phase(c,T_c(t,u),m)`
+or the first three opaque `M_paper` projections.  The radial equations are
+now expressed through named trigonometric sums in `(t,u)`.  Next step:
+separate the special-covector condition into an explicit scalar linear
+constraint on `ell` and begin extracting the actual scalar equations
+`ell · gradU_radial_tu_moment_rhs = 0` as a named finite system suitable for
+closed/negligible-cover work.
+
+## 2026-07-13, Codex: §7r/§7s scalar residual and projective covector charts
+landed (SOFT_BUILD_EXIT=0, 37s, no heap write)
+
+Continued the semi-formal/formal cycle while jEdit/PIDE was live, so the
+verification command deliberately used soft-build mode without `-b`:
+
+    isabelle build -S -j1 -d . ... -d M5_Dev_Wiring -d M5_Dev_D4Branch \
+      Applied_Math_M5_D4Branch
+
+Formal §7r:
+- `branch2_special_coeffs`: the vector `B(ω)` with
+  `B_j = Dcvec_dip(axis j) · perp2(c)`.
+- `branch2_special_condition_eq`: rewrites the old special-covector
+  condition as `ell · B(ω) = 0`.
+- `branch2_radial_scalar_eq` and `branch2_tu_scalar_residual`, bundling the
+  special equation plus the `n` radial equations as a residual in
+  `real × real^'n`.
+- `branch2_tu_scalar_system_locus`.
+- `branch2_tu_system_imp_scalar_system_locus`.
+
+Formal §7s:
+- `ell_chart1 a = (1,a)` and `ell_chart2 a = (a,1)`.
+- scaling lemmas for `branch2_tu_scalar_residual`.
+- `branch2_tu_scalar_chart1_locus` and `branch2_tu_scalar_chart2_locus`.
+- `branch2_tu_scalar_system_locus_iff_chart_loci`.
+- `branch2_tu_system_imp_scalar_chart_locus`.
+
+This removes the free nonzero covector as a `real^2` unknown.  The remaining
+branch-2 residual is now covered by two one-real-parameter systems in
+`(ω,t,u,a)`.  Next proof target: choose one chart and start exposing the
+chart residual components as concrete functions of `(ω,t,u,a)`, so the
+eventual closed/negligible-cover statement can quantify over chart images
+rather than the abstract `branch2_tu_system`.
+
+## 2026-07-13, Codex: §7t/§7u chart-image capstone bridge landed
+(SOFT_BUILD_EXIT=0, 38s; FULL_BUILD_EXIT=0, 34s, 0 sorry)
+
+User reported the §7r/§7s file fully compiles.  Codex continued the
+semi-formal/formal cycle and added the D4 capstone bridge from the two
+projective chart systems back to the old branch-2 cover hypothesis.
+
+Formal §7t:
+- `branch2_tu_x_map`.
+- `branch2_tu_chart1_system`, `branch2_tu_chart2_system`.
+- `branch2_tu_chart1_image`, `branch2_tu_chart2_image`.
+- `branch2_bad_subset_tu_chart_images`, proving
+  `branch2_bad ⊆ chart1_image ∪ chart2_image`.
+- generic `closed_negligible_cover_Un`.
+- `branch2_bad_closed_cover_of_tu_chart_image_covers`.
+- `branchP_indep_closed_cover_core_all_of_tu_chart_image_covers`.
+
+Formal §7u:
+- `branch2_chart_param_x_map`.
+- `branch2_chart1_residual`, `branch2_chart2_residual`.
+- `branch2_chart1_param_system`, `branch2_chart2_param_system`.
+- `branch2_chart1_param_image`, `branch2_chart2_param_image`.
+- equality bridges
+  `branch2_tu_chart1_image_eq_param_image` and
+  `branch2_tu_chart2_image_eq_param_image`.
+- capstone-facing
+  `branchP_indep_closed_cover_core_all_of_chart_param_image_covers`.
+
+The remaining D4 obligation is now sharply isolated: prove countable
+closed-negligible covers for the two explicit residual-zero image sets
+`branch2_chart1_param_image` and `branch2_chart2_param_image`.  The abstract
+`branch2_locus`, hidden existential covector, and hidden chart parameter are
+all gone from the final capstone interface.
+
+## 2026-07-13, Codex: §7v bounded-slice layer attempted, then removed from
+Scratch_D4Branch.thy after PIDE stall
+
+Codex tried the next semi-formal §7v move directly in
+`Scratch_D4Branch.thy`: introduce bounded chart-parameter slices and a
+countable-union capstone from per-slice covers back to
+`branchP_indep_closed_cover_core_all`.  This was the right mathematical
+direction, but the first formal version made PIDE sit at the end of the file
+for many minutes.
+
+To keep the theory usable, Codex directly edited `Scratch_D4Branch.thy` back
+to the last full-build-clean endpoint: §7u,
+`branchP_indep_closed_cover_core_all_of_chart_param_image_covers`.  The theory
+now has no §7v definitions.  §7v remains a semi-formal next target in
+`Sketch.md`, but it should be reintroduced as smaller independently checked
+pieces, or in a separate scratch theory, before being put back into the main
+D4 scratch file.
+
+## 2026-07-13, Codex: §7v bounded-slice reduction landed in smaller pieces
+(SOFT_BUILD_EXIT=0, 36s, no heap write)
+
+Re-ran the semi-formal/formal cycle for §7v, this time deliberately splitting
+the earlier PIDE-heavy attempt into small definitions and elementary lemmas.
+The informal proof was added to `Sketch.md` immediately after the §7v status
+note.
+
+Formal additions in `Scratch_D4Branch.thy`:
+- projection helpers for chart parameters `q = ((ω,t,u),a)`;
+- `branch2_chart_param_bounded`, imposing
+  `1 / real (Suc j) ≤ c(ω)·c(ω)`, `norm t ≤ real (Suc j)`,
+  `norm u ≤ real (Suc j)`, and `abs a ≤ real (Suc j)`;
+- `branch2_tu_system_cvec_nonzero`, extracting `c(ω) ≠ 0` from the
+  `BadXGW` conjunct already inside `branch2_tu_system`;
+- `branch2_chart_param_bounded_exists`, using `inner_gt_zero_iff` and
+  `reals_Archimedean`/`real_arch_simple` to put any valid chart parameter
+  into some bounded slice;
+- chart-1 and chart-2 slice systems/images;
+- `branch2_chart1_param_image_subset_slice_images` and the chart-2 analogue;
+- generic `closed_negligible_cover_of_slice_covers`;
+- capstone-facing
+  `branchP_indep_closed_cover_core_all_of_chart_param_slice_covers`.
+
+This removes the last unbounded-parameter bookkeeping from the top-level D4
+interface.  The current remaining obligation is now local: for every
+independent steering patch `Γ` and every slice index `j`, prove countable
+closed/negligible covers of the two bounded residual-zero slice images
+`branch2_chart1_param_slice_image V ω0 ωs Γ j` and
+`branch2_chart2_param_slice_image V ω0 ωs Γ j`.
+
+## 2026-07-13, Codex: §7w/§7x special-covector cancellation and reduced
+radial scalar equation landed (SOFT_BUILD_EXIT=0, 39s, no heap write)
+
+User pushed back correctly on abandoning the reduced-radial theorem after the
+first raw simplification failed.  The successful proof split was:
+
+1. prove a grouped `branch2_radial_scalar_L_eq` form of the old scalar radial
+   equation;
+2. prove the grouped form equals the reduced no-`u` equation using the
+   already-proved moment-combination cancellation;
+3. compose the two equalities.
+
+Formal additions in `Scratch_D4Branch.thy`:
+- `branch2_ell_combo`, the vector
+  `ell_1 Dc(axis 1) + ell_2 Dc(axis 2)`;
+- `branch2_ell_combo_perp_eq_special`;
+- `real2_parallel_of_perp2_orth`;
+- `tu_coord_combo_eq_inner` and `tu_coord_combo_special_no_u`;
+- `M12_tu_special_moment`;
+- `M12_tu_moment_combo_special_no_u`;
+- residual-zero packages including
+  `branch2_tu_scalar_residual_zero_M12_combo_no_u`;
+- `branch2_ell_gain_deriv`;
+- `branch2_radial_scalar_L_eq`;
+- `branch2_radial_scalar_reduced_eq`;
+- `branch2_radial_scalar_eq_L_form`;
+- `branch2_radial_scalar_L_eq_special_no_u`;
+- `branch2_radial_scalar_eq_special_no_u`;
+- chart-facing corollaries
+  `branch2_chart1_residual_zero_radial_reduced` and
+  `branch2_chart2_residual_zero_radial_reduced`.
+
+This is a real narrowing of the remaining D4 proof.  The radial scalar
+equations in the two projective charts can now be replaced, at residual-zero
+points, by equations that depend only on `(ω,t,a)`, not on `u`.  The intended
+final local proof is now: prove the `(ω,t,a)` reduced system has rank `n+1`
+on each bounded independent chart patch, giving a two-dimensional base
+solution set; then add the free bounded `u` fibre of dimension `n`, so the
+image dimension is at most `n+2 < 2n` for `CARD('n) ≥ 4`.
+
+## 2026-07-13, Codex: §7y reduced-base/fibre capstone landed
+(SOFT_BUILD_EXIT=0, 40s, no heap write)
+
+Added the semi-formal §7y sketch to `Sketch.md` and translated it into
+`Scratch_D4Branch.thy`.
+
+Formal additions:
+- base parameter projections for `r = ((ω,t),a)`;
+- `branch2_base_param_of_chart`, splitting a chart parameter
+  `q = ((ω,t,u),a)` into the reduced base parameter and the free `u` fibre;
+- bounded predicates for the base and the free fibre;
+- reduced chart residuals
+  `branch2_chart1_reduced_base_residual` and
+  `branch2_chart2_reduced_base_residual`, using the no-`u`
+  `branch2_radial_scalar_reduced_eq`;
+- zero-residual transfer lemmas from the old chart residuals to the reduced
+  base residuals;
+- reduced slice images
+  `branch2_chart1_reduced_slice_image` and
+  `branch2_chart2_reduced_slice_image`;
+- subset lemmas showing each old bounded chart slice image is contained in
+  the corresponding reduced base/fibre slice image;
+- capstone theorem
+  `branchP_indep_closed_cover_core_all_of_reduced_slice_covers`.
+
+This is now the cleanest D4 interface: for every independent steering patch
+`Γ` and slice index `j`, it suffices to cover the two reduced images.  The
+old global branch locus, projective charting, and unbounded-parameter
+bookkeeping have all been discharged.  The remaining mathematical core is the
+local analytic/rank theorem proving countable closed negligible covers for
+the two reduced base/fibre images.
+
+## 2026-07-13, Codex: §7z low-dimensional parametrization bridge landed
+(USER_JEDIT_COMPILE=clean after minor edit; stale soft build stopped)
+
+Added the semi-formal §7z proof shape to `Sketch.md`: the reduced residual
+system lives on base variables `((ω,t),a)` of dimension `n+3`; rank `n+1`
+would give local two-dimensional base charts by the implicit-function theorem;
+crossing those charts with the free bounded `u` fibre gives
+`real^2 × real^n` source dimension `n+2`, which is strictly below the target
+configuration dimension `2n` for `CARD('n) ≥ 4`.
+
+Formal additions in `Scratch_D4Branch.thy`:
+- `closed_negligible_cover_of_lowdim_image`, a generic wrapper around
+  `negligible_differentiable_image_lowdim` that also packages a closed image
+  as a one-piece closed negligible cover;
+- `branch2_lowdim_source_dim_lt`, recording
+  `DIM((real^2) × real^'n) < DIM((real^2)^'n)` from `4 ≤ CARD('n)`;
+- `closed_negligible_cover_of_branch2_lowdim_param_image`, the single-chart
+  reduced-image cover bridge;
+- `closed_negligible_cover_of_branch2_countable_lowdim_param_images`, the
+  countable-local-chart version that matches the actual IFT output;
+- capstones
+  `branchP_indep_closed_cover_core_all_of_reduced_lowdim_parametrizations`
+  and
+  `branchP_indep_closed_cover_core_all_of_reduced_countable_lowdim_parametrizations`.
+
+This moves the remaining proof boundary one level lower.  D4 now follows if,
+for each independent `Γ` and slice `j`, the two reduced slice images are
+covered by countably many closed images of differentiable maps
+`real^2 × real^'n → (real^2)^'n`.  The still-open hard theorem is therefore
+exactly the rank/IFT construction of those countably many local
+parametrizations from the reduced residuals.
+
+## 2026-07-13, Codex: §7aa base-chart-to-fibre lift landed
+(USER_JEDIT_COMPILE=clean after minor edits)
+
+Added semi-formal §7aa to `Sketch.md` and formalized the IFT-native bridge in
+`Scratch_D4Branch.thy`.
+
+The new formal layer introduces:
+- `branch2_u_slice_domain`, the bounded free-fibre domain for a slice index;
+- `branch2_lifted_base_chart_x_map`, which turns a base chart
+  `psi : real^2 -> ((real^2 × real^'n) × real)` into the configuration map
+  `(s,u) ↦ branch2_base_fibre_x_map (psi s, u)`;
+- subset lemmas showing that a countable cover of the reduced base system by
+  `psi_i` images lifts to a countable cover of the reduced slice image;
+- capstone theorem
+  `branchP_indep_closed_cover_core_all_of_reduced_base_chart_parametrizations`.
+
+This is now the exact interface the rank/IFT theorem must discharge.  For
+each chart, steering patch `Γ`, and slice `j`, it remains to produce
+countably many two-dimensional base charts covering the reduced base system,
+with differentiable lifted maps and closed lifted images.  Once that is
+proved, the existing §7aa -> §7z -> §7y chain closes D4.
+
+## 2026-07-13, Codex: §7ab rank/IFT endpoint named
+
+Added semi-formal §7ab to `Sketch.md` and formalized the remaining D4
+endpoint in `Scratch_D4Branch.thy`.
+
+The new formal names are:
+- `branch2_chart1_reduced_base_regular_rank`;
+- `branch2_chart2_reduced_base_regular_rank`;
+- `branch2_reduced_base_regular_rank_all`;
+- `branch2_chart1_reduced_base_IFT_parametrizations`;
+- `branch2_chart2_reduced_base_IFT_parametrizations`;
+- `branch2_reduced_base_IFT_parametrizations_all`;
+- `branchP_indep_closed_cover_core_all_of_reduced_base_IFT_parametrizations`;
+- `branchP_indep_closed_cover_core_all_of_reduced_base_regular_rank_and_IFT_chart_theorem`.
+
+This does not pretend the rank theorem is proved.  It names the exact theorem
+left to prove in two pieces: first, the derivative of each reduced residual
+must be onto `real × real^'n` on the reduced base zero set; second, the
+regular-rank/IFT chart theorem must turn that into countably many
+two-dimensional base charts whose lifted maps are differentiable and have
+closed images.  The new capstones then turn that rank/IFT package directly
+into `branchP_indep_closed_cover_core_all`.
+
+## 2026-07-13, Codex: IFT-ready coordinates and assoc-chart bridge
+
+Added semi-formal §7ac to `Sketch.md` and extended `Scratch_D4Branch.thy`.
+
+New formal layer:
+- `branch2_base_assoc` / `branch2_base_unassoc`;
+- `branch2_residual_to_IFT_range` / `branch2_residual_from_IFT_range`;
+- `branch2_chart1_reduced_base_IFT_residual`;
+- `branch2_chart2_reduced_base_IFT_residual`;
+- zero/system equivalence lemmas between the original reduced residuals and
+  the IFT-ready residuals;
+- local chart lemmas
+  `branch2_chart1_reduced_base_IFT_residual_local_chart` and
+  `branch2_chart2_reduced_base_IFT_residual_local_chart`, applying
+  `regular_value_local_chart` in the correct
+  `real^2 × (real^'n × real) -> real^'n × real` coordinate split;
+- associated-coordinate countable chart predicates
+  `branch2_chart*_reduced_base_assoc_IFT_parametrizations`;
+- bridge lemmas turning associated-coordinate chart covers into the older
+  `branch2_chart*_reduced_base_IFT_parametrizations`;
+- capstones
+  `branchP_indep_closed_cover_core_all_of_reduced_base_assoc_IFT_parametrizations`
+  and
+  `branchP_indep_closed_cover_core_all_of_reduced_base_regular_rank_and_assoc_IFT_chart_theorem`.
+
+The remaining theorem is now sharper:
+
+```isabelle
+branch2_reduced_base_regular_rank_all V ctr δ ω0 ωs
+  ⟹ branch2_reduced_base_assoc_IFT_parametrizations_all V ctr δ ω0 ωs
+```
+
+That is the genuine local analytic proof: build C1 derivative fields for the
+two IFT-ready reduced residuals, prove the `n+1` surjectivity calculation, and
+globalize the local charts by Lindelof plus closed bounded exhaustion.
+
+## 2026-07-13, user+Claude: ★ the user independently formalized the ENTIRE
+§7k branch-2 cover architecture (~2900 new lines); file verified sorry-free
+(BUILD_EXIT=0, 22s, 5161 lines)
+
+While Claude was blocked by tool outages, the user built, solo, the full
+"cover, not emptiness" pipeline for the non-aligned residual: the (t,u)
+frame (`tu_param_map`, `branch2_bad_subset_tu_system_image`), the moment
+pullbacks (`phase_t`, `A_t_moment`, `M1/M2_tu_moment`), the scalar residual
+chain, the projective covector charts (`ell_chart1/2` — §7b's λ=(1,a)/(a,1)
+idea landed at the right level), the KEY u-elimination lemmas
+(`tu_coord_combo_special_no_u`, `M12_tu_moment_combo_special_no_u`: on the
+special covector combination the u-coordinates drop out of the residuals),
+the resulting reduced-base system on (ω,t,a) with an explicit free u-fibre
+(`branch2_base_fibre_x_map`, `branch2_lifted_base_chart_x_map`), slice
+exhaustion, the lowdim-negligibility engine reuse
+(`closed_negligible_cover_of_lowdim_image`, n+2 < 2n), the assoc/unassoc
+IFT-range plumbing, and two final capstones that isolate D4's remaining
+mathematical content to exactly two inputs:
+
+  1. `branch2_reduced_base_regular_rank_all` (the genuine transversality
+     of the reduced base system — numerically true per §7k),
+  2. the rank ⟹ `branch2_reduced_base_(assoc_)IFT_parametrizations_all`
+     bridge (the IFT chart theorem instance — the heap's
+     `regular_value_local_chart` engine is the natural discharger).
+
+Claude's contribution this round: two fixes for the implicit-type-variable
+trap (the `_of_assoc` lemmas' statements never fixed phantom V's type, so
+the body's explicit 'n was a DIFFERENT variable — terminal `.` failing on
+identically-printed fact/goal; fixed with explicit `fixes V ::
+((real^2)^'n::finite) set`), plus independent batch verification.
+
+D4 status: aligned residual closed unconditionally (§7j); non-aligned
+residual reduced to the two inputs above. Next: discharge the IFT bridge
+with the heap engine, then attack regular-rank (semi-formal first).
+
+## 2026-07-13, addendum: Sketch.md §7m written (the user's branch-2 pipeline,
+its place in the architecture, and the honest two-input status of D4)
+
+## 2026-07-13, Claude: §7n — regular_rank_all is UNSATISFIABLE as stated
+(exact identity Σ_m F_m ≡ 0, verified to 2.3e-15 at non-solution points);
+concrete slot-swap repair designed and numerically validated in principle
+
+The semi-formal audit of the user's reduced-base rank hypothesis found,
+in sequence: (1) rank-deficient families from L=0 ⟸ det Dcvec=0 (never
+threaded from BadXGW into the base system — repair: det-bound in the
+bounded pieces); (2) after excluding those: rank uniformly 6/7 —
+an exact sum identity Σ_m F_m ≡ 0 makes surjectivity onto real × real^'n
+impossible, so the hypothesis was an unprovable frontier; (3) repair:
+repurpose one codomain slot with the reduced-gradU scalar R (§7k), which
+bad points satisfy and which breaks the sum degeneracy — downstream
+architecture (codomain, 2-dim IFT charts, capstones) unchanged; (4)
+repaired numerics: full-rank points exist, one unexplained in-box 5/7
+point remains to classify. Full work list in Sketch.md §7n. This is the
+third unprovable-statement catch of the semi-formal cycle in D4 (after
+the false (b4) and the L=0 family) — the cycle is earning its cost.
+
+## 2026-07-13, Codex: §7o repaired slot-swap formalized and threaded to a
+new D4 cover endpoint
+
+Implemented the §7n repair in `Scratch_D4Branch.thy`.  The formal scalar is
+the division-free cross-combination
+
+```isabelle
+L = (γ2 · perp2 c) *R γ1 - (γ1 · perp2 c) *R γ2
+```
+
+with `L · perp2 c = 0`, so the existing no-u moment lemma applies directly.
+The key theorem now proved is:
+
+```isabelle
+branch2_reduced_gradU_scalar_eq_gradU_cross
+branch2_reduced_gradU_scalar_zero_of_gradU_zero
+```
+
+Thus genuine bad points (`gradU = 0`) satisfy the repaired scalar equation.
+Added repaired residuals with one fixed radial slot replaced by this scalar,
+proved the old chart residual plus `gradU = 0` implies repaired residual zero,
+and threaded `1 / Suc j <= |det Dcvec|` through chart/base bounded pieces.
+
+The second pass added determinant-bounded chart slices and proved the new
+cover endpoint:
+
+```isabelle
+branchP_indep_closed_cover_core_all_of_repaired_reduced_slice_covers
+```
+
+Then cloned the downstream low-dimensional and IFT-capstone layer onto the
+repaired systems, including:
+
+```isabelle
+branchP_indep_closed_cover_core_all_of_repaired_reduced_base_IFT_parametrizations
+branchP_indep_closed_cover_core_all_of_repaired_reduced_base_assoc_IFT_parametrizations
+branchP_indep_closed_cover_core_all_of_repaired_reduced_base_regular_rank_and_assoc_IFT_chart_theorem
+branchP_indep_closed_cover_core_all_of_repaired_reduced_base_regular_rank_and_IFT_chart_theorem
+```
+
+Honest remaining target: prove
+
+```isabelle
+branch2_repaired_reduced_base_regular_rank_all V ctr δ ω0 ωs
+  ==> branch2_repaired_reduced_base_assoc_IFT_parametrizations_all V ctr δ ω0 ωs
+```
+
+and then prove the repaired rank hypothesis itself.  Before the rank proof,
+classify Claude's remaining numerical rank-5/7 repaired point; if it is a
+thin exceptional family, add the corresponding formal split before attacking
+the global rank statement.
+
+Follow-up pass: added the compact-chart repaired IFT endpoint.  The formal
+lemmas
+
+```isabelle
+compact_branch2_u_slice_domain
+compact_branch2_lifted_base_chart_domain
+closed_branch2_lifted_base_chart_image_of_differentiable
+```
+
+show that closed lifted images are automatic once the base chart domains are
+compact and the lifted map is differentiable.  Added the compact target
+
+```isabelle
+branch2_repaired_reduced_base_compact_IFT_parametrizations_all
+```
+
+and the capstone
+
+```isabelle
+branchP_indep_closed_cover_core_all_of_repaired_reduced_base_regular_rank_and_compact_IFT_chart_theorem
+```
+
+The preferred remaining bridge is now:
+
+```isabelle
+branch2_repaired_reduced_base_regular_rank_all V ctr δ ω0 ωs
+  ==> branch2_repaired_reduced_base_compact_IFT_parametrizations_all V ctr δ ω0 ωs
+```
+
+This matches the actual local proof shape: IFT local charts, restrict to
+closed balls, Lindelof subcover from the open-ball images, keep the closed
+balls as compact parametrization domains.  Batch build passed afterward:
+`Applied_Math_M5_D4Branch`, 0:00:27 elapsed for the final check.
+
+## 2026-07-13, Codex: §7ag C1 regular-rank interface and cball local charts
+
+Added the next semi-formal/formal bridge after the compact endpoint.  The key
+cleanup is that `branch2_repaired_reduced_base_regular_rank_all` is not, by
+itself, the exact input to `regular_value_local_chart`: it gives pointwise
+existence of a surjective derivative for the unassociated residual, but the
+IFT theorem consumes a global derivative field for the associated residual,
+with differentiability everywhere and continuity of that field.
+
+The new interface is:
+
+```isabelle
+branch2_chart1_repaired_reduced_base_C1_regular_rank
+branch2_chart2_repaired_reduced_base_C1_regular_rank
+branch2_repaired_reduced_base_C1_regular_rank_all
+```
+
+At the chart level this packages a field
+
+```isabelle
+G' :: ((real^2) × ((real^'n) × real))
+  ⇒ (((real^2) × ((real^'n) × real)) ⇒\<^sub>L ((real^'n) × real))
+```
+
+with derivative facts for
+`branch2_chart*_repaired_reduced_base_IFT_residual`, continuity on `UNIV`,
+and surjectivity at every associated repaired zero.
+
+Formalized the first consequences:
+
+```isabelle
+branch2_chart1_repaired_reduced_base_C1_regular_rankD
+branch2_chart2_repaired_reduced_base_C1_regular_rankD
+branch2_chart1_repaired_reduced_base_C1_regular_rank_local_chart
+branch2_chart2_repaired_reduced_base_C1_regular_rank_local_chart
+branch2_chart1_repaired_reduced_base_C1_regular_rank_cball_chart
+branch2_chart2_repaired_reduced_base_C1_regular_rank_cball_chart
+```
+
+The local-chart lemmas feed the C1 package into the already-verified repaired
+`regular_value_local_chart` wrappers.  The cball lemmas use
+`Nonemptiness_Paper.bad_zero_chart` to shrink those open charts to closed
+balls.  They provide the exact Lindelof input needed next: the open-ball
+images are open relative zero-set neighbourhoods, while the closed balls are
+ready to become compact parametrization domains.
+
+Also added the corresponding capstone:
+
+```isabelle
+branchP_indep_closed_cover_core_all_of_repaired_reduced_base_C1_regular_rank_and_compact_IFT_chart_theorem
+```
+
+The remaining bridge is now the precise compact assembly:
+
+```isabelle
+branch2_repaired_reduced_base_C1_regular_rank_all V ctr δ ω0 ωs
+  ==> branch2_repaired_reduced_base_compact_IFT_parametrizations_all V ctr δ ω0 ωs
+```
+
+After that, the remaining analytic work is no longer hidden in topology:
+prove the C1 derivative fields and surjectivity/rank of the slot-swapped
+repaired residuals.
+
+## 2026-07-13 (evening): the Lindelof/compact IFT bridge is CLOSED sorry-free (chart1)
+
+`Scratch_D4Branch.thy` (7610 lines) now builds with **zero sorrys**
+(`Finished Applied_Math_M5_D4Branch`, BUILD_EXIT=0, 30s).  The last open
+lemma was the hard glue
+
+```isabelle
+branch2_chart1_repaired_reduced_base_compact_IFT_parametrizations_of_C1_regular_rank
+```
+
+(C1 regular rank ==> countable compact differentiable parametrizations of the
+repaired chart-1 system), proven by: Lindelof countable subcover
+(`countable_subcover_of_openin_cover`) of the relative-open cball-chart images
+from `..._C1_regular_rank_cball_chart`, `from_nat_into` indexing, prod_encode
+double-indexing with the `1/Suc j <= c . c` threshold slice to make the
+domains compact (`compact_cball_cvec_threshold_of_continuous_chart`), and the
+cvec-nonzero differentiability of the lifted x-map.
+
+Debug findings worth remembering (all found via `isabelle eval_at` + batch):
+
+1. `O` is HOL's relcomp infix; it cannot be an `obtain` variable (line 7052
+   failure).  Renamed to `Ob`.
+2. THE blocker behind every "identical-looking goal fails" here: the local
+   `define F = {A Int (phi ` ball u0 rho) | u0 rho phi Dphi r. ...}` left
+   **phi's DOMAIN type unpinned** (only its codomain is forced by `A Int _`;
+   `ball u0 rho` merely gives a sort).  So F's phi lived on an anonymous
+   type, and blast/metis could never destructure membership against
+   `phi :: real^2 => ...`.  Fix: annotate the comprehension binder
+   `|(u0 :: real^2) rho phi Dphi r.`  Same phantom hit the case-split
+   `proof (cases "system = {}")` (the system constant's 'n is phantom in its
+   arguments): pin with `= ({} :: ((((real^2) * (real^'n)) * real)) set)`.
+3. blast REFUSES rules that would instantiate function-typed unknowns (the
+   obtain that-rule with `/\phi.`); after the type pin, `by (elim exE conjE)
+   metis` (obtains) and `(intro exI conjI; assumption)` (re-intro) are the
+   reliable closers.
+
+State of D4 after this commit: everything from `BadXGW` down to the two
+C1-regular-rank hypotheses is formally verified.  Remaining:
+
+- (mechanical) chart2 twin of `..._compact_IFT_parametrizations_of_C1_regular_rank`
+  + an `_all` glue lemma to discharge the `c1_rank_to_compact_ift` hypothesis
+  of the final capstone outright.
+- (mathematical core) `branch2_repaired_reduced_base_C1_regular_rank_all`:
+  global C1 derivative fields G' for the two slot-swapped repaired residuals
+  and surjectivity at every bounded-det system point (numerics: 7/7 full
+  rank at sampled repaired-system points).
+- splice `branchP_indep_closed_cover_core_all` into `m5_D34_D4_branchP`.
