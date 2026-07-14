@@ -89,6 +89,21 @@ Flagging here rather than picking one unilaterally. Scripts:
 `d4_big_sweep.py`, `d4_confirm_mechanism.py`, `d4_verify_lowrank.py`,
 `d4_symmetry_forced_check.py` (all in scratchpad) reproduce the above.
 
+**Update, same day: path (a) is closed — no rescue there.** Traced `t`'s
+physical origin via `af_null_zero` in `Appendix/Nonemptiness_Robust1.thy`
+(line 1708): `t_m = cvec_dip(ω)·x_m`, the phase felt by array element `m` at
+its actual planar position `x_m` (`x :: (real^2)^'n`, the drones'
+positions). `t_i = t_j` holds exactly when
+`cvec_dip(ω)·(x_i - x_j) ∈ 2πℤ` — two *physically distinct* drones lying on
+the same phase front relative to the steering direction `ω`. This is a
+completely ordinary, generically-reachable geometric coincidence (any `ω`
+roughly perpendicular to the segment joining two elements), not something
+excluded by the array geometry or by `x_i ≠ x_j`. So there is no hidden
+upstream distinctness guarantee to find — (a) is dead. The live choice is
+between (b) (weaken `reg1`/`reg2`, shrinking what D4 proves) and (c)
+(redesign `branch2_repair_slot` to be collision-robust, new math). Still a
+call for the user, not something to pick unilaterally.
+
 ---
 
 ## 2026-07-10 — Functional-cut wiring engine staged in scratch
