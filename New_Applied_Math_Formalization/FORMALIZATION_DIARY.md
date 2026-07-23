@@ -8655,3 +8655,30 @@ isolated vs fill intervals. If numerics support it, either attempt the
 transversality proof or, matching D4's posture, land countability as one
 precisely-scoped `sorry` atop the proven machinery. No harness exists yet;
 this is the decision-maker and the honest next move.
+
+## 2026-07-23 (cont'd) — D3 assembled to one labelled gap (commit `aedab97`)
+
+Landed the assembly, matching D4's posture. New session
+`Applied_Math_M5_D3ArcCount` (`M5_Dev_D3ArcCount/Scratch_D3ArcCount.thy`,
+parent `Applied_Math_M5_H0coreArc`), build-checked, exactly one `sorry`:
+
+- `d3_capstone_input_robust4` — the Robust4 D3 capstone input
+  `d3_detHess_arc_chart_core_all V (π/2,0) (π/4) (π/2,0) 0`, for every `V`
+  with `2 ≤ CARD('n)`, derived through the proven countable-cover glue from
+  the single scoped obligation
+  `H0coreArc_bad_angles_countable_robust4` (the lone `sorry`).
+- `d3_capstone_input_robust4_of_empty_bad_fibres` — proven `sorry`-free: the
+  P0 route. If no configuration in `V` is bad at any box angle, D3 closes with
+  no countability machinery at all. This is the cleanest target for the
+  numerical check (show `∂_x ∇_ω U` is always onto `ℝ²` at `ω`-critical
+  configurations) and would remove the `sorry` outright.
+- `H0coreArc_bad_angles_empty_of_empty_fibres` — the supporting `sorry`-free
+  lemma (empty fibres ⟹ empty bad-angle set).
+
+Isabelle now certifies that plugging in countability really does discharge the
+whole D3 side (no hidden obligation between it and the capstone input). Net
+state: both wings — D3 (this `sorry`) and D4 (the two Branch-P collision
+`sorry`s) — are proven-modulo-one-labelled-gap, which is the paper's stated
+posture. Gotcha for future work: `countable` in this session is
+`Top1_Ch3.countable` (Munkres import), not HOL's; `countable {}` needs
+`simp add: Top1_Ch3.countable_def inj_on_def`.
