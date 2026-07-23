@@ -8682,3 +8682,23 @@ state: both wings — D3 (this `sorry`) and D4 (the two Branch-P collision
 posture. Gotcha for future work: `countable` in this session is
 `Top1_Ch3.countable` (Munkres import), not HOL's; `countable {}` needs
 `simp add: Top1_Ch3.countable_def inj_on_def`.
+
+## 2026-07-23 (cont'd 2) — D3ArcCount made sorry-free (commit `9d33c3c`)
+
+Converted the one D3 `sorry` into an explicit hypothesis. `d3_capstone_input_robust4`
+now takes the per-arc countability as an assumption `countable_bad`, mirroring
+how `F0_dip_nonempty` carries `d3core`/`branchcore`. The leaf is fully
+`sorry`-free and oracle-free — rebuilt with `quick_and_dirty = false`, so the
+build itself certifies no hidden gaps. The proven P0 empty-fibre route stays.
+
+Basis for not proving it: after checking all three routes, the countability is a
+genuine transversality/subanalytic result. Sard gives measure-zero critical
+values in `\<real>\<^sup>2`, not countable-on-a-1-D-arc; there is no `\<omega>`-only discriminant
+(every box angle is regular); and the `\<exists>x` over non-compact configuration space
+blocks the 1-D isolated-zeros route. The enabling library (parametric
+transversality \<Rightarrow> countable critical values, or subanalytic projection) is not
+present; the archived `Parametric_Transversality_Euclidean_Base` has the same
+"missing analytic bridge" and a `..._stub_2d`. And `F0_dip_nonempty` needs
+`6 \<le> CARD('n)` odd, so the P0 emptiness escape is unavailable for the real
+theorem. Honest end state: both wings rest on one explicit, true-by-dimension-
+count, unformalized geometric-measure input each. Not faked; exposed.
