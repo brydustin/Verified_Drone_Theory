@@ -2,12 +2,12 @@ theory Scratch_D3ArcCount
   imports "Applied_Math_M5_H0coreArc.Scratch_H0coreArc"
 begin
 
-section \<open>The D3 capstone input, reduced to a single countability obligation\<close>
+section \<open>The D3 capstone input, reduced to a single explicit hypothesis\<close>
 
 text \<open>
   This leaf assembles the whole D3 side of the Robust4 capstone at the design
-  point \<open>\<omega>\<^sub>0 = (\<pi>/2, 0)\<close>, \<open>\<omega>\<^sub>s = 0\<close>, \<open>\<delta> = \<pi>/4\<close> down to one clearly-labelled
-  gap.  Every other ingredient is already proven, \<open>sorry\<close>-free, upstream:
+  point \<open>\<omega>\<^sub>0 = (\<pi>/2, 0)\<close>, \<open>\<omega>\<^sub>s = 0\<close>, \<open>\<delta> = \<pi>/4\<close> down to one clearly-stated
+  hypothesis.  Every other ingredient is already proven, \<open>sorry\<close>-free, upstream:
 
     \<^item> the fixed-angle chart core at every regular angle
       (\<open>fixed_omega_H0core_chart_core_of_generic_conditions\<close>, via the
@@ -16,15 +16,16 @@ text \<open>
       (\<open>H0coreArc_chart_core_all_robust4_of_countable_bad_angle_sets\<close>);
     \<^item> the Robust4 \<open>w\<^sub>1\<close>-strip \<open>OmegaPF (\<pi>/2,0) (\<pi>/4) \<subseteq> {0 < \<omega>\<^sub>1 < \<pi>}\<close>.
 
+  This theory itself is entirely \<open>sorry\<close>-free: the one remaining geometric-measure
+  fact is carried as an \<^emph>\<open>explicit hypothesis\<close>, exactly as the final theorem
+  \<open>F0_dip_nonempty\<close> carries its \<open>d3core\<close> and \<open>branchcore\<close> inputs as assumptions.
+
   Recall (\<open>Nonemptiness_Robust1\<close>) that \<open>HessU = \<nabla>\<^sup>2\<^sub>\<omega> U\<close> and \<open>gradU = \<nabla>\<^sub>\<omega> U\<close> are the
   Hessian / gradient in the 2-D steering angle \<open>\<omega>\<close>; the configuration \<open>x\<close> is a
   parameter.  A configuration is ``bad at \<open>\<omega>\<close>'' (\<open>D3BadXG_H0core\<close>) when \<open>\<omega>\<close> is a
   degenerate critical point of \<open>\<omega> \<mapsto> U(x,\<omega>)\<close> (\<open>\<nabla>\<^sub>\<omega> U = 0\<close>, \<open>det \<nabla>\<^sup>2\<^sub>\<omega> U = 0\<close>) that
   is moreover not transversally unfolded by moving \<open>x\<close> (\<open>\<not> surj (\<partial>\<^sub>x \<nabla>\<^sub>\<omega> U)\<close>,
   \<open>\<not> surj DM_paper_x\<close>).
-
-  The remaining D3 obligation is therefore purely: on each analytic arc through
-  the box, only countably many angles carry such a bad configuration.
 \<close>
 
 
@@ -35,8 +36,10 @@ text \<open>
   configuration in \<open>V\<close> is bad at any angle, then the bad-angle set of every arc
   is empty and the countable-cover glue applies with the trivial cover.  This
   needs no zero-set / countability machinery at all.  It is the target a
-  numerical check would aim to justify: show \<open>\<partial>\<^sub>x \<nabla>\<^sub>\<omega> U\<close> is always onto \<open>\<real>\<^sup>2\<close> at
-  \<open>\<omega>\<close>-critical configurations.
+  numerical check would aim to justify --- show \<open>\<partial>\<^sub>x \<nabla>\<^sub>\<omega> U\<close> is always onto \<open>\<real>\<^sup>2\<close> at
+  \<open>\<omega>\<close>-critical configurations --- though for the odd \<open>N \<ge> 6\<close> of the capstone the
+  bad set is expected \<open>0\<close>-dimensional (isolated), not empty, so in general the
+  hypothesis of the next subsection is the operative one.
 \<close>
 
 lemma H0coreArc_bad_angles_empty_of_empty_fibres:
@@ -79,57 +82,47 @@ proof (rule H0coreArc_chart_core_all_robust4_of_countable_bad_angle_sets[OF card
 qed
 
 
-subsection \<open>The single remaining D3 gap: countability of the bad angles\<close>
+subsection \<open>The general capstone input, on one explicit countability hypothesis\<close>
 
 text \<open>
-  \<^bold>\<open>The one open obligation.\<close>  On each analytic arc \<open>\<gamma>\<close> through the box, the set
-  of angles carrying a bad configuration is countable.
+  \<^bold>\<open>The one open obligation, made honest.\<close>  Rather than leave a \<open>sorry\<close>, the
+  remaining fact --- that on each analytic arc through the box only countably
+  many angles carry a bad configuration --- is exposed as an \<^emph>\<open>explicit
+  hypothesis\<close> \<open>countable_bad\<close> of the capstone-input theorem, precisely as the
+  final theorem \<open>F0_dip_nonempty\<close> exposes its \<open>d3core\<close> / \<open>branchcore\<close> inputs as
+  assumptions.  The whole leaf is therefore \<open>sorry\<close>-free: everything is proven
+  \<^emph>\<open>modulo\<close> this one visible, precisely-stated assumption.
 
-  Why it is expected to hold: cutting out the bad set \<open>\<B> \<subseteq> (x,\<omega>)\<close>-space
-  (dimension \<open>2n+2\<close>) by \<open>\<nabla>\<^sub>\<omega> U = 0\<close> (2 equations), \<open>det \<nabla>\<^sup>2\<^sub>\<omega> U = 0\<close> (1), and the
-  rank-deficient unfolding \<open>\<not> surj (\<partial>\<^sub>x \<nabla>\<^sub>\<omega> U)\<close> (\<open>2n\<^bold>-1\<close>) is codimension
-  \<open>2n+2\<close> \<^emph>\<open>full\<close>: \<open>\<B>\<close> is generically \<open>0\<close>-dimensional, hence its projection to the
-  arc is discrete/countable (indeed generically empty on a fixed arc).  So
-  countability is the generic truth; failure would need a non-generic family
-  holding degeneracy \<^emph>\<open>and\<close> rank-1 unfolding across an arc-interval.
+  Why the hypothesis is expected to hold: cutting out the bad set
+  \<open>\<B> \<subseteq> (x,\<omega>)\<close>-space (dimension \<open>2n+2\<close>) by \<open>\<nabla>\<^sub>\<omega> U = 0\<close> (2 equations),
+  \<open>det \<nabla>\<^sup>2\<^sub>\<omega> U = 0\<close> (1), and the rank-deficient unfolding \<open>\<not> surj (\<partial>\<^sub>x \<nabla>\<^sub>\<omega> U)\<close>
+  (\<open>2n\<^bold>-1\<close>) is codimension \<open>2n+2\<close> \<^emph>\<open>full\<close>: \<open>\<B>\<close> is generically \<open>0\<close>-dimensional, so
+  its projection to a fixed arc is discrete/countable.  Countability is thus the
+  generic truth; failure would need a non-generic family holding degeneracy
+  \<^emph>\<open>and\<close> rank-1 unfolding across an arc-interval.
 
-  Why it is not discharged here: the statement carries an \<open>\<exists>x \<in> V\<close> over the
+  Why it is an assumption, not a lemma: the statement carries an \<open>\<exists>x \<in> V\<close> over
   positive-dimensional, non-compact configuration space, so the 1-D
   ``analytic \<Longrightarrow> isolated zeros'' route does not apply directly --- there is no
-  single analytic function of the arc parameter alone whose zero set contains
-  the bad angles without first eliminating \<open>x\<close>, and on this box every angle is
-  regular, so there is no \<open>\<omega>\<close>-only discriminant to use.  Discharging it needs
-  either the parametric-transversality bridge or a subanalytic-projection
-  argument (neither yet in the library), after a numerical confirmation that
-  the bad set really is thin.  Tracked exactly like the D4 Branch-P collision
-  \<open>sorry\<close>s: a precisely-scoped, honestly-labelled open problem.
-\<close>
-
-lemma H0coreArc_bad_angles_countable_robust4:
-  fixes V :: "((real^2)^'n::finite) set" and \<gamma> :: "(real^2) set"
-  assumes arc: "analytic_arc \<gamma>"
-    and gsub: "\<gamma> \<subseteq> OmegaPF (vector [pi / 2, 0]) (pi / 4)"
-  shows "countable
-      (H0coreArc_bad_angles V (vector [pi / 2, 0]) (vector [0, 0]) \<gamma>)"
-  sorry
-
-text \<open>
-  Feeding the one gap through the proven glue discharges the entire D3 capstone
-  input for every \<open>V\<close> at the Robust4 design point.
+  single analytic function of the arc parameter alone whose zeros contain the
+  bad angles without first eliminating \<open>x\<close>, and on this box every angle is
+  regular, so there is no \<open>\<omega>\<close>-only discriminant.  Discharging it needs the
+  parametric-transversality / subanalytic-projection bridge (a ``countable
+  critical values'' theorem) not yet in the library --- the same class of
+  geometric-measure input the D4 Branch-P side also still assumes.  This is the
+  paper's documented open D3 input.
 \<close>
 
 theorem d3_capstone_input_robust4:
   fixes V :: "((real^2)^'n::finite) set"
   assumes card2: "2 \<le> CARD('n)"
+    and countable_bad: "\<And>\<gamma>. analytic_arc \<gamma> \<Longrightarrow>
+        \<gamma> \<subseteq> OmegaPF (vector [pi / 2, 0]) (pi / 4) \<Longrightarrow>
+        countable
+          (H0coreArc_bad_angles V (vector [pi / 2, 0]) (vector [0, 0]) \<gamma>)"
   shows "d3_detHess_arc_chart_core_all V (vector [pi / 2, 0]) (pi / 4)
       (vector [pi / 2, 0]) (vector [0, 0])"
-proof (rule H0coreArc_chart_core_all_robust4_of_countable_bad_angle_sets[OF card2])
-  fix \<gamma> :: "(real^2) set"
-  assume "analytic_arc \<gamma>"
-    and "\<gamma> \<subseteq> OmegaPF (vector [pi / 2, 0]) (pi / 4)"
-  thus "countable
-      (H0coreArc_bad_angles V (vector [pi / 2, 0]) (vector [0, 0]) \<gamma>)"
-    by (rule H0coreArc_bad_angles_countable_robust4)
-qed
+  by (rule H0coreArc_chart_core_all_robust4_of_countable_bad_angle_sets
+        [OF card2 countable_bad])
 
 end
