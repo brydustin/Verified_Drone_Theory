@@ -8601,3 +8601,57 @@ collisions are excluded, but not yet attempted as an Isabelle proof), or
 and resolve it, or (iii) accept the two `sorry`s as the paper's honestly-
 documented open problem. Not decided; flagging for whenever this is
 revisited.
+
+## 2026-07-23 — D3 side reduced to ONE gap; the Ξ/isolated-zeros paradigm assessed
+
+Got `Scratch_D3Generic.thy` compiling (it lands `Xi_zeros_nowhere_dense`, no
+sorry) and then mapped what the whole D3 side actually still needs. Good
+news, stated plainly: **the entire D3 capstone input now reduces to a single
+obligation.** The already-proven, sorry-free wrapper
+`H0coreArc_chart_core_all_robust4_of_countable_bad_angle_sets`
+(`M5_Dev_H0coreArc/Scratch_H0coreArc.thy:463`) shows
+
+  d3_detHess_arc_chart_core_all V (π/2,0) (π/4) (π/2,0) 0
+    ⟸  for every analytic arc γ ⊆ OmegaPF: countable (H0coreArc_bad_angles V … γ).
+
+Everything else on the D3 side — fixed-angle chart cores at every regular
+angle (`fixed_omega_H0core_chart_core_of_generic_conditions`, unconditional
+via the s1/s2 global-factor split), the countable→cover glue, the Robust4
+w1-strip — is proven. So D3 is one clean lemma away from the same
+"honest-end-to-end-modulo-a-labeled-gap" state D4 is already in. This is
+parity with D4, not a setback.
+
+Reframing that took a while to see (defs, `Nonemptiness_Robust1.thy:222-230`):
+`HessU = ∇²_ω U`, `gradU = ∇_ω U` — the 2-D **angle ω is the variable**, the
+configuration x is a **parameter**. "x bad at ω" = ω is a critical point of
+ω↦U(x,ω) that is degenerate (det∇²_ωU=0) AND not transversally unfoldable by
+moving x (¬surj ∂_x∇_ωU : config→ℝ²), plus ¬surj(DM_paper_x). Ξ = (∇²_ωU·w)·e_par;
+with w = arc velocity, Ξ≠0 ⟺ the arc tangent misses the kernel of the
+degenerate ω-Hessian (fold crossed transversally).
+
+**On the tempting "1-D analytic ⟹ isolated zeros ⟹ countable" paradigm:** it
+does NOT close this directly, because the bad-angle set carries an ∃x over
+positive-dimensional, non-compact config space, and `isolated_zeros` needs a
+single analytic function of the arc parameter t alone. Eliminating x would
+need subanalytic-projection or real-analytic-set dimension theory (neither in
+Isabelle/HOL) or an explicit ω-only discriminant — and there is none, because
+on the Robust4 arc every angle is regular, so bad angles are regular angles
+with nonempty bad fibres, a pure existence fact with no ω-only certificate.
+
+**But the news on truth is encouraging, and I'd overstated the risk earlier.**
+Dimension count with ALL the conditions: 𝓑 ⊆ (x,ω)-space (dim 2n+2) is cut by
+∇_ωU=0 (2) + det∇²_ωU=0 (1) + rank-deficient unfolding (2n−1) = codim 2n+2 ⟹
+dim 0 ⟹ bad angles isolated/countable, and per-arc generically EMPTY. So
+countability is the generically-expected truth; falseness would require a
+non-generic conspiracy (a 1-param family holding degeneracy + rank-1 unfolding
+across an arc-interval). That is exactly the kind of thing to reality-check
+numerically before investing (cf. case iii), not assume either way.
+
+**Recommended next step (not yet taken):** build a faithful numerical harness
+from `U_cart`/`DM_paper_x` to (P0) test whether any regular arc angle has a
+nonempty bad fibre at all — if generically empty, `H0coreArc_chart_core_of_no_bad_angles`
+closes D3 with zero countability machinery — and (P1) whether bad angles are
+isolated vs fill intervals. If numerics support it, either attempt the
+transversality proof or, matching D4's posture, land countability as one
+precisely-scoped `sorry` atop the proven machinery. No harness exists yet;
+this is the decision-maker and the honest next move.
