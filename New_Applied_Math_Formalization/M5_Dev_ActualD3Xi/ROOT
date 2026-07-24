@@ -1,0 +1,6 @@
+session Applied_Math_M5_ActualD3Xi in "." = Applied_Math_M5_ActualD3 +
+  options [document = false, quick_and_dirty = false, timeout = 3600]
+  sessions
+    Applied_Math_M5_D3Generic
+  theories
+    Scratch_ActualD3Xi
