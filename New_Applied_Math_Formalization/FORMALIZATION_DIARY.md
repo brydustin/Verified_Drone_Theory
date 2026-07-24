@@ -8702,3 +8702,334 @@ present; the archived `Parametric_Transversality_Euclidean_Base` has the same
 `6 \<le> CARD('n)` odd, so the P0 emptiness escape is unavailable for the real
 theorem. Honest end state: both wings rest on one explicit, true-by-dimension-
 count, unformalized geometric-measure input each. Not faked; exposed.
+
+## 2026-07-23 (cont'd 3) — correction: actual-design reduction landed; the H0core countability premise is false as stated
+
+This entry corrects the preceding “true-by-dimension-count” assessment. Moving
+the D3 `sorry` to an explicit premise in `Scratch_D3ArcCount.thy` was useful
+formal hygiene, but it did **not** establish that premise. More importantly,
+the premise is not true at the generality at which it was proposed.
+
+First, two strictly checked actual-design leaves now make genuine positive
+progress:
+
+- `Applied_Math_M5_ActualD3`
+  (`M5_Dev_ActualD3/Scratch_ActualD3.thy`) proves at the literal design
+  `omega0 = (pi/2,0)`, `omegas = (0,0)`, `delta = pi/4` that
+  `d3_crossTheta = (cos omega_1 - 1) sin omega_2`. Consequently the actual
+  phase-collinear locus is **exactly** the union of the three horizontal
+  segments `omega_2 = -pi, 0, pi`, `omega_1 in [pi/4,3pi/4]`. The theorem
+  `m5_D34_D3_collinear_robust4_of_three_arc_cores` concludes the actual
+  meagerness statement for `cvec_dip` and `gain_dip` from cores only on those
+  three literal arcs. Thus the capstone no longer needs a hypothesis over
+  every arbitrary object satisfying the unfortunately named `analytic_arc`
+  predicate (which is only a compact C1 image, not an analytic arc).
+- `Applied_Math_M5_ActualD3Xi`
+  (`M5_Dev_ActualD3Xi/Scratch_ActualD3Xi.thy`) makes the determinant/Hessian
+  machinery load-bearing on the two outer arcs. The closed form for `e_par`
+  uses `det (matrix Dcvec_dip)` in its denominator; the explicit actual-design
+  calculation proves its first component nonzero, and
+  `robust4_outer_arc_Xi_horizontal_zeros_nowhere_dense` instantiates
+  `Xi = (HessU *v tangent) dot e_par` with the actual dipole function, design,
+  and horizontal tangent. This proves a fixed-angle nowhere-dense exceptional
+  configuration set. It does **not** by itself justify exchanging the
+  fixed-angle statement with an existential projection over an angle interval.
+
+The decisive negative result is the new strict leaf
+`Applied_Math_M5_H0Counterexample`
+(`M5_Dev_H0Counterexample/Scratch_H0Counterexample.thy`). For every nonzero
+wavevector `c`, the formal configuration
+
+    antipodal_pair c = [0, (pi/(c dot c)) c]
+
+has `Afun = 0`, `gradU = 0`, `det HessU = 0`, non-surjective `DM_paper_x`,
+and non-surjective configuration derivative of `gradU`. Isabelle verifies
+the last rank statement by calculating that the derivative's image consists
+only of scalar multiples of one vector. The actual outer arcs have nonzero
+`cvec_dip` everywhere, so
+
+    H0coreArc_bad_angles UNIV (pi/2,0) (0,0) outer_arc = outer_arc
+
+for the two-drone type. The outer arc is uncountable (proved via HOL's
+`uncountable_closed_interval`, not the admitted Munkres corollary). Hence
+`H0coreArc_bad_angles_outer_robust4_not_countable_two` formally refutes the
+universal/cardinality-2 countability route.
+
+This does not by itself refute a specially formulated odd-`N`, `N >= 6`
+statement. It does refute the claimed general lemma and explains the
+structural mistake: `D3BadXG_H0core` is a strict overapproximation of the
+actual retained set `D3BadXG`. In particular it drops the actual conjuncts
+`A_cart ... != 0` and `det (matrix Dcvec_dip) != 0`; the counterexample lies
+entirely in the dropped `A = 0` stratum. Robust4 already treats that null
+stratum separately using the odd-`N` argument. Enlarging the D3 retained set
+back across it reintroduces precisely the continuum that defeats countability.
+
+**Correct D3 next move:** formulate the three-arc cover/core theorem directly
+for the actual `D3BadXG` set (or an auxiliary core that retains at least
+`A_cart != 0` and `det Dcvec_dip != 0`), and prove the required joint
+angle/configuration transversality or projection statement there. The final
+wrapper must then instantiate the literal `cvec_dip`, `gain_dip`, design, and
+three arcs and prove its premises, rather than end with arbitrary `fixes` plus
+unverified `assumes`. D4 remains independently open: the two collision
+`sorry`s and the distinct-`t` `reg1'`/`reg2'` inputs have not been discharged.
+
+## 2026-07-23 (cont'd 4) — D3 core repaired to retain the actual bad set
+
+The “correct D3 next move” above is now implemented in the strict leaf
+`Applied_Math_M5_ActualD3Core`
+(`M5_Dev_ActualD3Core/Scratch_ActualD3Core.thy`).  Its new
+`d3_actual_arc_chart_core` covers the exact retained set
+
+    V intersect D3BadXG cvec_dip gain_dip omega0 omegas
+
+on an arc, rather than the larger `D3BadXG_H0core` set.  In particular the
+actual conditions `A_cart != 0`, `det (matrix Dcvec_dip) != 0`, and
+`cvec_dip != 0` remain present.  Thus the antipodal `A = 0` continuum from the
+counterexample is not silently put back into the projected set.
+
+The fixed-angle H0core charts remain useful, but only after the exact bad
+angles have been enumerated: `D3ActualArc_bad_angles` records those angles for
+which an **actual** `D3BadXG` configuration exists, and each such configuration
+is then legitimately included in the proven H0core fixed-angle chart.  The
+leaf proves the countable-cover glue, the three literal horizontal-arc
+assembly, and finally
+`m5_D34_D3_collinear_robust4_of_three_actual_bad_angle_sets`.  Its conclusion
+is the literal actual-design D3 meagerness statement for `cvec_dip` and
+`gain_dip`, including the actual non-null and determinant conditions.
+
+The session builds with `quick_and_dirty = false`; the new four leaves
+`ActualD3`, `ActualD3Xi`, `H0Counterexample`, and `ActualD3Core` contain no
+`sorry` or `oops`.
+
+This is a repaired reduction, not the end-to-end proof.  The remaining D3
+mathematical input is now correctly scoped: prove countability of the three
+`D3ActualArc_bad_angles` sets (or prove the three actual arc cores directly)
+for the set needed by the capstone.  The capstone must then be rewired to
+consume this exact actual-set meagerness fact and must discharge it for the
+constructed feasible set; it must not leave that fact as an assumption of the
+final theorem.  The independent D4 collision and regularity obligations listed
+above remain open.
+
+## 2026-07-23 (cont'd 5) — actual horizontal geometry removes the H_par obstruction; joint actual-set chart bridge verified
+
+The strict leaf `Applied_Math_M5_ActualD3Argument`
+(`M5_Dev_ActualD3Argument/Scratch_ActualD3Argument.thy`) now verifies the
+design-specific argument recorded in `D3_ACTUAL_ARGUMENT.md`.  This changes
+the preferred route again: the goal is a direct joint `(x,t)` incidence proof,
+not countability of the projected bad-angle set.
+
+For the literal design `(omega0,omegas)=((pi/2,0),(0,0))` and every one of the
+three literal horizontal arcs `omega_2 in {-pi,0,pi}`, Isabelle proves:
+
+- the actual coupling vector is horizontal and the relevant column of
+  `Dcvec_dip` is horizontal;
+- the retained condition `det (matrix Dcvec_dip) != 0` forces
+  `(e_par)_2 = 0`, while `cvec_dip != 0` then forces `(e_par)_1 != 0`;
+- `D2cvec_dip e_par e_par` is horizontal and hence is a scalar multiple of
+  the nonzero horizontal vector `cvec_dip`;
+- consequently the residual term which made the general
+  `H_par` perpendicular-slot claim false is radial on these actual arcs, and
+  `robust4_horizontal_arc_actual_H_par_slot_perp_zero` proves the desired
+  derivative is zero with no carried hypothesis;
+- `Xi x ... (1,0) = (e_par)_1 * HessU_11`, so `Xi != 0` is exactly the
+  component-1 arc transversality needed by the existing implicit-function
+  graph;
+- the fixed-angle `Xi=0` set is nowhere dense on all three actual arcs,
+  including the central arc.
+
+The old unverified premise of `Jac3_H12zero_identity` is therefore discharged
+for the actual functions and arcs; the strict corollary
+`robust4_horizontal_arc_actual_Jac3_H12zero_nonzero` records this fact.
+The determinant is load-bearing twice: the already-proven phase determinant
+selects the three arcs, and `det Dcvec_dip != 0` is used to define/control
+`e_par` and to obtain the radial residual.
+
+The same leaf also proves
+`robust4_D3BadXG_eq_reduced`: on the literal design the `not surj DM_paper_x`
+conjunct follows from `A_cart != 0`, `det Dcvec_dip != 0`, and failure of the
+actual configuration derivative of `gradU`.  This is a proved equality for
+the actual D3 set, not a replacement theorem with an arbitrary set variable.
+
+Finally, the ArcBridge/Lindelof mechanism has been rebuilt on
+`D3ActualArcIncidence`.  The theorem
+`d3_actual_arc_chart_core_of_pointwise_arc_schur_patches` quantifies over
+literal `D3BadXG` fibres and produces `d3_actual_arc_chart_core`; it no longer
+requires transversality/Schur nonvanishing on the counterexample-contaminated
+`D3BadXG_H0core` superset.
+
+Strict build:
+
+    Finished Applied_Math_M5_ActualD3Argument
+
+with `quick_and_dirty = false` and no `sorry`/`oops`.
+
+Honest remaining D3 gap: prove the actual joint rank-stratification.  On the
+`Xi != 0` stratum, Schur nonvanishing feeds the now-verified actual-set chart
+bridge.  The Schur-zero and `Xi=0` residuals must be covered by joint
+configuration-angle rank-drop charts (using the repaired `H_par`/Jacobian
+identities); fixed-angle nowhere-density cannot simply be unioned over the
+uncountable arc.  Once those residual charts give the three actual arc cores,
+the already verified three-arc theorem yields the literal D3 meagerness
+statement.  The final capstone still must invoke those actual-core theorems,
+not retain them as assumptions.
+
+## 2026-07-23 (cont'd 6) — aligned and nonaligned-Xi branches closed; exact actual cubic residual isolated
+
+The D3 argument has advanced substantially beyond the state recorded above.
+The new strict session `Applied_Math_M5_AlignedCover`
+(`M5_Dev_AlignedCover/Scratch_AlignedCover.thy`) isolates the already-proven
+phase-quantization/parameterization machinery from the later, still-open D4
+theory.  It has `quick_and_dirty = false`, contains no `sorry`/`oops`, and
+strict-builds.  For `4 <= CARD('n)`, it gives a countable closed negligible
+cover of the phase-aligned locus.
+
+`Applied_Math_M5_ActualD3Argument` now instantiates that cover at the literal
+Robust4 design and proves
+`robust4_actual_aligned_projection_meager`.  The determinant calculation is
+load-bearing in the complementary branch: on the three horizontal arcs the
+first perpendicular factor is zero, while `det (matrix Dcvec_dip) != 0`,
+`cvec_dip != 0`, and the actual gain force the second factor nonzero.
+Nonalignment therefore supplies an actual perpendicular slot on which the
+second gradient component has nonzero configuration derivative.  The same
+slot is the ArcBridge Schur functional.  Consequently
+`robust4_horizontal_actual_nonphase_projection_meager` closes the whole
+nonaligned `Xi != 0` interior branch.
+
+The actual incidence now decomposes into:
+
+- the globally meager aligned projection;
+- the meager nonaligned `Xi != 0` projection; and
+- exactly `fst \` D3ActualXiZeroNonphaseIncidence V y`.
+
+The endpoints are discharged by the existing fixed-angle chart.
+`robust4_horizontal_actual_arc_projection_meager_of_Xi_zero` therefore closes
+one whole literal closed arc from meagerness of that one residual, and
+`m5_D34_D3_collinear_robust4_of_actual_Xi_zero_residuals` closes the literal
+three-arc D3 statement from the three residuals at `y = -pi, 0, pi`.  Its
+conclusion explicitly contains the actual `gradU`, `HessU`, `A_cart`,
+`cvec_dip`, `Dcvec_dip`, `OmegaPF`, and phase-collinearity predicate.  It is
+an intermediate conditional theorem, not the final theorem: its three actual
+residual hypotheses still have to be proved and then instantiated for the
+capstone's actual feasible set.
+
+The residual itself is now better understood.  Isabelle proves
+`H11 = H12 = H_par = 0` there
+(`robust4_actual_Xi_zero_incidence_Hessian_reduction`) and obtains a nonzero
+actual second-gradient perpendicular slot
+(`robust4_actual_Xi_zero_nonphase_s2_witness`).  Combining that vertical
+witness with the retained nonsurjectivity of `D_x gradU` forces the entire
+first row of `D_x gradU` to vanish
+(`robust4_actual_Xi_zero_incidence_gradU_first_row_zero`).  Since `e_par` is
+horizontal, all configuration derivatives of `Phi_par` vanish as well.
+The strict corollaries
+`robust4_actual_Xi_zero_incidence_Lambda_zero` and
+`robust4_actual_Xi_zero_incidence_Jac3_H12zero_zero` show that the old
+`Lambda_ij` / `Jac3_H12zero` route cannot close this exact actual residual;
+its required nonzero determinant is identically zero here.
+
+The corrected next route is cubic in the actual arc parameter.  Write
+`F2(x,t) = gradU_2(x,(t,y))` and
+`X(x,t) = Xi(x,(t,y),(1,0))`.  On the residual, `F2 = X = 0`,
+`D_x F2` has the verified nonzero perpendicular slot, and
+`partial_t F2 = H12 = 0`; the last identity is now recorded directly by
+`robust4_actual_Xi_zero_incidence_gradU2_arc_derivative_zero`.  Thus,
+wherever `partial_t X != 0`, an IFT graph
+for `X = 0` leaves the nonzero `F2` perpendicular derivative unchanged and
+gives the required local hypersurface projection.  The remaining genuinely
+flat branch is `X = partial_t X = 0`.  `Scratch_D3Hess` already contains the
+actual third-derivative ingredients for `cvec_dip`, `gain_dip`, and `Wc`;
+they now need to be assembled into the literal `partial_t X` formula and
+used to settle that zero-cubic branch.
+
+Both `Applied_Math_M5_AlignedCover` and
+`Applied_Math_M5_ActualD3Argument` strict-build with
+`quick_and_dirty = false` and no `sorry`/`oops`.
+
+## 2026-07-24 (overnight, autonomous) — actual-D3 committed; D3 endgame fully mapped
+
+Committed the whole actual-D3 chain green (`07d3cdc`): sessions
+`Applied_Math_M5_ActualD3 → ActualD3Xi → ActualD3Core → ActualD3Argument`
+(+ `AlignedCover`), strict, 0-sorry. (Compile fixes: two `have→note` typos and a
+divergent `blinfun`-linearity method replaced by helper
+`blinfun_apply_zero_scaleR_snd_component`.)
+
+**Exact endgame (two tracing forks, verified):** the actual argument discharges
+the D3 capstone hole `m5_D34_D3_collinear` (`Nonemptiness_Robust4.thy:225`,
+normally `d3core ⟹ meager ?D3`) EXCEPT three residuals
+`meager (fst \` D3ActualXiZeroNonphaseIncidence V y)`, `y∈{−π,0,π}`; then
+`m5_D34_D3_collinear_robust4_of_actual_Xi_zero_residuals`
+(`Scratch_ActualD3Argument.thy:1919`, needs `card4`) gives unconditional
+design-point `meager ?D3`. Everything else in the wing is proven.
+
+The residual is a **degenerate fold**: `Xi=0 ⟺ h11=0`, and with `detHess=0` this
+forces `HessU=diag(0,h22)`, so `trans := (HessU·(1,0))₁ = 0`; the arc tangent is
+in `ker HessU`. Consequences:
+- **schur-only / single-functional-cut are PROVABLY IMPOSSIBLE** — `arc_schur_L`
+  is defined by `/trans`, and every existing chart engine builds the critical-t
+  graph `τ(x)` by IFT on `gradU1=0`, which needs `trans≠0`. Dead ends; do not
+  retry.
+- **Correct path = `Jac3_H12zero` rank-3 vector-cut** through
+  `chart_core_data_of_vector_cuts` (`D3_Chart_Wiring.thy:417`). Rank-3
+  non-vanishing (`robust4_horizontal_arc_actual_Jac3_H12zero_nonzero :2967`,
+  hyps `s_k_nz`+`lambda_nz`, both available on the residual; note
+  `∂_x gradU1 ≡ 0` there, `:2682`) is the trans-FREE condition — NOT obstructed,
+  just a long (~hundreds of lines) construction mirroring the existing
+  `nonphase_point_open_patch (:1304) → …_projection_chart_data (:1420) →
+  d3_projection_chart_data_meager (:811)` pipeline with the vector cut.
+
+**In progress (autonomous):** a construction fork is building the Jac3
+vector-cut pipeline bottom-up in a new leaf `M5_Dev_D3Residual` (kept green at
+each stage). **F0 threading caveat:** `d3core`/`branchcore` flow into F0 via
+`meager_rank_deficient_stratum (:625)` and `m5_D34_residual (:535)`, both taking
+BOTH cores — so eliminating them re-proves that stack with the unconditional
+meager facts. **D4** is the exact mirror (hole `m5_D34_D4_branchP :486 ←
+branchcore`), still open; its own gap is the reduced-base t-collision Jacobian
+(the two `Scratch_D4Branch.thy` sorrys), separate from D3's fold. See memory
+`[[d3-residual-schur-only-patch]]`.
+
+## 2026-07-24 (autonomous, later) — RETRACTION: the Jac3 rank-3 path is refuted; h11'-IFT graph route restored
+
+Correcting the entry directly above. The "correct path = `Jac3_H12zero` rank-3
+vector-cut" claim was **wrong**, and the construction fork chasing it hit the
+crux it could not resolve (then died on the spend limit). Resolved now by
+reading, not building:
+
+- On the residual `Jac3_H12zero = 0` **identically**
+  (`robust4_actual_Xi_zero_incidence_Jac3_H12zero_zero :2854`), and `Lambda_ij=0`
+  (`:2833`), because every `Phi_par` x-derivative vanishes
+  (`robust4_actual_Xi_zero_incidence_Phi_par_x_derivative_zero :2762`, for ALL
+  `u`: `e_par` is horizontal and `∂_x gradU₁ ≡ 0`). The nonzero-lemma
+  `…_Jac3_H12zero_nonzero :2968` needs `lambda_nz` (`Lambda_ij≠0`) — FALSE here.
+  No contradiction: **the rank-3 cut just vanishes on the fold, so it cannot
+  carve the residual.** Do not retry it.
+
+- The route the *pre-overnight* entry had already found is the right one, and its
+  machinery is largely built. The one live cut is rank-1 in x —
+  `∂_x gradU₂ ≠ 0` (nonphase, `schur_or_phase_aligned :417`); it is
+  `t`-invariant because `∂_t gradU₂ = h12 = 0`
+  (`…_gradU2_arc_derivative_zero :2054`). The missing second (transverse)
+  direction is the `t`-derivative `∂_t h11 = h11'`, **already computed** as the
+  cubic-map t-derivative 2nd component `(?D (0, vector[1,0]))₂`
+  (`tcomponent2`, `:2609`–`:2620`). So:
+  - **Simple-fold branch `h11'≠0`:** IFT on `h11(x,(t,y))=0` (⟺ `Xi=0`) gives
+    `τ(x)` — using `∂_t h11 = h11' ≠ 0` in place of the dead `trans`. Then the
+    residual ⊆ `{x : gradU₂(x,(τ(x),y))=0}`, codim-1 nowhere-dense (live
+    `∂_x gradU₂`), Lindelöf-patched → meager. Structurally identical to the
+    existing `nonphase_point_open_patch → nonphase_projection_chart_data →
+    d3_projection_chart_data_meager` pipeline, **swapping the graph equation
+    `gradU₁=0 → h11=0`.** Concrete build task: a new `arc_schur_point`-analog
+    engine keyed on `h11`/`h11'`.
+  - **Flat-fold branch `h11=h11'=0`:** the higher-order fold — the one genuinely
+    delicate residual-of-the-residual. `h11(x,(·,y))` is real-analytic in `t`;
+    settle by the next t-derivative (`h11''`, third-deriv ingredients in
+    `Scratch_D3Hess`) or by showing it negligible.
+
+  Rank-2-in-x via `(gradU₂, Xi)` does NOT shortcut this: `∂_x h11` vanishes in
+  the same perp-slot direction as the live `∂_x gradU₂`
+  (`…_H_par_slot_perp_zero :2906`), so the needed transversality is genuinely the
+  `t`-direction, i.e. `h11'`.
+
+Committed state re-verified green (`isabelle build Applied_Math_M5_ActualD3Argument`
+exit 0). No proof code changed tonight — this is a corrected map, not a new
+build; the spend limit blocked fork-driven construction. See memory
+`[[d3-residual-schur-only-patch]]`.
