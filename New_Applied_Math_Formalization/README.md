@@ -20,6 +20,15 @@ margins.  It has no other hypotheses, every session is built with
 the theorem depends on an oracle.  See `END_TO_END_PLAN.md` for the statement,
 its relation to the paper, and the route.
 
+The same theory states the result in three parts:
+`degenerate_configurations_nowhere_dense` (the configurations with a degenerate
+critical point in the box form a closed nowhere dense set),
+`nondegenerate_in_X0` (every other configuration is robust for suitable
+margins) and `F0_dip_interior_nonempty` (for suitable margins `F0` contains a
+ball).  `Poles_And_Fixed_Margins.thy` has two facts behind the form of the
+theorem: at a pole of the dipole pattern every configuration has a degenerate
+critical point, and the margins have to depend on the configuration.
+
 The earlier conditional theorem `F0_dip_nonempty` and its two assumed chart-core
 predicates were removed from `Appendix/Robust4/Nonemptiness_Robust4.thy` on
 2026-11-11; the tag `pre-isabelle2026` still has them.
@@ -46,10 +55,10 @@ table of formal names), `FORMALIZATION_DIARY.md` (log).
 | `Applied_Math_Appendix_Full` | `Appendix/Robust3/` | `Nonemptiness_Robust3` (M5 scaffold through the D3 cover set-algebra bridge) |
 | `Applied_Math_Morse` | `Morse/` | 2D Morse/saddle/Hadamard/arc-clip helpers for the curve cover |
 | `Applied_Math_D3_Curve_Cover` | `Appendix/Robust4Cover/` | `D3_Curve_Cover` (finite C1 arc cover of the phase-collinear locus, proved) |
-| `Applied_Math_Appendix_Frontier` | `Appendix/Robust4/` | `Nonemptiness_Robust4`: the retained bad set `BadXGW`, the regular stratum, the lemmas from a regular feasible configuration to a point of `F0` |
+| `Applied_Math_Appendix_Frontier` | `Appendix/Robust4/` | `Nonemptiness_Robust4`: the retained bad set `BadXGW`, the lemmas from a regular feasible configuration to a point of `F0` |
 | `Applied_Math_Residual_Analysis` | `Residual/` | `Residual_Measure` (Fubini with countable slices), `Residual_Null_Set` (the phase functions; the zero set of `res_f` is negligible) |
 | `Applied_Math_Residual` | `Residual/Stratum/` | the three equations at a point of `BadXGW`, the design geometry, the charts and their cover, the aligned cover, `residual_meager_design` |
-| `Applied_Math_Final` | `Residual/Final/` | `Nonemptiness_Final`: `F0_dip_nonempty_final`, its explicit form, a numeric example |
+| `Applied_Math_Final` | `Residual/Final/` | `Nonemptiness_Final`: the degenerate set is closed and nowhere dense, margins, `F0_dip_interior_nonempty`, `F0_dip_nonempty_final`, its explicit form, a numeric example; `Poles_And_Fixed_Margins`: poles, fixed margins, the zero set of the wavevector |
 | `Applied_Math_Oracle_Audit` | `Audit/` | fails the build if the final theorem, or a theorem on the way to it, uses an oracle; `Audit/Control` checks that the test detects a `sorry` |
 
 `Munkres/` is the vendored Munkres topology library (session

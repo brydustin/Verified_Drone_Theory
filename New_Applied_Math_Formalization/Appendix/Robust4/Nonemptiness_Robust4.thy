@@ -3,8 +3,8 @@ theory Nonemptiness_Robust4
 begin
 
 text \<open>Lemmas used by \<open>Nonemptiness_Final\<close> that hold for every steering geometry: the retained
-  bad set \<open>BadXGW\<close>, the regular stratum, the interior of the feasible body, and the passage
-  from a regular feasible configuration to a point of \<open>F0\<close>.\<close>
+  bad set \<open>BadXGW\<close>, the interior of the feasible body, and the passage from a regular
+  feasible configuration to a point of \<open>F0\<close>.\<close>
 
 
 subsection \<open>Arc cover of the phase-collinear locus\<close>
@@ -56,8 +56,8 @@ qed
 
 subsection \<open>The retained bad set\<close>
 
-text \<open>Degenerate critical points with nonzero array factor and regular steering Jacobian at
-  which neither the moment map nor the configuration derivative of the gradient is onto.\<close>
+text \<open>Degenerate critical points with nonzero array factor, regular steering Jacobian and nonzero
+  wavevector at which the configuration derivative of the gradient is not onto.\<close>
 
 definition BadXGW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
   "BadXGW \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
@@ -66,7 +66,6 @@ definition BadXGW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<R
       \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
       \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
       \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
       \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
 
 
@@ -105,73 +104,8 @@ lemma BadXGW_point:
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
               \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
               \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-              \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
               \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
   unfolding BadXGW_def by blast
-
-
-subsection \<open>Moment-rank bridge\<close>
-
-text \<open>The bad set lies in the fibre where the moment map is not onto.\<close>
-
-definition MomentBad :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
-  "MomentBad \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
-        cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-      \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
-
-lemma BadXGW_subset_MomentBad:
-  "(BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> MomentBad \<omega>0 \<omega>s \<Gamma>"
-  unfolding BadXGW_def MomentBad_def by blast
-
-lemma MomentBad_eq_mstarg_zeros:
-  "(MomentBad \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)
-     = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>. cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-                              \<and> mstarg (cvec_dip \<omega>0 \<omega>s \<omega>) x = 0}"
-  unfolding MomentBad_def by (simp add: surj_iff_mstarg)
-
-lemma closed_mstarg_zero_slice:
-  "closed {x::(real^2)^'n. mstarg c x = 0}"
-  by (rule closed_Collect_eq[OF cont_mstarg continuous_on_const])
-
-lemma branchP_indep_of_negligible_closed_cover:
-  fixes V :: "((real^2)^'n) set" and \<Gamma> :: "(real^2) set"
-    and K :: "nat \<Rightarrow> ((real^2)^'n) set"
-  assumes cover: "(V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set) \<subseteq> (\<Union>n. K n)"
-    and clo: "\<And>n. closed (K n)"
-    and neg: "\<And>n. negligible (K n)"
-  shows "meager (V \<inter> BadXGW \<omega>0 \<omega>s \<Gamma> :: ((real^2)^'n) set)"
-  by (rule meager_negligible_closed_cover[OF cover clo neg])
-
-
-subsection \<open>The regular stratum\<close>
-
-lemma m5_D1_regular:
-  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
-  assumes openV: "open V" and Vne: "V \<noteq> {}"
-  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
-            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
-          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
-          \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-          \<and> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
-proof -
-  have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
-            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
-          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
-          \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
-          \<and> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}
-        \<subseteq> {x \<in> V. \<exists>\<omega> :: real^2. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-            \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
-            \<and> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
-    by blast
-  show ?thesis
-    by (rule meager_subset[OF sub meager_grad_x_regular_part[OF openV Vne]])
-qed
 
 
 subsection \<open>From a regular feasible configuration to a point of \<open>F0\<close>\<close>

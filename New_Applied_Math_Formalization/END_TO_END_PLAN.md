@@ -235,9 +235,12 @@ Status (2026-11-10), all on Isabelle2026 in `Residual/` (session
   nonempty interior for every `dmin`, every `δnull > 0`, every
   `pmin < gain_dip design_beam · N²`, every null direction with `cvec ≠ 0`,
   arbitrary `A B D`, all large `R`); the re-threaded lemmas
-  `Phi_bad_meager_design` (assembled from five strata since the change
-  recorded in §8), `regular_config_exists_design`, `no_degenerate_to_sphere_annulus_bounded`
-  (exports `ε ≤ δ`), `F0_nonempty_of_witness_radius` (keeps `ε`);
+  `Phi_bad_meager_design`, `regular_config_exists_design`,
+  `no_degenerate_to_sphere_annulus_bounded` (exports `ε ≤ δ`),
+  `F0_nonempty_of_witness_radius` (keeps `ε`) — the first, second and fourth
+  were replaced on 2026-11-11 by `degenerate_configurations_meager`, a direct
+  proof of `regular_feasible_configuration_exists`, and `X0_of_witness_radius`
+  (§8);
   `regular_feasible_configuration_exists`; `F0_dip_nonempty_final`,
   `F0_dip_nonempty_final_explicit`, `F0_dip_nonempty_example`.
   The oracle audit now checks the final theorem.
@@ -319,7 +322,20 @@ fixed angle with `c ≠ 0`, criticality alone is a nowhere dense condition
 null, steering-singular, beam centre, regular, residual).  The bound 5 is
 `4 ≤ N` of `residual_meager_design` together with oddness.  The six-moment
 theorems are kept; the final theorem does not depend on them
-(`tools/final_deps/Final_Deps.thy`).  Possible extensions, not needed for
+(`tools/final_deps/Final_Deps.thy`).
+
+2026-11-11, second change: the theorems are stated as in the write-up.
+`Nonemptiness_Final.thy` defines `degenerate_configurations` and proves
+`degenerate_configurations_meager` (the five strata),
+`degenerate_configurations_nowhere_dense` (closed and nowhere dense),
+`nondegenerate_in_X0` (margins for a configuration outside the set),
+`X0_lower_margins_ball`, `F0_dip_interior_nonempty` (for suitable margins `F0`
+contains a ball) and, as a corollary, `F0_dip_nonempty_final` (statement
+unchanged).  The condition `¬ surj (DM_paper_x …)` was removed from `BadXGW`
+and from the main-beam stratum (`meager_main_beam`), where it was not used.
+`Poles_And_Fixed_Margins.thy`: `pole_degenerate`, `X0_empty_on_box_with_pole`,
+`feasible_ball_outside_X0`, `design_cvec_eq_0_iff`.
+  Possible extensions, not needed for
 it: other steering angles (the residual equations of WP3 already hold for all
 angles; the charts and the other strata would need the design facts for them),
 and an explicit `R0`.

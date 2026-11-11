@@ -9520,3 +9520,36 @@ Left: WP7 close-out (plan §8).
   17349 facts in the dependency closure of the final theorems; none of the
   six-moment theorems is among them, nor any fact of
   `Block_Determinants_BigJ`, `Moment_Jacobian`, `D3_Curve_Cover` or `Morse/`.
+
+### 2026-11-11 — the theorems in the form of the write-up; poles and fixed margins
+
+- User rule for the write-up: every statement in it is either formal or removed.
+- `Nonemptiness_Robust1.thy`: `feasible_witness_exists` also states that the
+  elements lie on a line through the origin.
+- `Nonemptiness_Robust3.thy`: `meager_main_beam` (no moment-map condition,
+  `2 ≤ N`); `m5_D2_beamcenter` is a corollary.
+- `Nonemptiness_Robust4.thy`: `BadXGW` without the condition
+  `¬ surj (DM_paper_x …)`; the moment-rank bridge (`MomentBad`, …) and
+  `m5_D1_regular` removed (unused).  `Residual_Meager.thy`: statement of
+  `residual_meager_design` accordingly.  No residual proof needed a change.
+- `Nonemptiness_Final.thy` rewritten: `degenerate_configurations`,
+  `degenerate_configurations_meager`, `closed_exists_compact`,
+  `degenerate_set_closed`, `degenerate_configurations_nowhere_dense`,
+  `nondegenerate_open_dense`, `X0_of_witness_radius`, `nondegenerate_in_X0`,
+  `X0_lower_margins_ball`, `design_strictly_feasible_collinear`,
+  `nondegenerate_dense_in_open`, `F0_dip_interior_nonempty`;
+  `F0_dip_nonempty_final` is a corollary, statement unchanged.  Removed:
+  `Phi_bad_meager_design`, `regular_config_exists_design`,
+  `F0_nonempty_of_witness_radius`.
+- New `Poles_And_Fixed_Margins.thy` (session `Applied_Math_Final`):
+  `pole_degenerate`, `X0_empty_on_box_with_pole`, `X0_closed`,
+  `collinear_null_degenerate`, `feasible_ball_outside_X0`,
+  `design_cvec_eq_0_iff`.
+- Traps met: a `have` about `F0 …` without the configuration in it gets a
+  fresh index type (annotate `{}`); `intro cos_inj_pi` loops (the last premise
+  is again an equation); `isabelle process_theories -l HEAP` rebuilds stale
+  heaps first.
+- Build: `tools/build_session.sh Applied_Math_Oracle_Audit` → EXIT=0, strict,
+  sessions from `Applied_Math_Appendix_Base` up rebuilt, audit passes (it now
+  also checks the new theorems).  `tools/final_deps`: 17362 facts in the
+  closure, none of the six-moment theorems.

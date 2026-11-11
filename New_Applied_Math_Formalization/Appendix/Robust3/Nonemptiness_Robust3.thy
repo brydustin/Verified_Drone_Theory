@@ -2302,49 +2302,38 @@ next
 qed
 
 
-section \<open>Assembly: \<open>m5_D2_beamcenter\<close> from finite \<open>K\<close> + nowhere-dense slices\<close>
+section \<open>The main beam\<close>
 
-text \<open>The exact target statement (verbatim from the M5 skeleton), closed by witness
-  confinement to the finite beam-center angle set \<open>K\<close>, a finite union of
-  nowhere-dense per-angle slices (@{thm meager_Union_finite} + @{thm
-  meager_nowhere_dense}), and @{thm meager_subset}.  Two facts make the confinement
-  work \<^emph>\<open>x\<close>-universally at a beam center: the \<open>\<not> surj (DM_paper_x x 0)\<close> conjunct is
-  automatic (@{thm DM_paper_x_null_not_surj}), so it drops out of the slice; and
-  critical witnesses satisfy \<open>cos (\<omega>\<^sub>1) = 0\<close> (@{thm beamcenter_critical_cos_zero}),
-  pinning the witness angle into the finite \<open>K\<close>.  proof-complete at this assembly layer.\<close>
+text \<open>Degenerate critical points at which the wavevector vanishes.  Criticality confines the angle
+  to a finite set (@{thm [source] beamcenter_critical_cos_zero}); over each such angle the
+  configurations form a nowhere dense set (@{thm [source] m5_D2_slice_nowhere_dense}).\<close>
 
-lemma m5_D2_beamcenter:
+lemma meager_main_beam:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and card2: "2 \<le> CARD('n)"
-    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+  assumes card2: "2 \<le> CARD('n)"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
 proof -
-  \<comment> \<open>The finite beam-center witness-angle set (\<open>cos(\<omega>\<^sub>1)=0\<close> from criticality, \<open>cvec=0\<close>).\<close>
   define K :: "(real^2) set" where
     "K = {\<omega> \<in> OmegaPF ctr \<delta>. cos (\<omega> $ 1) = 0 \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
   have finK: "finite K"
     unfolding K_def by (rule m5_D2_beamcenter_K_finite)
-  \<comment> \<open>The matrix_det-Hessian covariance slice at a fixed beam-center angle.\<close>
   define slice :: "real^2 \<Rightarrow> ((real^2)^'n) set" where
     "slice \<omega> = {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}" for \<omega> :: "real^2"
-  \<comment> \<open>Witness confinement: every bad witness angle lies in \<open>K\<close>, and the configuration
-       lies in the corresponding slice.  The \<open>\<not> surj\<close> conjunct is dropped (automatic
-       at a beam center), and \<open>cos(\<omega>\<^sub>1)=0\<close> comes from criticality.\<close>
+  text \<open>Every witness angle lies in \<open>K\<close>.\<close>
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}
              \<subseteq> (\<Union>\<omega>\<in>K. slice \<omega>)"
@@ -2354,7 +2343,6 @@ proof -
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
     then obtain \<omega> :: "real^2" where wD: "\<omega> \<in> OmegaPF ctr \<delta>"
@@ -2376,8 +2364,7 @@ proof -
       show "x \<in> slice \<omega>" by (rule xs)
     qed
   qed
-  \<comment> \<open>Each slice over a fixed beam-center angle is nowhere dense, hence meager; the
-       finite union over \<open>K\<close> is meager; the bad set is contained in it.\<close>
+  text \<open>Each slice over a fixed angle in \<open>K\<close> is nowhere dense; the finite union is meager.\<close>
   have meagU: "meager (\<Union>\<omega>\<in>K. slice \<omega>)"
   proof (rule meager_Union_finite[OF finK])
     fix \<omega> :: "real^2" assume wK: "\<omega> \<in> K"
@@ -2390,6 +2377,19 @@ proof -
   qed
   show ?thesis by (rule meager_subset[OF sub meagU])
 qed
+
+lemma m5_D2_beamcenter:
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and card2: "2 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
+  by (rule meager_subset[OF _ meager_main_beam[OF card2 pf]]) blast
 
 (* ---- D34: phase_collinear predicate ---- *)
 

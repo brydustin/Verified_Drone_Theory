@@ -14,6 +14,12 @@ every minimum main-beam power below the maximum, every null direction other
 than the main beam, the paper's plane coefficients, all large radii, and
 suitable margins.  No other hypotheses, no oracles (checked at build time).
 
+The same theory proves more: the configurations whose pattern has a degenerate
+critical point in the angular box form a closed nowhere dense set
+(`degenerate_configurations_nowhere_dense`), every other configuration is
+robust for suitable margins (`nondegenerate_in_X0`), and for suitable margins
+`F0` contains a ball (`F0_dip_interior_nonempty`).
+
 ## Contents
 
 - **`New_Applied_Math_Formalization/`** — the proof of the main result, for

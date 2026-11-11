@@ -1756,7 +1756,7 @@ text \<open>\<^bold>\<open>Parameterised witness construction.\<close>  For any 
   (\<open>s = d\<^sub>min\<close>) and the open-interior result (\<open>s > d\<^sub>min\<close>, giving \<^emph>\<open>strict\<close> spacing) specialise
   this.  Construction: enumerate by a bijection \<open>f\<close> of \<open>{..<N}\<close>, place element \<open>f k\<close> to
   solve \<open>\<Q>x'+\<P>y' = 2\<pi>k/N\<close> along the axis with nonzero coefficient, spreading the other
-  coordinate as \<open>s\<cdot>k\<close>.\<close>
+  coordinate as \<open>s\<cdot>k\<close>.  The elements lie on a line through the origin.\<close>
 
 lemma feasible_witness_exists:
   fixes \<omega>0 \<omega>s \<omega>n :: angle and s A B D :: real
@@ -1764,7 +1764,8 @@ lemma feasible_witness_exists:
     and cn: "cvec_dip \<omega>0 \<omega>s \<omega>n \<noteq> 0"
     and spos: "0 < s"
   shows "\<exists>x::(real^2)^'n. af (cvec_dip \<omega>0 \<omega>s) x \<omega>n = 0
-            \<and> (\<forall>m m'. m \<noteq> m' \<longrightarrow> s \<le> spdist A B D (x $ m) (x $ m'))"
+            \<and> (\<forall>m m'. m \<noteq> m' \<longrightarrow> s \<le> spdist A B D (x $ m) (x $ m'))
+            \<and> (\<exists>v. \<forall>m. \<exists>r. x $ m = r *\<^sub>R v)"
 proof -
   define c1 where "c1 = cvec_dip \<omega>0 \<omega>s \<omega>n $ 1"
   define c2 where "c2 = cvec_dip \<omega>0 \<omega>s \<omega>n $ 2"
@@ -1779,23 +1780,29 @@ proof -
     using that bijf by (simp add: idx_def bij_betw_imp_inj_on inv_into_f_f)
   have ex_p: "\<exists>p::nat \<Rightarrow> real^2.
        (\<forall>k. c1 * (p k $ 1) + c2 * (p k $ 2) = t k)
-     \<and> (\<forall>k j. k \<noteq> j \<longrightarrow> s \<le> \<bar>p k $ 1 - p j $ 1\<bar> \<or> s \<le> \<bar>p k $ 2 - p j $ 2\<bar>)"
+     \<and> (\<forall>k j. k \<noteq> j \<longrightarrow> s \<le> \<bar>p k $ 1 - p j $ 1\<bar> \<or> s \<le> \<bar>p k $ 2 - p j $ 2\<bar>)
+     \<and> (\<exists>v. \<forall>k. p k = real k *\<^sub>R v)"
   proof (cases "c2 = 0")
     case False
-    define p where "p = (\<lambda>k. vector [s * real k, (t k - c1 * (s * real k)) / c2] :: real^2)"
+    define v :: "real^2" where "v = vector [s, (2 * pi / real CARD('n) - c1 * s) / c2]"
+    define p where "p = (\<lambda>k. real k *\<^sub>R v)"
+    have p1: "p k $ 1 = s * real k" and p2: "p k $ 2 = (t k - c1 * (s * real k)) / c2" for k
+      using False by (simp_all add: p_def v_def t_def field_simps)
     have ph: "c1 * (p k $ 1) + c2 * (p k $ 2) = t k" for k
-      using False by (simp add: p_def)
+      using False by (simp add: p1 p2)
     have sp: "s \<le> \<bar>p k $ 1 - p j $ 1\<bar>" if "k \<noteq> j" for k j
     proof -
       have "p k $ 1 - p j $ 1 = s * (real k - real j)"
-        by (simp add: p_def right_diff_distrib)
+        by (simp add: p1 right_diff_distrib)
       hence "\<bar>p k $ 1 - p j $ 1\<bar> = s * \<bar>real k - real j\<bar>"
         using spos by (simp add: abs_mult abs_of_pos)
       moreover have "s * 1 \<le> s * \<bar>real k - real j\<bar>"
         using spos nat_real_abs_diff_ge1[OF that] by (intro mult_left_mono) auto
       ultimately show ?thesis by simp
     qed
-    show ?thesis by (intro exI[of _ p] conjI allI impI) (use ph sp in blast)+
+    have col: "\<exists>v. \<forall>k. p k = real k *\<^sub>R v"
+      unfolding p_def by blast
+    show ?thesis by (intro exI[of _ p] conjI allI impI col) (use ph sp in blast)+
   next
     case True
     hence c1ne: "c1 \<noteq> 0"
@@ -1805,24 +1812,30 @@ proof -
           metis (mono_tags, opaque_lifting) Finite_Cartesian_Product.vec_eq_iff exhaust_2 zero_index)
       thus ?thesis using True by simp
     qed
-    define p where "p = (\<lambda>k. vector [t k / c1, s * real k] :: real^2)"
+    define v :: "real^2" where "v = vector [2 * pi / real CARD('n) / c1, s]"
+    define p where "p = (\<lambda>k. real k *\<^sub>R v)"
+    have p1: "p k $ 1 = t k / c1" and p2: "p k $ 2 = s * real k" for k
+      using c1ne by (simp_all add: p_def v_def t_def field_simps)
     have ph: "c1 * (p k $ 1) + c2 * (p k $ 2) = t k" for k
-      using True c1ne by (simp add: p_def)
+      using True c1ne by (simp add: p1 p2)
     have sp: "s \<le> \<bar>p k $ 2 - p j $ 2\<bar>" if "k \<noteq> j" for k j
     proof -
       have "p k $ 2 - p j $ 2 = s * (real k - real j)"
-        by (simp add: p_def right_diff_distrib)
+        by (simp add: p2 right_diff_distrib)
       hence "\<bar>p k $ 2 - p j $ 2\<bar> = s * \<bar>real k - real j\<bar>"
         using spos by (simp add: abs_mult abs_of_pos)
       moreover have "s * 1 \<le> s * \<bar>real k - real j\<bar>"
         using spos nat_real_abs_diff_ge1[OF that] by (intro mult_left_mono) auto
       ultimately show ?thesis by simp
     qed
-    show ?thesis by (intro exI[of _ p] conjI allI impI) (use ph sp in blast)+
+    have col: "\<exists>v. \<forall>k. p k = real k *\<^sub>R v"
+      unfolding p_def by blast
+    show ?thesis by (intro exI[of _ p] conjI allI impI col) (use ph sp in blast)+
   qed
-  obtain p :: "nat \<Rightarrow> real^2"
+  obtain p :: "nat \<Rightarrow> real^2" and v :: "real^2"
     where pphase: "\<And>k. c1 * (p k $ 1) + c2 * (p k $ 2) = t k"
       and pspace: "\<And>k j. k \<noteq> j \<Longrightarrow> s \<le> \<bar>p k $ 1 - p j $ 1\<bar> \<or> s \<le> \<bar>p k $ 2 - p j $ 2\<bar>"
+      and pcol: "\<And>k. p k = real k *\<^sub>R v"
     using ex_p by blast
   define xbar where "xbar = (\<chi> m. p (idx m))"
   have xbar_m: "xbar $ m = p (idx m)" for m by (simp add: xbar_def)
@@ -1846,7 +1859,9 @@ proof -
       using spdist_ge_abs2[of "xbar $ m" "xbar $ m'" A B D] by (simp add: xbar_m)
     from disj d1 d2 show ?thesis by auto
   qed
-  from afz spac show ?thesis by (intro exI[of _ xbar]) blast
+  have col: "\<exists>v. \<forall>m. \<exists>r. xbar $ m = r *\<^sub>R v"
+    using pcol by (auto simp: xbar_m)
+  from afz spac col show ?thesis by (intro exI[of _ xbar]) blast
 qed
 
 text \<open>\<^bold>\<open>The feasible set is nonempty (D_edit Prop.~openfeas / L450--566).\<close>  Under the
