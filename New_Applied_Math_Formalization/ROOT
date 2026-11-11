@@ -55,10 +55,7 @@ session Applied_Math_Nonemptiness in "." = Applied_Math_MomentJac +
    Nonemptiness_Robust4 is the live F0 frontier theory. *)
 session Applied_Math_Appendix_Base in "Appendix" = Applied_Math_Nonemptiness +
   options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    Smooth_Manifolds
   theories
-    Smooth_Manifolds_Bridge
     Nonemptiness_Regnonzero_Appendix
     Nonemptiness_Robust1
 

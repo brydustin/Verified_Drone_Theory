@@ -39,10 +39,7 @@ text \<open>
     exactly as the four-branch closeout \<open>nonemptiness_from_branches\<close> takes its bad
     strata as hypotheses.
 
-  The Hessian-zero lemma \<open>lem:Hzero\<close> uses the real Hessian \<open>\<nabla>\<^sup>2\<close>
-  (\<open>Higher_Differentiability_Multi.hess_fun\<close>) and lives in the companion
-  theory \<open>Nonemptiness_Hessian_Facts.thy\<close> (built in the \<open>HigherDiff\<close> session, so
-  that \<open>Smooth_Manifolds\<close> need not be merged into this heap).
+  The Hessian \<open>\<nabla>\<^sup>2\<close> is \<open>hess_fun\<close> of \<open>HOL-Analysis.Higher_Differentiability_Multi\<close>.
 \<close>
 
 

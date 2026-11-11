@@ -1,6 +1,10 @@
 theory Nonemptiness_Robust1
-  imports Nonemptiness_Regnonzero_Appendix Smooth_Manifolds_Bridge
+  imports Nonemptiness_Regnonzero_Appendix
 begin
+
+lemma frechet_derivative_at':
+  "(f has_derivative f') (at x) \<Longrightarrow> frechet_derivative f (at x) = f'"
+  by (rule frechet_derivative_at[symmetric])
 
 section \<open>The robust feasible set (concrete \<open>thm:final\<close> objects)\<close>
 
@@ -285,7 +289,7 @@ text \<open>\<^bold>\<open>Dropping the assumption, step 1.\<close>  The per-poi
   but holds wherever \<open>U_cart\<close> is \<open>C\<^sup>2\<close>.  Under \<open>U_cart \<in> C\<^sup>2\<close> on a neighbourhood the gradient
   field \<^emph>\<open>is\<close> differentiable, with derivative the Hessian matrix --- so \<open>gradU\<close> is
   differentiable everywhere on the \<open>C\<^sup>2\<close> locus and \<open>HessU\<close> is the genuine Hessian there.
-  The remaining drops are \<open>U_cart \<in> C\<^sup>2 \<Longleftarrow> cvec, gain \<in> C\<^sup>2\<close> (AFP closure lemmas) and,
+  The remaining drops are \<open>U_cart \<in> C\<^sup>2 \<Longleftarrow> cvec, gain \<in> C\<^sup>2\<close> (closure lemmas for \<open>Ck_on\<close>) and,
   for the concrete pattern, \<open>cvec\<^sub>0, \<bar>e\<bar>\<^sup>2\<close> smooth --- leaving no assumption at all.\<close>
 
 lemma gradU_has_derivative_of_C2:
@@ -310,27 +314,26 @@ text \<open>\<^bold>\<open>Dropping the assumption, step 2: smoothness of the bu
   \<open>cos\<close> are \<open>C\<^sup>n\<close> for every \<open>n\<close> (mutual induction: \<open>sin' = cos\<close>, \<open>cos' = -sin\<close>); hence so is
   \<open>cis t = cos t \<cdot> 1 + sin t \<cdot> \<ii>\<close>.\<close>
 
-lemma sin_cos_higher_differentiable_on:
-  "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n
-   \<and> higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
+lemma sin_cos_Ck_on:
+  "Ck_on n (sin::real \<Rightarrow> real) UNIV \<and> Ck_on n (cos::real \<Rightarrow> real) UNIV"
 proof (induction n)
   case 0
-  have a: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) 0"
-    by (simp only: higher_differentiable_on.simps(1)) (intro continuous_intros)
-  have b: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) 0"
-    by (simp only: higher_differentiable_on.simps(1)) (intro continuous_intros)
+  have a: "Ck_on 0 (sin::real \<Rightarrow> real) UNIV"
+    by (simp only: Ck_on_0_iff) (intro conjI open_UNIV continuous_intros)
+  have b: "Ck_on 0 (cos::real \<Rightarrow> real) UNIV"
+    by (simp only: Ck_on_0_iff) (intro conjI open_UNIV continuous_intros)
   show ?case using a b by blast
 next
   case (Suc n)
-  have IHs: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n"
+  have IHs: "Ck_on n (sin::real \<Rightarrow> real) UNIV"
     using Suc.IH by (rule conjunct1)
-  have IHc: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
+  have IHc: "Ck_on n (cos::real \<Rightarrow> real) UNIV"
     using Suc.IH by (rule conjunct2)
   have dsin: "sin differentiable (at x)" for x :: real
     using has_field_derivative_imp_has_derivative[OF DERIV_sin] by (blast intro: differentiableI)
   have dcos: "cos differentiable (at x)" for x :: real
     using has_field_derivative_imp_has_derivative[OF DERIV_cos] by (blast intro: differentiableI)
-  have ms: "higher_differentiable_on UNIV (\<lambda>x. frechet_derivative sin (at x) v) n" for v :: real
+  have ms: "Ck_on n (\<lambda>x. frechet_derivative sin (at x) v) UNIV" for v :: real
   proof -
     have "(\<lambda>x::real. frechet_derivative sin (at x) v) = (\<lambda>x. cos x * v)"
     proof (rule ext)
@@ -340,11 +343,11 @@ next
               OF has_field_derivative_imp_has_derivative[OF DERIV_sin]])
       thus "frechet_derivative sin (at x) v = cos x * v" by simp
     qed
-    moreover have "higher_differentiable_on UNIV (\<lambda>x. cos x * v) n"
-      by (rule higher_differentiable_on_mult[OF IHc higher_differentiable_on_const open_UNIV])
+    moreover have "Ck_on n (\<lambda>x. cos x * v) UNIV"
+      by (rule Ck_on_mult[OF IHc Ck_on_const[OF open_UNIV]])
     ultimately show ?thesis by simp
   qed
-  have mc: "higher_differentiable_on UNIV (\<lambda>x. frechet_derivative cos (at x) v) n" for v :: real
+  have mc: "Ck_on n (\<lambda>x. frechet_derivative cos (at x) v) UNIV" for v :: real
   proof -
     have "(\<lambda>x::real. frechet_derivative cos (at x) v) = (\<lambda>x. sin x * (- v))"
     proof (rule ext)
@@ -354,27 +357,27 @@ next
               OF has_field_derivative_imp_has_derivative[OF DERIV_cos]])
       thus "frechet_derivative cos (at x) v = sin x * (- v)" by simp
     qed
-    moreover have "higher_differentiable_on UNIV (\<lambda>x. sin x * (- v)) n"
-      by (rule higher_differentiable_on_mult[OF IHs higher_differentiable_on_const open_UNIV])
+    moreover have "Ck_on n (\<lambda>x. sin x * (- v)) UNIV"
+      by (rule Ck_on_mult[OF IHs Ck_on_const[OF open_UNIV]])
     ultimately show ?thesis by simp
   qed
-  show ?case using dsin dcos ms mc by (simp add: higher_differentiable_on_real_Suc)
+  show ?case using dsin dcos ms mc by (simp add: Ck_on_Suc_iff)
 qed
 
-lemma cis_higher_differentiable_on: "higher_differentiable_on UNIV cis n"
+lemma cis_Ck_on: "Ck_on n cis UNIV"
 proof -
   have eq: "cis = (\<lambda>t. cos t *\<^sub>R (1::complex) + sin t *\<^sub>R \<i>)"
     by (rule ext) (simp add: cis.code complex_eq_iff)
-  have s: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n"
-    using sin_cos_higher_differentiable_on by (rule conjunct1)
-  have c: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
-    using sin_cos_higher_differentiable_on by (rule conjunct2)
-  have t1: "higher_differentiable_on UNIV (\<lambda>t. cos t *\<^sub>R (1::complex)) n"
-    by (rule higher_differentiable_on_scaleR[OF c higher_differentiable_on_const open_UNIV])
-  have t2: "higher_differentiable_on UNIV (\<lambda>t. sin t *\<^sub>R \<i>) n"
-    by (rule higher_differentiable_on_scaleR[OF s higher_differentiable_on_const open_UNIV])
-  have "higher_differentiable_on UNIV (\<lambda>t. cos t *\<^sub>R (1::complex) + sin t *\<^sub>R \<i>) n"
-    by (rule higher_differentiable_on_add[OF t1 t2 open_UNIV])
+  have s: "Ck_on n (sin::real \<Rightarrow> real) UNIV"
+    using sin_cos_Ck_on by (rule conjunct1)
+  have c: "Ck_on n (cos::real \<Rightarrow> real) UNIV"
+    using sin_cos_Ck_on by (rule conjunct2)
+  have t1: "Ck_on n (\<lambda>t. cos t *\<^sub>R (1::complex)) UNIV"
+    by (rule Ck_on_bilinear[OF bounded_bilinear_scaleR c Ck_on_const[OF open_UNIV]])
+  have t2: "Ck_on n (\<lambda>t. sin t *\<^sub>R \<i>) UNIV"
+    by (rule Ck_on_bilinear[OF bounded_bilinear_scaleR s Ck_on_const[OF open_UNIV]])
+  have "Ck_on n (\<lambda>t. cos t *\<^sub>R (1::complex) + sin t *\<^sub>R \<i>) UNIV"
+    by (rule Ck_on_add[OF t1 t2])
   thus ?thesis by (simp add: eq)
 qed
 
@@ -383,20 +386,20 @@ text \<open>\<^bold>\<open>Reusable kernel for removable smoothness.\<close>  A 
   member.  (\<open>sin\<close>/\<open>cos\<close> are an instance; below we use it for the \<open>sinc\<close> integral family,
   whose derivative chain comes from the Leibniz rule, with \<^emph>\<open>no\<close> \<open>0/0\<close> limit.)\<close>
 
-lemma hdo_real_deriv_chain:
+lemma Ck_on_real_deriv_chain:
   fixes J :: "nat \<Rightarrow> real \<Rightarrow> real"
   assumes ch: "\<And>k x. (J k has_real_derivative J (Suc k) x) (at x)"
-  shows "higher_differentiable_on UNIV (J k) n"
+  shows "Ck_on n (J k) UNIV"
 proof (induction n arbitrary: k)
   case 0
   have "continuous_on UNIV (J k)"
     by (auto intro: continuous_at_imp_continuous_on DERIV_isCont[OF ch])
-  thus ?case by (simp add: higher_differentiable_on.simps(1))
+  thus ?case by (simp add: Ck_on_0_iff)
 next
   case (Suc n)
   have d: "J k differentiable (at x)" for x
     using ch[of k x] by (blast intro: differentiableI has_field_derivative_imp_has_derivative)
-  have fd: "higher_differentiable_on UNIV (\<lambda>x. frechet_derivative (J k) (at x) v) n" for v :: real
+  have fd: "Ck_on n (\<lambda>x. frechet_derivative (J k) (at x) v) UNIV" for v :: real
   proof -
     have "(\<lambda>x. frechet_derivative (J k) (at x) v) = (\<lambda>x. J (Suc k) x * v)"
     proof (rule ext)
@@ -406,17 +409,17 @@ next
               OF has_field_derivative_imp_has_derivative[OF ch]])
       thus "frechet_derivative (J k) (at x) v = J (Suc k) x * v" by simp
     qed
-    moreover have "higher_differentiable_on UNIV (\<lambda>x. J (Suc k) x * v) n"
-      by (rule higher_differentiable_on_mult[OF Suc.IH higher_differentiable_on_const open_UNIV])
+    moreover have "Ck_on n (\<lambda>x. J (Suc k) x * v) UNIV"
+      by (rule Ck_on_mult[OF Suc.IH Ck_on_const[OF open_UNIV]])
     ultimately show ?thesis by simp
   qed
-  show ?case using d fd by (simp add: higher_differentiable_on.simps(2))
+  show ?case using d fd by (simp add: Ck_on_Suc_iff)
 qed
 
 text \<open>\<^bold>\<open>The \<open>sinc\<close> integral family.\<close>  \<open>Jsinc k x = \<integral>\<^sub>0\<^sup>1 t\<^sup>k cos(xt + k\<pi>/2) dt\<close> is the
   \<open>k\<close>-th \<open>x\<close>-derivative of \<open>\<integral>\<^sub>0\<^sup>1 cos(xt) dt = sinc x\<close>, written as an integral so there is
   \<^emph>\<open>no\<close> \<open>0/0\<close>.  The family is closed under differentiation (Leibniz), so by
-  @{thm hdo_real_deriv_chain} every \<open>Jsinc k\<close> --- in particular \<open>Jsinc 0 = sinc\<close> --- is
+  @{thm Ck_on_real_deriv_chain} every \<open>Jsinc k\<close> --- in particular \<open>Jsinc 0 = sinc\<close> --- is
   \<open>C\<^sup>\<infinity>\<close>.  This is the removable-smoothness kernel: the dipole \<open>e\<close> factors through \<open>sinc\<close>.\<close>
 
 definition gsinc :: "real \<Rightarrow> real" where
@@ -460,9 +463,8 @@ proof -
   from L eq show ?thesis by simp
 qed
 
-lemma Jsinc_higher_differentiable_on:
-  "higher_differentiable_on UNIV (Jsinc k) n"
-  by (intro hdo_real_deriv_chain Jsinc_deriv)
+lemma Jsinc_Ck_on: "Ck_on n (Jsinc k) UNIV"
+  by (intro Ck_on_real_deriv_chain Jsinc_deriv)
 
 lemma Jsinc_0: "Jsinc 0 = gsinc"
 proof (rule ext)
@@ -494,8 +496,8 @@ proof (rule ext)
   qed
 qed
 
-lemma gsinc_higher_differentiable_on: "higher_differentiable_on UNIV gsinc n"
-  using Jsinc_higher_differentiable_on[of 0 n] by (simp add: Jsinc_0)
+lemma gsinc_Ck_on: "Ck_on n gsinc UNIV"
+  using Jsinc_Ck_on[where k = 0] by (simp add: Jsinc_0)
 
 text \<open>\<^bold>\<open>The concrete dipole element pattern and its gain.\<close>  \<open>edip \<theta> = cos(\<pi>/2 cos\<theta>)/sin\<theta>\<close>
   (tex D_edit L238) is the raw half-wave-dipole pattern, \<open>0/0\<close> at \<open>\<theta>=k\<pi>\<close>.  Its \<^emph>\<open>gain\<close>
@@ -508,28 +510,21 @@ definition edip :: "real \<Rightarrow> real" where
 definition gdip :: "real \<Rightarrow> real" where
   "gdip \<theta> = (pi^2/4) * (gsinc ((pi/2)*(1 - cos \<theta>)) * gsinc ((pi/2)*(1 + cos \<theta>)))"
 
-lemma gdip_higher_differentiable_on: "higher_differentiable_on UNIV gdip n"
+lemma gdip_Ck_on: "Ck_on n gdip UNIV"
 proof -
-  have cosn: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
-    using sin_cos_higher_differentiable_on by (rule conjunct2)
-  have am: "higher_differentiable_on UNIV (\<lambda>\<theta>::real. (pi/2)*(1 - cos \<theta>)) n"
-    by (intro higher_differentiable_on_mult higher_differentiable_on_minus
-              higher_differentiable_on_const cosn open_UNIV)
-  have ap: "higher_differentiable_on UNIV (\<lambda>\<theta>::real. (pi/2)*(1 + cos \<theta>)) n"
-    by (intro higher_differentiable_on_mult higher_differentiable_on_add
-              higher_differentiable_on_const cosn open_UNIV)
-  have gm: "higher_differentiable_on UNIV (\<lambda>\<theta>. gsinc ((pi/2)*(1 - cos \<theta>))) n"
-    using higher_differentiable_on_compose
-            [OF gsinc_higher_differentiable_on am _ open_UNIV open_UNIV]
-    by (simp add: o_def)
-  have gp: "higher_differentiable_on UNIV (\<lambda>\<theta>. gsinc ((pi/2)*(1 + cos \<theta>))) n"
-    using higher_differentiable_on_compose
-            [OF gsinc_higher_differentiable_on ap _ open_UNIV open_UNIV]
-    by (simp add: o_def)
+  have cosn: "Ck_on n (cos::real \<Rightarrow> real) UNIV"
+    using sin_cos_Ck_on by (rule conjunct2)
+  have am: "Ck_on n (\<lambda>\<theta>::real. (pi/2)*(1 - cos \<theta>)) UNIV"
+    by (intro Ck_on_mult Ck_on_sub Ck_on_const cosn open_UNIV)
+  have ap: "Ck_on n (\<lambda>\<theta>::real. (pi/2)*(1 + cos \<theta>)) UNIV"
+    by (intro Ck_on_mult Ck_on_add Ck_on_const cosn open_UNIV)
+  have gm: "Ck_on n (\<lambda>\<theta>. gsinc ((pi/2)*(1 - cos \<theta>))) UNIV"
+    by (rule Ck_on_compose[OF gsinc_Ck_on am]) simp
+  have gp: "Ck_on n (\<lambda>\<theta>. gsinc ((pi/2)*(1 + cos \<theta>))) UNIV"
+    by (rule Ck_on_compose[OF gsinc_Ck_on ap]) simp
   show ?thesis
     unfolding gdip_def
-    by (intro higher_differentiable_on_mult higher_differentiable_on_const
-              gm gp open_UNIV)
+    by (intro Ck_on_mult Ck_on_const gm gp open_UNIV)
 qed
 
 lemma gdip_eq_edip_sq: "gdip \<theta> = (edip \<theta>)\<^sup>2"
@@ -624,33 +619,23 @@ text \<open>\<^bold>\<open>The literal pattern-squared is smooth, and the gain a
   \<open>gain_dip \<omega> = gdip(\<omega>$1) = \<bar>e(\<theta>)\<bar>\<^sup>2\<close>, \<open>C\<^sup>\<infinity>\<close> on \<open>\<real>\<^sup>2\<close>.  \<^bold>\<open>This is the extension that
   defines \<open>U\<close>\<close> --- so \<open>U\<close>'s global derivative facts follow.\<close>
 
-lemma edip_sq_higher_differentiable_on:
-  "higher_differentiable_on UNIV (\<lambda>\<theta>. (edip \<theta>)\<^sup>2) n"
+lemma edip_sq_Ck_on: "Ck_on n (\<lambda>\<theta>. (edip \<theta>)\<^sup>2) UNIV"
 proof -
   have "(\<lambda>\<theta>. (edip \<theta>)\<^sup>2) = gdip"
     by (rule ext) (rule gdip_eq_edip_sq[symmetric])
-  thus ?thesis by (simp add: gdip_higher_differentiable_on)
+  thus ?thesis by (simp add: gdip_Ck_on)
 qed
 
 definition gain_dip :: "real^2 \<Rightarrow> real" where
   "gain_dip \<omega> = gdip (\<omega> $ 1)"
 
-lemma gain_dip_higher_differentiable_on: "higher_differentiable_on UNIV gain_dip n"
+lemma gain_dip_Ck_on: "Ck_on n gain_dip UNIV"
 proof -
-  have proj: "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. \<omega> $ 1) n"
-  proof -
-    have "(\<lambda>\<omega>::real^2. \<omega> $ 1) = (\<lambda>\<omega>. inner \<omega> (axis 1 1))"
-      by (rule ext) (simp add: inner_axis)
-    thus ?thesis
-      using higher_differentiable_on_inner[OF higher_differentiable_on_id
-              higher_differentiable_on_const open_UNIV]
-      by simp
-  qed
-  have "higher_differentiable_on UNIV (gdip \<circ> (\<lambda>\<omega>::real^2. \<omega> $ 1)) n"
-    by (rule higher_differentiable_on_compose
-          [OF gdip_higher_differentiable_on proj _ open_UNIV open_UNIV]) auto
-  thus ?thesis
-    by (metis (no_types, lifting) ext comp_def gain_dip_def)
+  have proj: "Ck_on n (\<lambda>\<omega>::real^2. \<omega> $ 1) UNIV"
+    by (rule Ck_on_component[OF Ck_on_id[OF open_UNIV]])
+  have "Ck_on n (\<lambda>\<omega>::real^2. gdip (\<omega> $ 1)) UNIV"
+    by (rule Ck_on_compose[OF gdip_Ck_on proj]) simp
+  thus ?thesis by (simp add: gain_dip_def[abs_def])
 qed
 
 text \<open>\<^bold>\<open>The gain derivatives.\<close>  \<open>gain_dip \<omega> = gdip(\<omega>\<^sub>1)\<close> depends only on \<open>\<theta> = \<omega>\<^sub>1\<close>, so its
@@ -658,12 +643,7 @@ text \<open>\<^bold>\<open>The gain derivatives.\<close>  \<open>gain_dip \<omeg
   assumption-free derivative of our dipole gain (the \<open>gdip\<close> jet is a fact, \<open>gdip\<close> being \<open>C\<^sup>\<infinity>\<close>).\<close>
 
 lemma gdip_differentiable: "gdip differentiable (at (x::real))"
-proof -
-  have "gdip differentiable_on UNIV"
-    using gdip_higher_differentiable_on[of 1]
-    by (rule higher_differentiable_on_imp_differentiable_on) simp
-  thus ?thesis by (simp add: differentiable_on_def)
-qed
+  using gdip_Ck_on[of "Suc 0"] unfolding Ck_on_Suc_iff by blast
 
 text \<open>\<^bold>\<open>The gain is \<open>C\<^sup>2\<close>: its first-derivative field is again differentiable.\<close>  \<open>gdip\<close> is
   \<open>C\<^sup>\<infinity>\<close>, so \<open>\<partial>gdip\<close> (\<open>\<lambda>t. frechet_derivative gdip (at t) v\<close>) is differentiable --- the
@@ -673,12 +653,9 @@ lemma gdip_deriv_differentiable:
   fixes t :: real
   shows "(\<lambda>t. frechet_derivative gdip (at t) v) differentiable (at t)"
 proof -
-  have "higher_differentiable_on UNIV (\<lambda>y. frechet_derivative gdip (at y) v) 1"
-    using gdip_higher_differentiable_on[of "Suc 1"]
-    by (simp add: higher_differentiable_on.simps(2))
-  hence "(\<lambda>y. frechet_derivative gdip (at y) v) differentiable_on UNIV"
-    by (rule higher_differentiable_on_imp_differentiable_on) simp
-  thus ?thesis by (simp add: differentiable_on_def)
+  have "Ck_on (Suc 0) (\<lambda>y. frechet_derivative gdip (at y) v) UNIV"
+    using gdip_Ck_on[of "Suc (Suc 0)"] unfolding Ck_on_Suc_iff[of "Suc 0"] by blast
+  thus ?thesis unfolding Ck_on_Suc_iff by blast
 qed
 
 text \<open>\<^bold>\<open>Step 2: the concrete steered wavevector \<open>cvec\<^sub>0\<close> is \<open>C\<^sup>\<infinity>\<close>.\<close>  \<open>kx,ky,kz\<close> are \<open>sin/cos\<close>
@@ -686,51 +663,26 @@ text \<open>\<^bold>\<open>Step 2: the concrete steered wavevector \<open>cvec\<
   are \<^emph>\<open>constants\<close> in \<open>\<omega>\<close> (finite by the secant hypothesis), so the planar steered wavevector
   is \<open>C\<^sup>\<infinity>\<close> on \<open>\<real>\<^sup>2\<close>.  \<open>cvec_dip\<close> is the \<open>\<real>\<^sup>2\<close>-valued form feeding \<open>U_cart\<close>.\<close>
 
-lemma proj_higher_differentiable_on:
-  "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. \<omega> $ i) n"
-proof -
-  have "(\<lambda>\<omega>::real^2. \<omega> $ i) = (\<lambda>\<omega>. inner \<omega> (axis i 1))"
-    by (rule ext) (simp add: inner_axis)
-  thus ?thesis
-    using higher_differentiable_on_inner[OF higher_differentiable_on_id
-            higher_differentiable_on_const open_UNIV] by simp
-qed
+lemma proj_Ck_on: "Ck_on n (\<lambda>\<omega>::real^2. \<omega> $ i) UNIV"
+  by (rule Ck_on_component[OF Ck_on_id[OF open_UNIV]])
 
-lemma sin_proj_higher_differentiable_on:
-  "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. sin (\<omega> $ i)) n"
-proof -
-  have sinc: "higher_differentiable_on UNIV (sin::real \<Rightarrow> real) n"
-    using sin_cos_higher_differentiable_on by (rule conjunct1)
-  have "higher_differentiable_on UNIV (sin \<circ> (\<lambda>\<omega>::real^2. \<omega> $ i)) n"
-    by (rule higher_differentiable_on_compose
-          [OF sinc proj_higher_differentiable_on _ open_UNIV open_UNIV]) auto
-  thus ?thesis by (simp add: o_def)
-qed
+lemma sin_proj_Ck_on: "Ck_on n (\<lambda>\<omega>::real^2. sin (\<omega> $ i)) UNIV"
+  by (rule Ck_on_compose[OF conjunct1[OF sin_cos_Ck_on] proj_Ck_on]) simp
 
-lemma cos_proj_higher_differentiable_on:
-  "higher_differentiable_on UNIV (\<lambda>\<omega>::real^2. cos (\<omega> $ i)) n"
-proof -
-  have cosc: "higher_differentiable_on UNIV (cos::real \<Rightarrow> real) n"
-    using sin_cos_higher_differentiable_on by (rule conjunct2)
-  have "higher_differentiable_on UNIV (cos \<circ> (\<lambda>\<omega>::real^2. \<omega> $ i)) n"
-    by (rule higher_differentiable_on_compose
-          [OF cosc proj_higher_differentiable_on _ open_UNIV open_UNIV]) auto
-  thus ?thesis by (simp add: o_def)
-qed
+lemma cos_proj_Ck_on: "Ck_on n (\<lambda>\<omega>::real^2. cos (\<omega> $ i)) UNIV"
+  by (rule Ck_on_compose[OF conjunct2[OF sin_cos_Ck_on] proj_Ck_on]) simp
 
-lemma kx_higher_differentiable_on: "higher_differentiable_on UNIV kx n"
+lemma kx_Ck_on: "Ck_on n kx UNIV"
   unfolding kx_def[abs_def]
-  by (rule higher_differentiable_on_mult[OF sin_proj_higher_differentiable_on
-        cos_proj_higher_differentiable_on open_UNIV])
+  by (rule Ck_on_mult[OF sin_proj_Ck_on cos_proj_Ck_on])
 
-lemma ky_higher_differentiable_on: "higher_differentiable_on UNIV ky n"
+lemma ky_Ck_on: "Ck_on n ky UNIV"
   unfolding ky_def[abs_def]
-  by (rule higher_differentiable_on_mult[OF sin_proj_higher_differentiable_on
-        sin_proj_higher_differentiable_on open_UNIV])
+  by (rule Ck_on_mult[OF sin_proj_Ck_on sin_proj_Ck_on])
 
-lemma kz_higher_differentiable_on: "higher_differentiable_on UNIV kz n"
+lemma kz_Ck_on: "Ck_on n kz UNIV"
   unfolding kz_def[abs_def]
-  by (rule cos_proj_higher_differentiable_on)
+  by (rule cos_proj_Ck_on)
 
 definition cvec_dip :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real^2" where
   \<comment> \<open>the planar steered wavevector \<open>cvec\<^sub>0\<close> as a \<open>\<real>\<^sup>2\<close> vector (axis form, so smoothness
@@ -739,23 +691,23 @@ definition cvec_dip :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarr
      ((kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) *\<^sub>R axis 1 1
    + ((ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) *\<^sub>R axis 2 1"
 
-lemma cvec_dip_higher_differentiable_on:
-  "higher_differentiable_on UNIV (cvec_dip \<omega>0 \<omega>s) n"
+lemma cvec_dip_Ck_on: "Ck_on n (cvec_dip \<omega>0 \<omega>s) UNIV"
 proof -
-  have comp1: "higher_differentiable_on UNIV
-      (\<lambda>\<omega>. (kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) n"
-    by (intro higher_differentiable_on_add higher_differentiable_on_minus
-              higher_differentiable_on_mult higher_differentiable_on_const
-              kx_higher_differentiable_on kz_higher_differentiable_on open_UNIV)
-  have comp2: "higher_differentiable_on UNIV
-      (\<lambda>\<omega>. (ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) n"
-    by (intro higher_differentiable_on_add higher_differentiable_on_minus
-              higher_differentiable_on_mult higher_differentiable_on_const
-              ky_higher_differentiable_on kz_higher_differentiable_on open_UNIV)
+  have comp1: "Ck_on n
+      (\<lambda>\<omega>. (kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) UNIV"
+    by (intro Ck_on_add Ck_on_sub Ck_on_mult Ck_on_const kx_Ck_on kz_Ck_on open_UNIV)
+  have comp2: "Ck_on n
+      (\<lambda>\<omega>. (ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s)) UNIV"
+    by (intro Ck_on_add Ck_on_sub Ck_on_mult Ck_on_const ky_Ck_on kz_Ck_on open_UNIV)
+  have s1: "Ck_on n (\<lambda>\<omega>. ((kx \<omega> - kx \<omega>s) + ((kx \<omega>0 - kx \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s))
+              *\<^sub>R (axis 1 1 :: real^2)) UNIV"
+    by (rule Ck_on_bilinear[OF bounded_bilinear_scaleR comp1 Ck_on_const[OF open_UNIV]])
+  have s2: "Ck_on n (\<lambda>\<omega>. ((ky \<omega> - ky \<omega>s) + ((ky \<omega>0 - ky \<omega>s)/(kz \<omega>s - kz \<omega>0)) * (kz \<omega> - kz \<omega>s))
+              *\<^sub>R (axis 2 1 :: real^2)) UNIV"
+    by (rule Ck_on_bilinear[OF bounded_bilinear_scaleR comp2 Ck_on_const[OF open_UNIV]])
   show ?thesis
     unfolding cvec_dip_def[abs_def]
-    by (intro higher_differentiable_on_add higher_differentiable_on_scaleR
-              higher_differentiable_on_const comp1 comp2 open_UNIV)
+    by (rule Ck_on_add[OF s1 s2])
 qed
 
 text \<open>\<^bold>\<open>The explicit Jacobian of the steering map.\<close>  Since \<open>k\<close> is explicit, the
@@ -812,7 +764,7 @@ lemma has_derivative_sin_proj:
 
 definition Dcvec_dip :: "angle \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real^2 \<Rightarrow> real^2" where
   \<comment> \<open>The explicit Jacobian of @{const cvec_dip}.  \<^bold>\<open>Why \<^const>\<open>vec_nth\<close> instead of the \<open>$\<close>
-      notation:\<close> in this merged JNF+HMA+Smooth_Manifolds session, parsing the infix \<open>$\<close>
+      notation:\<close> in this merged JNF+HMA session, parsing the infix \<open>$\<close>
       is super-linearly expensive (notation/type disambiguation), so a single term with
       \<open>\<approx>12\<close> occurrences of \<open>$\<close> takes \<^emph>\<open>minutes\<close> (or hangs) to elaborate, whereas the
       identical term written with the constant \<^const>\<open>vec_nth\<close> elaborates in \<open>< 0.5 s\<close>.
@@ -850,6 +802,12 @@ lemma has_derivative_cvec_dip:
 lemma frechet_derivative_cvec_dip:
   "frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) = Dcvec_dip \<omega>0 \<omega>s \<omega>"
   by (rule frechet_derivative_at[symmetric, OF has_derivative_cvec_dip])
+
+text \<open>The Jacobian matrix of the steering map, in the sense of the analysis library.\<close>
+
+lemma jacobian_cvec_dip:
+  "jacobian (cvec_dip \<omega>0 \<omega>s) (at \<omega>) = matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+  by (simp add: jacobian_def frechet_derivative_cvec_dip)
 
 text \<open>\<^bold>\<open>The \<^emph>\<open>second\<close> derivative of \<open>cvec_dip\<close>\<close> --- differentiate the explicit Jacobian
   \<open>Dcvec_dip\<close> once more.  This is the genuine \<open>D\<^sup>2cvec\<^sub>0\<close>, an explicit \<open>sin/cos\<close> bilinear
@@ -919,45 +877,32 @@ text \<open>\<^bold>\<open>Step 3: the objective \<open>U\<close>, DEFINED FROM 
 definition U_dip :: "angle \<Rightarrow> angle \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real" where
   "U_dip \<omega>0 \<omega>s x \<omega> = U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>"
 
-lemma A_cart_dip_higher_differentiable_on:
-  "higher_differentiable_on UNIV (\<lambda>\<omega>. A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>) n"
+lemma A_cart_dip_Ck_on: "Ck_on n (\<lambda>\<omega>. A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>) UNIV"
 proof -
-  have summand: "higher_differentiable_on UNIV
-                (\<lambda>\<omega>. cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) n" for j
+  have summand: "Ck_on n (\<lambda>\<omega>. cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) UNIV" for j
   proof -
-    have arg: "higher_differentiable_on UNIV
-                 (\<lambda>\<omega>. - ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j))) n"
-      by (intro higher_differentiable_on_uminus higher_differentiable_on_inner
-                cvec_dip_higher_differentiable_on higher_differentiable_on_const open_UNIV)
-    have "higher_differentiable_on UNIV
-            (cis \<circ> (\<lambda>\<omega>. - ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) n"
-      by (rule higher_differentiable_on_compose
-            [OF cis_higher_differentiable_on arg _ open_UNIV open_UNIV]) auto
-    thus ?thesis by (simp add: o_def)
+    have arg: "Ck_on n (\<lambda>\<omega>. - ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j))) UNIV"
+      by (intro Ck_on_neg Ck_on_inner cvec_dip_Ck_on Ck_on_const open_UNIV)
+    show ?thesis
+      by (rule Ck_on_compose[OF cis_Ck_on arg]) simp
   qed
-  have "higher_differentiable_on UNIV
-          (\<lambda>\<omega>. \<Sum>j\<in>UNIV. cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) n"
-    by (intro higher_differentiable_on_sum summand open_UNIV)
+  have "Ck_on n (\<lambda>\<omega>. \<Sum>j\<in>UNIV. cis (- ((cvec_dip \<omega>0 \<omega>s \<omega>) \<bullet> (x $ j)))) UNIV"
+    by (rule Ck_on_sum) (simp_all add: summand)
   thus ?thesis by (simp add: A_cart_def)
 qed
 
-lemma U_dip_higher_differentiable_on:
-  "higher_differentiable_on UNIV (U_dip \<omega>0 \<omega>s x) n"
+lemma U_dip_Ck_on: "Ck_on n (U_dip \<omega>0 \<omega>s x) UNIV"
 proof -
-  have AA: "higher_differentiable_on UNIV
-              (\<lambda>\<omega>. (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2) n"
+  have AA: "Ck_on n (\<lambda>\<omega>. (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2) UNIV"
   proof -
     have "(\<lambda>\<omega>. (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2)
           = (\<lambda>\<omega>. inner (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>) (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))"
       by (rule ext) (simp add: power2_norm_eq_inner)
     thus ?thesis
-      using higher_differentiable_on_inner[OF A_cart_dip_higher_differentiable_on
-              A_cart_dip_higher_differentiable_on open_UNIV] by simp
+      using Ck_on_inner[OF A_cart_dip_Ck_on[of n \<omega>0 \<omega>s x] A_cart_dip_Ck_on[of n \<omega>0 \<omega>s x]] by simp
   qed
-  have "higher_differentiable_on UNIV
-          (\<lambda>\<omega>. gain_dip \<omega> * (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2) n"
-    by (rule higher_differentiable_on_mult
-          [OF gain_dip_higher_differentiable_on AA open_UNIV])
+  have "Ck_on n (\<lambda>\<omega>. gain_dip \<omega> * (cmod (A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega>))\<^sup>2) UNIV"
+    by (rule Ck_on_mult[OF gain_dip_Ck_on AA])
   thus ?thesis by (simp add: U_dip_def[abs_def] U_cart_def[abs_def])
 qed
 
@@ -967,12 +912,7 @@ text \<open>\<^bold>\<open>The global \<open>\<omega>\<close>-derivative facts.\
   No assumption, no excluded poles.\<close>
 
 lemma U_dip_Ck2: "Ck_on 2 (U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x) UNIV"
-proof -
-  have "higher_differentiable_on UNIV (U_cart (cvec_dip \<omega>0 \<omega>s) gain_dip x) 2"
-    using U_dip_higher_differentiable_on[of \<omega>0 \<omega>s x 2]
-    by (simp add: U_dip_def[abs_def])
-  thus ?thesis by (simp add: Ck_on_iff_higher_differentiable_on)
-qed
+  using U_dip_Ck_on[of 2 \<omega>0 \<omega>s x] by (simp add: U_dip_def[abs_def])
 
 lemma gradU_dip_has_derivative:
   "(gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x
@@ -1055,14 +995,14 @@ lemma continuous_on_M22_moment_joint:
             bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
 text \<open>\<^bold>\<open>A5 brick 2a: the moment composite \<open>(\<bm>x,\<omega>) \<mapsto> M_paper \<bm>x (cvec_dip \<omega>0 \<omega>s \<omega>)\<close> is jointly
-  continuous.\<close>  The dipole steering \<open>cvec_dip\<close> is smooth (@{thm cvec_dip_higher_differentiable_on}),
+  continuous.\<close>  The dipole steering \<open>cvec_dip\<close> is smooth (@{thm cvec_dip_Ck_on}),
   hence continuous; composing the pairing \<open>(\<bm>x,\<omega>) \<mapsto> (\<bm>x, cvec_dip \<omega>0 \<omega>s \<omega>)\<close> with the
   jointly-continuous moments (brick 1) routes every \<open>\<bm>x\<close>-dependence of \<open>HessU\<close>/\<open>Dx\<close> through this
   composite.\<close>
 
 lemma continuous_on_cvec_dip:
   "continuous_on UNIV (cvec_dip \<omega>0 \<omega>s)"
-  by (rule higher_differentiable_on_imp_continuous_on[OF cvec_dip_higher_differentiable_on])
+  by (rule Ck_on_imp_continuous_on[OF cvec_dip_Ck_on])
 
 lemma continuous_on_pair_cvec_dip:
   "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
@@ -1110,44 +1050,38 @@ lemma continuous_on_M22_moment_cvec_dip:
 text \<open>\<^bold>\<open>A5 brick 2b: the pure-\<open>\<omega>\<close> jets of \<open>HessU_dip_entry_moments\<close> are continuous in \<open>\<omega>\<close>.\<close>
   The gain \<open>gain_dip = gdip\<circ>\<pi>\<^sub>1\<close> and the steering jets \<open>Dcvec_dip\<close>, \<open>D2cvec_dip\<close>, and the gain's
   first/second Fréchet derivatives are all continuous in \<open>\<omega>\<close> --- proved through the \<open>C\<^sup>\<infinity>\<close>
-  smoothness of \<open>gdip\<close>/\<open>cvec_dip\<close> (@{thm higher_differentiable_on.simps(2)} extracts the
+  smoothness of \<open>gdip\<close>/\<open>cvec_dip\<close> (@{thm Ck_on_Suc_iff} extracts the
   derivative-field smoothness, the @{thm frechet_derivative_cvec_dip}/
   @{thm has_derivative_Dcvec_dip} jets identify the explicit forms), so we never touch the
   \<open>sin/cos\<close> formulas or the beam-lift division constant.\<close>
 
 lemma continuous_on_gain_dip:
   "continuous_on UNIV gain_dip"
-  unfolding gain_dip_def
-  by (rule continuous_on_compose2[OF
-        higher_differentiable_on_imp_continuous_on[OF gdip_higher_differentiable_on]
-        bounded_linear.continuous_on[OF bounded_linear_vec_nth continuous_on_id] subset_UNIV])
+  by (rule Ck_on_imp_continuous_on[OF gain_dip_Ck_on])
 
 lemma continuous_on_Dcvec_dip:
   "continuous_on UNIV (\<lambda>\<omega>. Dcvec_dip \<omega>0 \<omega>s \<omega> h)"
 proof -
-  have "higher_differentiable_on UNIV (\<lambda>\<omega>. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) h) 1"
-    using cvec_dip_higher_differentiable_on[of \<omega>0 \<omega>s "Suc 1"]
-    by (simp add: higher_differentiable_on.simps(2))
+  have "Ck_on (Suc 0) (\<lambda>\<omega>. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) h) UNIV"
+    using cvec_dip_Ck_on[of "Suc (Suc 0)" \<omega>0 \<omega>s] unfolding Ck_on_Suc_iff[of "Suc 0"] by blast
   hence "continuous_on UNIV (\<lambda>\<omega>. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at \<omega>) h)"
-    by (rule higher_differentiable_on_imp_continuous_on)
+    by (rule Ck_on_imp_continuous_on)
   thus ?thesis by (simp add: frechet_derivative_cvec_dip)
 qed
 
 lemma continuous_on_D2cvec_dip:
   "continuous_on UNIV (\<lambda>\<omega>. D2cvec_dip \<omega>0 \<omega>s \<omega> h h')"
 proof -
-  have C1: "higher_differentiable_on UNIV (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) 1"
+  have C1: "Ck_on (Suc 0) (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) UNIV"
   proof -
-    have "higher_differentiable_on UNIV (\<lambda>y. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at y) h) 1"
-      using cvec_dip_higher_differentiable_on[of \<omega>0 \<omega>s "Suc 1"]
-      by (simp add: higher_differentiable_on.simps(2))
+    have "Ck_on (Suc 0) (\<lambda>y. frechet_derivative (cvec_dip \<omega>0 \<omega>s) (at y) h) UNIV"
+      using cvec_dip_Ck_on[of "Suc (Suc 0)" \<omega>0 \<omega>s] unfolding Ck_on_Suc_iff[of "Suc 0"] by blast
     thus ?thesis by (simp add: frechet_derivative_cvec_dip)
   qed
-  from C1 have "higher_differentiable_on UNIV
-                  (\<lambda>x. frechet_derivative (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) (at x) h') 0"
-    by (simp add: higher_differentiable_on.simps(2))
+  from C1 have "Ck_on 0 (\<lambda>x. frechet_derivative (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) (at x) h') UNIV"
+    unfolding Ck_on_Suc_iff by blast
   hence "continuous_on UNIV (\<lambda>x. frechet_derivative (\<lambda>y. Dcvec_dip \<omega>0 \<omega>s y h) (at x) h')"
-    by (rule higher_differentiable_on_imp_continuous_on)
+    by (rule Ck_on_imp_continuous_on)
   thus ?thesis
     by (simp add: frechet_derivative_at[OF has_derivative_Dcvec_dip])
 qed
@@ -1157,10 +1091,9 @@ lemma continuous_on_frechet_gdip_proj:
 proof -
   have g: "continuous_on UNIV (\<lambda>t::real. frechet_derivative gdip (at t) r)"
   proof -
-    have "higher_differentiable_on UNIV (\<lambda>t. frechet_derivative gdip (at t) r) 1"
-      using gdip_higher_differentiable_on[of "Suc 1"]
-      by (simp add: higher_differentiable_on.simps(2))
-    thus ?thesis by (rule higher_differentiable_on_imp_continuous_on)
+    have "Ck_on (Suc 0) (\<lambda>t. frechet_derivative gdip (at t) r) UNIV"
+      using gdip_Ck_on[of "Suc (Suc 0)"] unfolding Ck_on_Suc_iff[of "Suc 0"] by blast
+    thus ?thesis by (rule Ck_on_imp_continuous_on)
   qed
   show ?thesis
     by (rule continuous_on_compose2[OF g
@@ -1171,22 +1104,14 @@ lemma continuous_on_frechet2_gdip_proj:
   "continuous_on UNIV
      (\<lambda>\<omega>::real^2. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) c) (at \<omega>) v)"
 proof -
-  have outer1: "higher_differentiable_on UNIV (\<lambda>t. frechet_derivative gdip (at t) c) 1"
-    using gdip_higher_differentiable_on[of "Suc 1"]
-    by (simp add: higher_differentiable_on.simps(2))
-  have f1C1: "higher_differentiable_on UNIV
-                (\<lambda>\<eta>::real^2. frechet_derivative gdip (at (\<eta>$1)) c) 1"
-  proof -
-    have "higher_differentiable_on UNIV
-            ((\<lambda>t. frechet_derivative gdip (at t) c) \<circ> (\<lambda>\<eta>::real^2. \<eta>$1)) 1"
-      by (rule higher_differentiable_on_compose
-            [OF outer1 proj_higher_differentiable_on _ open_UNIV open_UNIV]) auto
-    thus ?thesis by (simp add: o_def)
-  qed
-  from f1C1 have "higher_differentiable_on UNIV
-       (\<lambda>x. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) c) (at x) v) 0"
-    by (simp add: higher_differentiable_on.simps(2))
-  thus ?thesis by (rule higher_differentiable_on_imp_continuous_on)
+  have outer1: "Ck_on (Suc 0) (\<lambda>t. frechet_derivative gdip (at t) c) UNIV"
+    using gdip_Ck_on[of "Suc (Suc 0)"] unfolding Ck_on_Suc_iff[of "Suc 0"] by blast
+  have f1C1: "Ck_on (Suc 0) (\<lambda>\<eta>::real^2. frechet_derivative gdip (at (\<eta>$1)) c) UNIV"
+    by (rule Ck_on_compose[OF outer1 proj_Ck_on]) simp
+  from f1C1 have "Ck_on 0
+       (\<lambda>x. frechet_derivative (\<lambda>\<eta>. frechet_derivative gdip (at (\<eta>$1)) c) (at x) v) UNIV"
+    unfolding Ck_on_Suc_iff by blast
+  thus ?thesis by (rule Ck_on_imp_continuous_on)
 qed
 
 subsection \<open>First contact with the determinant: the moments appear in \<open>dA\<close>\<close>
@@ -1403,20 +1328,10 @@ text \<open>\<^bold>\<open>Nothing is assumed: the derivatives of the concrete \
   of \<open>gradU\<close> holds for \<open>U_dip\<close> with no hypotheses at all.\<close>
 
 lemma cvec_dip_differentiable: "cvec_dip \<omega>0 \<omega>s differentiable (at \<omega>)"
-proof -
-  have "cvec_dip \<omega>0 \<omega>s differentiable_on UNIV"
-    using cvec_dip_higher_differentiable_on[of \<omega>0 \<omega>s 1]
-    by (rule higher_differentiable_on_imp_differentiable_on) simp
-  thus ?thesis by (simp add: differentiable_on_def)
-qed
+  using cvec_dip_Ck_on[of "Suc 0" \<omega>0 \<omega>s] unfolding Ck_on_Suc_iff by blast
 
 lemma gain_dip_differentiable: "gain_dip differentiable (at \<omega>)"
-proof -
-  have "gain_dip differentiable_on UNIV"
-    using gain_dip_higher_differentiable_on[of 1]
-    by (rule higher_differentiable_on_imp_differentiable_on) simp
-  thus ?thesis by (simp add: differentiable_on_def)
-qed
+  using gain_dip_Ck_on[of "Suc 0"] unfolding Ck_on_Suc_iff by blast
 
 lemma gradU_dip_real_moments:
   "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ j

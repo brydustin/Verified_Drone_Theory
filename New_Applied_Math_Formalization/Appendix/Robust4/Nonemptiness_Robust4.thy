@@ -64,7 +64,7 @@ definition BadXGW :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<R
         gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
       \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
       \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-      \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+      \<and> matrix_det (jacobian (cvec_dip \<omega>0 \<omega>s) (at \<omega>)) \<noteq> 0
       \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
       \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
 
@@ -102,7 +102,7 @@ lemma BadXGW_point:
                 gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
               \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
               \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-              \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+              \<and> matrix_det (jacobian (cvec_dip \<omega>0 \<omega>s) (at \<omega>)) \<noteq> 0
               \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
               \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
   unfolding BadXGW_def by blast

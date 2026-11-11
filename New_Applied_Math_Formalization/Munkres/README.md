@@ -1,5 +1,9 @@
 # Vendored Munkres Topology
 
+Source: D. Bryant, J. J. Huerta y Munive, C. Kaliszyk and J. Urban, *Munkres' General Topology
+Autoformalized in Isabelle/HOL*, in: Logic, Computation and Proof: A Festschrift in Honour of
+Lawrence C. Paulson, LNCS 16870, Springer, 2026 (preprint: arXiv:2604.07455).
+
 This directory contains local copies of the four main chapter theories from:
 
 - `/home/dusty/Desktop/Academic/Isabelle_Stuff/Topology/isa_top_autoform1/tst/i/`

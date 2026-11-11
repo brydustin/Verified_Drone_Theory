@@ -107,7 +107,7 @@ theorem residual_meager_design:
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
+          \<and> matrix_det (jacobian (cvec_dip design_beam design_source) (at \<omega>)) \<noteq> 0
           \<and> cvec_dip design_beam design_source \<omega> \<noteq> 0
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
 proof -
@@ -119,7 +119,7 @@ proof -
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
+          \<and> matrix_det (jacobian (cvec_dip design_beam design_source) (at \<omega>)) \<noteq> 0
           \<and> cvec_dip design_beam design_source \<omega> \<noteq> 0
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}
       \<subseteq> {x. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). x \<in> BadXGW design_beam design_source {\<omega>}}"
@@ -128,7 +128,7 @@ proof -
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
+          \<and> matrix_det (jacobian (cvec_dip design_beam design_source) (at \<omega>)) \<noteq> 0
           \<and> cvec_dip design_beam design_source \<omega> \<noteq> 0
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}
       \<subseteq> (\<Union>n. K n)"

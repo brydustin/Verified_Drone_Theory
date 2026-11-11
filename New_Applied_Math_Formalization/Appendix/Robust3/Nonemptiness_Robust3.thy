@@ -1835,7 +1835,7 @@ lemma meager_steering_singular:
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+          \<and> matrix_det (jacobian (cvec_dip \<omega>0 \<omega>s) (at \<omega>)) = 0}"
 proof -
   define Ac :: real where "Ac = (kx \<omega>0 - kx \<omega>s) / (kz \<omega>s - kz \<omega>0)"
   define Bc :: real where "Bc = (ky \<omega>0 - ky \<omega>s) / (kz \<omega>s - kz \<omega>0)"
@@ -1932,7 +1932,7 @@ proof -
       unfolding slice_def
       by (rule steering_slice_meager[OF card2 s1])
   qed
-  show ?thesis by (rule meager_subset[OF sub meagU])
+  show ?thesis unfolding jacobian_cvec_dip by (rule meager_subset[OF sub meagU])
 qed
 
 
@@ -1953,7 +1953,7 @@ lemma m5_D5_steersing:
 proof -
   have card2: "2 \<le> CARD('n)" using c6 by simp
   show ?thesis
-    by (rule meager_subset[OF _ meager_steering_singular[OF card2 pf hsep kdiff]]) blast
+    by (rule meager_subset[OF _ meager_steering_singular[OF card2 pf hsep kdiff, unfolded jacobian_cvec_dip]]) blast
 qed
 
 (* ---- D2: beam-center stratum (consumes D5 machinery above) ---- *)
@@ -2316,7 +2316,7 @@ lemma meager_main_beam:
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> matrix_det (jacobian (cvec_dip \<omega>0 \<omega>s) (at \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
 proof -
   define K :: "(real^2) set" where
@@ -2375,7 +2375,7 @@ proof -
       unfolding slice_def
       by (rule meager_nowhere_dense[OF m5_D2_slice_nowhere_dense[OF card2 s1 cz]])
   qed
-  show ?thesis by (rule meager_subset[OF sub meagU])
+  show ?thesis unfolding jacobian_cvec_dip by (rule meager_subset[OF sub meagU])
 qed
 
 lemma m5_D2_beamcenter:
@@ -2389,7 +2389,7 @@ lemma m5_D2_beamcenter:
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
-  by (rule meager_subset[OF _ meager_main_beam[OF card2 pf]]) blast
+  by (rule meager_subset[OF _ meager_main_beam[OF card2 pf, unfolded jacobian_cvec_dip]]) blast
 
 (* ---- D34: phase_collinear predicate ---- *)
 

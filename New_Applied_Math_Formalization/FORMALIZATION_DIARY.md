@@ -9553,3 +9553,30 @@ Left: WP7 close-out (plan §8).
   sessions from `Applied_Math_Appendix_Base` up rebuilt, audit passes (it now
   also checks the new theorems).  `tools/final_deps`: 17362 facts in the
   closure, none of the six-moment theorems.
+
+### 2026-11-11 — derivatives through the Isabelle2026 library only
+
+- Question from the user: are the gradient, Hessian and Jacobian the ones of the
+  higher-differentiation library that is now in HOL-Analysis, or objects made
+  for this development?  Finding: `gradU`/`HessU` were already `∇`/`∇²` of
+  `HOL-Analysis.Higher_Differentiability_Multi`; smoothness went through the
+  AFP predicate `higher_differentiable_on` (Smooth_Manifolds) and a bridge
+  lemma to `Ck_on`; the Jacobian of the steering map was the explicit formula
+  `Dcvec_dip`.
+- `Nonemptiness_Robust1.thy`: the smoothness lemmas are stated and proved with
+  `Ck_on` and its closure lemmas (`sin_cos_Ck_on`, `cis_Ck_on`,
+  `Ck_on_real_deriv_chain`, `Jsinc_Ck_on`, `gsinc_Ck_on`, `gdip_Ck_on`,
+  `edip_sq_Ck_on`, `gain_dip_Ck_on`, `proj_Ck_on`, `sin_proj_Ck_on`,
+  `cos_proj_Ck_on`, `kx_Ck_on`, `ky_Ck_on`, `kz_Ck_on`, `cvec_dip_Ck_on`,
+  `A_cart_dip_Ck_on`, `U_dip_Ck_on`); new `jacobian_cvec_dip`
+  (`jacobian (cvec_dip ω0 ωs) (at ω) = matrix (Dcvec_dip ω0 ωs ω)`).
+  `Smooth_Manifolds_Bridge.thy` removed; the session `Applied_Math_Appendix_Base`
+  no longer depends on the AFP entry Smooth_Manifolds.  The one lemma used from
+  that entry outside the smoothness block, `frechet_derivative_at'`, is now a
+  two-line local lemma.
+- `BadXGW`, `meager_steering_singular`, `meager_main_beam`,
+  `residual_meager_design` and the assembly state the Jacobian condition with
+  `jacobian (cvec_dip ω0 ωs) (at ω)`.
+- Sources named in the READMEs: the Munkres library (Bryant, Huerta y Munive,
+  Kaliszyk, Urban; LNCS 16870, arXiv:2604.07455) and the higher-differentiation
+  library (Bryant, Huerta y Munive, Foster; SEFM 2026, arXiv:2511.20550).

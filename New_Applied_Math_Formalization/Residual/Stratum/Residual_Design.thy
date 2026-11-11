@@ -104,9 +104,9 @@ lemma BadXGW_design_nondegenerate:
     and "sin (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 1) - sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)) \<noteq> 0"
 proof -
   show "cvec_dip design_beam design_source \<omega> \<noteq> 0"
-    using bad unfolding BadXGW_def by auto
+    using bad unfolding BadXGW_def jacobian_cvec_dip by auto
   have "matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0"
-    using bad unfolding BadXGW_def by auto
+    using bad unfolding BadXGW_def jacobian_cvec_dip by auto
   then show "sin (vec_nth \<omega> 1) * (cos (vec_nth \<omega> 1) - sin (vec_nth \<omega> 1) * cos (vec_nth \<omega> 2)) \<noteq> 0"
     unfolding matrix_det_cross2 design_cross2 .
 qed

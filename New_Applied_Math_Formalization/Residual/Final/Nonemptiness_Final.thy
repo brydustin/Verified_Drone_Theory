@@ -70,12 +70,12 @@ proof -
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) = 0}"
+          \<and> matrix_det (jacobian (cvec_dip design_beam design_source) (at \<omega>)) = 0}"
   let ?beam = "{x \<in> ?V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
+          \<and> matrix_det (jacobian (cvec_dip design_beam design_source) (at \<omega>)) \<noteq> 0
           \<and> cvec_dip design_beam design_source \<omega> = 0}"
   let ?reg = "{x \<in> ?V. \<exists>\<omega> :: real^2. gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
             \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
@@ -84,7 +84,7 @@ proof -
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
+          \<and> matrix_det (jacobian (cvec_dip design_beam design_source) (at \<omega>)) \<noteq> 0
           \<and> cvec_dip design_beam design_source \<omega> \<noteq> 0
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
   have meag: "meager (?null \<union> ?sing \<union> ?beam \<union> ?reg \<union> ?res)"
@@ -112,7 +112,7 @@ proof -
     next
       case a0: False
       show ?thesis
-      proof (cases "matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) = 0")
+      proof (cases "matrix_det (jacobian (cvec_dip design_beam design_source) (at \<omega>)) = 0")
         case True
         then have "x \<in> ?sing"
           using xV wD g0 h0 a0 by blast

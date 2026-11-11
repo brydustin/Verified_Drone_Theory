@@ -632,7 +632,7 @@ proof -
     and detD: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
     and cnz: "c \<noteq> 0"
     and nsurj: "\<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)"
-    using bad unfolding BadXGW_def c_def by auto
+    using bad unfolding BadXGW_def c_def jacobian_cvec_dip by auto
   have det: "cross2 \<gamma>1 \<gamma>2 \<noteq> 0"
     using detD unfolding matrix_det_cross2 \<gamma>1_def \<gamma>2_def .
   have gnz: "gain_dip \<omega> \<noteq> 0"

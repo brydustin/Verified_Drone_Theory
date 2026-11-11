@@ -123,7 +123,7 @@ the tag `pre-isabelle2026`; `main` is untouched.  Every session is strict.
 | Isabelle2026 change | Fix |
 |---|---|
 | `real_arch_pow`, `real_arch_pow_inv` renamed to `arch_pow`, `arch_pow_inv` | 9 replacements in the Munkres files, now vendored in `Munkres/` (the external copy was under no version control) |
-| HOL-Analysis ships `Higher_Differentiability_Multi`; a second theory of that name is rejected | the tree's copy leaves the chain: bridge lemma `Ck_on_iff_higher_differentiable_on` in `Appendix/Smooth_Manifolds_Bridge.thy`, `GRAD` → `GDERIV` in `Nonemptiness_Robust1` (4 lines), one `ROOT` line |
+| HOL-Analysis ships `Higher_Differentiability_Multi`; a second theory of that name is rejected | the tree's copy leaves the chain: `GRAD` → `GDERIV` in `Nonemptiness_Robust1` (4 lines), one `ROOT` line; at first a bridge lemma to the AFP predicate `higher_differentiable_on`, since 2026-11-11 `Ck_on` throughout and no bridge (§8) |
 | unqualified `det` is the determinant of a linear map | `det` → `matrix_det` (290 occurrences in 8 theories), `det_def` → `matrix_det_def` |
 | `baby_Sard` is stated for Euclidean spaces | wrapper `baby_Sard_cart` in the old form; 5 call sites |
 | `verit_minus_simplify` no longer exists | `diff_self` in one `smt` proof in `Nonemptiness_Robust3` |
@@ -335,6 +335,12 @@ unchanged).  The condition `¬ surj (DM_paper_x …)` was removed from `BadXGW`
 and from the main-beam stratum (`meager_main_beam`), where it was not used.
 `Poles_And_Fixed_Margins.thy`: `pole_degenerate`, `X0_empty_on_box_with_pole`,
 `feasible_ball_outside_X0`, `design_cvec_eq_0_iff`.
+
+2026-11-11, third change: derivatives use the Isabelle2026 library only.
+Smoothness is `Ck_on` (the AFP entry Smooth_Manifolds and the bridge theory are
+no longer needed), and the Jacobian condition in `BadXGW` and in the stratum
+lemmas is `jacobian (cvec_dip ω0 ωs) (at ω)` (`jacobian_cvec_dip` relates it to
+the explicit formula `Dcvec_dip`).
   Possible extensions, not needed for
 it: other steering angles (the residual equations of WP3 already hold for all
 angles; the charts and the other strata would need the design facts for them),

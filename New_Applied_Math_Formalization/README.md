@@ -62,7 +62,16 @@ table of formal names), `FORMALIZATION_DIARY.md` (log).
 | `Applied_Math_Oracle_Audit` | `Audit/` | fails the build if the final theorem, or a theorem on the way to it, uses an oracle; `Audit/Control` checks that the test detects a `sorry` |
 
 `Munkres/` is the vendored Munkres topology library (session
-`Munkres_Topology_Local`, two lemma names updated for Isabelle2026).
+`Munkres_Topology_Local`, two lemma names updated for Isabelle2026); it is the
+formalization of Bryant, Huerta y Munive, Kaliszyk and Urban (LNCS 16870,
+arXiv:2604.07455), and the Baire category theorem is taken from it.
+
+Derivatives are those of HOL-Analysis in Isabelle2026: the gradient and the
+Hessian of the pattern are `∇` and `∇²` of `Higher_Differentiability_Multi`,
+the Jacobian of the wavevector map is `jacobian`, smoothness is `Ck_on`
+(library of Bryant, Huerta y Munive and Foster, *Verifying Numerical Methods
+with Isabelle/HOL*, SEFM 2026, arXiv:2511.20550).  From the AFP the chain
+needs only `Jordan_Normal_Form` and `Perron_Frobenius` with their dependencies.
 `tools/` holds the build script, the numeric checks of the residual
 equations and the dependency scan `final_deps/`.
 

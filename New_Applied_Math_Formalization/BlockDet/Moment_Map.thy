@@ -658,9 +658,7 @@ text \<open>
   \<open>x \<mapsto> Blinfun (DM_paper_x x c)\<close> --- exactly the \<open>contG'\<close>-shaped \<open>C\<^sup>1\<close> input the
   rank argument consumes (paired with @{thm has_derivative_M_paper_x} as \<open>derG\<close>).
 
-  Kept in native \<open>has_derivative\<close>/\<open>continuous_on\<close> language so this stays in the
-  \<open>Applied_Math_BlockDet\<close> heap without pulling in the \<open>Smooth_Manifolds\<close>-rooted
-  higher-differentiability session.
+  Stated with \<open>has_derivative\<close> and \<open>continuous_on\<close>.
 \<close>
 
 text \<open>Building blocks: continuity of the coordinate projections and the phase.\<close>
