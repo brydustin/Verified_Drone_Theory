@@ -1,0 +1,6 @@
+session Applied_Math_M5_H0coreArc in "." = Applied_Math_M5_Wiring +
+  options [document = false, quick_and_dirty = true, timeout = 3600]
+  sessions
+    Applied_Math_M5_ArcBridge
+  theories
+    Scratch_H0coreArc

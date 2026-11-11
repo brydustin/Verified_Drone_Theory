@@ -3182,4 +3182,1138 @@ proof -
   qed
 qed
 
+section \<open>Toward eliminating \<open>\<omega>\<close>: the closed form of \<open>e_par\<close> and its \<open>\<omega>\<close>-derivative\<close>
+
+text \<open>\<^bold>\<open>The corrected plan.\<close>  The quantity actually needed to eliminate the arc
+  parameter is \<open>e_par \<bullet> (HessU's column j)\<close> for a FIXED \<open>\<omega>\<close>-coordinate
+  \<open>j\<close> --- computable from \<open>HessU\<close>'s EXISTING (already fully explicit) value,
+  no new derivative order.  At a critical point this equals
+  \<open>\<partial>Phi_par/\<partial>\<omega>_j\<close> exactly.  The route taken here: get \<open>e_par\<close>'s closed form
+  (an elementary Lagrange-identity computation reveals it is --- up to a
+  scalar --- exactly \<open>d3_s2_global_factor\<close>/\<open>d3_s1_global_factor\<close>, already
+  fully understood quantities from earlier this session), then differentiate
+  THAT via the quotient rule.\<close>
+
+lemma cross_perp2_lagrange_identity:
+  fixes Dc1 Dc2 c :: "real^2"
+  shows "(Dc2 \<bullet> perp2 c) *\<^sub>R Dc1 - (Dc1 \<bullet> perp2 c) *\<^sub>R Dc2
+       = (vec_nth Dc1 1 * vec_nth Dc2 2 - vec_nth Dc1 2 * vec_nth Dc2 1) *\<^sub>R c"
+proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+  fix i :: 2
+  show "vec_nth ((Dc2 \<bullet> perp2 c) *\<^sub>R Dc1 - (Dc1 \<bullet> perp2 c) *\<^sub>R Dc2) i
+      = vec_nth ((vec_nth Dc1 1 * vec_nth Dc2 2 - vec_nth Dc1 2 * vec_nth Dc2 1) *\<^sub>R c) i"
+    using exhaust_2[of i]
+    by (auto simp: perp2_def inner_vec_def sum_2 vector_scaleR_component
+        vector_minus_component algebra_simps)
+qed
+
+lemma Dcvec_dip_inj:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  shows "inj (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+proof -
+  have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
+  have decomp: "\<And>h::real^2. h = vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1"
+  proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+    fix h :: "real^2" and i :: 2
+    show "vec_nth h i = vec_nth (vec_nth h 1 *\<^sub>R axis 1 1 + vec_nth h 2 *\<^sub>R axis 2 1) i"
+      using exhaust_2[of i] by (auto simp: axis_def)
+  qed
+  have mv: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h = Dcvec_dip \<omega>0 \<omega>s \<omega> h" for h :: "real^2"
+  proof -
+    have expand: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h
+        = vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+    proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+      fix i :: 2
+      show "vec_nth (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) *v h) i
+          = vec_nth (vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)
+                   + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) i"
+        by (simp add: matrix_def matrix_vector_mult_def sum_2 algebra_simps)
+    qed
+    have "Dcvec_dip \<omega>0 \<omega>s \<omega> h
+        = vec_nth h 1 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) + vec_nth h 2 *\<^sub>R Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+      using decomp[of h] linear_add[OF lin] linear_cmul[OF lin] by metis
+    with expand show ?thesis by simp
+  qed
+  have bij: "bij ((*v) (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)))"
+    by (rule bij_matrix_vector_mult[OF detnz])
+  have "inj ((*v) (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)))"
+    using bij by (simp add: bij_def)
+  thus ?thesis
+    using mv unfolding inj_on_def by metis
+qed
+
+theorem e_par_closed_form:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+  shows "e_par \<omega>0 \<omega>s \<omega> =
+      vector [d3_s2_global_factor \<omega>0 \<omega>s \<omega>
+                / (2 * gain_dip \<omega> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))),
+              - d3_s1_global_factor \<omega>0 \<omega>s \<omega>
+                / (2 * gain_dip \<omega> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)))]"
+proof -
+  define D where "D = 2 * gain_dip \<omega> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))"
+  define cand :: "real^2" where "cand = vector [d3_s2_global_factor \<omega>0 \<omega>s \<omega> / D,
+                                     - d3_s1_global_factor \<omega>0 \<omega>s \<omega> / D]"
+  define Dc1 where "Dc1 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)"
+  define Dc2 where "Dc2 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+  define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  have Dnz: "D \<noteq> 0" unfolding D_def using detnz gnz by simp
+  have s2: "d3_s2_global_factor \<omega>0 \<omega>s \<omega> = 2 * gain_dip \<omega> * (Dc2 \<bullet> perp2 c)"
+    unfolding d3_s2_global_factor_def Dc2_def c_def by simp
+  have s1: "d3_s1_global_factor \<omega>0 \<omega>s \<omega> = 2 * gain_dip \<omega> * (Dc1 \<bullet> perp2 c)"
+    unfolding d3_s1_global_factor_def Dc1_def c_def by simp
+  have detdc: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+      = vec_nth Dc1 1 * vec_nth Dc2 2 - vec_nth Dc1 2 * vec_nth Dc2 1"
+  proof -
+    have m11: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) $ 1 $ 1 = vec_nth Dc1 1"
+      unfolding Dc1_def matrix_def by simp
+    have m21: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) $ 2 $ 1 = vec_nth Dc1 2"
+      unfolding Dc1_def matrix_def by simp
+    have m12: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) $ 1 $ 2 = vec_nth Dc2 1"
+      unfolding Dc2_def matrix_def by simp
+    have m22: "matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>) $ 2 $ 2 = vec_nth Dc2 2"
+      unfolding Dc2_def matrix_def by simp
+    show ?thesis
+      unfolding det_2 m11 m12 m21 m22 by simp
+  qed
+  have lagrange: "(Dc2 \<bullet> perp2 c) *\<^sub>R Dc1 - (Dc1 \<bullet> perp2 c) *\<^sub>R Dc2
+      = (vec_nth Dc1 1 * vec_nth Dc2 2 - vec_nth Dc1 2 * vec_nth Dc2 1) *\<^sub>R c"
+    by (rule cross_perp2_lagrange_identity)
+  have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
+  have cand_eq: "Dcvec_dip \<omega>0 \<omega>s \<omega> cand = c"
+  proof -
+    have lincomb: "cand = (d3_s2_global_factor \<omega>0 \<omega>s \<omega> / D) *\<^sub>R axis 1 1
+        - (d3_s1_global_factor \<omega>0 \<omega>s \<omega> / D) *\<^sub>R axis 2 1"
+      unfolding cand_def
+      by (simp add: Finite_Cartesian_Product.vec_eq_iff forall_2 vector_2
+          vector_minus_component vector_scaleR_component axis_def)
+    have "Dcvec_dip \<omega>0 \<omega>s \<omega> cand
+        = (d3_s2_global_factor \<omega>0 \<omega>s \<omega> / D) *\<^sub>R Dc1
+        - (d3_s1_global_factor \<omega>0 \<omega>s \<omega> / D) *\<^sub>R Dc2"
+      unfolding lincomb
+      by (simp add: linear_diff[OF lin] linear_cmul[OF lin] Dc1_def Dc2_def)
+    also have "\<dots> = (1/D) *\<^sub>R (d3_s2_global_factor \<omega>0 \<omega>s \<omega> *\<^sub>R Dc1
+        - d3_s1_global_factor \<omega>0 \<omega>s \<omega> *\<^sub>R Dc2)"
+      by (simp add: algebra_simps)
+    also have "\<dots> = (1/D) *\<^sub>R ((2 * gain_dip \<omega> * (Dc2 \<bullet> perp2 c)) *\<^sub>R Dc1
+        - (2 * gain_dip \<omega> * (Dc1 \<bullet> perp2 c)) *\<^sub>R Dc2)"
+      unfolding s1 s2 ..
+    also have "\<dots> = (2 * gain_dip \<omega> / D)
+        *\<^sub>R ((Dc2 \<bullet> perp2 c) *\<^sub>R Dc1 - (Dc1 \<bullet> perp2 c) *\<^sub>R Dc2)"
+      by (simp add: algebra_simps)
+    also have "\<dots> = (2 * gain_dip \<omega> / D)
+        *\<^sub>R ((vec_nth Dc1 1 * vec_nth Dc2 2 - vec_nth Dc1 2 * vec_nth Dc2 1) *\<^sub>R c)"
+      unfolding lagrange ..
+    also have "\<dots> = (2 * gain_dip \<omega> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) / D) *\<^sub>R c"
+      unfolding detdc[symmetric] by simp
+    also have "\<dots> = (D / D) *\<^sub>R c"
+      unfolding D_def by simp
+    also have "\<dots> = c"
+      using Dnz by simp
+    finally show ?thesis .
+  qed
+  have epar_eq: "Dcvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>) = c"
+    unfolding c_def by (rule Dcvec_dip_e_par[OF detnz])
+  have eq_img: "Dcvec_dip \<omega>0 \<omega>s \<omega> cand = Dcvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>)"
+    using cand_eq epar_eq by simp
+  have inj: "inj (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule Dcvec_dip_inj[OF detnz])
+  have "cand = e_par \<omega>0 \<omega>s \<omega>"
+    using eq_img inj unfolding inj_def by blast
+  thus ?thesis unfolding cand_def D_def by simp
+qed
+
+lemma bounded_linear_perp2: "bounded_linear (perp2 :: real^2 \<Rightarrow> real^2)"
+  unfolding perp2_def
+  by (intro bounded_linearI') (simp_all add: Finite_Cartesian_Product.vec_eq_iff forall_2)
+
+lemma has_derivative_perp2 [derivative_intros]:
+  fixes c :: "real^2"
+  shows "(perp2 has_derivative perp2) (at c)"
+  by (simp only: bounded_linear_perp2 bounded_linear_imp_has_derivative)
+
+lemma has_derivative_d3_s_global_factor:
+  fixes j :: 2 and \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. 2 * gain_dip \<eta>
+          * (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<eta>)))
+      has_derivative
+        (\<lambda>h. 2 *
+          (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + gain_dip \<omega>
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h)
+                + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) h \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))))
+      (at \<omega>)"
+proof -
+  have dGain: "(gain_dip has_derivative
+      (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1))) (at \<omega>)"
+    by (rule gain_dip_has_derivative)
+  have dDc: "((\<lambda>\<eta>. Dcvec_dip \<omega>0 \<omega>s \<eta> (axis j 1)) has_derivative
+      D2cvec_dip \<omega>0 \<omega>s \<omega> (axis j 1)) (at \<omega>)"
+    by (rule has_derivative_Dcvec_dip)
+  have dPerp: "((\<lambda>\<eta>. perp2 (cvec_dip \<omega>0 \<omega>s \<eta>)) has_derivative
+      (\<lambda>h. perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h))) (at \<omega>)"
+    by (rule has_derivative_compose[OF has_derivative_cvec_dip has_derivative_perp2])
+  have dInner: "((\<lambda>\<eta>. Dcvec_dip \<omega>0 \<omega>s \<eta> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<eta>))
+      has_derivative
+        (\<lambda>h. Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h)
+          + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) h \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))
+      (at \<omega>)"
+    by (rule has_derivative_inner[OF dDc dPerp])
+  have dProd: "((\<lambda>\<eta>. gain_dip \<eta>
+          * (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<eta>)))
+      has_derivative
+        (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + gain_dip \<omega>
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h)
+                + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) h \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))))
+      (at \<omega>)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF dGain dInner]])
+       (simp add: fun_eq_iff algebra_simps)
+  have scaled: "((\<lambda>\<eta>. 2 * (gain_dip \<eta>
+          * (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<eta>))))
+      has_derivative
+        (\<lambda>h. 2 *
+          (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + gain_dip \<omega>
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h)
+                + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) h \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))))
+      (at \<omega>)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF has_derivative_const dProd]])
+       (simp add: fun_eq_iff algebra_simps)
+  show ?thesis
+    using scaled by (simp add: algebra_simps)
+qed
+
+lemma has_derivative_d3_s1_global_factor:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. d3_s1_global_factor \<omega>0 \<omega>s \<eta>) has_derivative
+        (\<lambda>h. 2 *
+          (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + gain_dip \<omega>
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) \<bullet> perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h)
+                + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) h \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))))
+      (at \<omega>)"
+  unfolding d3_s1_global_factor_def
+  by (rule has_derivative_d3_s_global_factor)
+
+lemma has_derivative_d3_s2_global_factor:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. d3_s2_global_factor \<omega>0 \<omega>s \<eta>) has_derivative
+        (\<lambda>h. 2 *
+          (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))
+           + gain_dip \<omega>
+             * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) \<bullet> perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h)
+                + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) h \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))))
+      (at \<omega>)"
+  unfolding d3_s2_global_factor_def
+  by (rule has_derivative_d3_s_global_factor)
+
+definition Dd3_s_global_factor ::
+  "2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "Dd3_s_global_factor j \<omega>0 \<omega>s \<omega> h =
+     2 * (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>))
+          + gain_dip \<omega>
+            * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) \<bullet> perp2 (Dcvec_dip \<omega>0 \<omega>s \<omega> h)
+               + D2cvec_dip \<omega>0 \<omega>s \<omega> (axis j 1) h \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<omega>)))"
+
+lemma has_derivative_d3_s_global_factor_D:
+  fixes j :: 2 and \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. 2 * gain_dip \<eta>
+          * (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis j 1) \<bullet> perp2 (cvec_dip \<omega>0 \<omega>s \<eta>)))
+      has_derivative Dd3_s_global_factor j \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+  unfolding Dd3_s_global_factor_def
+  by (rule has_derivative_d3_s_global_factor)
+
+lemma has_derivative_d3_s1_global_factor_D:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. d3_s1_global_factor \<omega>0 \<omega>s \<eta>) has_derivative
+      Dd3_s_global_factor 1 \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+  unfolding d3_s1_global_factor_def Dd3_s_global_factor_def
+  by (rule has_derivative_d3_s_global_factor)
+
+lemma has_derivative_d3_s2_global_factor_D:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. d3_s2_global_factor \<omega>0 \<omega>s \<eta>) has_derivative
+      Dd3_s_global_factor 2 \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+  unfolding d3_s2_global_factor_def Dd3_s_global_factor_def
+  by (rule has_derivative_d3_s_global_factor)
+
+definition Ddet_Dcvec_dip :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "Ddet_Dcvec_dip \<omega>0 \<omega>s \<omega> h =
+     vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) h) 1
+       * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 2
+   + vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 1
+       * vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) h) 2
+   - vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) h) 2
+       * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)) 1
+   - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)) 2
+       * vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) h) 1"
+
+lemma has_derivative_det_matrix_Dcvec_dip:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>))) has_derivative
+      Ddet_Dcvec_dip \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+proof -
+  have d11: "((\<lambda>\<eta>. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 1 1)) 1) has_derivative
+      (\<lambda>h. vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) h) 1)) (at \<omega>)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_Dcvec_dip])
+  have d12: "((\<lambda>\<eta>. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 1 1)) 2) has_derivative
+      (\<lambda>h. vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) h) 2)) (at \<omega>)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_Dcvec_dip])
+  have d21: "((\<lambda>\<eta>. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 2 1)) 1) has_derivative
+      (\<lambda>h. vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) h) 1)) (at \<omega>)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_Dcvec_dip])
+  have d22: "((\<lambda>\<eta>. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 2 1)) 2) has_derivative
+      (\<lambda>h. vec_nth (D2cvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) h) 2)) (at \<omega>)"
+    by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_Dcvec_dip])
+  have deteq: "(\<lambda>\<eta>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>))) =
+      (\<lambda>\<eta>. vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 1 1)) 1
+           * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 2 1)) 2
+         - vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 1 1)) 2
+           * vec_nth (Dcvec_dip \<omega>0 \<omega>s \<eta> (axis 2 1)) 1)"
+    by (rule ext) (simp add: det_2 matrix_def)
+  show ?thesis
+    unfolding deteq Ddet_Dcvec_dip_def
+    by (rule has_derivative_eq_rhs[OF has_derivative_diff[OF
+          has_derivative_mult[OF d11 d22] has_derivative_mult[OF d12 d21]]])
+       (simp add: fun_eq_iff algebra_simps)
+qed
+
+definition e_par_denominator :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "e_par_denominator \<omega>0 \<omega>s \<omega> =
+     2 * gain_dip \<omega> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))"
+
+definition De_par_denominator :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
+  "De_par_denominator \<omega>0 \<omega>s \<omega> h =
+     2 * (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+          * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+        + gain_dip \<omega> * Ddet_Dcvec_dip \<omega>0 \<omega>s \<omega> h)"
+
+lemma has_derivative_e_par_denominator:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "((\<lambda>\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta>) has_derivative
+      De_par_denominator \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+proof -
+  have dGain: "(gain_dip has_derivative
+      (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1))) (at \<omega>)"
+    by (rule gain_dip_has_derivative)
+  have dDet: "((\<lambda>\<eta>. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>))) has_derivative
+      Ddet_Dcvec_dip \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+    by (rule has_derivative_det_matrix_Dcvec_dip)
+  have dProd: "((\<lambda>\<eta>. gain_dip \<eta> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>))) has_derivative
+      (\<lambda>h. frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+            * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+          + gain_dip \<omega> * Ddet_Dcvec_dip \<omega>0 \<omega>s \<omega> h)) (at \<omega>)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF dGain dDet]])
+       (simp add: fun_eq_iff algebra_simps)
+  have scaled: "((\<lambda>\<eta>. 2 * (gain_dip \<eta> * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)))) has_derivative
+      (\<lambda>h. 2 * (frechet_derivative gdip (at (vec_nth \<omega> 1)) (vec_nth h 1)
+            * det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+          + gain_dip \<omega> * Ddet_Dcvec_dip \<omega>0 \<omega>s \<omega> h))) (at \<omega>)"
+    by (rule has_derivative_eq_rhs[OF has_derivative_mult[OF has_derivative_const dProd]])
+       (simp add: fun_eq_iff algebra_simps)
+  show ?thesis
+    using scaled unfolding e_par_denominator_def De_par_denominator_def
+    by (simp add: algebra_simps)
+qed
+
+definition e_par_closed_form_rhs :: "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2" where
+  "e_par_closed_form_rhs \<omega>0 \<omega>s \<omega> =
+     vector [d3_s2_global_factor \<omega>0 \<omega>s \<omega> / e_par_denominator \<omega>0 \<omega>s \<omega>,
+             - d3_s1_global_factor \<omega>0 \<omega>s \<omega> / e_par_denominator \<omega>0 \<omega>s \<omega>]"
+
+definition De_par_closed_form_rhs ::
+  "real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real^2" where
+  "De_par_closed_form_rhs \<omega>0 \<omega>s \<omega> h =
+     vector [
+       (Dd3_s_global_factor 2 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+          - d3_s2_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+        / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>),
+       - ((Dd3_s_global_factor 1 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+          - d3_s1_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+        / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>))]"
+
+lemma e_par_closed_form_rhs_eq:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+  shows "e_par \<omega>0 \<omega>s \<omega> = e_par_closed_form_rhs \<omega>0 \<omega>s \<omega>"
+  using e_par_closed_form[OF detnz gnz]
+  unfolding e_par_closed_form_rhs_def e_par_denominator_def .
+
+lemma has_derivative_e_par_closed_form_rhs:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes denz: "e_par_denominator \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  shows "((\<lambda>\<eta>. e_par_closed_form_rhs \<omega>0 \<omega>s \<eta>) has_derivative
+      De_par_closed_form_rhs \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+proof -
+  have ds1: "((\<lambda>\<eta>. d3_s1_global_factor \<omega>0 \<omega>s \<eta>) has_derivative
+      Dd3_s_global_factor 1 \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+    by (rule has_derivative_d3_s1_global_factor_D)
+  have ds2: "((\<lambda>\<eta>. d3_s2_global_factor \<omega>0 \<omega>s \<eta>) has_derivative
+      Dd3_s_global_factor 2 \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+    by (rule has_derivative_d3_s2_global_factor_D)
+  have dden: "((\<lambda>\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta>) has_derivative
+      De_par_denominator \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+    by (rule has_derivative_e_par_denominator)
+  have q2: "((\<lambda>\<eta>. d3_s2_global_factor \<omega>0 \<omega>s \<eta> / e_par_denominator \<omega>0 \<omega>s \<eta>)
+      has_derivative
+        (\<lambda>h. (Dd3_s_global_factor 2 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+          - d3_s2_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+        / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>))) (at \<omega>)"
+    by (rule has_derivative_divide'[OF ds2 dden denz])
+  have q1: "((\<lambda>\<eta>. d3_s1_global_factor \<omega>0 \<omega>s \<eta> / e_par_denominator \<omega>0 \<omega>s \<eta>)
+      has_derivative
+        (\<lambda>h. (Dd3_s_global_factor 1 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+          - d3_s1_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+        / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>))) (at \<omega>)"
+    by (rule has_derivative_divide'[OF ds1 dden denz])
+  have vder: "((\<lambda>\<eta>.
+        (d3_s2_global_factor \<omega>0 \<omega>s \<eta> / e_par_denominator \<omega>0 \<omega>s \<eta>) *\<^sub>R axis 1 1
+      + (-(d3_s1_global_factor \<omega>0 \<omega>s \<eta> / e_par_denominator \<omega>0 \<omega>s \<eta>)) *\<^sub>R axis 2 1)
+      has_derivative
+        (\<lambda>h.
+          ((Dd3_s_global_factor 2 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+              - d3_s2_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+            / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>)) *\<^sub>R axis 1 1
+        + (- ((Dd3_s_global_factor 1 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+              - d3_s1_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+            / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>))) *\<^sub>R axis 2 1))
+      (at \<omega>)"
+    by (rule has_derivative_add[OF has_derivative_scaleR_left[OF q2]
+          has_derivative_scaleR_left[OF has_derivative_minus[OF q1]]])
+  have lhs: "(\<lambda>\<eta>. e_par_closed_form_rhs \<omega>0 \<omega>s \<eta>) =
+      (\<lambda>\<eta>. (d3_s2_global_factor \<omega>0 \<omega>s \<eta> / e_par_denominator \<omega>0 \<omega>s \<eta>) *\<^sub>R axis 1 1
+          + (-(d3_s1_global_factor \<omega>0 \<omega>s \<eta> / e_par_denominator \<omega>0 \<omega>s \<eta>)) *\<^sub>R axis 2 1)"
+    by (rule ext)
+       (simp add: e_par_closed_form_rhs_def Finite_Cartesian_Product.vec_eq_iff
+          forall_2 vector_2 vector_scaleR_component axis_def)
+  have rhs: "(\<lambda>h.
+          ((Dd3_s_global_factor 2 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+              - d3_s2_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+            / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>)) *\<^sub>R axis 1 1
+        + (- ((Dd3_s_global_factor 1 \<omega>0 \<omega>s \<omega> h * e_par_denominator \<omega>0 \<omega>s \<omega>
+              - d3_s1_global_factor \<omega>0 \<omega>s \<omega> * De_par_denominator \<omega>0 \<omega>s \<omega> h)
+            / (e_par_denominator \<omega>0 \<omega>s \<omega> * e_par_denominator \<omega>0 \<omega>s \<omega>))) *\<^sub>R axis 2 1)
+      = De_par_closed_form_rhs \<omega>0 \<omega>s \<omega>"
+    by (rule ext)
+       (simp add: De_par_closed_form_rhs_def Finite_Cartesian_Product.vec_eq_iff
+          forall_2 vector_2 vector_scaleR_component axis_def)
+  show ?thesis
+    unfolding lhs rhs[symmetric] by (rule vder)
+qed
+
+lemma e_par_denominator_nonzero_iff:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  shows "e_par_denominator \<omega>0 \<omega>s \<omega> \<noteq> 0
+      \<longleftrightarrow> gain_dip \<omega> \<noteq> 0 \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+  unfolding e_par_denominator_def by simp
+
+lemma continuous_on_e_par_denominator:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "continuous_on UNIV (e_par_denominator \<omega>0 \<omega>s)"
+proof (rule continuous_at_imp_continuous_on, rule ballI)
+  fix \<eta> :: "real^2"
+  assume "\<eta> \<in> UNIV"
+  show "continuous (at \<eta>) (e_par_denominator \<omega>0 \<omega>s)"
+    by (rule has_derivative_continuous[OF has_derivative_e_par_denominator])
+qed
+
+lemma open_e_par_denominator_nonzero:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "open {\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}"
+  using open_Collect_neq[OF continuous_on_e_par_denominator continuous_on_const] by simp
+
+lemma e_par_closed_form_rhs_eq_on_denominator_nonzero:
+  fixes \<omega>0 \<omega>s \<eta> :: "real^2"
+  assumes denz: "e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0"
+  shows "e_par \<omega>0 \<omega>s \<eta> = e_par_closed_form_rhs \<omega>0 \<omega>s \<eta>"
+  using denz e_par_closed_form_rhs_eq[of \<omega>0 \<omega>s \<eta>]
+  unfolding e_par_denominator_nonzero_iff by blast
+
+lemma e_par_closed_form_rhs_local_eq:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+  obtains U where "open U" "\<omega> \<in> U"
+    "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> gain_dip \<eta> \<noteq> 0"
+    "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> e_par \<omega>0 \<omega>s \<eta> = e_par_closed_form_rhs \<omega>0 \<omega>s \<eta>"
+proof -
+  define U where "U = {\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}"
+  have openU: "open U"
+    unfolding U_def by (rule open_e_par_denominator_nonzero)
+  have \<omega>U: "\<omega> \<in> U"
+    using detnz gnz unfolding U_def e_par_denominator_nonzero_iff by simp
+  have gnzU: "gain_dip \<eta> \<noteq> 0" if "\<eta> \<in> U" for \<eta>
+    using that unfolding U_def e_par_denominator_nonzero_iff by simp
+  have detnzU: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0" if "\<eta> \<in> U" for \<eta>
+    using that unfolding U_def e_par_denominator_nonzero_iff by simp
+  have eqU: "e_par \<omega>0 \<omega>s \<eta> = e_par_closed_form_rhs \<omega>0 \<omega>s \<eta>" if "\<eta> \<in> U" for \<eta>
+  proof (rule e_par_closed_form_rhs_eq_on_denominator_nonzero)
+    show "e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0"
+      using that unfolding U_def by simp
+  qed
+  show ?thesis
+    by (rule that[OF openU \<omega>U gnzU detnzU eqU])
+qed
+
+theorem has_derivative_e_par:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+  shows "((\<lambda>\<eta>. e_par \<omega>0 \<omega>s \<eta>) has_derivative
+      De_par_closed_form_rhs \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+proof -
+  have denz: "e_par_denominator \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    using detnz gnz unfolding e_par_denominator_nonzero_iff by simp
+  have drhs: "((\<lambda>\<eta>. e_par_closed_form_rhs \<omega>0 \<omega>s \<eta>) has_derivative
+      De_par_closed_form_rhs \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+    by (rule has_derivative_e_par_closed_form_rhs[OF denz])
+  obtain U where openU: "open U" and \<omega>U: "\<omega> \<in> U"
+    and eqU: "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> e_par \<omega>0 \<omega>s \<eta> = e_par_closed_form_rhs \<omega>0 \<omega>s \<eta>"
+    using e_par_closed_form_rhs_local_eq[OF detnz gnz] by metis
+  show ?thesis
+    using drhs eqU openU \<omega>U has_derivative_transform_within_open by fastforce
+qed
+
+lemma continuous_on_e_par_denominator_nonzero:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "continuous_on {\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0} (e_par \<omega>0 \<omega>s)"
+proof (rule continuous_at_imp_continuous_on, rule ballI)
+  fix \<eta> :: "real^2"
+  assume \<eta>U: "\<eta> \<in> {\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}"
+  have detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    using \<eta>U unfolding e_par_denominator_nonzero_iff by simp
+  have gnz: "gain_dip \<eta> \<noteq> 0"
+    using \<eta>U unfolding e_par_denominator_nonzero_iff by simp
+  show "continuous (at \<eta>) (e_par \<omega>0 \<omega>s)"
+    by (rule has_derivative_continuous[OF has_derivative_e_par[OF detnz gnz]])
+qed
+
+lemma continuous_on_HessU_col_e_par_omega:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s :: "real^2" and j :: 2
+  shows "continuous_on {\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}
+      (\<lambda>\<eta>. (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> *v axis j 1) \<bullet>
+            e_par \<omega>0 \<omega>s \<eta>)"
+proof -
+  let ?U = "{\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}"
+  have hcont: "continuous_on ?U (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x)"
+    by (rule HessU_dip_continuous_on)
+  have colcont: "continuous_on ?U
+      (\<lambda>\<eta>. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> *v axis j 1)"
+    by (rule continuous_on_matvec[OF hcont continuous_on_const])
+  have econt: "continuous_on ?U (e_par \<omega>0 \<omega>s)"
+    by (rule continuous_on_e_par_denominator_nonzero)
+  show ?thesis
+    by (intro continuous_intros colcont econt)
+qed
+
+lemma open_e_par_denominator_nonzero_snd:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "open {p::((real^2)^'n::finite) \<times> (real^2).
+      e_par_denominator \<omega>0 \<omega>s (snd p) \<noteq> 0}"
+proof -
+  have cont: "continuous_on (UNIV :: (((real^2)^'n) \<times> (real^2)) set)
+      (\<lambda>p. e_par_denominator \<omega>0 \<omega>s (snd p))"
+    by (rule continuous_on_compose2[OF continuous_on_e_par_denominator
+          continuous_on_snd[OF continuous_on_id] subset_UNIV])
+  have "open ((UNIV :: (((real^2)^'n) \<times> (real^2)) set) \<inter>
+      (\<lambda>p. e_par_denominator \<omega>0 \<omega>s (snd p)) -` (- {0}))"
+    by (rule continuous_open_preimage[OF cont open_UNIV])
+       (rule open_Compl[OF closed_singleton])
+  moreover have "((UNIV :: (((real^2)^'n) \<times> (real^2)) set) \<inter>
+      (\<lambda>p. e_par_denominator \<omega>0 \<omega>s (snd p)) -` (- {0}))
+      = {p. e_par_denominator \<omega>0 \<omega>s (snd p) \<noteq> 0}"
+    by auto
+  ultimately show ?thesis by simp
+qed
+
+lemma continuous_on_e_par_snd_denominator_nonzero:
+  fixes \<omega>0 \<omega>s :: "real^2"
+  shows "continuous_on {p::((real^2)^'n::finite) \<times> (real^2).
+      e_par_denominator \<omega>0 \<omega>s (snd p) \<noteq> 0}
+      (\<lambda>p. e_par \<omega>0 \<omega>s (snd p))"
+proof -
+  let ?P = "{p::((real^2)^'n) \<times> (real^2). e_par_denominator \<omega>0 \<omega>s (snd p) \<noteq> 0}"
+  let ?D = "{\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}"
+  have sndcont: "continuous_on ?P snd"
+    by (rule continuous_on_snd[OF continuous_on_id])
+  have sndsub: "snd ` ?P \<subseteq> ?D"
+    by auto
+  show ?thesis
+    by (rule continuous_on_compose2[OF continuous_on_e_par_denominator_nonzero sndcont sndsub])
+qed
+
+lemma continuous_on_HessU_col_e_par_joint:
+  fixes \<omega>0 \<omega>s :: "real^2" and j :: 2
+  shows "continuous_on {p::((real^2)^'n::finite) \<times> (real^2).
+      e_par_denominator \<omega>0 \<omega>s (snd p) \<noteq> 0}
+      (\<lambda>p. (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p) *v axis j 1) \<bullet>
+            e_par \<omega>0 \<omega>s (snd p))"
+proof -
+  let ?P = "{p::((real^2)^'n) \<times> (real^2). e_par_denominator \<omega>0 \<omega>s (snd p) \<noteq> 0}"
+  have hcont: "continuous_on ?P
+      (\<lambda>p. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))"
+    by (rule continuous_on_subset[OF continuous_on_HessU_dip_joint]) simp
+  have colcont: "continuous_on ?P
+      (\<lambda>p. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p) *v axis j 1)"
+    by (rule continuous_on_matvec[OF hcont continuous_on_const])
+  have econt: "continuous_on ?P (\<lambda>p. e_par \<omega>0 \<omega>s (snd p))"
+    by (rule continuous_on_e_par_snd_denominator_nonzero)
+  show ?thesis
+    by (intro continuous_intros colcont econt)
+qed
+
+theorem has_derivative_Phi_par_omega:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+  shows "((\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) has_derivative
+      (\<lambda>h. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> \<bullet> De_par_closed_form_rhs \<omega>0 \<omega>s \<omega> h
+          + (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v h) \<bullet> e_par \<omega>0 \<omega>s \<omega>))
+      (at \<omega>)"
+proof -
+  have dGrad: "((\<lambda>\<eta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta>) has_derivative
+      (\<lambda>h. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v h)) (at \<omega>)"
+    by (rule gradU_dip_has_derivative)
+  have dE: "((\<lambda>\<eta>. e_par \<omega>0 \<omega>s \<eta>) has_derivative
+      De_par_closed_form_rhs \<omega>0 \<omega>s \<omega>) (at \<omega>)"
+    by (rule has_derivative_e_par[OF detnz gnz])
+  have dInner: "((\<lambda>\<eta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> \<bullet> e_par \<omega>0 \<omega>s \<eta>)
+      has_derivative
+      (\<lambda>h. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> \<bullet> De_par_closed_form_rhs \<omega>0 \<omega>s \<omega> h
+          + (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v h) \<bullet> e_par \<omega>0 \<omega>s \<omega>))
+      (at \<omega>)"
+    by (rule has_derivative_inner[OF dGrad dE])
+  have eq: "(\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s)
+      = (\<lambda>\<eta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> \<bullet> e_par \<omega>0 \<omega>s \<eta>)"
+    by (rule ext) (simp add: Phi_par_def)
+  show ?thesis
+    unfolding eq by (rule dInner)
+qed
+
+lemma frechet_derivative_Phi_par_omega:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> h :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+  shows "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) h
+      = gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> \<bullet> De_par_closed_form_rhs \<omega>0 \<omega>s \<omega> h
+        + (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v h) \<bullet> e_par \<omega>0 \<omega>s \<omega>"
+  by (rule fun_cong[OF frechet_derivative_at[OF has_derivative_Phi_par_omega[OF detnz gnz],
+        symmetric]])
+
+theorem frechet_derivative_Phi_par_omega_critical:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> h :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+  shows "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) h
+      = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v h) \<bullet> e_par \<omega>0 \<omega>s \<omega>"
+  using frechet_derivative_Phi_par_omega[OF detnz gnz, of x h] crit by simp
+
+corollary frechet_derivative_Phi_par_omega_axis_critical:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> :: "real^2" and j :: 2
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+  shows "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis j 1)
+      = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis j 1) \<bullet> e_par \<omega>0 \<omega>s \<omega>"
+  by (rule frechet_derivative_Phi_par_omega_critical[OF detnz gnz crit])
+
+lemma e_par_nonzero:
+  fixes \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  shows "e_par \<omega>0 \<omega>s \<omega> \<noteq> 0"
+proof
+  assume ez: "e_par \<omega>0 \<omega>s \<omega> = 0"
+  have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
+    by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
+  have "cvec_dip \<omega>0 \<omega>s \<omega> = Dcvec_dip \<omega>0 \<omega>s \<omega> (e_par \<omega>0 \<omega>s \<omega>)"
+    using Dcvec_dip_e_par[OF detnz] by simp
+  also have "\<dots> = 0"
+    using ez linear_0[OF lin] by simp
+  finally show False
+    using cnz by simp
+qed
+
+lemma invertible_matrix_column_inner_nonzero:
+  fixes H :: "real^2^2" and e :: "real^2"
+  assumes detnz: "det H \<noteq> 0"
+    and enz: "e \<noteq> 0"
+  shows "((H *v axis 1 1) \<bullet> e) \<noteq> 0 \<or> ((H *v axis 2 1) \<bullet> e) \<noteq> 0"
+proof (rule ccontr)
+  assume contra: "\<not> ?thesis"
+  hence z1: "(H *v axis 1 1) \<bullet> e = 0"
+    and z2: "(H *v axis 2 1) \<bullet> e = 0"
+    by simp_all
+  have bij: "bij ((*v) H)"
+    by (rule bij_matrix_vector_mult[OF detnz])
+  obtain h :: "real^2" where he: "e = H *v h"
+    using bij_is_surj[OF bij] unfolding surj_def by blast
+  have expand: "H *v h = vec_nth h 1 *\<^sub>R (H *v axis 1 1) + vec_nth h 2 *\<^sub>R (H *v axis 2 1)"
+  proof (rule Finite_Cartesian_Product.vec_eq_iff[THEN iffD2], intro allI)
+    fix i :: 2
+    show "vec_nth (H *v h) i
+        = vec_nth (vec_nth h 1 *\<^sub>R (H *v axis 1 1) + vec_nth h 2 *\<^sub>R (H *v axis 2 1)) i"
+      by (simp add: matrix_vector_mult_def sum_2 axis_def algebra_simps)
+  qed
+  have "(H *v h) \<bullet> e = 0"
+    unfolding expand using z1 z2 by (simp add: inner_add_left inner_scaleR_left)
+  hence "e \<bullet> e = 0"
+    using he by simp
+  thus False
+    using enz by simp
+qed
+
+theorem Phi_par_omega_axis_critical_nonzero_disjunction:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and detHnz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  shows "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis 1 1) \<noteq> 0
+      \<or> frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis 2 1) \<noteq> 0"
+proof -
+  have enz: "e_par \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    by (rule e_par_nonzero[OF detJnz cnz])
+  have disj: "((HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 1 1) \<bullet> e_par \<omega>0 \<omega>s \<omega>) \<noteq> 0
+      \<or> ((HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 2 1) \<bullet> e_par \<omega>0 \<omega>s \<omega>) \<noteq> 0"
+    by (rule invertible_matrix_column_inner_nonzero[OF detHnz enz])
+  have d1: "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis 1 1)
+      = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 1 1) \<bullet> e_par \<omega>0 \<omega>s \<omega>"
+    by (rule frechet_derivative_Phi_par_omega_axis_critical[OF detJnz gnz crit])
+  have d2: "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis 2 1)
+      = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 2 1) \<bullet> e_par \<omega>0 \<omega>s \<omega>"
+    by (rule frechet_derivative_Phi_par_omega_axis_critical[OF detJnz gnz crit])
+  show ?thesis
+    using disj unfolding d1 d2 .
+qed
+
+corollary Phi_par_omega_axis_critical_nonzero_exists:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and detHnz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  shows "\<exists>j::2. frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis j 1) \<noteq> 0"
+  using Phi_par_omega_axis_critical_nonzero_disjunction[OF detJnz gnz cnz crit detHnz]
+  by blast
+
+corollary Phi_par_omega_axis_critical_nonzero_obtains:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and detHnz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  obtains j :: 2 where
+    "frechet_derivative (\<lambda>\<eta>. Phi_par x \<eta> \<omega>0 \<omega>s) (at \<omega>) (axis j 1) \<noteq> 0"
+  using Phi_par_omega_axis_critical_nonzero_exists[OF detJnz gnz cnz crit detHnz]
+  by blast
+
+theorem Phi_par_omega_axis_critical_nonzero_local:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and detHnz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  obtains j :: 2 and U where
+    "open U" and "\<omega> \<in> U"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow> gain_dip \<eta> \<noteq> 0"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow>
+           (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> *v axis j 1) \<bullet>
+             e_par \<omega>0 \<omega>s \<eta> \<noteq> 0"
+    and "\<And>\<eta>. \<eta> \<in> U \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> = 0 \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1) \<noteq> 0"
+proof -
+  have enz: "e_par \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    by (rule e_par_nonzero[OF detJnz cnz])
+  have col_disj: "((HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 1 1) \<bullet>
+          e_par \<omega>0 \<omega>s \<omega>) \<noteq> 0
+      \<or> ((HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 2 1) \<bullet>
+          e_par \<omega>0 \<omega>s \<omega>) \<noteq> 0"
+    by (rule invertible_matrix_column_inner_nonzero[OF detHnz enz])
+  then obtain j :: 2 where colnz: "(HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis j 1) \<bullet>
+      e_par \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    by blast
+  let ?D = "{\<eta>. e_par_denominator \<omega>0 \<omega>s \<eta> \<noteq> 0}"
+  let ?F = "\<lambda>\<eta>. (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> *v axis j 1) \<bullet>
+      e_par \<omega>0 \<omega>s \<eta>"
+  define U where "U = ?D \<inter> ?F -` (- {0})"
+  have Dopen: "open ?D"
+    by (rule open_e_par_denominator_nonzero)
+  have Fcont: "continuous_on ?D ?F"
+    by (rule continuous_on_HessU_col_e_par_omega)
+  have Uopen: "open U"
+    unfolding U_def
+    by (rule continuous_open_preimage[OF Fcont Dopen])
+       (rule open_Compl[OF closed_singleton])
+  have denz: "e_par_denominator \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    using detJnz gnz unfolding e_par_denominator_nonzero_iff by simp
+  have \<omega>U: "\<omega> \<in> U"
+    using denz colnz unfolding U_def by simp
+  have detU: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0" if "\<eta> \<in> U" for \<eta>
+    using that unfolding U_def e_par_denominator_nonzero_iff by simp
+  have gainU: "gain_dip \<eta> \<noteq> 0" if "\<eta> \<in> U" for \<eta>
+    using that unfolding U_def e_par_denominator_nonzero_iff by simp
+  have colU: "?F \<eta> \<noteq> 0" if "\<eta> \<in> U" for \<eta>
+    using that unfolding U_def by simp
+  have dU: "frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1) \<noteq> 0"
+    if "\<eta> \<in> U" and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<eta> = 0" for \<eta>
+  proof -
+    have "frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1)
+        = ?F \<eta>"
+      by (rule frechet_derivative_Phi_par_omega_axis_critical[OF detU[OF that(1)]
+            gainU[OF that(1)] that(2)])
+    thus ?thesis
+      using colU[OF that(1)] by simp
+  qed
+  show ?thesis
+    by (rule that[OF Uopen \<omega>U detU gainU colU dU])
+qed
+
+theorem Phi_par_omega_axis_critical_nonzero_product_local:
+  fixes x :: "(real^2)^'n::finite" and \<omega>0 \<omega>s \<omega> :: "real^2"
+  assumes detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and gnz: "gain_dip \<omega> \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    and crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+    and detHnz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  obtains j :: 2 and W where
+    "open W" and "(x, \<omega>) \<in> W"
+    and "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    and "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow> gain_dip \<eta> \<noteq> 0"
+    and "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow>
+           (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<eta> *v axis j 1) \<bullet>
+             e_par \<omega>0 \<omega>s \<eta> \<noteq> 0"
+    and "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<eta> = 0 \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par y \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1) \<noteq> 0"
+proof -
+  have enz: "e_par \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    by (rule e_par_nonzero[OF detJnz cnz])
+  have col_disj: "((HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 1 1) \<bullet>
+          e_par \<omega>0 \<omega>s \<omega>) \<noteq> 0
+      \<or> ((HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis 2 1) \<bullet>
+          e_par \<omega>0 \<omega>s \<omega>) \<noteq> 0"
+    by (rule invertible_matrix_column_inner_nonzero[OF detHnz enz])
+  then obtain j :: 2 where colnz: "(HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> *v axis j 1) \<bullet>
+      e_par \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    by blast
+  let ?D = "{p::((real^2)^'n) \<times> (real^2). e_par_denominator \<omega>0 \<omega>s (snd p) \<noteq> 0}"
+  let ?F = "\<lambda>p::((real^2)^'n) \<times> (real^2).
+      (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p) *v axis j 1) \<bullet>
+        e_par \<omega>0 \<omega>s (snd p)"
+  define W where "W = ?D \<inter> ?F -` (- {0})"
+  have Dopen: "open ?D"
+    by (rule open_e_par_denominator_nonzero_snd)
+  have Fcont: "continuous_on ?D ?F"
+    by (rule continuous_on_HessU_col_e_par_joint)
+  have Wopen: "open W"
+    unfolding W_def
+    by (rule continuous_open_preimage[OF Fcont Dopen])
+       (rule open_Compl[OF closed_singleton])
+  have denz: "e_par_denominator \<omega>0 \<omega>s \<omega> \<noteq> 0"
+    using detJnz gnz unfolding e_par_denominator_nonzero_iff by simp
+  have xW: "(x, \<omega>) \<in> W"
+    using denz colnz unfolding W_def by simp
+  have detW: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    if "(y, \<eta>) \<in> W" for y \<eta>
+    using that unfolding W_def e_par_denominator_nonzero_iff by simp
+  have gainW: "gain_dip \<eta> \<noteq> 0" if "(y, \<eta>) \<in> W" for y \<eta>
+    using that unfolding W_def e_par_denominator_nonzero_iff by simp
+  have colW: "(HessU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<eta> *v axis j 1) \<bullet>
+      e_par \<omega>0 \<omega>s \<eta> \<noteq> 0" if "(y, \<eta>) \<in> W" for y \<eta>
+  proof -
+    have "?F (y, \<eta>) \<noteq> 0"
+      using that unfolding W_def by simp
+    thus ?thesis by simp
+  qed
+  have dW: "frechet_derivative (\<lambda>\<zeta>. Phi_par y \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1) \<noteq> 0"
+    if "(y, \<eta>) \<in> W" and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<eta> = 0" for y \<eta>
+  proof -
+    have d_eq: "frechet_derivative (\<lambda>\<zeta>. Phi_par y \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1)
+        = (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<eta> *v axis j 1) \<bullet>
+            e_par \<omega>0 \<omega>s \<eta>"
+      by (rule frechet_derivative_Phi_par_omega_axis_critical[OF detW[OF that(1)]
+            gainW[OF that(1)] that(2)])
+    have "frechet_derivative (\<lambda>\<zeta>. Phi_par y \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1)
+        = ?F (y, \<eta>)"
+      using d_eq by simp
+    thus ?thesis
+      using colW[OF that(1)] by simp
+  qed
+  show ?thesis
+    by (rule that[OF Wopen xW detW gainW colW dW])
+qed
+
+theorem dip_critical_graph_Phi_par_omega_axis_branch:
+  fixes x0 :: "(real^2)^'n::finite" and \<omega>b \<omega>0 \<omega>s :: "real^2"
+  assumes crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b = 0"
+    and nds: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b) \<noteq> 0"
+    and detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>b)) \<noteq> 0"
+    and gnz: "gain_dip \<omega>b \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega>b \<noteq> 0"
+  obtains B N g j where
+    "open B" and "connected B" and "x0 \<in> B"
+    and "open N" and "(x0, \<omega>b) \<in> N"
+    and "g x0 = \<omega>b" and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> gain_dip (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+proof (rule Phi_par_omega_axis_critical_nonzero_product_local[OF detJnz gnz cnz crit nds])
+  fix j :: 2 and W
+  assume Wopen: "open W" and xW: "(x0, \<omega>b) \<in> W"
+    and detW: "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<eta>)) \<noteq> 0"
+    and gainW: "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow> gain_dip \<eta> \<noteq> 0"
+    and colW: "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow>
+           (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<eta> *v axis j 1) \<bullet>
+             e_par \<omega>0 \<omega>s \<eta> \<noteq> 0"
+    and dW: "\<And>y \<eta>. (y, \<eta>) \<in> W \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<eta> = 0 \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par y \<zeta> \<omega>0 \<omega>s) (at \<eta>) (axis j 1) \<noteq> 0"
+  show ?thesis
+  proof (rule dip_critical_graph_dichotomy_unique[OF crit nds])
+    fix B0 N g
+    assume B0o: "open B0" and B0c: "connected B0" and xB0: "x0 \<in> B0"
+      and Nopen: "open N" and pN: "(x0, \<omega>b) \<in> N"
+      and gx0: "g x0 = \<omega>b" and gana0: "real_analytic_on g B0"
+      and graph0: "\<And>x. x \<in> B0 \<Longrightarrow>
+             (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      and uniq0: "\<And>x \<omega>. x \<in> B0 \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+      and dich0: "(\<forall>x\<in>B0. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0) \<or>
+             interior (closure {x \<in> B0. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+    have idB0: "real_analytic_on (\<lambda>x::(real^2)^'n. x) B0"
+      by (rule real_analytic_on_bounded_linear[OF B0o bounded_linear_ident])
+    have pair_ana: "real_analytic_on (\<lambda>x::(real^2)^'n. (x, g x)) B0"
+      by (rule real_analytic_on_Pair[OF idB0 gana0])
+    have pair_cont: "continuous_on B0 (\<lambda>x::(real^2)^'n. (x, g x))"
+    proof (rule continuous_at_imp_continuous_on, rule ballI)
+      fix x :: "(real^2)^'n"
+      assume xB0': "x \<in> B0"
+      show "continuous (at x) (\<lambda>x::(real^2)^'n. (x, g x))"
+        by (rule real_analytic_on_imp_continuous_vec[OF pair_ana xB0'])
+    qed
+    have Sopen: "open (B0 \<inter> (\<lambda>x::(real^2)^'n. (x, g x)) -` W)"
+      by (rule continuous_open_preimage[OF pair_cont B0o Wopen])
+    have x0S: "x0 \<in> B0 \<inter> (\<lambda>x::(real^2)^'n. (x, g x)) -` W"
+      using xB0 gx0 xW by simp
+    obtain \<epsilon> where e0: "0 < \<epsilon>"
+      and esub: "ball x0 \<epsilon> \<subseteq> B0 \<inter> (\<lambda>x::(real^2)^'n. (x, g x)) -` W"
+      using openE[OF Sopen x0S] by blast
+    define B where "B = ball x0 \<epsilon>"
+    have Bo: "open B" by (simp add: B_def)
+    have Bc: "connected B" by (simp add: B_def)
+    have xB: "x0 \<in> B" by (simp only: B_def centre_in_ball e0)
+    have Bsub: "B \<subseteq> B0" using esub by (auto simp: B_def)
+    have graphW: "(x, g x) \<in> W" if "x \<in> B" for x
+      using esub that by (auto simp: B_def)
+    have ganaB: "real_analytic_on g B"
+      by (rule real_analytic_on_open_subset[OF gana0 Bo Bsub])
+    have graphB: "(x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      if "x \<in> B" for x
+      using graph0 Bsub that by blast
+    have uniqB: "\<omega> = g x"
+      if "x \<in> B" and "(x, \<omega>) \<in> N" and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+      for x \<omega>
+      using uniq0 Bsub that by blast
+    have detB: "det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0" if "x \<in> B" for x
+      by (rule detW[OF graphW[OF that]])
+    have gainB: "gain_dip (g x) \<noteq> 0" if "x \<in> B" for x
+      by (rule gainW[OF graphW[OF that]])
+    have dB: "frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+      if "x \<in> B" for x
+      by (rule dW[OF graphW[OF that]]) (use graphB[OF that] in blast)
+    show thesis
+      by (rule that[OF Bo Bc xB Nopen pN gx0 ganaB graphB uniqB detB gainB dB])
+  qed
+qed
+
+theorem dip_critical_graph_Phi_par_omega_axis_regular_branch:
+  fixes x0 :: "(real^2)^'n::finite" and \<omega>b \<omega>0 \<omega>s :: "real^2"
+  assumes crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b = 0"
+    and nds: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b) \<noteq> 0"
+    and detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>b)) \<noteq> 0"
+    and gnz: "gain_dip \<omega>b \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega>b \<noteq> 0"
+  obtains B N g j where
+    "open B" and "connected B" and "x0 \<in> B"
+    and "open N" and "(x0, \<omega>b) \<in> N"
+    and "g x0 = \<omega>b" and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+    and "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> gain_dip (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+proof -
+  show ?thesis
+  proof (rule dip_critical_graph_Phi_par_omega_axis_branch[OF crit nds detJnz gnz cnz])
+    fix B0 N g j
+    assume B0o: "open B0" and B0c: "connected B0" and xB0: "x0 \<in> B0"
+      and Nopen: "open N" and pN: "(x0, \<omega>b) \<in> N"
+      and gx0: "g x0 = \<omega>b" and gana0: "real_analytic_on g B0"
+      and graph0: "\<And>x. x \<in> B0 \<Longrightarrow>
+             (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      and uniq0: "\<And>x \<omega>. x \<in> B0 \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+      and detJ0: "\<And>x. x \<in> B0 \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0"
+      and gain0: "\<And>x. x \<in> B0 \<Longrightarrow> gain_dip (g x) \<noteq> 0"
+      and dPhi0: "\<And>x. x \<in> B0 \<Longrightarrow>
+             frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+    have cg_ana: "real_analytic_on (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) B0"
+      by (rule real_analytic_on_compose[OF gana0 real_analytic_on_cvec_dip subset_UNIV])
+    have cg_isC: "isCont (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) x" if "x \<in> B0" for x
+      by (rule has_derivative_continuous[OF
+            real_analytic_on_has_derivative_Dblinfun[OF cg_ana that]])
+    have cg_cont: "continuous_on B0 (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x))"
+      using cg_isC continuous_at_imp_continuous_on by blast
+    have Sopen: "open (B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))"
+      by (rule continuous_open_preimage[OF cg_cont B0o])
+         (rule open_Compl[OF closed_singleton])
+    have dh_ana: "real_analytic_on
+        (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) B0"
+      by (rule real_analytic_on_detHessU_chart[OF B0o gana0])
+    have dh_isC: "isCont (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) x"
+      if "x \<in> B0" for x
+      by (rule has_derivative_continuous[OF
+            real_analytic_on_has_derivative_Dblinfun[OF dh_ana that]])
+    have dh_cont: "continuous_on B0 (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)))"
+      using dh_isC continuous_at_imp_continuous_on by blast
+    have Dopen: "open (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0}))"
+      by (rule continuous_open_preimage[OF dh_cont B0o])
+         (rule open_Compl[OF closed_singleton])
+    have SDopen: "open ((B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))
+        \<inter> (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0})))"
+      by (rule open_Int[OF Sopen Dopen])
+    have x0S: "x0 \<in> (B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))
+        \<inter> (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0}))"
+      using xB0 gx0 cnz nds by simp
+    obtain \<epsilon> where e0: "0 < \<epsilon>"
+      and esub: "ball x0 \<epsilon> \<subseteq> (B0 \<inter> (\<lambda>x. cvec_dip \<omega>0 \<omega>s (g x)) -` (- {0}))
+        \<inter> (B0 \<inter> (\<lambda>x. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x))) -` (- {0}))"
+      using openE[OF SDopen x0S] by blast
+    define B where "B = ball x0 \<epsilon>"
+    have Bo: "open B" by (simp add: B_def)
+    have Bc: "connected B" by (simp add: B_def)
+    have xB: "x0 \<in> B" by (simp only: B_def centre_in_ball e0)
+    have Bsub: "B \<subseteq> B0" using esub by (auto simp: B_def)
+    have cB: "cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0" if "x \<in> B" for x
+      using esub that by (auto simp: B_def)
+    have dB: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0" if "x \<in> B" for x
+      using esub that by (auto simp: B_def)
+    have ganaB: "real_analytic_on g B"
+      by (rule real_analytic_on_open_subset[OF gana0 Bo Bsub])
+    have graphB: "(x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      if "x \<in> B" for x
+      using graph0 Bsub that by blast
+    have uniqB: "\<omega> = g x"
+      if "x \<in> B" and "(x, \<omega>) \<in> N" and "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
+      for x \<omega>
+      using uniq0 Bsub that by blast
+    have detJB: "det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0" if "x \<in> B" for x
+      by (rule detJ0) (use Bsub that in blast)
+    have gainB: "gain_dip (g x) \<noteq> 0" if "x \<in> B" for x
+      by (rule gain0) (use Bsub that in blast)
+    have dPhiB: "frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+      if "x \<in> B" for x
+      by (rule dPhi0) (use Bsub that in blast)
+    show thesis
+      by (rule that[OF Bo Bc xB Nopen pN gx0 ganaB graphB uniqB cB dB detJB gainB dPhiB])
+  qed
+qed
+
+theorem dip_critical_chart_nowhere_dense_Phi_par_omega_axis_branch:
+  fixes x0 :: "(real^2)^'n::finite" and \<omega>b \<omega>0 \<omega>s :: "real^2"
+  assumes crit: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b = 0"
+    and nds: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x0 \<omega>b) \<noteq> 0"
+    and detJnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>b)) \<noteq> 0"
+    and gnz: "gain_dip \<omega>b \<noteq> 0"
+    and cnz: "cvec_dip \<omega>0 \<omega>s \<omega>b \<noteq> 0"
+    and wit: "\<And>B g. open B \<Longrightarrow> connected B \<Longrightarrow> x0 \<in> B \<Longrightarrow>
+                real_analytic_on g B \<Longrightarrow> g x0 = \<omega>b \<Longrightarrow>
+                (\<And>x. x \<in> B \<Longrightarrow> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0) \<Longrightarrow>
+                (\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0) \<Longrightarrow>
+                (\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0) \<Longrightarrow>
+                \<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+  obtains B N g j where
+    "open B" and "connected B" and "x0 \<in> B"
+    and "open N" and "(x0, \<omega>b) \<in> N"
+    and "g x0 = \<omega>b" and "real_analytic_on g B"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+    and "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+           gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+    and "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow> gain_dip (g x) \<noteq> 0"
+    and "\<And>x. x \<in> B \<Longrightarrow>
+           frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+    and "interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+proof -
+  show ?thesis
+  proof (rule dip_critical_graph_Phi_par_omega_axis_regular_branch[OF crit nds detJnz gnz cnz])
+    fix B N g j
+    assume Bo: "open B" and Bc: "connected B" and xB: "x0 \<in> B"
+      and Nopen: "open N" and pN: "(x0, \<omega>b) \<in> N"
+      and gx0: "g x0 = \<omega>b" and gana: "real_analytic_on g B"
+      and graphB: "\<And>x. x \<in> B \<Longrightarrow>
+             (x, g x) \<in> N \<and> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0"
+      and uniqB: "\<And>x \<omega>. x \<in> B \<Longrightarrow> (x, \<omega>) \<in> N \<Longrightarrow>
+             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0 \<Longrightarrow> \<omega> = g x"
+      and cB: "\<And>x. x \<in> B \<Longrightarrow> cvec_dip \<omega>0 \<omega>s (g x) \<noteq> 0"
+      and dB: "\<And>x. x \<in> B \<Longrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x)) \<noteq> 0"
+      and detJB: "\<And>x. x \<in> B \<Longrightarrow> det (matrix (Dcvec_dip \<omega>0 \<omega>s (g x))) \<noteq> 0"
+      and gainB: "\<And>x. x \<in> B \<Longrightarrow> gain_dip (g x) \<noteq> 0"
+      and dPhiB: "\<And>x. x \<in> B \<Longrightarrow>
+             frechet_derivative (\<lambda>\<zeta>. Phi_par x \<zeta> \<omega>0 \<omega>s) (at (g x)) (axis j 1) \<noteq> 0"
+    have gradB: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x (g x) = 0" if "x \<in> B" for x
+      using graphB[OF that] by blast
+    have ex: "\<exists>x\<in>B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x \<noteq> 0"
+      by (rule wit[OF Bo Bc xB gana gx0 gradB cB dB])
+    have idB: "real_analytic_on (\<lambda>x::(real^2)^'n. x) B"
+      by (rule real_analytic_on_bounded_linear[OF Bo bounded_linear_ident])
+    have pairB: "real_analytic_on (\<lambda>x::(real^2)^'n. (x, g x)) B"
+      by (rule real_analytic_on_Pair[OF idB gana])
+    have "real_analytic_on (\<lambda>x::(real^2)^'n.
+            (\<lambda>q::((real^2)^'n) \<times> (real^2). mstarg (cvec_dip \<omega>0 \<omega>s (snd q)) (fst q))
+              (x, g x)) B"
+      by (rule real_analytic_on_compose[OF pairB real_analytic_on_mstarg_cvec subset_UNIV])
+    hence hana: "real_analytic_on (\<lambda>x. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x) B"
+      by simp
+    have thin: "interior (closure {x \<in> B. mstarg (cvec_dip \<omega>0 \<omega>s (g x)) x = 0}) = {}"
+      by (rule real_analytic_nowhere_dense_zeros[OF hana Bc ex])
+    show thesis
+      by (rule that[OF Bo Bc xB Nopen pN gx0 gana graphB uniqB cB dB detJB gainB dPhiB thin])
+  qed
+qed
+
 end

@@ -8,6 +8,187 @@ into the monorepo `Verified_Drone_Theory` under `Applied_Math_Formalization/`.
 
 ---
 
+## 2026-08-06 — D4 t-collision: a different approach (stratify-and-deduplicate),
+## replacing "everywhere submersion" with "distinct-phase submersion + dimension"
+
+**The problem, restated.** `branchP_indep_closed_cover_core_all` was reduced to
+`reg1`/`reg2`: pointwise surjectivity of the repaired reduced-base IFT residual
+`F : ℝ^{n+3} → ℝ^{n+1}` at every zero (with `cvec≠0`, `det(Dcvec)≠0`). The
+2026-07-14 entry showed this is **false** at `n=4`: at genuine zeros with a
+phase collision `t_i = t_j` the Jacobian drops rank (corank 1, "sometimes 2"),
+and neither slot-choice (`branch2_repair_slot` adaptive) nor dropping one
+redundant equation repairs it. The committed state (`reg1'/reg2'` +
+`reg1_of_reg1_generic`/`reg2_of_reg2_generic`, `Scratch_D4Branch.thy:9359ff`)
+isolates the collision case as the two open `sorry`s at l.9395/l.9437.
+
+**Why the current route asks for the wrong thing.** The whole D4 reduction only
+ever needs, per non-collinear steering slice `Γ` and bound `j`, a cover of the
+bad slice image (a subset of x-space `(ℝ²)^n`) by countably many **closed
+negligible** sets — interface `branchP_indep_closed_cover_core_all_of_reduced_slice_covers`
+(l.4312). The reduced-base route produces those as differentiable images
+`F ` C` with `C ⊆ (ℝ²)×(ℝ^n) = ℝ^{2+n}`, and negligibility is then automatic
+from the **dimension gap** `DIM(ℝ^{2+n}) < DIM((ℝ²)^n)` for `n≥4` (already the
+proved lemma `branch2_lowdim_source_dim_lt`; `closed_negligible_cover_of_lowdim_image`,
+l.4359, converts any such image). The submersion `reg1`/`reg2` is **not**
+load-bearing for negligibility — it is used only to *construct* the chart `F`
+by solving the residual for `(t,a)` as a function of `ω` via the IFT. That
+construction is the only thing collisions break.
+
+**The corank-2 "unidentified second degeneracy" is dissolved.** Because
+`radial(m)` depends on `m` only through `t_m` and the *symmetric* global
+moments `A = A_t_moment t = Σ_k e^{-i t_k}` and `AW = A_t_weighted_moment t =
+Σ_k t_k e^{-i t_k}` (verified against `branch2_radial_scalar_reduced_eq`,
+l.3916; `M12_tu_special_moment = (L·c/c·c)·AW`, l.3782), each phase coincidence
+contributes exactly one forced degeneracy. The 2026-07-14 corank-2 example
+`t ≈ [0.63, 0.63, 3.77, 3.77]` is a *double* collision — two coincident pairs —
+so corank 2 is the single-collision mechanism happening twice. In general, for
+a collision partition with `r` distinct phase-blocks the coincidence relations
+number `n − r`. There is no second unexplained degeneracy; the earlier
+"drop-one-equation" fix failed only because the deficient points had **two**
+coincidences and it removed one.
+
+**The different approach: stratify by collision pattern, then deduplicate.**
+Do *not* seek a submersion of the `n`-element residual across collisions (it is
+genuinely false). Instead:
+
+1. **Stratify** the branch-2 bad set by collision partition `P` of `{1,…,n}`
+   (finitely many). Blocks = maximal sets of indices sharing a common phase.
+2. **Deduplicate.** On stratum `P` with `r` blocks the residual depends on the
+   phases only through the `r` distinct block-phases, so the system on `P`
+   *is* the branch-2 reduced-base system of a smaller `r`-element **weighted**
+   problem (weight = block size) at **distinct** super-phases.
+3. **Use the submersion that actually holds** — the distinct-phase one. With
+   distinct super-phases the coincidence-forced degeneracy is *absent*, so the
+   `r`-element residual is a genuine submersion (this is `reg1'/reg2'` for the
+   smaller weighted system). IFT solves `(τ,a)` from `ω`: a dim-2 chart, no
+   collision in sight.
+4. **Recover `x` and count.** `tu_param_map c t u` (l.2305) splits each drone
+   `x_m = (t_m/c·c) c + (u_m/c·c) perp2 c`; the residual never constrains `u`
+   (confirmed: `branch2_chart1_reduced_base_residual`, l.4071, depends only on
+   `ω,t,a`). So on *every* stratum all `n` perpendicular coords `u` stay free,
+   the covering map has domain `(ω,u) ∈ ℝ^{2+n}`, and `2+n < 2n` (`n≥4`) makes
+   the image negligible.
+5. **Assemble.** Finitely many strata, each a closed negligible cover → union
+   → feed `..._of_reduced_countable_lowdim_parametrizations` (l.4492).
+
+**Why this is right and not just relabeling.** It makes the corank problem
+**moot**: on a collision one never computes the `n`-element Jacobian; the
+stratum is handled by *dimension*, and the `sorry`s at l.9395/9437 are deleted
+(their guarded case `¬distinct_t` is dispatched by the deduplicated stratum,
+not by a submersion claim that is false). It converts a *false* statement
+("`n`-element residual submersive everywhere") into *true* ones ("`r`-element
+residual submersive at distinct super-phases", `r=1..n`), each stated in the
+regime where the only known obstruction is excluded. Unlike 2026-07-14 option
+(b) it loses no strength — the collision fibre is proved negligible, not
+assumed away — and unlike option (c) it does not touch `branch2_repair_slot`
+(which the numerics already showed cannot help).
+
+**The one load-bearing new assumption to de-risk first.** The *weighted
+distinct-phase submersion*: the `r`-element branch-2 reduced-base residual, with
+block-multiplicity weights and pairwise-distinct super-phases, has surjective
+derivative at its zeros. Sharpest falsifiable test: at genuine `n`-element
+collision zeros the cokernel of `DF` should be spanned **exactly** by the
+coincidence-antisymmetric radial output directions `{e_i − e_j : t_i = t_j,
+i,j non-slot}` — i.e. *all* the degeneracy is the coincidence symmetry, and
+deduplicating (merging coincident phases, dropping the duplicated radial
+equations) restores full row rank. If any cokernel direction is *not* of that
+form, there is a genuine extra degeneracy and the approach needs revision.
+
+Before any Isabelle work I therefore built a faithful numerical harness
+(`d4_collision_derisk.py`, repo root, untracked) that reconstructs the exact
+chart-1/2 repaired residual at the design point `ω0=(π/2,0), ωs=(0,0)` from the
+real definitions (`cvec_dip`, `gain_dip`/`gdip`, `Dcvec_dip`, `branch2_radial_scalar_reduced_eq`,
+`branch2_reduced_gradU_scalar`, `A_t_moment`, `A_t_weighted_moment`), finds
+genuine collision zeros by random-restart least squares, and tests (a)
+corank = #coincidences, (b) cokernel ⊆ coincidence-antisymmetric span
+("unexplained cokernel" ≈ 0), (c) the deduplicated reduced Jacobian is full
+row rank.
+
+**Update, same day — DE-RISK RESULT: the approach above is REFUTED.**
+The harness (`d4_collision_derisk.py`, `n=4`, chart 1, slot 0) was first
+validated: after fixing two harness bugs (the residual is *not* 2π-periodic in
+`t` — it carries an explicit `t_m` term, so `t mod 2π` canonicalization
+destroyed zeros; and coincidence must be tested on **exact** `t`, not phase),
+it **reproduces the 2026-07-14 benchmark** — clean single-collision zeros
+(residual `< 1e-9`, `cvec≠0`, `|det Dcvec|>0.05`) give **corank 1**. So the
+Jacobian ranks it reports are the real `reg1`/`reg2` ranks (the `IFT_range` /
+`base_(un)assoc` wrappers are pure rank-preserving reorderings, l.4707–4719).
+
+Then tests (b) and (c) **fail**, and the reason is decisive. At every clean
+corank-1 collision zero — *whether or not the slot index is in the colliding
+pair* — the cokernel of `DF` is **purely the `R*` (reduced-gradU / slot moment)
+output direction**, cokernel energy `[scalar, R*, radials] = [0, 1, 0, …]`; it
+is *never* the coincidence-antisymmetric radial direction `e_i − e_j`.
+Consequently deduplicating the radial equations does nothing: the deduplicated
+reduced Jacobian stays corank 1 (test (c): e.g. `[[0],[1],[2,3]] → (4,6)` of
+rank 3, not 4). **The rank drop at a collision is the reduced-gradU scalar
+`R* = branch2_reduced_gradU_scalar` (l.5831) becoming linearly dependent on the
+`{scalar, radial}` equations — not a radial permutation symmetry.** There are
+no duplicated radial equations driving it, so "stratify-and-deduplicate" as
+formulated above cannot fix D4.
+
+This kills the "corank = #coincidences ⇒ dedup to a distinct-phase submersion"
+story: the corank *count* roughly tracks the number of coincidences (test (a):
+21/26), but its *structure* is the `R*` dependency, so the count is
+coincidental, not the mechanism. (Noise caveat: some points report corank 2–3
+with radial energy spread `≈0.667` — near-multiple-collisions / conditioning;
+the clean corank-1 signal `cokernel = R*` is the robust one and repeats.)
+
+**Where this leaves D4 — the real, localized obstruction.** The numerics now
+say precisely: *along the phase-collision locus, the reduced-gradU condition
+`R* = 0` is not independent of the radial + special equations.* Any correct
+approach must engage this `R*`-degeneracy directly (e.g. understand why `R*`,
+built from the symmetric moments `|A|²` and `Re(cnj A·(−i)AW)`, drops rank when
+two phases coincide; or drop `R*` where it is dependent and re-close the cover
+from the remaining equations). A validated replacement is **not** yet in hand;
+this entry records that the first proposed replacement was cheaply refuted by
+the harness *before* any Isabelle work — which is exactly what the de-risk was
+for. Harness kept at repo root (untracked) for the next iteration.
+
+**Update, same day (later) — pursuing the R*-degeneracy: the "drop-R*"
+dimension route.** Two facts now reframe the problem.
+
+*Analytic structure.* Writing `P(k) = Im(cnj A · ph_k)` and
+`Q(k) = Re(cnj ph_k · AW) − t_k·Re(cnj A · ph_k)`, both the radial equation and
+the `t`-gradient of `R*` live in the SAME 2-dimensional function space
+`span{P(·), Q(·)}`:
+```
+radial(k)      = 2(egd·cc + g·Lc)·P(k) + 2 g Lc·Q(k)
+∂R*/∂t_k       = 2((γ2·perp2c)p1 + g d)·P(k) + 2 g d·Q(k)
+```
+(direct differentiation of `branch2_reduced_gradU_scalar`, using
+`∂A/∂t_k = −i ph_k`, `∂AW/∂t_k = ph_k(1 − i t_k)`). This is why `R*` and the
+radial equations are entangled at a zero: with `radial(k)=0` the points
+`(P(k),Q(k))` all lie on one line through the origin, and `∂R*/∂t_k` is read off
+that same line — the numerically observed `cokernel = R*` degeneracy is this
+`{P,Q}` collinearity.
+
+*The reframe (what negligibility actually needs).* The D4 interface only needs
+the bad slice covered by a differentiable image of a source of dimension
+`< DIM((ℝ²)^n) = 2n` (`closed_negligible_cover_of_lowdim_image`, l.4359). The
+`n+1`-equation reduced solution set `Z_full` is dim 2 (image `2+n`), but that
+needs the *full* submersion (`reg1/reg2`), which is what fails. However the bad
+set is CONTAINED in `Z_noR` = zeros of the `n` equations `{scalar, radial_k}`
+alone (drop `R*`). If those `n` equations are submersive (rank `n`), `Z_noR` is
+dim `(n+3) − n = 3`, its x-image has dim `≤ 3 + n`, and
+```
+3 + n < 2n   ⟺   n > 3,
+```
+true at the theorem's floor `n ≥ 4`. So **if dropping `R*` restores a rank-`n`
+submersion at the collision zeros, the bad set is negligible by dimension and
+`R*` is not needed at all** — a far simpler fix than stratify-and-deduplicate,
+and one that engages the true (`R*`) obstruction head-on.
+
+*Hypothesis under test* (`d4_dropR_check.py`): at genuine zeros (`cvec≠0`,
+`det≠0`), removing the `R*` row leaves `{scalar, radials}` at full rank `n`,
+including at collisions. Single collisions should pass cleanly (the whole
+corank-1 was the `R*` row). Multi-collisions (corank ≥ 2 = `R*` + residual
+radial degeneracy) are the open sub-question: either dropping `R*` still
+suffices, or the residual radial degeneracy defines a thinner sub-stratum to
+handle by recursion / analytic thinness. Results appended below.
+
+---
+
 ## 2026-07-14 — D4 reg1/reg2 pointwise-rank fact: found a probable genuine
 ## counterexample at n=4 (t-collision solution branch), not yet fixed
 
@@ -9033,3 +9214,73 @@ Committed state re-verified green (`isabelle build Applied_Math_M5_ActualD3Argum
 exit 0). No proof code changed tonight — this is a corrected map, not a new
 build; the spend limit blocked fork-driven construction. See memory
 `[[d3-residual-schur-only-patch]]`.
+
+## 2026-11-10 — audit + new end-to-end plan: D3 and D4 are one set, closed by one argument
+
+Audit (details: `END_TO_END_PLAN.md` §2).
+
+- `d3core` and `branchcore` are consumed only by `m5_D34_residual`
+  (`Nonemptiness_Robust4.thy:535`).  D3 and D4 are the same retained set
+  `BadXGW` over the box, split by `phase_collinear`.  One meagerness statement
+  is all that is missing.
+- No `sorry`/`axiomatization`/`oracle` command on the capstone path (the eight
+  `sorry` hits in the vendored Munkres file are comments).  But every session
+  in `ROOT` is `quick_and_dirty = true`, and the whole chain from
+  `Applied_Math_Base` up is stale (parent heaps rebuilt in October).
+- A strict rebuild (`quick_and_dirty = false`) with a `Thm_Deps.all_oracles`
+  check on `F0_dip_nonempty` was started in an isolated copy with renamed
+  sessions.  Negative control works.  Result: see the next entry.
+
+New route (semi-formal proof: `Sketch.md` §8; scripts: `tools/residual_*.py`).
+
+- At a non-aligned point of the residual with `s_m ≠ 0`, three equations hold:
+  one radial equation linear in `cos φ`; `f_m(t) = s_m(P+W) + q_m W = 0`, in `t`
+  alone; and the so-far-unused component `e_perp · gradU = 0`, linear in `u_m`.
+- So the residual is an explicit differentiable image, between spaces of equal
+  dimension `2N`, of the negligible set `{f_m = 0}`.  No rank condition on the
+  `N+1` equation system is used, so phase collisions and the flat fold need no
+  separate treatment.
+- Checked numerically for `N = 4..7` against the actual `cvec_dip`/`gdip`
+  formulas: the slot-derivative identities, both components of `gradU`, and
+  that solutions of the three equations have `gradU = 0` and rank-1 `D_x gradU`.
+  Every solution found had a phase collision.
+
+This supersedes the D3 fold-order split (2026-07-24) and the D4 reduced-base
+route (2026-07-14, 2026-08-06).  Nothing in the new route is formalized yet.
+Work packages WP0–WP7 are in `END_TO_END_PLAN.md` §4.
+
+## 2026-11-10 (cont'd) — strict audits pass on both Isabelle versions; WP1 and WP2 proved on Isabelle2026
+
+**Strict audit, Isabelle2025-2.** A copy of the tree with every session set to
+`quick_and_dirty = false` built from `Base` to `Robust4`, exit 0, no errors,
+about 16 minutes.  `Thm_Deps.all_oracles [F0_dip_nonempty] = []`; the negative
+control (a `sorry` lemma) reports `Pure.skip_proof`.
+
+**Port to Isabelle2026** (user's instruction).  The same chain builds in strict
+mode on Isabelle2026 with AFP `afp-2026-10-29` after six changes, listed in
+`END_TO_END_PLAN.md` §2a and scripted in `tools/isabelle2026_port/make_copy.sh`.
+Oracle check on `F0_dip_nonempty` is empty there as well.  The tree itself is
+unchanged and still targets Isabelle2025-2.
+
+**What these audits do not show** (user's question).  Oracle-free is not the
+same as meaningful.  `thm_final`, `prop_h0res_meager` and
+`parametric_transversality_negligible_stub` are schemas about arbitrary sets or
+functions.  The capstone assumes `d3core`/`branchcore` for every
+`V ctr δ ω0 ωs`, where they may be false, and concludes existentially over all
+design constants and over `ε` with no bound.  The constants its proof picks
+include `pmin = 0`, which makes the main-beam constraint vacuous.  Five
+concreteness rules were added to the plan (§1).
+
+**WP1** (`Residual/Residual_Measure.thy`): a Borel set whose slices along a
+fixed direction are all countable is negligible
+(`negligible_of_countable_line_slices`).  Proof: Fubini on `'a × real` for
+countable second-coordinate slices, then the shear `(p, r) ↦ (p + r d, r)`.
+
+**WP2** (`Residual/Residual_Null_Set.thy`):
+`negligible {t. res_s m t ≠ 0 ∧ res_f m t = 0}` (`negligible_res_f_zeros`).
+Along a line in direction `axis m 1` the function is an explicit expression in
+`x`, `sin x`, `cos x` with four real parameters, so it extends to an entire
+function and `holomorphic_countable_zeros` applies.  It is not identically zero
+because `f(x+2π) − f(x) = 2π a(x)` and `a(x) + a(x+π) = 4(s_m² + C²)`.
+
+Both theories build in strict mode in about 20 seconds; oracle check empty.

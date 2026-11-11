@@ -60,7 +60,7 @@ qed
 
 theorem has_derivative_beta_h0: "(beta_h0 has_derivative (\<lambda>h. -(2 * sin t + t * cos t) * h)) (at t)"
   unfolding beta_h0_def
-  by (auto intro!: derivative_eq_intros ext) (simp add: algebra_simps fun_eq_iff)
+  by (auto intro!: derivative_eq_intros ext, simp only: algebra_simps fun_eq_iff)
 
 subsection \<open>ucoord: the c-projected parallel coordinate of a single element\<close>
 

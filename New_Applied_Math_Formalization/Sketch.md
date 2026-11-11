@@ -4253,3 +4253,156 @@ The remaining compact bridge is now precise:
 After that bridge is closed, the final hard analytic task is to prove the C1
 derivative fields and surjectivity for the repaired slot-swapped residuals
 themselves.
+
+
+## 8. (2026-11-10) One argument for the whole D3 ∪ D4 residual
+
+This section replaces the D3 fold analysis (§§2–7 above) and the D4 reduced-base
+submersion route.  It treats the residual as one set and needs no rank
+condition beyond "one antenna is not phase-aligned".  Numerical checks are in
+`tools/residual_three_equations_check.py` and `tools/residual_null_set_check.py`;
+nothing here is formalized yet.
+
+### 8.1 Notation (fixed once)
+
+Design: `ω0 = (π/2,0)`, `ωs = (0,0)`, box `Ω = [π/4,3π/4] × [−π,π]`,
+`ω = (θ,φ)`.
+
+    c(ω)  = cvec_dip ω0 ωs ω = (sin θ cos φ + cos θ − 1,  sin θ sin φ)
+    Dc(ω) = Dcvec_dip,   det Dc = sin θ (cos θ − sin θ cos φ)
+    g(θ)  = gdip θ > 0 on the box,   g' = its derivative
+    Φ(x,ω) = gradU,      x = (x_1,…,x_N) ∈ (ℝ²)^N
+
+For `c ≠ 0` put `t_n = c·x_n`, `u_n = perp2 c · x_n` (so `x = tu_param_map c t u`),
+`θ_np = t_n − t_p`, and
+
+    s_n = Σ_p sin θ_np            (= −Im(cnj A · phase_n);  "aligned" means all s_n = 0)
+    q_n = Σ_p θ_np cos θ_np
+    W   = Σ_{n,p} cos θ_np        (= |A|²)
+    P   = Σ_{n,p} θ_np sin θ_np
+
+All four depend on `t` only.
+
+**The residual.**  `R = {x ∈ V : ∃ω∈Ω. Φ(x,ω) = 0, c ≠ 0, det Dc ≠ 0, D_xΦ(x,ω) not onto}`.
+This contains the capstone's D34 set (which has the extra conjuncts
+`det HessU = 0`, `A ≠ 0`, `¬surj DM_paper_x`; they are not used).  D3 and D4 are
+this same set split by `phase_collinear`; the split is not needed.
+
+### 8.2 Statement
+
+For `N ≥ 4`, `R` is covered by countably many closed negligible sets.  Hence
+`R` is meager, which is exactly what `m5_D34_residual` needs.
+
+### 8.3 Lemmas
+
+**L1 (slot derivatives; formal: `gradU_dip_xderiv_slot`).**  With
+`e_par = Dc⁻¹ c`, `e_perp = Dc⁻¹ perp2 c` and `λ(ω) = 1 + (e_par)_1 g'/g`:
+
+    e_par  · D_xΦ[slot m (perp2 c)] = 0
+    e_perp · D_xΦ[slot m (perp2 c)] = −2 g |c|² s_m
+    e_par  · D_xΦ[slot m c]         = −2 g |c|² (λ s_m + q_m)
+
+**L2 (three equations).**  Let `(x,ω)` be a point of the residual with
+`s_m ≠ 0` for some `m`.  Then
+
+    (E1)  K_m cos φ = Num_m,   K_m   = g (s_m+q_m) sin θ + g' s_m (1 − cos θ),
+                               Num_m = g (s_m+q_m) cos θ + g' s_m sin θ
+    (E2)  f_m(t) = 0,          f_m   = s_m (P + W) + q_m W
+    (E3)  2 g Σ_n s_n u_n = W g' sin φ (cos θ − 1) / (cos θ − sin θ cos φ)
+
+*Proof.*  By L1 the image of `D_xΦ` contains a nonzero vector `v` with
+`e_par·v = 0`; not onto forces `e_par · D_xΦ[h] = 0` for all `h`, so
+`λ s_m + q_m = 0`.  Inserting `(e_par)_1 = (sin θ + (cos θ−1) cos φ)/(cos θ − sin θ cos φ)`
+and clearing denominators gives (E1).  `Φ = 0` has two components:
+`e_par·Φ = g (W(λ−1) − P)` and `e_perp·Φ = W (e_perp)_1 g' − 2 g Σ s_n u_n`.
+The first with `λ = −q_m/s_m` is (E2); the second with
+`(e_perp)_1 = sin φ (cos θ − 1)/(cos θ − sin θ cos φ)` is (E3).  ∎
+
+**L3 (ω lies on an explicit curve).**  At such a point exactly one holds:
+
+* `K_m ≠ 0` and `sin φ ≠ 0`: `φ = ± arccos(Num_m/K_m)`;
+* `sin φ = 0`: `φ ∈ {−π, 0, π}`;
+* `K_m = 0`: then `Num_m = 0` too, and the 2×2 system in
+  `(g(s_m+q_m), g' s_m)` has determinant `1 − cos θ ≠ 0`, so `g'(θ) = 0`,
+  i.e. `θ = π/2` (`gdip_deriv_zero_iff`).
+
+So `ω = ω_κ(p, t)` for one of six chart types `κ` (two arccos branches, three
+arcs, the line `θ = π/2`) and one real parameter `p`.
+
+**L4 (null set).**  `Z_m = {t ∈ ℝ^N : s_m(t) ≠ 0 ∧ f_m(t) = 0}` is negligible.
+
+*Proof.*  Fix the other coordinates and vary `τ = t_m`.  Put
+`B = Σ_{p≠m} e^{i t_p}`.  Then `s_m = Im(e^{iτ} cnj B)`, so a nonempty slice has
+`B ≠ 0`.  The slice function `τ ↦ f_m` extends to an entire function `F`
+(replace `τ` by `z` in the sines and cosines).  It is not identically zero:
+
+    f_m(τ+2π) − f_m(τ) = 2π (2 s_m² + C W),   C = Σ_{p≠m} cos θ_mp,
+
+and at `τ* = arg B` the bracket equals `|B|(1+|B|)² > 0`.  So `F` has countably
+many zeros (`holomorphic_countable_zeros`), every line slice of `Z_m` in
+direction `e_m` is countable, and L5(a) applies.  ∎
+
+**L5 (measure tools; both generic).**
+
+* (a) A Borel set `S` in a Euclidean space whose slices `{r. p + r d ∈ S}` are
+  all countable is negligible.  (Shear `(p,r) ↦ (p + r d, r)`, `lborel_prod`,
+  `emeasure_lborel_countable`.)
+* (b) `negligible_differentiable_image_negligible`: a map differentiable on a
+  negligible set, between spaces of equal dimension, has negligible image.
+
+### 8.4 Proof of 8.2
+
+Aligned points (`all s_n = 0`) are covered by `aligned_bad_closed_cover`
+(already proved, needs `N ≥ 4`).  For the rest fix `m` and a chart type `κ`.
+The source space is `ℝ^N × ℝ^N ∋ (t, w)`; read `p = w_m` and `u_n = w_n` for
+`n ≠ m`.  Define
+
+    ω   = ω_κ(p, t)                                             (L3)
+    u_m = (W g' sin φ (cos θ − 1)/(2 g (cos θ − sin θ cos φ)) − Σ_{n≠m} s_n w_n) / s_m   (E3)
+    Y_{m,κ}(t, w) = tu_param_map (c ω) t u
+
+`Y_{m,κ}` is differentiable on the open set `D` where the denominators are
+nonzero and `|Num_m/K_m| < 1`.  By L2–L3 every nonaligned residual point with
+`s_m ≠ 0` is `Y_{m,κ}(t,w)` for some `κ` and some `(t,w) ∈ D` with `f_m(t) = 0`.
+The set `S = D ∩ (Z_m × ℝ^N)` is negligible by L4, the source and target both
+have dimension `2N`, so `Y_{m,κ}(S)` is negligible by L5(b).  Exhausting `D` by
+compact sets `C_j` (thresholds `≥ 1/j` on each denominator), the pieces
+`Y_{m,κ}(C_j ∩ {f_m = 0})` are compact and negligible.  They are countably
+many.  ∎
+
+### 8.5 What was computed, and what it shows
+
+| check | script | result |
+|---|---|---|
+| L1 identities and both components of `Φ` at random points, `N = 4,5,7` | `tools/residual_three_equations_check.py` | agree to finite-difference accuracy (≤ 1e-6) |
+| solving (E1)–(E3) gives `Φ = 0` and rank `D_xΦ = 1` (24 solutions, `N = 4..7`) | same | `|Φ| ≤ 4e-11`, second singular value ≤ 1e-8 |
+| periodicity identity and `|B|(1+|B|)²` in L4 | `tools/residual_null_set_check.py` | errors ≤ 1e-12 |
+
+Every solution the solver found had a phase collision `t_i = t_j`.  The argument
+does not care: it never uses the rank of the big system.
+
+### 8.6 How the formal text writes these (Isabelle2026, `Residual/`)
+
+| Sketch | Isabelle | where |
+|---|---|---|
+| `s_m`, `q_m`, `W`, `P`, `f_m` | `res_s m`, `res_q m`, `res_W`, `res_P`, `res_f m` | `Residual_Null_Set.thy` |
+| L4 | `negligible_res_f_zeros` | `Residual_Null_Set.thy` |
+| L5(a) | `negligible_of_countable_line_slices` | `Residual_Measure.thy` |
+
+The formal definitions use single sums, not the double sums above:
+`phase_cos_sum t = Σ cos t_a`, `phase_sin_sum`, `phase_lin_cos_sum t = Σ t_a cos t_a`,
+`phase_lin_sin_sum`.  Then `res_s m t = sin t_m · Σcos − cos t_m · Σsin`,
+`res_W = (Σcos)² + (Σsin)²`, `res_P = 2(Σ t sin · Σcos − Σ t cos · Σsin)`, and so on.  The
+two forms agree by the addition formulas; the single sums are the real and imaginary parts of
+the moments `A_t_moment` and `A_t_weighted_moment`, which is what WP3 will connect to.
+
+The proof of L4 in the formal text differs from 8.3 in one step: instead of `τ* = arg B` it
+uses `a(τ) + a(τ+π) = 4(s_m² + C²)`, where `a = 2 s_m² + C W` is the bracket in the
+periodicity identity.  This needs no `arg` and no case on `B`.
+
+### 8.7 Not proved here
+
+* Formalized so far (2026-11-10): L4 and L5(a).  L1 exists formally in a scratch
+  session; L2, L3 and the chart maps do not.
+* The strata outside the residual (regular part, `c = 0`, `det Dc = 0`,
+  `A = 0`) are the existing Isabelle lemmas; this section does not re-examine them.
