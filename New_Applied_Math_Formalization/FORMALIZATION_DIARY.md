@@ -9284,3 +9284,206 @@ function and `holomorphic_countable_zeros` applies.  It is not identically zero
 because `f(x+2π) − f(x) = 2π a(x)` and `a(x) + a(x+π) = 4(s_m² + C²)`.
 
 Both theories build in strict mode in about 20 seconds; oracle check empty.
+
+## 2026-11-10 (cont'd 2) — tree moved to Isabelle2026 in place; what the paper says about the set
+
+**Git.** Branch `isabelle2026`; the pre-transition state is commits `3506445`
+and `13423c8`, tagged `pre-isabelle2026`.  `main` is untouched.
+
+**In-place port.** The six changes of `END_TO_END_PLAN.md` §2a were applied to
+the tree.  The Munkres library is now vendored in `Munkres/` (the external
+`Imported_Munkres_Topology` was under no version control).  `ROOT` is strict
+throughout and has a permanent oracle audit (`Audit/`).  `HigherDiff/`,
+`Analytic/`, `Appendix/AnalyticBridge/`, `Appendix/Wiring/` and the `M5_Dev_*`
+sessions stay as an Isabelle2025-2 archive.
+
+**The paper** (`Paper/Geometry_Driven_Optimization_of_Passive_UAV_Relay_Arrays.pdf`,
+the Applied Mathematical Modelling submission) and the formal statement:
+
+- Nonemptiness of `F0` is **Conjecture 5** in the paper; Corollary 6 assumes
+  it.  The formalization proves what the paper leaves open.
+- The feasible set (Eq. 22) has free parameters `d_min`, `δ_null > 0`,
+  `p_min < |e(θ0)|² N²`, a null direction and `R`.  The plane coefficients are
+  not free: `A`, `B`, `D` are given by Eqs. (12)–(14).
+- The present capstone picks `pmin = 0`; the null direction `(π, 0)`, where
+  `gdip π = 0`; and `A = B = 0`, `D = 1`.  So its main-beam and null constraints
+  are both vacuous and its spacing is planar.  For the formal angles the
+  paper's formulas give `A = −1`, `B = 0`, `D = −1`.
+- The paper's angular box `[θ0−π/2, θ0+π/2] × [φ0−π, φ0+π]` contains the poles
+  of the dipole pattern.  The formal box is `[π/4, 3π/4] × [−π, π]`, pole-free.
+- The paper's experiment uses `(θ0, φ0) = (90°, 120°)`, `(θs, φs) = (85°, 120°)`,
+  null `(90°, 60°)`, `N = 9`, `d_min = λ0/4`.  The formal steering geometry is
+  `θs = 0`, `(θ0, φ0) = (90°, 0°)`, which satisfies the paper's standing
+  assumption `0 ≤ θs < π/2 ≤ θ0 ≤ π` but is not the experiment's.
+
+The final theorem (plan §1) is now stated for all admissible `d_min`, `δ_null`,
+`p_min` and null directions, with the paper's `A`, `B`, `D`.
+
+## 2026-11-10 (cont'd 3) — WP3: the three equations hold at every non-aligned point of `BadXGW`
+
+`Residual/Stratum/Residual_Equations.thy` and `Residual_Design.thy`, session
+`Applied_Math_Residual` (parent `Applied_Math_Appendix_Frontier`), Isabelle2026,
+strict.  `Applied_Math_Oracle_Audit` now sits on this session and checks
+`F0_dip_nonempty` together with the WP1–WP3 theorems: no oracles.
+
+- `BadXGW_point_equations`: hypotheses are `x ∈ BadXGW ω0 ωs {ω}`,
+  `sin (ω$1) ≠ 0` and `res_s m (phase_coords c x) ≠ 0`.  Conclusions (E1)–(E3)
+  as in `END_TO_END_PLAN.md` §4.  No steering-specific formula is used, so
+  this part would serve other steering angles unchanged.
+- The proof does not use `e_par`.  It takes a cokernel covector of the
+  `x`-derivative of `gradU` (`not_surj_linear_cokernel`) and Cramer's rule in
+  the plane (`cramer_first`, `cramer_combination`).
+- Ported from the Isabelle2025-2 archive: `slot`, `perp2`, the three slot laws
+  for the moment derivatives, `dEjm_slot_value`.  New: `cross2`,
+  `phase_coords`, `perp_coords`, and the dictionary between the complex moments
+  and `res_s`, `res_q`, `res_W`, `res_P` (`Im_A_phase`, `Re_A_phase`,
+  `Re_phase_cmoment`, `Re_A_cmoment`, `Re_A_perpmoment`, `cmod_A_sq`).
+- `Residual_Design`: `design_cross2` (the three determinants for
+  `design_beam = (π/2, 0)`, `design_source = (0, 0)`), `design_radial_equation`
+  (`K cos φ = Num`), `design_radial_degenerate` (`K = 0` implies `cos θ = 0`,
+  through `gdip_deriv_zero_iff`).
+
+Traps met (Isabelle2026, big heap): `simp` expands `Re`/`Im` of a product
+before a rewrite rule for that product can fire, so such values must be
+substituted by `unfolding`; `algebra` did not prove small polynomial goals with
+hypotheses; `simp add: vec_eq_iff` does not split a vector equation (use
+`Finite_Cartesian_Product.vec_eq_iff[THEN iffD2]`); an `obtains` lemma could
+not be applied with `by (rule …)`, the existential form with `blast` works.
+
+## 2026-11-11 — WP4: the non-aligned residual is covered by closed negligible sets
+
+`Residual/Stratum/Residual_Charts.thy` and `Residual_Chart_Cover.thy`, session
+`Applied_Math_Residual`, Isabelle2026, strict; the oracle audit covers the new
+theorems and passes.
+
+- `nonaligned_residual_cover` has no hypotheses: the set of `x` for which some
+  `ω` in `OmegaPF design_beam (π/4)` has `x ∈ BadXGW design_beam design_source {ω}`
+  and a non-aligned antenna lies in a countable union of closed negligible sets.
+- Engine `chart_image_cover`: source `(real^'n) × (real^'n)`, same dimension as
+  the target; the zero set of `res_f m` times the second factor is negligible
+  (`negligible_Times_UNIV`), a map differentiable there has negligible image,
+  and a compact exhaustion of the open chart domain gives closed pieces.
+- Six charts per antenna: `φ = ± arccos (N/K)` where `K ≠ 0` and `0 < |φ| < π`;
+  `φ ∈ {−π, 0, π}`; and `θ = π/2` where `K = 0`
+  (`design_radial_degenerate`).  `nonaligned_point_in_chart_image` does the
+  case split from the box bounds.
+- `tools/build_session.sh SESSION [SECONDS]` builds with a hard time limit and
+  kills the prover's process tree on timeout.
+
+Traps met: `metis` looped on `borel_open`/`borel_closed`/`sets.Int`, and
+`blast` looped when eliminating an existential whose body mentions several
+`⋃`; both replaced by explicit rules (`rule choice`, `..`, `conjunct1`).  The
+type `real^'n × real^'n` parses as `real^('n × real)^'n`: write
+`(real^'n) × (real^'n)`.  `from_nat` resolves to `Bij_Nat.from_nat` in this
+heap: write `Countable.from_nat`.  `OF` with facts of the form `?f ?z = …`
+gives "multiple unifiers": instantiate the function with `where`.
+
+## 2026-11-11 (cont'd) — WP5: the whole residual is meager at the design point; D3 and D4 are no longer assumed
+
+`Residual/Stratum/Residual_Aligned.thy` and `Residual_Meager.thy`, session
+`Applied_Math_Residual`, Isabelle2026, strict; oracle audit passes.
+
+- `residual_meager_design`: for every `V` and `4 ≤ CARD('n)` the set
+  `{x∈V. ∃ω∈OmegaPF design_beam (π/4). gradU = 0 ∧ matrix_det HessU = 0 ∧ A_cart ≠ 0 ∧ ¬surj DM_paper_x ∧ matrix_det (matrix Dcvec_dip) ≠ 0 ∧ cvec_dip ≠ 0 ∧ D_x gradU not onto}`
+  is meager.  This is the conclusion of `m5_D34_residual`
+  (`Nonemptiness_Robust4.thy:535`) at the capstone's angles, proved without
+  `d3_detHess_arc_chart_core_all` and `branchP_indep_closed_cover_core_all`.
+- It follows from `BadXGW_design_cover`: a point of `BadXGW` is either
+  non-aligned (`nonaligned_residual_cover`, WP4) or aligned
+  (`aligned_bad_closed_cover`), by `aligned_conf_iff_res_s`.
+- The aligned cover was copied from `M5_Dev_AlignedCover/Scratch_AlignedCover.thy`
+  (minus the unused coincident-drone lemma) and built on Isabelle2026 without
+  a change.
+
+What is left for the end-to-end theorem is WP6 only: re-thread the last four
+lemmas of `Nonemptiness_Robust4` through `residual_meager_design` and state the
+capstone with the paper's parameters (`END_TO_END_PLAN.md` §1).
+
+## 2026-11-11 (cont'd 2) — WP6: `F0_dip_nonempty_final`, the end-to-end theorem
+
+`Residual/Final/Nonemptiness_Final.thy`, session `Applied_Math_Final`,
+Isabelle2026, strict.  `Applied_Math_Oracle_Audit` now checks
+`F0_dip_nonempty_final`, its explicit form, the example instance and
+`regular_feasible_configuration_exists`: no oracles.
+
+- Hypotheses: `6 ≤ CARD('n)`, `odd CARD('n)`, `0 < δnull`,
+  `pmin < gain_dip design_beam * (real CARD('n))²`,
+  `cvec_dip design_beam design_source ωnull ≠ 0`.  Nothing else; `dmin` is
+  arbitrary.  Conclusion: `∃R0. ∀R≥R0. ∃ξ κ ε. 0<ξ ∧ 0<κ ∧ 0<ε ∧ ε ≤ π/4 ∧ F0 … ≠ {}`
+  with the paper's `A = kx ωs − kx ω0`, `B = ky ωs − ky ω0`, `D = kz ω0 − kz ωs`
+  (here −1, 0, −1).
+- The paper states this as Conjecture 5.  The theorem proves it for a pole-free
+  box and the steering geometry source overhead / main beam horizontal.
+- `F0_dip_nonempty_example`: `dmin = 1/4`, `δnull = 1/100`, `pmin = 1`, null
+  direction `(π/2, π/2)`; `gain_dip` is 1 at the main beam and at the null
+  direction (`gdip_pi_half`), so neither power constraint is vacuous.
+- Re-threading: `meager_rank_deficient_stratum_design`, `Phi_bad_meager_design`
+  and `regular_config_exists_design` are the Robust4 proofs with the constants
+  fixed and `residual_meager_design` in place of `m5_D34_residual`
+  (`tools/make_final_blocks.py`).  `nsing` is no longer needed.
+  `no_degenerate_to_sphere_annulus_bounded` exports the bound `ε ≤ δ` that the
+  old lemma already had inside its proof; `F0_nonempty_of_witness_radius`
+  keeps the radius instead of hiding it under `∃`.
+- Trap: `intro exI[of _ R0] allI impI` also instantiated the inner `∃ξ` with
+  `R0`; use `rule exI[of _ R0], intro allI impI`.
+
+### 2026-11-11 — WP6 verified: from-scratch build of the finished chain
+
+Final check of commit `3876566`, in an isolated copy with all sessions renamed
+(`AMFresh_*`), so no existing heap could be reused.
+
+- Command: `isabelle build -b -v -d . -d ~/Desktop/Isabelle/afp-2026-10-29/thys AMFresh_Oracle_Audit AMFresh_Oracle_Audit_Control`
+  (Isabelle2026). Result: exit 0, 13 sessions finished, no error lines,
+  `0:15:09 elapsed time, 0:42:22 cpu time`, finished 00:30:45 CST.
+- The 42 theory files of the copy are identical to the committed tree up to the
+  session renaming.
+- Every session strict; the audit session passed for `F0_dip_nonempty_final`,
+  `F0_dip_nonempty_final_explicit`, `F0_dip_nonempty_example` and the WP1–WP5
+  theorems; the control session detected its `sorry`.
+- Source search over the 42 theories: no `axiomatization`, `oops`, `consts`,
+  `typedecl`, `Skip_Proof`, `cheat_tac`, `add_oracle`; the only `sorry` command
+  is the one in `Audit/Control`. `Munkres/Top1_Ch5_8.thy` still has old comments
+  saying "left as sorry": they are stale text, there is no such command.
+
+Left: WP7 close-out (plan §8).
+
+### 2026-11-11 — WP7 part 1: conditional capstone retired
+
+- `Nonemptiness_Robust4.thy` 1524 → 517 lines. Removed: the predicates
+  `d3_detHess_arc_chart_core(_all)`, `branchP_indep_closed_cover_core(_all)`,
+  `branchP_indep_chart_core`, `D3BadXG_H0core`, and every lemma assuming them
+  (`m5_D34_D3_collinear`, `m5_D34_D4_branchP`, `m5_D34_residual`,
+  `meager_rank_deficient_stratum`, `Phi_bad_meager_dip`, `regular_config_exists`,
+  `regular_feasible_point_dip`, `regular_feasible_witness_dip`, `F0_dip_nonempty`).
+  Kept: everything unconditional (`BadXGW`, `m5_D1_regular`, the arc covers, the
+  general capstone lemmas). Comments shortened.
+- Audit no longer lists the old capstone; `tools/make_final_blocks.py` removed
+  (its input is gone); comments in `Residual_Meager`, `Nonemptiness_Final`, `ROOT` updated.
+- Build: `tools/build_session.sh Applied_Math_Oracle_Audit` → EXIT=0, strict,
+  4 sessions rebuilt, audit passes.
+- NOT done: README directory map and top-level README rewrite, plan §4/§8,
+  archive-directory decision, merge into `main`, push.
+
+### 2026-11-11 — WP7 part 2: documents and archive
+
+- `README.md` rewritten above "What was dropped": purpose, status, directory
+  map of the built chain (now with the `Residual/` and `Audit/` sessions),
+  "Archive (not built)", build and jEdit commands.
+- Repository `README.md`: main result, the new tree, both build routes.
+- `END_TO_END_PLAN.md`: WP7 entry in §4, §8 rewritten (no next step for the
+  theorem; extensions listed).
+- Archive decision: the Isabelle2025-2 directories and the D3/D4 documents stay
+  in place, not built, listed in the README.
+- No theory changed since the build of part 1 (EXIT=0, audit passes). The
+  sessions below `Applied_Math_Appendix_Frontier` are unchanged since the
+  from-scratch build of 00:30.
+
+### 2026-11-11 — WP7 part 3: `main`
+
+- `main` = `12aaa44` plus two commits: the state before the move to
+  Isabelle2026 (tag `pre-isabelle2026`), and the Isabelle2026 port with the
+  proof of `F0_dip_nonempty_final`.
+- The commit hashes cited in the entries of 2026-11-10 and 2026-11-11 are those
+  of the per-package working branch (`isabelle2026-full`, local); its content
+  is the same.
+- WP0–WP7 are done.

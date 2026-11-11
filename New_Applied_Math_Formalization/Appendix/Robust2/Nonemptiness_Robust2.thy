@@ -411,7 +411,7 @@ text \<open>Cover the open triple-regularity locus (\<open>A \<noteq> 0\<close>,
   \<open>parametric_transversality_meager_planar_config\<close> on each box (the joint
   \<open>C\<^sup>1\<close> field from \<open>gradU_dip_joint_C1\<close> and the regular value from
   \<open>regular_value_on_gradU_dip\<close> restrict to boxes, Helper 1), and inject the
-  degenerate-critical set: \<open>det HessU = 0\<close> forbids a surjective slice
+  degenerate-critical set: \<open>matrix_det HessU = 0\<close> forbids a surjective slice
   derivative since the slice derivative IS the Hessian (Helper 3,
   \<open>gradU_dip_has_derivative\<close> + uniqueness at interior points).  Helpers 1-3
   are generic and reused by the remaining strata (M5/M6/M6b).\<close>
@@ -521,7 +521,7 @@ subsection \<open>Helper 3: degenerate Hessian forbids a surjective slice deriva
 lemma dip_slice_no_surj_deriv:
   fixes x :: "(real^2)^'n" and \<omega> \<omega>0 \<omega>s :: "real^2" and C :: "(real^2) set"
   assumes oC: "open C" and wC: "\<omega> \<in> C"
-    and hess0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+    and hess0: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
   shows "\<not> (\<exists>D. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D)
                   (at \<omega> within C) \<and> surj D)"
 proof
@@ -539,7 +539,7 @@ proof
     by (rule has_derivative_unique[OF dD' dH])
   have "surj ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
     using sD unfolding DH by simp
-  then have "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  then have "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
     by (simp add: surj_matrix_vector_iff_det)
   with hess0 show False by simp
 qed
@@ -550,20 +550,20 @@ lemma meager_bad_regular_stratum:
   fixes V :: "((real^2)^'n) set" and \<omega>0 \<omega>s :: "real^2"
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
   shows "meager {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+                  \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
 proof -
   \<comment> \<open>The open triple-regularity locus over \<open>V\<close>.\<close>
   define WV :: "(((real^2)^'n) \<times> (real^2)) set"
     where "WV = {p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                              \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-                             \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+                             \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
   have WVeq: "WV = (V \<times> UNIV) \<inter> {p :: ((real^2)^'n) \<times> (real^2).
                  A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+               \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
     unfolding WV_def by auto
   have oWV: "open WV"
     unfolding WVeq
@@ -621,23 +621,23 @@ proof -
     by (rule meager_Union_nat) (rule mbad)
   \<comment> \<open>The M4 bad set injects into the union of engine bad sets.\<close>
   have inj_sub: "{x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0} \<subseteq> (\<Union>n. bad n)"
+                  \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0} \<subseteq> (\<Union>n. bad n)"
   proof
     fix x assume "x \<in> {x \<in> V. \<exists>\<omega>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+                  \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
     then obtain \<omega> :: "real^2" where
       xV: "x \<in> V" and
       g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" and
-      h0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" and
+      h0: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" and
       anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0" and
       dms: "surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))" and
-      dcz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+      dcz: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
       by blast
     have inWV: "(x, \<omega>) \<in> WV"
       unfolding WV_def using xV anz dms dcz by simp
@@ -720,10 +720,10 @@ lemma meager_bad_regular_stratum_on:
   fixes V :: "((real^2)^'n) set" and \<omega>0 \<omega>s :: "real^2" and K :: "(real^2) set"
   assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>K. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+                  \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
   by (rule meager_subset[OF _ meager_bad_regular_stratum[OF openV Vne c6]]) auto
 
 
@@ -736,7 +736,7 @@ text \<open>The planar engine applied to \<open>G = cplx_r2 \<circ> af\<close> w
   \<open>af = CARD \<noteq> 0\<close>) --- no box cover needed.  Witness bridge: at an
   array-factor null every \<open>HessU\<close> term except the \<open>Hcmat\<close> block vanishes and
   \<open>Hcmat\<close> reduces to the first-moment Gram, giving
-  \<open>det HessU = 4 gain\<^sup>2 (det(matrix Dcvec) \<cdot> Im(cnj \<mu>\<^sub>1 \<mu>\<^sub>2))\<^sup>2\<close>; the same quantity
+  \<open>matrix_det HessU = 4 gain\<^sup>2 (matrix_det(matrix Dcvec) \<cdot> Im(cnj \<mu>\<^sub>1 \<mu>\<^sub>2))\<^sup>2\<close>; the same quantity
   is the slice-Jacobian determinant of \<open>afR2\<close>, so degeneracy with
   \<open>gain \<noteq> 0\<close> (pole-free) forbids a surjective slice derivative.\<close>
 
@@ -773,17 +773,17 @@ lemma HessU_at_null:
   unfolding HessU_dip_entry_moments
   by (simp add: gradUc_at_null[OF null] Uc_at_null[OF null])
 
-text \<open>The determinant identity at nulls: \<open>det HessU = 4 gain\<^sup>2 (detJ \<cdot> Im(cnj M\<^sub>2 M\<^sub>3))\<^sup>2\<close>,
-  where \<open>detJ = det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))\<close> and \<open>M\<^sub>2, M\<^sub>3\<close> are the first
+text \<open>The determinant identity at nulls: \<open>matrix_det HessU = 4 gain\<^sup>2 (detJ \<cdot> Im(cnj M\<^sub>2 M\<^sub>3))\<^sup>2\<close>,
+  where \<open>detJ = matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))\<close> and \<open>M\<^sub>2, M\<^sub>3\<close> are the first
   moments.  The slice Jacobian of \<open>cplx_r2 \<circ> af\<close> has determinant
-  \<open>detJ \<cdot> Im(cnj M\<^sub>2 M\<^sub>3)\<close>, hence \<open>det HessU = 4 gain\<^sup>2 (det sliceJac)\<^sup>2\<close>.\<close>
+  \<open>detJ \<cdot> Im(cnj M\<^sub>2 M\<^sub>3)\<close>, hence \<open>matrix_det HessU = 4 gain\<^sup>2 (matrix_det sliceJac)\<^sup>2\<close>.\<close>
 
 lemma det_HessU_at_null:
   fixes x :: "(real^2)^'n" and \<omega> \<omega>0 \<omega>s :: "real^2"
   assumes nullA: "Afun x (cvec_dip \<omega>0 \<omega>s \<omega>) = 0"
-  shows "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
+  shows "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
        = 4 * (gain_dip \<omega>)\<^sup>2
-           * (det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+           * (matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
               * Im (cnj (Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 1)
                     * Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 2))\<^sup>2"
 proof -
@@ -843,16 +843,16 @@ proof -
     using ReSym
     by (simp add: sum_2 n1_def n2_def r12_def \<mu>1_def \<mu>2_def algebra_simps)
   \<comment> \<open>determinant via the 2x2 formula and pure algebra\<close>
-  have detJ: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = j11 * j22 - j12 * j21"
+  have detJ: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = j11 * j22 - j12 * j21"
     unfolding j11_def j12_def j21_def j22_def
     by (simp add: det_2 matrix_def axis_def)
-  have det2: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
+  have det2: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
       = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 1
         * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 2
       - HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2
         * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 1"
     by (simp add: det_2)
-  have detH: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
+  have detH: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
       = 4 * (g * g) * ((j11 * j22 - j12 * j21) * (j11 * j22 - j12 * j21))
           * (n1 * n2 - r12 * r12)"
     unfolding det2 entry qform
@@ -1180,7 +1180,7 @@ lemma null_no_surj_slice:
   assumes oC: "open C" and wC: "\<omega> \<in> C"
     and gnz: "gain_dip \<omega> \<noteq> 0"
     and null: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0"
-    and hess0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+    and hess0: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
   shows "\<not> (\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within C) \<and> surj D)"
 proof
   assume "\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within C) \<and> surj D"
@@ -1211,7 +1211,7 @@ proof
     by (rule matrix_vector_mul(2)[OF linD])
   have surjM: "surj (\<lambda>y. matrix D *v y)"
     unfolding matD by (rule sD)
-  have detD: "det (matrix D) \<noteq> 0"
+  have detD: "matrix_det (matrix D) \<noteq> 0"
     using surjM by (simp add: surj_matrix_vector_iff_det)
   have ent: "matrix D $ i $ j = cplx_r2 (S (axis j 1)) $ i" for i j
     unfolding DEq matrix_def by simp
@@ -1223,7 +1223,7 @@ proof
     unfolding ent by (simp add: cplx_r2_def vector_2)
   have e22: "matrix D $ 2 $ 2 = Im (S (axis 2 1))"
     unfolding ent by (simp add: cplx_r2_def vector_2)
-  have detD_eq: "det (matrix D) = Im (cnj (S (axis 1 1)) * S (axis 2 1))"
+  have detD_eq: "matrix_det (matrix D) = Im (cnj (S (axis 1 1)) * S (axis 2 1))"
     by (simp add: det_2 e11 e12 e21 e22 algebra_simps)
   \<comment> \<open>compute the determinant in moment form\<close>
   define j11 where "j11 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) $ 1"
@@ -1234,21 +1234,21 @@ proof
       = (j11 * j22 - j12 * j21) * Im (cnj \<mu>1 * \<mu>2)"
     unfolding Sval j11_def j12_def j21_def j22_def
     by (simp add: algebra_simps)
-  have detJ: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = j11 * j22 - j12 * j21"
+  have detJ: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = j11 * j22 - j12 * j21"
     unfolding j11_def j12_def j21_def j22_def
     by (simp add: det_2 matrix_def axis_def)
   \<comment> \<open>the B4 connection: degeneracy kills exactly this quantity\<close>
   have nullA: "Afun x (cvec_dip \<omega>0 \<omega>s \<omega>) = 0"
     using null by (simp add: A_cart_eq_Afun)
   have "4 * (gain_dip \<omega>)\<^sup>2
-          * (det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * Im (cnj \<mu>1 * \<mu>2))\<^sup>2 = 0"
+          * (matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * Im (cnj \<mu>1 * \<mu>2))\<^sup>2 = 0"
     using det_HessU_at_null[OF nullA] hess0
     unfolding \<mu>1_def \<mu>2_def c_def by simp
-  hence z0: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * Im (cnj \<mu>1 * \<mu>2) = 0"
+  hence z0: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) * Im (cnj \<mu>1 * \<mu>2) = 0"
     using gnz by simp
   have z1: "(j11 * j22 - j12 * j21) * Im (cnj \<mu>1 * \<mu>2) = 0"
     using z0 unfolding detJ .
-  have z2: "det (matrix D) = (j11 * j22 - j12 * j21) * Im (cnj \<mu>1 * \<mu>2)"
+  have z2: "matrix_det (matrix D) = (j11 * j22 - j12 * j21) * Im (cnj \<mu>1 * \<mu>2)"
     unfolding detD_eq Imform by (rule refl)
   show False using detD z2 z1 by simp
 qed
@@ -1264,7 +1264,7 @@ lemma meager_Azero_degenerate_stratum:
     and oddN: "odd CARD('n)"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
 proof -
   obtain G' :: "(((real^2)^'n) \<times> (real^2)) \<Rightarrow> ((((real^2)^'n) \<times> (real^2)) \<Rightarrow>\<^sub>L (real^2))"
@@ -1284,17 +1284,17 @@ proof -
     using parametric_transversality_meager_planar_config[OF openV Vne open_UNIV
             derGn contGn regn] by blast
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}
        \<subseteq> {x \<in> V. \<exists>\<omega>\<in>(UNIV :: (real^2) set).
       afR2 \<omega>0 \<omega>s (x, \<omega>) = 0 \<and>
       \<not> (\<exists>D. ((\<lambda>u. afR2 \<omega>0 \<omega>s (x, u)) has_derivative D) (at \<omega> within UNIV) \<and> surj D)}"
   proof
     fix x assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0}"
     then obtain \<omega> where xV: "x \<in> V" and wD: "\<omega> \<in> OmegaPF ctr \<delta>"
-      and h0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+      and h0: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
       and a0: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> = 0"
       by blast
     have gnz: "gain_dip \<omega> \<noteq> 0"
@@ -2043,7 +2043,7 @@ lemma M6_witness_gdip_deriv_zero:
   assumes pfw: "sin (\<omega> $ 1) \<noteq> 0"
     and g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
     and anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
-    and detz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
+    and detz: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
   shows "frechet_derivative gdip (at (\<omega>$1)) 1 = 0"
 proof -
   define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
@@ -2100,7 +2100,7 @@ section \<open>The steering determinant formula (copied verbatim from Nonemptine
 
 lemma Dcvec_det_eq:
     fixes \<omega>0 \<omega>s \<omega> :: "real^2"
-    shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+    shows "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
            = sin (\<omega>$1) * (cos (\<omega>$1)
                - sin (\<omega>$1) * (((kx \<omega>0 - kx
   \<omega>s)/(kz \<omega>s - kz \<omega>0)) * cos (\<omega>$2)
@@ -2251,10 +2251,10 @@ lemma meager_steering_singular_stratum:
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+                  \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
 proof -
   define Ac :: real where "Ac = (kx \<omega>0 - kx \<omega>s) / (kz \<omega>s - kz \<omega>0)"
   define Bc :: real where "Bc = (ky \<omega>0 - ky \<omega>s) / (kz \<omega>s - kz \<omega>0)"
@@ -2301,24 +2301,24 @@ proof -
           finite_imageI[OF finite_cartesian_product[OF finS1 finS2]]])
   text \<open>Witness confinement: every bad witness angle lies in \<open>K\<close>.\<close>
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}
+                  \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}
              \<subseteq> (\<Union>\<omega>\<in>K. slice \<omega>)"
   proof
     fix x :: "(real^2)^'n"
     assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-                  \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+                  \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
                   \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
                   \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-                  \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+                  \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
     then obtain \<omega> :: "real^2" where wD: "\<omega> \<in> OmegaPF ctr \<delta>"
       and g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
-      and hz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+      and hz: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
       and anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
       and sj: "surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))"
-      and dz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
+      and dz: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
       by blast
     have s1: "sin (\<omega> $ 1) \<noteq> 0" by (rule bspec[OF pf wD])
     have gd0: "frechet_derivative gdip (at (\<omega> $ 1)) 1 = 0"
@@ -2374,7 +2374,7 @@ lemma meager_grad_x_regular_part:
   fixes V :: "((real^2)^'n) set" and \<omega>0 \<omega>s :: "real^2"
   assumes openV: "open V" and Vne: "V \<noteq> {}"
   shows "meager {x \<in> V. \<exists>\<omega> :: real^2. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-            \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+            \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
             \<and> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
 proof -
   \<comment> \<open>The explicit x-partial field (the RHS of @{thm has_derivative_gradU_dip_x_explicit}).\<close>
@@ -2521,25 +2521,25 @@ proof -
 
   \<comment> \<open>Step 5: the M5a bad set injects into the union of engine bad sets.\<close>
   have set_rw: "{x \<in> V. \<exists>\<omega> :: real^2. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-            \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+            \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
             \<and> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x)
                      \<and> surj Dx)}
        = {x \<in> V. \<exists>\<omega> :: real^2. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-            \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+            \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
             \<and> surj (DxF x \<omega>)}"
     unfolding witness_iff by (rule refl)
   have inj_sub: "{x \<in> V. \<exists>\<omega> :: real^2. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-            \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+            \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
             \<and> surj (DxF x \<omega>)} \<subseteq> (\<Union>n. bad n)"
   proof
     fix x :: "(real^2)^'n"
     assume "x \<in> {x \<in> V. \<exists>\<omega> :: real^2. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-            \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+            \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
             \<and> surj (DxF x \<omega>)}"
     then obtain \<omega> :: "real^2" where
       xV: "x \<in> V" and
       g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" and
-      h0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" and
+      h0: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" and
       sx: "surj (DxF x \<omega>)"
       by blast
     have inWV: "(x, \<omega>) \<in> WV"

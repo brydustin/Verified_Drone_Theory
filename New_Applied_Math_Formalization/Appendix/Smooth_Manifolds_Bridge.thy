@@ -1,4 +1,4 @@
-theory Higher_Diff_Bridge_2026
+theory Smooth_Manifolds_Bridge
   imports "HOL-Analysis.Analysis" "Smooth_Manifolds.Smooth"
 begin
 

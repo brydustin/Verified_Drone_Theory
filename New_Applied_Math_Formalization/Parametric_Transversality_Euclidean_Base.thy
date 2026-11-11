@@ -280,7 +280,34 @@ text \<open>
 \<close>
 
 
-thm baby_Sard
+text \<open>Isabelle2026 states \<open>baby_Sard\<close> for Euclidean spaces with \<open>dim (range f')\<close>.  This is the
+  Cartesian form with \<open>rank (matrix f')\<close> used below.\<close>
+
+lemma baby_Sard_cart:
+  fixes f :: "real^'m::finite \<Rightarrow> real^'n::finite"
+  assumes mlen: "CARD('m) \<le> CARD('n)"
+    and der: "\<And>x. x \<in> S \<Longrightarrow> (f has_derivative f' x) (at x within S)"
+    and rank: "\<And>x. x \<in> S \<Longrightarrow> rank (matrix (f' x)) < CARD('n)"
+  shows "negligible (f ` S)"
+proof -
+  have 1: "DIM(real^'m) \<le> DIM(real^'n)"
+    using mlen by simp
+  have 3: "dim (f' x ` UNIV) < DIM(real^'n)" if x: "x \<in> S" for x
+  proof -
+    have lin: "linear (f' x)"
+      using der[OF x] has_derivative_linear by blast
+    have "range (f' x) = range (\<lambda>v. matrix (f' x) *v v)"
+      using lin by (simp add: matrix_works)
+    then have "dim (range (f' x)) = rank (matrix (f' x))"
+      by (simp add: rank_dim_range)
+    then show ?thesis
+      using rank[OF x] by simp
+  qed
+  show ?thesis
+    by (rule baby_Sard[OF 1 der 3])
+qed
+
+thm baby_Sard_cart
 
 lemma negligible_critical_values_from_charts:
   fixes charts ::
@@ -300,7 +327,7 @@ proof -
   have "negligible ((proj \<circ> charts i) ` (Crit i))" for i
   proof -
     have "negligible ((proj \<circ> charts i) ` (Crit i))"
-    proof (rule baby_Sard[where f = "proj \<circ> charts i" and S = "Crit i" and f' = "\<lambda>x. blinfun_apply (D i x)"])
+    proof (rule baby_Sard_cart[where f = "proj \<circ> charts i" and S = "Crit i" and f' = "\<lambda>x. blinfun_apply (D i x)"])
       show "CARD('m) \<le> CARD('m)"
         by simp
       show "\<And>x. x \<in> Crit i \<Longrightarrow>
@@ -664,18 +691,18 @@ proof -
     using continuous_on_compose2[OF cgW cci sub] by (simp add: o_def)
   have ent: "continuous_on U (\<lambda>u. blinfun_apply (G' (charts u)) z)" for z
     by (rule bounded_bilinear.continuous_on[OF bounded_bilinear_blinfun_apply GC continuous_on_const])
-  have det_eq: "\<And>u. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w)))
+  have det_eq: "\<And>u. matrix_det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w)))
         = blinfun_apply (G' (charts u)) (0, axis 1 1) $ 1 * blinfun_apply (G' (charts u)) (0, axis 2 1) $ 2
         - blinfun_apply (G' (charts u)) (0, axis 2 1) $ 1 * blinfun_apply (G' (charts u)) (0, axis 1 1) $ 2"
     by (simp add: det_2 matrix_def)
-  have detc: "continuous_on U (\<lambda>u. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))))"
+  have detc: "continuous_on U (\<lambda>u. matrix_det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))))"
   proof -
     have e2: "continuous_on U (\<lambda>u. blinfun_apply (G' (charts u)) z $ i)" for z i
       by (rule bounded_linear.continuous_on[OF bounded_linear_vec_nth ent])
     show ?thesis unfolding det_eq by (intro continuous_intros e2)
   qed
   have surj_det: "surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))
-                \<longleftrightarrow> det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) \<noteq> 0" for u
+                \<longleftrightarrow> matrix_det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) \<noteq> 0" for u
   proof -
     have "surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))
         \<longleftrightarrow> inj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))"
@@ -684,10 +711,10 @@ proof -
     thus ?thesis using det_nz_iff_inj[OF slice_linear] by blast
   qed
   have crit_eq: "{u \<in> U. \<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))}
-               = {u \<in> U. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) = 0}"
+               = {u \<in> U. matrix_det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) = 0}"
     by (auto simp: surj_det)
   have "closedin (top_of_set U)
-          {u \<in> U. det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) = 0}"
+          {u \<in> U. matrix_det (matrix (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))) = 0}"
     by (rule continuous_closedin_preimage_constant[OF detc])
   with crit_eq have cl: "closedin (top_of_set U)
           {u \<in> U. \<not> surj (\<lambda>w::real^2. blinfun_apply (G' (charts u)) (0, w))}" by simp
@@ -1565,7 +1592,7 @@ proof -
   have contF: "continuous_on U F"
     by (rule has_derivative_continuous_on[OF der])
   have neg: "negligible (F ` K n)" for n
-  proof (rule baby_Sard[OF mlen])
+  proof (rule baby_Sard_cart[OF mlen])
     show "\<And>x. x \<in> K n \<Longrightarrow> (F has_derivative F' x) (at x within K n)"
       using der KU has_derivative_subset by blast
     show "\<And>x. x \<in> K n \<Longrightarrow> rank (matrix (F' x)) < CARD('n)"
@@ -1633,7 +1660,7 @@ proof (rule meager_Union_nat)
     have cpt: "compact ((proj \<circ> charts i) ` (K n))"
       using compact_continuous_image[OF continuous_on_subset[OF contpc KsubCrit] Kc] .
     have neg: "negligible ((proj \<circ> charts i) ` (K n))"
-    proof (rule baby_Sard[where f = "proj \<circ> charts i" and S = "K n"
+    proof (rule baby_Sard_cart[where f = "proj \<circ> charts i" and S = "K n"
               and f' = "\<lambda>x. blinfun_apply (D i x)"])
       show "CARD('m) \<le> CARD('m)" by simp
       show "\<And>x. x \<in> K n \<Longrightarrow>

@@ -1,5 +1,5 @@
 theory Nonemptiness_Robust1
-  imports Nonemptiness_Regnonzero_Appendix "Applied_Math_HigherDiff.Higher_Differentiability_Multi"
+  imports Nonemptiness_Regnonzero_Appendix Smooth_Manifolds_Bridge
 begin
 
 section \<open>The robust feasible set (concrete \<open>thm:final\<close> objects)\<close>
@@ -213,7 +213,7 @@ text \<open>TeX (D_edit_May18, \eqref{X0def}/\eqref{F0}, the \<^emph>\<open>acti
   of the symmetric \<open>2\<times>2\<close> Hessian.  \<open>ctr\<close> is the design direction \<open>(\<theta>\<^sub>0,\<phi>\<^sub>0)\<close>;
   \<open>\<partial>B\<^sub>\<epsilon>(ctr) = sphere ctr \<epsilon>\<close>, \<open>B\<^sub>\<epsilon>(ctr) = ball ctr \<epsilon>\<close>.  Crucially \<open>X\<^sub>0\<close> now depends on the real
   derivatives of \<^const>\<open>U_cart\<close> (via \<open>gradU\<close>/\<open>HessU\<close> below), and the nondegeneracy
-  margin \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close> is exactly the \<open>det \<nabla>\<^sup>2U \<noteq> 0\<close> condition the determinant work secures.\<close>
+  margin \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) > 0\<close> is exactly the \<open>matrix_det \<nabla>\<^sup>2U \<noteq> 0\<close> condition the determinant work secures.\<close>
 
 definition angle2 :: "real \<Rightarrow> real \<Rightarrow> real^2" where
   \<comment> \<open>the angle point \<open>(\<theta>,\<phi>)\<close>\<close>
@@ -249,7 +249,7 @@ proof -
   have "((U_cart cvec gain x) has_derivative dU_cart cvec dc gain dgain x \<omega>) (at \<omega>)"
     using has_derivative_U_cart[OF assms, where x = x] by simp
   from has_derivative_to_gradient[OF this]
-  have "GRAD (U_cart cvec gain x) \<omega>
+  have "GDERIV (U_cart cvec gain x) \<omega>
           :> (\<Sum>i\<in>UNIV. dU_cart cvec dc gain dgain x \<omega> (axis i 1) *\<^sub>R axis i 1)" .
   thus ?thesis unfolding gradU_def by (rule grad_fun_eq)
 qed
@@ -2487,7 +2487,7 @@ lemma Hcmat_12:
   by (simp add: Hcmat_def)
 
 text \<open>\<^bold>\<open>The Hessian-determinant component \<open>\<Phi>\<^sub>3\<close> in \<open>c\<close>-coordinates IS a moment polynomial.\<close>
-  \<open>det \<nabla>\<^sup>2\<^sub>c U = H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2 = det(Hcmat)\<close>, a polynomial in the six \<open>M_paper\<close> moments
+  \<open>matrix_det \<nabla>\<^sup>2\<^sub>c U = H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2 = matrix_det(Hcmat)\<close>, a polynomial in the six \<open>M_paper\<close> moments
   --- the third component \<open>F\<^sub>3\<close> of the bad-point map factored through \<open>\<M>\<close> (\<open>\<Phi> = F \<circ> \<M>\<close>).\<close>
 
 lemma detHessU_c:
@@ -2537,9 +2537,9 @@ proof -
   have hd: "(U_cart (\<lambda>c. c) (\<lambda>_. 1) x
               has_derivative dU_cart (\<lambda>c. c) (\<lambda>h. h) (\<lambda>_. 1) (\<lambda>_. 0) x c) (at c)"
     by (rule has_derivative_U_cart[OF has_derivative_ident has_derivative_const])
-  have "GRAD (U_cart (\<lambda>c. c) (\<lambda>_. 1) x) c :> \<nabla> (U_cart (\<lambda>c. c) (\<lambda>_. 1) x) c"
-    by (rule grad_fun_satisfies_GRAD[OF has_derivative_to_gradient[OF hd]])
-  thus ?thesis by (simp add: has_gradient_def gradU_def)
+  have "GDERIV (U_cart (\<lambda>c. c) (\<lambda>_. 1) x) c :> \<nabla> (U_cart (\<lambda>c. c) (\<lambda>_. 1) x) c"
+    by (rule grad_fun_satisfies_GDERIV[OF has_derivative_to_gradient[OF hd]])
+  thus ?thesis by (simp add: gderiv_def gradU_def)
 qed
 
 text \<open>\<^bold>\<open>First-order bridge.\<close>  The actual pattern's \<open>\<omega>\<close>-derivative is the chain+product rule
@@ -2728,7 +2728,7 @@ qed
 text \<open>\<^bold>\<open>The Hessian entry in moment-space form\<close> --- combine the two: \<open>HessU_dip\<close>'s \<open>(k,l)\<close>
   entry is the explicit moment expression (jet coefficients \<open>Dcvec_dip\<close>, \<open>D\<^sup>2cvec_dip\<close>,
   \<open>\<partial>gdip\<close>, \<open>\<partial>\<^sup>2gdip\<close>, \<open>Hcmat\<close>, all \<open>x\<close>-constant; the \<open>x\<close>-dependence is entirely through the
-  moments \<open>\<nabla>\<^sub>cV\<close>, \<open>Hcmat\<close>, \<open>V\<close> = \<open>M_paper\<close>).  So \<open>det HessU_dip\<close> factors through \<open>M_paper\<close>.\<close>
+  moments \<open>\<nabla>\<^sub>cV\<close>, \<open>Hcmat\<close>, \<open>V\<close> = \<open>M_paper\<close>).  So \<open>matrix_det HessU_dip\<close> factors through \<open>M_paper\<close>.\<close>
 
 lemma HessU_dip_entry_moments:
   fixes x :: "(real^2)^'n"
@@ -3113,16 +3113,16 @@ text \<open>\<^bold>\<open>Surjectivity of a square linear map \<open>\<longleft
   marks \<open>\<omega>\<close> as \<^emph>\<open>bad\<close> when the \<open>\<omega>\<close>-derivative of \<open>G\<close> fails to be surjective.  For \<open>G =
   \<nabla>\<^sub>\<Omega>U\<close> that derivative is the action \<open>(*v) (\<nabla>\<^sup>2U)\<close> of the Hessian (cf. @{thm
   has_derivative_gradU_c}, @{thm HessU_c_eq}), so the non-surjectivity test is literally
-  \<open>det (\<nabla>\<^sup>2U) = 0\<close> --- the third component of \<open>\<Phi>\<close>.  This brick is the linear-algebra hinge:
-  for a square matrix \<open>A\<close>, the linear map \<open>h \<mapsto> A *v h\<close> is onto iff \<open>det A \<noteq> 0\<close> (surjective
-  \<open>\<Rightarrow>\<close> right-inverse \<open>\<Rightarrow>\<close> two-sided inverse on the square shape \<open>\<Rightarrow>\<close> invertible \<open>\<Rightarrow>\<close> \<open>det \<noteq> 0\<close>;
-  conversely \<open>det \<noteq> 0 \<Rightarrow>\<close> invertible \<open>\<Rightarrow>\<close> bijective \<open>\<Rightarrow>\<close> surjective).\<close>
+  \<open>matrix_det (\<nabla>\<^sup>2U) = 0\<close> --- the third component of \<open>\<Phi>\<close>.  This brick is the linear-algebra hinge:
+  for a square matrix \<open>A\<close>, the linear map \<open>h \<mapsto> A *v h\<close> is onto iff \<open>matrix_det A \<noteq> 0\<close> (surjective
+  \<open>\<Rightarrow>\<close> right-inverse \<open>\<Rightarrow>\<close> two-sided inverse on the square shape \<open>\<Rightarrow>\<close> invertible \<open>\<Rightarrow>\<close> \<open>matrix_det \<noteq> 0\<close>;
+  conversely \<open>matrix_det \<noteq> 0 \<Rightarrow>\<close> invertible \<open>\<Rightarrow>\<close> bijective \<open>\<Rightarrow>\<close> surjective).\<close>
 
 lemma surj_matrix_vector_iff_det:
   fixes A :: "real^'n^'n"
-  shows "surj ((*v) A) \<longleftrightarrow> det A \<noteq> 0"
+  shows "surj ((*v) A) \<longleftrightarrow> matrix_det A \<noteq> 0"
 proof
-  assume "det A \<noteq> 0"
+  assume "matrix_det A \<noteq> 0"
   hence "invertible A" by (simp add: invertible_det_nz)
   hence "bij ((*v) A)" by (simp add: invertible_eq_bij)
   thus "surj ((*v) A)" by (simp add: bij_betw_def)
@@ -3132,7 +3132,7 @@ next
     using matrix_right_invertible_surjective by blast
   have "B ** A = mat 1" by (rule matrix_left_right_inverse1[OF AB])
   with AB have "invertible A" unfolding invertible_def by blast
-  thus "det A \<noteq> 0" by (simp add: invertible_det_nz)
+  thus "matrix_det A \<noteq> 0" by (simp add: invertible_det_nz)
 qed
 
 text \<open>\<^bold>\<open>The \<open>2\<times>2\<close> determinant in \<open>\<Phi>\<close>'s coordinates.\<close>  For a \<^emph>\<open>symmetric\<close> Hessian (\<open>H\<^sub>1\<^sub>2 = H\<^sub>2\<^sub>1\<close>)
@@ -3141,7 +3141,7 @@ text \<open>\<^bold>\<open>The \<open>2\<times>2\<close> determinant in \<open>\
 lemma det_2_symmetric:
   fixes A :: "real^2^2"
   assumes "A $ 1 $ 2 = A $ 2 $ 1"
-  shows "det A = A $ 1 $ 1 * A $ 2 $ 2 - (A $ 1 $ 2)\<^sup>2"
+  shows "matrix_det A = A $ 1 $ 1 * A $ 2 $ 2 - (A $ 1 $ 2)\<^sup>2"
   using assms by (simp add: det_2 power2_eq_square)
 
 text \<open>\<^bold>\<open>A surjective \<open>\<bm>x\<close>-partial forces a surjective joint derivative.\<close>  For the regular-value
@@ -3315,7 +3315,7 @@ text \<open>\<^bold>\<open>The actual dipole gain is nonzero off the endfire nul
   \<open>gdip \<theta> = (edip \<theta>)\<^sup>2\<close>; the half-wave dipole pattern \<open>edip \<theta> = cos(\<pi>/2 cos\<theta>)/sin\<theta>\<close> vanishes only where
   \<open>cos(\<pi>/2 cos\<theta>) = 0 \<longleftrightarrow> cos\<theta> = \<pm>1 \<longleftrightarrow> sin\<theta> = 0\<close>.  So off \<open>sin\<theta> = 0\<close> the gain is strictly positive.
   Crucially the steering determinant carries a \<open>sin(\<omega>\<^sub>1)\<close> factor (its \<open>\<omega>\<close>-column is
-  \<open>(-sin\<omega>\<^sub>1 sin\<omega>\<^sub>2, sin\<omega>\<^sub>1 cos\<omega>\<^sub>2)\<close>), so the immersion hypothesis \<open>det(Dcvec) \<noteq> 0\<close> already forces
+  \<open>(-sin\<omega>\<^sub>1 sin\<omega>\<^sub>2, sin\<omega>\<^sub>1 cos\<omega>\<^sub>2)\<close>), so the immersion hypothesis \<open>matrix_det(Dcvec) \<noteq> 0\<close> already forces
   \<open>sin(\<omega>\<^sub>1) \<noteq> 0\<close>, hence \<open>gain_dip \<omega> \<noteq> 0\<close> --- no separate gain hypothesis is needed.\<close>
 
 lemma gain_dip_nonzero_of_sin:
@@ -3353,13 +3353,13 @@ qed
 
 text \<open>\<^bold>\<open>The steering determinant carries the \<open>sin(\<omega>\<^sub>1)\<close> factor.\<close>  At \<open>sin(\<omega>\<^sub>1) = 0\<close> the steering
   Jacobian \<open>Dcvec_dip\<close> sends \<open>axis 2 1\<close> to \<open>0\<close> (its \<open>\<omega>\<close>-column vanishes), so it is not injective and
-  its determinant is \<open>0\<close>.  Contrapositively \<open>det \<noteq> 0 \<Longrightarrow> sin(\<omega>\<^sub>1) \<noteq> 0\<close>, which with
+  its determinant is \<open>0\<close>.  Contrapositively \<open>matrix_det \<noteq> 0 \<Longrightarrow> sin(\<omega>\<^sub>1) \<noteq> 0\<close>, which with
   @{thm gain_dip_nonzero_of_sin} yields \<open>gain_dip \<omega> \<noteq> 0\<close> from the immersion hypothesis alone.\<close>
 
 lemma Dcvec_det_zero_of_sin:
   fixes \<omega>0 \<omega>s \<omega> :: "real^2"
   assumes "sin (\<omega> $ 1) = 0"
-  shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
+  shows "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
 proof -
   have lin: "linear (Dcvec_dip \<omega>0 \<omega>s \<omega>)"
     by (rule bounded_linear.linear[OF has_derivative_bounded_linear[OF has_derivative_cvec_dip]])
@@ -3374,7 +3374,7 @@ qed
 
 text \<open>\<^bold>\<open>(A3) The determinant payoff: the configuration partial is onto \<open>\<real>\<^sup>2\<close>.\<close>  When \<open>A \<noteq> 0\<close>, the
   moment map is a submersion (\<open>surj (DM_paper_x \<dots>)\<close>, \<open>lem:Msurj\<close>), and the steering map is an
-  immersion (\<open>det (Dcvec_dip \<dots>) \<noteq> 0\<close>, which also forces \<open>gain_dip \<omega> \<noteq> 0\<close>), the \<open>\<bm>x\<close>-derivative
+  immersion (\<open>matrix_det (Dcvec_dip \<dots>) \<noteq> 0\<close>, which also forces \<open>gain_dip \<omega> \<noteq> 0\<close>), the \<open>\<bm>x\<close>-derivative
   of \<open>\<nabla>\<^sub>\<Omega>U\<close> is surjective.\<close>
 
 text \<open>\<^bold>\<open>Analytic core of the determinant payoff.\<close>  For a nonzero complex \<open>a\<close>, the real-linear
@@ -3625,7 +3625,7 @@ lemma gradU_dip_x_partial_surj:
   fixes x :: "(real^2)^'n"
   assumes Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
     and Msurj: "surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))"
-    and steer: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+    and steer: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
   shows "\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx"
 proof -
   define dE :: "complex^6 \<Rightarrow> real^2" where
@@ -3922,7 +3922,7 @@ lemma open_A_cart_nonzero:
   shows "open {p :: ((real^2)^'n) \<times> (real^2).
                  A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+               \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
  proof -
     \<comment> \<open>Conjunct 1: array factor nonzero --- A_cart =
   Afun, jointly continuous (brick 2c-i).\<close>
@@ -3958,11 +3958,11 @@ lemma open_A_cart_nonzero:
       show ?thesis unfolding eq by (rule continuous_open_vimage[OF
   open_surj_blinfun isc])
     qed
-    \<comment> \<open>Conjunct 3: steering-Jacobian det nonzero ---
+    \<comment> \<open>Conjunct 3: steering-Jacobian matrix_det nonzero ---
   det_2 in the continuous matrix entries.\<close>
     have contD: "continuous_on (UNIV :: (((real^2)^'n) \<times>
   (real^2)) set)
-                   (\<lambda>p. det (matrix (Dcvec_dip \<omega>0
+                   (\<lambda>p. matrix_det (matrix (Dcvec_dip \<omega>0
   \<omega>s (snd p))))"
     proof -
       have ent: "continuous_on (UNIV :: (((real^2)^'n) \<times>
@@ -3979,7 +3979,7 @@ lemma open_A_cart_nonzero:
         thus ?thesis
           by (metis continuous_on_Dcvec_dip_snd continuous_on_component) 
       qed
-      have eq: "(\<lambda>p :: ((real^2)^'n) \<times> (real^2). det
+      have eq: "(\<lambda>p :: ((real^2)^'n) \<times> (real^2). matrix_det
   (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))))
               = (\<lambda>p. vec_nth (vec_nth (matrix (Dcvec_dip
   \<omega>0 \<omega>s (snd p))) 1) 1
@@ -3993,7 +3993,7 @@ lemma open_A_cart_nonzero:
       show ?thesis unfolding eq by (intro continuous_intros ent)
     qed
 
-    have o3: "open {p :: ((real^2)^'n) \<times> (real^2). det
+    have o3: "open {p :: ((real^2)^'n) \<times> (real^2). matrix_det
   (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
       using open_Collect_neq[OF contD continuous_on_const] by simp
     \<comment> \<open>The regularity locus is the intersection of
@@ -4003,13 +4003,13 @@ lemma open_A_cart_nonzero:
   (snd p) \<noteq> 0
                  \<and> surj (DM_paper_x (fst p) (cvec_dip
   \<omega>0 \<omega>s (snd p)))
-                 \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s
+                 \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s
   (snd p))) \<noteq> 0}
                 = {p. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p)
   (snd p) \<noteq> 0}
                   \<inter> {p. surj (DM_paper_x (fst p) (cvec_dip
   \<omega>0 \<omega>s (snd p)))}
-                  \<inter> {p. det (matrix (Dcvec_dip \<omega>0
+                  \<inter> {p. matrix_det (matrix (Dcvec_dip \<omega>0
   \<omega>s (snd p))) \<noteq> 0}"
       by auto
     show ?thesis unfolding setEq by (intro open_Int o1 o2 o3)
@@ -4137,30 +4137,30 @@ lemma regular_value_on_gradU_dip:
   shows "regular_value_on (\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p))
             ({p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                              \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-                             \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}) 0"
+                             \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}) 0"
 proof (rule regular_value_on_via_x_partial)
   have eq: "{p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                             \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-                            \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}
+                            \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}
           = (V \<times> UNIV) \<inter> {p::((real^2)^'n) \<times> (real^2).
                  A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-               \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+               \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
     by auto
   show "open {p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                             \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-                            \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+                            \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
     unfolding eq
     by (intro open_Int open_Times open_A_cart_nonzero openV open_UNIV)
 next
   fix x w
   assume mem: "(x, w) \<in> {p \<in> V \<times> UNIV. A_cart (cvec_dip \<omega>0 \<omega>s) (fst p) (snd p) \<noteq> 0
                             \<and> surj (DM_paper_x (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))
-                            \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
+                            \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s (snd p))) \<noteq> 0}"
     and G0: "(\<lambda>p. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip (fst p) (snd p)) (x, w) = 0"
   from mem have Anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x w \<noteq> 0"
     and DMs: "surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s w))"
-    and dets: "det (matrix (Dcvec_dip \<omega>0 \<omega>s w)) \<noteq> 0" by auto
+    and dets: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s w)) \<noteq> 0" by auto
   obtain Dx where dx: "((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y w) has_derivative Dx) (at x)"
       and sx: "surj Dx"
     using gradU_dip_x_partial_surj[OF Anz DMs dets] by blast
@@ -4189,9 +4189,9 @@ subsection \<open>Tying the bad-point map \<open>\<Phi>\<close> to \<open>U_cart
 
 text \<open>\<^bold>\<open>This is the bridge that the determinant computations exist for.\<close>  On the regular
   stratum the paper's bad-point map (tex L516) is
-  \<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1 U, \<partial>\<^sub>c\<^sub>2 U, det \<nabla>\<^sup>2 U)\<close> with \<open>U = U_cart\<close> the actual radiation pattern.  Thus
+  \<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1 U, \<partial>\<^sub>c\<^sub>2 U, matrix_det \<nabla>\<^sup>2 U)\<close> with \<open>U = U_cart\<close> the actual radiation pattern.  Thus
   \<^item> \<open>\<Phi>\<^sub>1 = \<Phi>\<^sub>2 = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<nabla>U = 0\<close>  \<open>\<longleftrightarrow>\<close>  \<open>\<omega>\<close> is a \<^emph>\<open>critical point\<close> of the pattern;
-  \<^item> \<open>\<Phi>\<^sub>3 = det \<nabla>\<^sup>2 U = 0\<close>  \<open>\<longleftrightarrow>\<close> the critical point is \<^emph>\<open>degenerate\<close>.
+  \<^item> \<open>\<Phi>\<^sub>3 = matrix_det \<nabla>\<^sup>2 U = 0\<close>  \<open>\<longleftrightarrow>\<close> the critical point is \<^emph>\<open>degenerate\<close>.
   So \<open>\<Phi>(\<bm>x,\<omega>) = 0\<close> exactly picks out the degenerate critical points --- the configurations
   that must be excluded for \<open>\<bm>x \<in> X\<^sub>0\<close>.  The determinant (\<open>lem:Msurj\<close>: \<open>D\<^sub>x\<M>\<close> rank \<open>12\<close>) makes the
   moment map a submersion, so \<open>{\<Phi> = 0}\<close> is a positive-codimension submanifold (\<open>prop:dimZ\<close>)
@@ -4200,7 +4200,7 @@ text \<open>\<^bold>\<open>This is the bridge that the determinant computations 
 
 definition Phibad ::
   "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^3"
-  where \<comment> \<open>\<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1U, \<partial>\<^sub>c\<^sub>2U, det \<nabla>\<^sup>2U)\<close>; \<open>\<Phi> = 0 \<longleftrightarrow>\<close> degenerate critical point of \<open>U_cart\<close>\<close>
+  where \<comment> \<open>\<open>\<Phi> = (\<partial>\<^sub>c\<^sub>1U, \<partial>\<^sub>c\<^sub>2U, matrix_det \<nabla>\<^sup>2U)\<close>; \<open>\<Phi> = 0 \<longleftrightarrow>\<close> degenerate critical point of \<open>U_cart\<close>\<close>
   "Phibad cvec gain x \<omega> =
      vector [ gradU cvec gain x \<omega> $ 1,
               gradU cvec gain x \<omega> $ 2,
@@ -4237,8 +4237,8 @@ text \<open>\<^bold>\<open>The chart engine's non-surjectivity test \<open>=\<cl
   The transversality engine flags \<open>(\<bm>x,\<omega>)\<close> as critical exactly when the \<open>\<omega>\<close>-derivative of
   \<open>G = \<nabla>\<^sub>\<Omega>U\<close> has no surjective branch.  For the \<open>C\<^sup>2\<close> dipole that derivative is unique and
   equals the Hessian action \<open>(*v) (\<nabla>\<^sup>2U)\<close> (@{thm gradU_dip_has_derivative}); by @{thm
-  surj_matrix_vector_iff_det} it is onto iff \<open>det (\<nabla>\<^sup>2U) \<noteq> 0\<close>.  Hence the engine's
-  non-surjectivity predicate is \<^emph>\<open>literally\<close> \<open>det (\<nabla>\<^sup>2U) = 0\<close> --- the degeneracy condition that
+  surj_matrix_vector_iff_det} it is onto iff \<open>matrix_det (\<nabla>\<^sup>2U) \<noteq> 0\<close>.  Hence the engine's
+  non-surjectivity predicate is \<^emph>\<open>literally\<close> \<open>matrix_det (\<nabla>\<^sup>2U) = 0\<close> --- the degeneracy condition that
   enters \<open>\<Phi>\<close>'s third slot.  We phrase it with \<open>at \<omega> within \<Omega>\<close> (\<open>\<omega>\<close> interior to the open
   \<open>\<Omega>\<close>) so it plugs straight into the engine's bad-set description.\<close>
 
@@ -4247,7 +4247,7 @@ lemma not_surj_omega_deriv_iff_detHess_dip:
   assumes O: "open \<Omega>" and w: "\<omega> \<in> \<Omega>"
   shows "(\<not> (\<exists>D\<omega>. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D\<omega>)
                   (at \<omega> within \<Omega>) \<and> surj D\<omega>))
-         \<longleftrightarrow> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+         \<longleftrightarrow> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
 proof -
   have atw: "at \<omega> within \<Omega> = at \<omega>" by (rule at_within_open[OF w O])
   have hd: "((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative
@@ -4259,10 +4259,10 @@ proof -
                     (at \<omega>) \<and> surj D\<omega>)"
     hence "\<not> surj ((*v) (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
       using hd by blast
-    thus "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+    thus "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
       using surj_matrix_vector_iff_det by blast
   next
-    assume d0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+    assume d0: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
     show "\<not> (\<exists>D\<omega>. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D\<omega>)
                   (at \<omega>) \<and> surj D\<omega>)"
     proof
@@ -4289,17 +4289,17 @@ lemma HessU_dip_symmetric:
   unfolding HessU_def
   by (rule mixed_partials_commute[OF open_UNIV UNIV_I U_dip_Ck2])
 
-text \<open>\<^bold>\<open>Degenerate critical point \<open>\<Longrightarrow>\<close> the gradient vanishes and \<open>det (\<nabla>\<^sup>2U) = 0\<close>.\<close>  Combining
+text \<open>\<^bold>\<open>Degenerate critical point \<open>\<Longrightarrow>\<close> the gradient vanishes and \<open>matrix_det (\<nabla>\<^sup>2U) = 0\<close>.\<close>  Combining
   @{thm Phibad_zero_iff} (whose third slot is \<open>H\<^sub>1\<^sub>1H\<^sub>2\<^sub>2 - H\<^sub>1\<^sub>2\<^sup>2\<close>) with @{thm det_2} and the
   Hessian symmetry @{thm HessU_dip_symmetric}, \<open>\<Phi> = 0\<close> rewrites exactly to \<open>\<nabla>\<^sub>\<Omega>U = 0\<close> and
-  \<open>det (\<nabla>\<^sup>2U) = 0\<close> --- the form the chart engine consumes (via @{thm
+  \<open>matrix_det (\<nabla>\<^sup>2U) = 0\<close> --- the form the chart engine consumes (via @{thm
   not_surj_omega_deriv_iff_detHess_dip}).\<close>
 
 lemma Phibad_dip_imp_detHess0:
   fixes x :: "(real^2)^'n"
   assumes "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
   shows "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-       \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+       \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
 proof -
   from assms have conj:
     "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
@@ -4315,7 +4315,7 @@ proof -
   have sym: "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2
            = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 1"
     by (rule HessU_dip_symmetric)
-  have "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
+  have "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
         = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 1
             * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 2
           - HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2
@@ -4348,7 +4348,7 @@ proof
     and pb: "Phibad (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
   from Phibad_dip_imp_detHess0[OF pb]
   have g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
-    and d0: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" by blast+
+    and d0: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0" by blast+
   have "\<not> (\<exists>D. ((\<lambda>u. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x u) has_derivative D)
               (at \<omega> within UNIV) \<and> surj D)"
     using not_surj_omega_deriv_iff_detHess_dip[OF open_UNIV UNIV_I] d0 by blast
@@ -4468,7 +4468,7 @@ text \<open>\<^bold>\<open>=== The genuinely-complete dipole meagerness scaffold
   \<open>gain\<close> in \<open>\<omega>\<close>), so the capstone uses the \<^bold>\<open>dipole-specific\<close> \<open>Phi_bad_meager_dip\<close> below.  Proving
   it requires a \<^bold>\<open>three-stratum decomposition\<close> --- because the regular value @{thm
   regular_value_on_gradU_dip} only holds where the moment map is a submersion \<^bold>\<open>and\<close> the steering
-  map is an immersion.  The two non-regular strata (\<open>\<not> surj (DM_paper_x \<dots>)\<close> and \<open>det (Dcvec) = 0\<close>)
+  map is an immersion.  The two non-regular strata (\<open>\<not> surj (DM_paper_x \<dots>)\<close> and \<open>matrix_det (Dcvec) = 0\<close>)
   are positive-codimension and meager by their own arguments.  This mirrors the paper's
   \<open>prop:dimZ\<close>/\<open>prop_regnonzero\<close> stratification (where the strata meagerness are themselves the deep
   branch obligations).\<close>
@@ -4535,7 +4535,7 @@ proof -
     qed
 
 
-  have "det N = 1 / (c \<bullet> c)"
+  have "matrix_det N = 1 / (c \<bullet> c)"
     unfolding N_def
     by (simp add: det_2 cdot[symmetric] cc0 field_simps power2_eq_square,
         metis (no_types) add_divide_distrib arithmetic_simps(79) cc0 inner_real2 

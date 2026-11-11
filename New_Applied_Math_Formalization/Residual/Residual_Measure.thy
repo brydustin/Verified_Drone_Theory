@@ -126,4 +126,32 @@ proof (rule negligible_of_countable_line_slices)
     using assms(1,2) by simp
 qed (rule assms(3))
 
+text \<open>A negligible Borel set times a whole space is negligible.\<close>
+
+lemma negligible_Times_UNIV:
+  fixes A :: "'a::euclidean_space set"
+  assumes A: "A \<in> sets borel" and neg: "negligible A"
+  shows "negligible (A \<times> (UNIV :: 'b::euclidean_space set))"
+proof -
+  have "A \<in> null_sets lebesgue"
+    using neg by (simp add: negligible_iff_null_sets)
+  then have "emeasure lebesgue A = 0"
+    by (simp add: null_sets_def)
+  then have A0: "emeasure lborel A = 0"
+    using A by simp
+  have borel: "A \<times> (UNIV :: 'b set) \<in> sets borel"
+    by (rule borel_Times[OF A]) simp
+  have "emeasure lborel (A \<times> (UNIV :: 'b set))
+      = emeasure ((lborel :: 'a measure) \<Otimes>\<^sub>M (lborel :: 'b measure)) (A \<times> UNIV)"
+    by (simp add: lborel_prod)
+  also have "\<dots> = emeasure lborel A * emeasure lborel (UNIV :: 'b set)"
+    by (rule lborel.emeasure_pair_measure_Times) (use A in simp_all)
+  also have "\<dots> = 0"
+    by (simp add: A0)
+  finally have "A \<times> (UNIV :: 'b set) \<in> null_sets lborel"
+    using borel by (simp add: null_sets_def)
+  then show ?thesis
+    by (simp add: negligible_iff_null_sets null_sets_completionI)
+qed
+
 end

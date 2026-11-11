@@ -340,7 +340,7 @@ subsection \<open>Spine: block-triangular and rank-3 moment Jacobians (concrete)
 text \<open>TeX \<open>lem:block\<close> (L602): the partial derivatives establishing that
   \<open>J\<^sub>5 = \<partial>(\<Phi>\<^sub>1,\<Phi>\<^sub>2,H\<^sub>1\<^sub>1,H\<^sub>1\<^sub>2,H\<^sub>2\<^sub>2)/\<partial>(b\<^sub>1,b\<^sub>2,a\<^sub>1\<^sub>1,a\<^sub>1\<^sub>2,a\<^sub>2\<^sub>2)\<close> is block lower
   triangular with diagonal blocks \<open>2ga\<cdot>I\<^sub>2\<close> and \<open>-2ga\<cdot>I\<^sub>3\<close> (hence
-  \<open>det J\<^sub>5 = -32 g\<^sup>5 a\<^sup>5\<close>).  Stated as the genuine partial-derivative identities of
+  \<open>matrix_det J\<^sub>5 = -32 g\<^sup>5 a\<^sup>5\<close>).  Stated as the genuine partial-derivative identities of
   the concrete map.\<close>
 
 lemma lem_block:
@@ -642,7 +642,7 @@ text \<open>
 text \<open>
   \<^bold>\<open>On \<open>Du\<close> and real derivatives.\<close>  \<open>Du\<close> is the \<open>u\<close>-pair minor \<^emph>\<open>as a function of the
   working point\<close> \<open>x\<close>: it is the \<open>2\<times>2\<close> Jacobian determinant
-  \<open>Du x = det \<partial>(b\<^sub>1,a\<^sub>1\<^sub>1)/\<partial>(u\<^sub>i,u\<^sub>j) = \<beta>(u\<^sub>i x)\<alpha>(u\<^sub>j x) - \<beta>(u\<^sub>j x)\<alpha>(u\<^sub>i x)\<close>, where
+  \<open>Du x = matrix_det \<partial>(b\<^sub>1,a\<^sub>1\<^sub>1)/\<partial>(u\<^sub>i,u\<^sub>j) = \<beta>(u\<^sub>i x)\<alpha>(u\<^sub>j x) - \<beta>(u\<^sub>j x)\<alpha>(u\<^sub>i x)\<close>, where
   \<^emph>\<open>\<open>\<beta>,\<alpha>\<close> are themselves the partial derivatives\<close> \<open>\<partial>\<^sub>u b\<^sub>1 = \<beta>(u)\<close>,
   \<open>\<partial>\<^sub>u a\<^sub>1\<^sub>1 = \<alpha>(u)\<close> (= \<^const>\<open>betaU\<close>, \<^const>\<open>alphaU\<close>).  So the derivative content is
   already \<^emph>\<open>inside\<close> \<open>\<beta>,\<alpha>\<close>; once evaluated, \<open>Du x\<close> is a plain real depending on \<open>x\<close>.
@@ -694,8 +694,8 @@ lemma prop_vmixed:
          = - 2 * det3 s1 s2 s3 (u1 * c1) (u2 * c2) (u3 * c3) (v1 * c1) (v2 * c2) (v3 * c3)"
   by (simp add: det3_def algebra_simps)
 
-text \<open>TeX \<open>prop:KLM\<close> (L1668): with \<open>K = det[s;uc;vc]\<close>, \<open>L = det[c;s;vc]\<close>,
-  \<open>M = det[c;s;uc]\<close>: (1) on \<open>c\<^sub>1c\<^sub>2c\<^sub>3 \<noteq> 0\<close>, \<open>K=L=M=0 \<longleftrightarrow> s\<^sub>1=s\<^sub>2=s\<^sub>3=0\<close>;
+text \<open>TeX \<open>prop:KLM\<close> (L1668): with \<open>K = matrix_det[s;uc;vc]\<close>, \<open>L = matrix_det[c;s;vc]\<close>,
+  \<open>M = matrix_det[c;s;uc]\<close>: (1) on \<open>c\<^sub>1c\<^sub>2c\<^sub>3 \<noteq> 0\<close>, \<open>K=L=M=0 \<longleftrightarrow> s\<^sub>1=s\<^sub>2=s\<^sub>3=0\<close>;
   (2) one cosine zero \<open>\<Longrightarrow> L \<noteq> 0 \<or> M \<noteq> 0\<close>.\<close>
 
 lemma prop_KLM_1:
@@ -1128,11 +1128,11 @@ lemma prop_szero_small_meager:
 subsection \<open>Appendix E --- residual one-cosine-zero subcases\<close>
 
 text \<open>TeX \<open>cor:onecos-codim3\<close> (L2306): cert
-  \<open>= det \<partial>(c\<^sub>1,K,a\<^sub>2)/\<partial>(u\<^sub>1,v\<^sub>2,v\<^sub>3) = \<kappa> s\<^sub>1\<^sup>2 c\<^sub>2 c\<^sub>3 (c\<^sub>2u\<^sub>2+c\<^sub>3u\<^sub>3)\<close>;
+  \<open>= matrix_det \<partial>(c\<^sub>1,K,a\<^sub>2)/\<partial>(u\<^sub>1,v\<^sub>2,v\<^sub>3) = \<kappa> s\<^sub>1\<^sup>2 c\<^sub>2 c\<^sub>3 (c\<^sub>2u\<^sub>2+c\<^sub>3u\<^sub>3)\<close>;
   \<open>cor:onecos-lam\<close> (L2416): cert
-  \<open>= det \<partial>(c\<^sub>1,a\<^sub>2,\<Lambda>)/\<partial>(u\<^sub>1,u\<^sub>2,v\<^sub>2) = \<kappa> s\<^sub>1 c\<^sub>2 (c\<^sub>2 - \<kappa> s\<^sub>2 u\<^sub>2)\<close>;
+  \<open>= matrix_det \<partial>(c\<^sub>1,a\<^sub>2,\<Lambda>)/\<partial>(u\<^sub>1,u\<^sub>2,v\<^sub>2) = \<kappa> s\<^sub>1 c\<^sub>2 (c\<^sub>2 - \<kappa> s\<^sub>2 u\<^sub>2)\<close>;
   \<open>cor:onecos-terminal\<close> (L2508): cert
-  \<open>= det \<partial>(c\<^sub>1,E\<^sub>2,E\<^sub>3)/\<partial>(u\<^sub>1,u\<^sub>2,u\<^sub>3) = -\<kappa> s\<^sub>1 (-2\<kappa>s\<^sub>2-\<kappa>\<^sup>2u\<^sub>2c\<^sub>2)(-2\<kappa>s\<^sub>3-\<kappa>\<^sup>2u\<^sub>3c\<^sub>3)\<close>,
+  \<open>= matrix_det \<partial>(c\<^sub>1,E\<^sub>2,E\<^sub>3)/\<partial>(u\<^sub>1,u\<^sub>2,u\<^sub>3) = -\<kappa> s\<^sub>1 (-2\<kappa>s\<^sub>2-\<kappa>\<^sup>2u\<^sub>2c\<^sub>2)(-2\<kappa>s\<^sub>3-\<kappa>\<^sup>2u\<^sub>3c\<^sub>3)\<close>,
   \<open>E\<^sub>k = c\<^sub>k - \<kappa> s\<^sub>k u\<^sub>k\<close>.  Each is an analytic-cut meagerness instance.\<close>
 
 lemma cor_onecos_codim3:
@@ -1289,7 +1289,7 @@ qed
 
 subsection \<open>Appendix I --- direct configuration-space closure of Case B\<close>
 
-text \<open>TeX \<open>prop:vblock\<close> (L3682): \<open>det \<partial>(\<Phi>\<^sub>2,H\<^sub>1\<^sub>2,H\<^sub>2\<^sub>2)/\<partial>(v) = -16a\<^sup>2g\<^sup>3(aK+a\<^sub>1L-a\<^sub>2M)\<close>;
+text \<open>TeX \<open>prop:vblock\<close> (L3682): \<open>matrix_det \<partial>(\<Phi>\<^sub>2,H\<^sub>1\<^sub>2,H\<^sub>2\<^sub>2)/\<partial>(v) = -16a\<^sup>2g\<^sup>3(aK+a\<^sub>1L-a\<^sub>2M)\<close>;
   \<open>prop:branch\<close> (L3712)/\<open>cor:repair\<close> (L3812): on \<open>{H\<^sub>2\<^sub>2\<noteq>0, H\<^sub>1\<^sub>2\<noteq>0, aK+a\<^sub>1L-a\<^sub>2M\<noteq>0}\<close>
   with a regular \<open>u\<close>-slice direction, \<open>rank D\<^bsub>x\<^esub>\<Phi> = 3\<close>.  Consumable: the
   rank-deficient locus is the analytic cut \<open>{aK+a\<^sub>1L-a\<^sub>2M = 0}\<close> (mod the \<open>u\<close>-slice
@@ -1466,7 +1466,7 @@ lemma cor_vpair22_nonzero:
   using assms by (auto simp: field_simps)
 
 text \<open>TeX \<open>prop:H12zero\<close> (L5447)/\<open>cor:H12zero\<close> (L5529): \<open>H\<^sub>1\<^sub>2=0\<close> block factorization
-  \<open>det \<partial>(\<Phi>)/\<partial>(u\<^sub>i,u\<^sub>j,v\<^sub>k) = 2ag s\<^sub>k H\<^sub>2\<^sub>2 \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<close>; rank 3 if \<open>s\<^sub>k\<noteq>0, \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<noteq>0\<close>.
+  \<open>matrix_det \<partial>(\<Phi>)/\<partial>(u\<^sub>i,u\<^sub>j,v\<^sub>k) = 2ag s\<^sub>k H\<^sub>2\<^sub>2 \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<close>; rank 3 if \<open>s\<^sub>k\<noteq>0, \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j\<noteq>0\<close>.
   Consumable: the rank-deficient locus is the analytic cut \<open>{s\<^sub>k \<Lambda>\<^sup>(\<^sup>1\<^sup>1\<^sup>)\<^sub>i\<^sub>j = 0}\<close>.\<close>
 
 lemma cor_H12zero_meager:

@@ -157,7 +157,7 @@ qed
 
 text \<open>\<^bold>\<open>[E] brick 4b: the \<open>Sym\<^sup>2\<close> block is invertible.\<close>  The second-order transport
   block --- the \<open>3\<times>3\<close> matrix carrying \<open>(M\<^sub>1\<^sub>1, M\<^sub>1\<^sub>2, M\<^sub>2\<^sub>2)\<close> --- is the symmetric square
-  of \<open>T = ((a,b),(p,q))\<close>.  Its determinant is \<open>(det T)\<^sup>3 = (aq - bp)\<^sup>3\<close>, so it is
+  of \<open>T = ((a,b),(p,q))\<close>.  Its determinant is \<open>(matrix_det T)\<^sup>3 = (aq - bp)\<^sup>3\<close>, so it is
   invertible exactly when \<open>T\<close> is.  This is the one genuinely nonlinear step of the
   steering transport.\<close>
 
@@ -168,7 +168,7 @@ definition Smat :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> rea
       vector [p\<^sup>2,    2 * p * q,      q\<^sup>2] ]"
 
 lemma det_Smat:
-  "det (Smat a b p q) = (a * q - b * p) ^ 3"
+  "matrix_det (Smat a b p q) = (a * q - b * p) ^ 3"
   unfolding Smat_def
   by (simp add: det_3 vector_3 power2_eq_square power3_eq_cube algebra_simps)
 
@@ -176,14 +176,14 @@ lemma invertible_Smat:
   assumes "a * q - b * p \<noteq> 0"
   shows "invertible (Smat a b p q)"
 proof -
-  have "det (Smat a b p q) = (a * q - b * p) ^ 3" by (rule det_Smat)
-  with assms have "det (Smat a b p q) \<noteq> 0" by simp
+  have "matrix_det (Smat a b p q) = (a * q - b * p) ^ 3" by (rule det_Smat)
+  with assms have "matrix_det (Smat a b p q) \<noteq> 0" by simp
   thus ?thesis by (simp add: invertible_det_nz)
 qed
 
 text \<open>\<^bold>\<open>[E] brick 4b (complex block): the \<open>Sym\<^sup>2\<close> block over \<open>\<complex>\<close>.\<close>  The
   transport acts on the complex moment vector, so we need the \<open>3\<times>3\<close> symmetric-square
-  block over \<open>\<complex>\<close>; its determinant is \<open>(of_real (det T))\<^sup>3\<close>, nonzero exactly when
+  block over \<open>\<complex>\<close>; its determinant is \<open>(of_real (matrix_det T))\<^sup>3\<close>, nonzero exactly when
   \<open>T\<close> is invertible.\<close>
 
 definition Smat_c :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^3^3" where
@@ -193,7 +193,7 @@ definition Smat_c :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> r
       vector [of_real (p\<^sup>2),   of_real (2 * p * q),     of_real (q\<^sup>2)] ]"
 
 lemma det_Smat_c:
-  "det (Smat_c a b p q) = (of_real (a * q - b * p)) ^ 3"
+  "matrix_det (Smat_c a b p q) = (of_real (a * q - b * p)) ^ 3"
   unfolding Smat_c_def
   by (simp add: det_3 vector_3 of_real_power of_real_mult of_real_add of_real_diff
                 power2_eq_square power3_eq_cube algebra_simps)
@@ -202,11 +202,11 @@ lemma invertible_Smat_c:
   assumes "a * q - b * p \<noteq> 0"
   shows "invertible (Smat_c a b p q)"
 proof -
-  have "det (Smat_c a b p q) = (of_real (a * q - b * p)) ^ 3"
+  have "matrix_det (Smat_c a b p q) = (of_real (a * q - b * p)) ^ 3"
     by (rule det_Smat_c)
   moreover have "(of_real (a * q - b * p) :: complex) \<noteq> 0"
     using assms by fastforce
-  ultimately have "det (Smat_c a b p q) \<noteq> 0" by simp
+  ultimately have "matrix_det (Smat_c a b p q) \<noteq> 0" by simp
   thus ?thesis by (simp add: invertible_det_nz)
 qed
 
@@ -511,7 +511,7 @@ text \<open>\<^bold>\<open>(M2) Open-dense submersion at a fixed nonzero wavevec
   \<open>V\<close>.  This is the general-wavevector analogue of \<open>DM_paper_open_dense_surjective\<close>.\<close>
 
 text \<open>\<^bold>\<open>[E]/[F] sound open-dense machinery (in progress).\<close>  The general-n analogue of
-  the dim-6 \<open>m_star\<close>: \<open>mstarg c x = det (matrix (G x c))\<close> with the codomain Gram
+  the dim-6 \<open>m_star\<close>: \<open>mstarg c x = matrix_det (matrix (G x c))\<close> with the codomain Gram
   \<open>G = (transC \<circ> DM_paper_x x c) \<circ> adjoint (\<dots>) :: real^12 \<Rightarrow> real^12\<close> (no flattening; \<open>transC\<close>
   is the fixed iso).  \<open>surj (DM_paper_x x c) \<longleftrightarrow> mstarg c x \<noteq> 0\<close>, continuous, and (TODO)
   entire-along-lines + nonzero \<Rightarrow> nowhere-dense zeros \<Rightarrow> a rank-semicont-free [F].\<close>
@@ -558,7 +558,7 @@ proof -
 qed
 
 definition mstarg :: "planar \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
-  "mstarg c x = det (matrix ((transC \<circ> DM_paper_x x c) \<circ> adjoint (transC \<circ> DM_paper_x x c)))"
+  "mstarg c x = matrix_det (matrix ((transC \<circ> DM_paper_x x c) \<circ> adjoint (transC \<circ> DM_paper_x x c)))"
 
 lemma linear_DM_paper_x: "linear (DM_paper_x x c)"
   by (metis has_derivative_M_paper_x has_derivative_bounded_linear bounded_linear.linear)
@@ -769,7 +769,7 @@ text \<open>\<^bold>\<open>(M3) The steering-singular angle locus is nowhere den
 
 lemma Dcvec_det_eq:
     fixes \<omega>0 \<omega>s \<omega> :: "real^2"
-    shows "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
+    shows "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
            = sin (\<omega>$1) * (cos (\<omega>$1)
                - sin (\<omega>$1) * (((kx \<omega>0 - kx
   \<omega>s)/(kz \<omega>s - kz \<omega>0)) * cos (\<omega>$2)
@@ -884,7 +884,7 @@ lemma sin_cos_lin_not_const0:
 
 
 lemma steering_singular_nowhere_dense:
-    shows "nowhere_dense {\<omega>::angle. det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+    shows "nowhere_dense {\<omega>::angle. matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
   proof -   
     define g where "g = (\<lambda>u::real. ((kx \<omega>0 - kx
   \<omega>s)/(kz \<omega>s - kz \<omega>0)) * cos u
@@ -893,7 +893,7 @@ lemma steering_singular_nowhere_dense:
     define f where "f = (\<lambda>\<omega>::real^2. sin
   (\<omega>$1) * (cos (\<omega>$1) - sin (\<omega>$1) * g
   (\<omega>$2)))"
-    have feq: "{\<omega>::angle. det (matrix (Dcvec_dip \<omega>0
+    have feq: "{\<omega>::angle. matrix_det (matrix (Dcvec_dip \<omega>0
   \<omega>s \<omega>)) = 0} = {\<omega>. f \<omega> = 0}"
       by (simp add: f_def g_def Dcvec_det_eq)
     have contf: "continuous_on UNIV f"
@@ -914,7 +914,7 @@ lemma steering_singular_nowhere_dense:
         have "vector [s, c$2] - c = axis 1 (s - c$1)"
           by (simp add: vec_eq_iff forall_2 vector_2 axis_def,
               smt (verit, del_insts) Finite_Cartesian_Product.minus_vec_def 
-              exhaust_2 vec_lambda_unique vector_2(1,2) verit_minus_simplify(1))
+              exhaust_2 vec_lambda_unique vector_2(1,2) diff_self)
         hence "dist (vector [s, c$2] :: real^2) c = \<bar>s -  c$1\<bar>"
           by (simp add: dist_norm norm_eq_sqrt_inner inner_axis_axis)
         hence "vector [s, c$2] \<in> ball c r" using hs by (simp add: dist_commute)
@@ -940,7 +940,7 @@ text \<open>\<^bold>\<open>The planar-config transversality engine is DONE\<clos
   capstone_X0_sound, odd_N_nonemptiness).\<close>
 
 text \<open>\<^bold>\<open>(M4) Regular stratum is meager.\<close>  On the open locus where \<open>A \<noteq> 0\<close>, \<open>surj (DM_paper_x \<dots>)\<close>,
-  and \<open>det (Dcvec) \<noteq> 0\<close>, \<open>0\<close> is a regular value (@{thm regular_value_on_gradU_dip}); covering this
+  and \<open>matrix_det (Dcvec) \<noteq> 0\<close>, \<open>0\<close> is a regular value (@{thm regular_value_on_gradU_dip}); covering this
   open (non-product) locus by countably many product boxes and applying
   {thm parametric_transversality_meager_planar_config} on each, the degenerate-critical projection
   over the regular stratum is meager.\<close>
@@ -1217,7 +1217,7 @@ proof -
 qed
 
 
-subsection \<open>The beam-center (\<open>c = 0\<close>) Hessian collapse and the det moment polynomial\<close>
+subsection \<open>The beam-center (\<open>c = 0\<close>) Hessian collapse and the matrix_det moment polynomial\<close>
 
 text \<open>\<^bold>\<open>Moments at the beam center \<open>c = 0\<close> are real.\<close>  At \<open>c = 0\<close> every phase factor is \<open>1\<close>,
   so \<open>Afun x 0 = N\<close> (\<open>N = CARD('n)\<close>) and \<open>Mcfun x 0 k\<close>, \<open>M2cfun x 0 k l\<close> are real coordinate
@@ -1403,7 +1403,7 @@ proof -
 qed
 
 
-subsection \<open>The beam-center det-Hessian as an entire, continuous moment polynomial in \<open>x\<close>\<close>
+subsection \<open>The beam-center matrix_det-Hessian as an entire, continuous moment polynomial in \<open>x\<close>\<close>
 
 text \<open>\<^bold>\<open>The curvature matrix entry at \<open>c = 0\<close> in real moment form.\<close>
   \<open>Hcmat x 0 $ k $ l = 2 ((\<Sum>x\<^sub>l)(\<Sum>x\<^sub>k) - N (\<Sum>x\<^sub>k x\<^sub>l))\<close> --- a real degree-2 polynomial in
@@ -1513,21 +1513,21 @@ proof -
     unfolding eq by (intro continuous_intros continuous_on_sum fin continuous_Hcmat_at_zero)
 qed
 
-text \<open>\<^bold>\<open>The beam-center det-Hessian is entire-on-lines and continuous in \<open>x\<close>\<close> --- via the \<open>2\<times>2\<close>
+text \<open>\<^bold>\<open>The beam-center matrix_det-Hessian is entire-on-lines and continuous in \<open>x\<close>\<close> --- via the \<open>2\<times>2\<close>
   determinant expansion @{thm det_2} and the entry lemmas.\<close>
 
 lemma rline_entire_det_HessU_beamcenter:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
   assumes c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
-  shows "rline_entire (\<lambda>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+  shows "rline_entire (\<lambda>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
   by (rule rline_entire_det_fun) (rule rline_entire_HessU_beamcenter_entry[OF c0])
 
 lemma continuous_det_HessU_beamcenter:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
   assumes c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
-  shows "continuous_on UNIV (\<lambda>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+  shows "continuous_on UNIV (\<lambda>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
 proof -
-  have d2: "(\<lambda>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))
+  have d2: "(\<lambda>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))
       = (\<lambda>x. HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 1
              * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 $ 2
            - HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 $ 2
@@ -1538,21 +1538,21 @@ proof -
 qed
 
 
-subsection \<open>Nontriviality: a one-displaced-element witness with \<open>det HessU \<noteq> 0\<close>\<close>
+subsection \<open>Nontriviality: a one-displaced-element witness with \<open>matrix_det HessU \<noteq> 0\<close>\<close>
 
 text \<open>\<^bold>\<open>The rank-one curvature witness.\<close>  Put one element at a point \<open>p\<close> not orthogonal to the
   second steering column \<open>col2 = Dcvec(e\<^sub>2)\<close>; the others at the origin.  Then every moment is a
   single-element moment, so \<open>Hcmat xs 0 = 2(1 - N) p p\<^sup>T\<close> is rank one.  Writing \<open>u = p \<bullet> col1\<close>,
   \<open>v = p \<bullet> col2\<close>, \<open>\<alpha> = gain \<cdot> 2(1 - N)\<close>, \<open>\<gamma> = gdip''(\<omega>\<^sub>1) N\<^sup>2\<close>, the four Hessian entries are
   \<open>H\<^sub>1\<^sub>1 = \<alpha> u\<^sup>2 + \<gamma>\<close>, \<open>H\<^sub>1\<^sub>2 = H\<^sub>2\<^sub>1 = \<alpha> u v\<close>, \<open>H\<^sub>2\<^sub>2 = \<alpha> v\<^sup>2\<close>, whence
-  \<open>det HessU = (\<alpha> u\<^sup>2 + \<gamma>)(\<alpha> v\<^sup>2) - (\<alpha> u v)\<^sup>2 = \<gamma> \<alpha> v\<^sup>2\<close> --- nonzero since \<open>\<gamma> \<noteq> 0\<close> (cos-zero,
+  \<open>matrix_det HessU = (\<alpha> u\<^sup>2 + \<gamma>)(\<alpha> v\<^sup>2) - (\<alpha> u v)\<^sup>2 = \<gamma> \<alpha> v\<^sup>2\<close> --- nonzero since \<open>\<gamma> \<noteq> 0\<close> (cos-zero,
   @{thm gdip_scalar_second_deriv_nonzero}), \<open>gain \<noteq> 0\<close>, \<open>1 - N \<noteq> 0\<close> (\<open>N \<ge> 6\<close>), \<open>v \<noteq> 0\<close>.\<close>
 
 lemma det_HessU_beamcenter_witness:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
   assumes c6: "6 \<le> CARD('n)" and pfw: "sin (\<omega> $ 1) \<noteq> 0"
     and c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0" and cz: "cos (\<omega> $ 1) = 0"
-  shows "\<exists>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+  shows "\<exists>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
 proof -
   define col1 where "col1 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1)"
   define col2 where "col2 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
@@ -1609,9 +1609,9 @@ proof -
               g_def[symmetric] v_def
     by (simp add: sum_2 axis_def algebra_simps)
   \<comment> \<open>the determinant collapses to \<open>\<gamma> g N1 v\<^sup>2\<close>\<close>
-  have detval: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega>) = \<gamma> * (g * (N1 * (v * v)))"
+  have detval: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega>) = \<gamma> * (g * (N1 * (v * v)))"
   proof -
-    have "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega>)
+    have "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega>)
         = HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega> $ 1 $ 1 * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega> $ 2 $ 2
         - HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega> $ 1 $ 2 * HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega> $ 2 $ 1"
       by (simp add: det_2)
@@ -1628,7 +1628,7 @@ proof -
   have gnz: "g \<noteq> 0" unfolding g_def by (rule gain_dip_nonzero_of_sin[OF pfw])
   have N1nz: "N1 \<noteq> 0" unfolding N1_def using c6 by simp
   have vnz: "v \<noteq> 0" using vp unfolding v_def by (simp add: inner_vec_def sum_2 mult.commute)
-  have "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega>) \<noteq> 0"
+  have "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega>) \<noteq> 0"
     unfolding detval using \<gamma>nz gnz N1nz vnz by simp
   thus ?thesis by blast
 qed
@@ -1639,8 +1639,8 @@ subsection \<open>The genuine per-angle beam-center obligation (D2-style polynom
 text \<open>The \<open>c = 0\<close> sub-case of a witness angle.  When \<open>cvec_dip \<omega>0 \<omega>s \<omega> = 0\<close> the moment-map
   derivative \<open>DM_paper_x x 0\<close> is never surjective (@{thm DM_paper_x_null_not_surj}), so the
   D5 slice degenerates to the D2 beam-center slice at \<open>\<omega>\<close>:
-  \<open>{x. gradU = 0 \<and> A \<noteq> 0 \<and> det HessU = 0}\<close>.  Its meagerness is the beam-center det-Hessian
-  covariance-polynomial argument: \<open>det HessU\<close> is a continuous, entire-on-lines moment polynomial
+  \<open>{x. gradU = 0 \<and> A \<noteq> 0 \<and> matrix_det HessU = 0}\<close>.  Its meagerness is the beam-center matrix_det-Hessian
+  covariance-polynomial argument: \<open>matrix_det HessU\<close> is a continuous, entire-on-lines moment polynomial
   in \<open>x\<close> (@{thm continuous_det_HessU_beamcenter}, @{thm rline_entire_det_HessU_beamcenter}); when
   \<open>cos(\<omega>\<^sub>1) = 0\<close> it is not identically zero (@{thm det_HessU_beamcenter_witness}, nontrivial
   because \<open>gdip''(\<pi>/2) = (16 - 4\<pi>\<^sup>2)/8 \<noteq> 0\<close>), so its zero set is nowhere dense and the slice
@@ -1654,7 +1654,7 @@ lemma m5_D5_beamcenter_angle_meager:
   shows "meager {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
 proof (cases "cos (\<omega> $ 1) = 0")
   case False
   \<comment> \<open>\<open>cos(\<omega>\<^sub>1) \<noteq> 0\<close>: criticality fails for ALL \<open>x\<close> (the M6-empty mirror), so the set is empty.\<close>
@@ -1663,13 +1663,13 @@ proof (cases "cos (\<omega> $ 1) = 0")
   have empty: "{x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0} = {}"
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0} = {}"
   proof (rule equals0I)
     fix x :: "(real^2)^'n"
     assume "x \<in> {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
     hence g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
     \<comment> \<open>component 1 of the beam-center gradient is \<open>gdip'(\<omega>\<^sub>1) N\<^sup>2\<close>\<close>
     have a1: "((axis (1::2) 1 :: real^2) $ 1) = 1" by (simp add: axis_def)
@@ -1710,31 +1710,31 @@ proof (cases "cos (\<omega> $ 1) = 0")
   show ?thesis unfolding empty by simp
 next
   case True
-  \<comment> \<open>\<open>cos(\<omega>\<^sub>1) = 0\<close>: the det-Hessian moment polynomial is nontrivial, so its zero set is
+  \<comment> \<open>\<open>cos(\<omega>\<^sub>1) = 0\<close>: the matrix_det-Hessian moment polynomial is nontrivial, so its zero set is
        nowhere dense; the slice is contained in it, hence meager.\<close>
-  have nd: "nowhere_dense {x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+  have nd: "nowhere_dense {x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
   proof -
-    have seq: "{x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
-             = {x \<in> (UNIV::((real^2)^'n) set). det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+    have seq: "{x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
+             = {x \<in> (UNIV::((real^2)^'n) set). matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
       by simp
     show ?thesis
       unfolding seq
     proof (rule lines_entire_slice_nowhere_dense)
-      show "continuous_on UNIV (\<lambda>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+      show "continuous_on UNIV (\<lambda>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
         by (rule continuous_det_HessU_beamcenter[OF c0])
       show "\<And>a v. \<exists>F. F holomorphic_on UNIV
               \<and> (\<forall>t::real. F (complex_of_real t)
-                          = complex_of_real (det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (a + t *\<^sub>R v) \<omega>)))"
+                          = complex_of_real (matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (a + t *\<^sub>R v) \<omega>)))"
         using rline_entire_det_HessU_beamcenter[OF c0] unfolding rline_entire_def by blast
-      show "\<exists>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+      show "\<exists>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
         by (rule det_HessU_beamcenter_witness[OF c6 pfw c0 True])
     qed
   qed
   have sub: "{x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
-        \<subseteq> {x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
+        \<subseteq> {x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
     by blast
   show ?thesis
     by (rule meager_subset[OF sub meager_nowhere_dense[OF nd]])
@@ -1744,7 +1744,7 @@ qed
 subsection \<open>Per-angle D5 slice is meager (case split on the beam center)\<close>
 
 text \<open>For a fixed witness angle \<open>\<omega>\<close> with \<open>sin(\<omega>$1) \<noteq> 0\<close>, the D5 slice
-  \<open>{x. gradU = 0 \<and> A \<noteq> 0 \<and> det HessU = 0 \<and> \<not> surj (DM_paper_x x (cvec \<omega>))}\<close> is meager.
+  \<open>{x. gradU = 0 \<and> A \<noteq> 0 \<and> matrix_det HessU = 0 \<and> \<not> surj (DM_paper_x x (cvec \<omega>))}\<close> is meager.
   Case \<open>c \<noteq> 0\<close>: it injects into \<open>{x. \<not> surj (DM_paper_x x c)}\<close>, nowhere dense by the mstarg
   freebie.  Case \<open>c = 0\<close>: \<open>\<not> surj\<close> is universal, so the slice is the D2 beam-center set,
   meager by @{thm m5_D5_beamcenter_angle_meager}.\<close>
@@ -1755,7 +1755,7 @@ lemma m5_D5_slice_meager:
   shows "meager {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
 proof (cases "cvec_dip \<omega>0 \<omega>s \<omega> = 0")
   case True
@@ -1763,12 +1763,12 @@ proof (cases "cvec_dip \<omega>0 \<omega>s \<omega> = 0")
   have e: "{x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}
         = {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
     using DM_paper_x_null_not_surj[where x = _ and 'n = 'n] by (simp add: True)
   show ?thesis
     unfolding e by (rule m5_D5_beamcenter_angle_meager[OF c6 pfw True])
@@ -1781,7 +1781,7 @@ next
   have sub: "{x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}
         \<subseteq> {x::(real^2)^'n. \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
     by blast
@@ -1806,10 +1806,10 @@ lemma m5_D5_steersing:
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
 proof -
   \<comment> \<open>Phase-separation data \<open>hsep\<close>/\<open>kdiff\<close> are now lemma assumptions, supplied by the
       M5 splice (where they hold for the concrete \<open>\<omega>0 = vector[\<pi>/2,0]\<close>, \<open>\<omega>s = vector[0,0]\<close>).\<close>
@@ -1822,7 +1822,7 @@ proof -
     "slice \<omega> = {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}" for \<omega> :: "real^2"
   text \<open>The phase coefficients are not both zero.\<close>
   have D0: "kz \<omega>s - kz \<omega>0 \<noteq> 0" using hsep by simp
@@ -1861,25 +1861,25 @@ proof -
     (R3 kernel-direction reduction --- uses NO surjectivity).\<close>
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}
              \<subseteq> (\<Union>\<omega>\<in>K. slice \<omega>)"
   proof
     fix x :: "(real^2)^'n"
     assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
     then obtain \<omega> :: "real^2" where wD: "\<omega> \<in> OmegaPF ctr \<delta>"
       and g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
-      and hz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+      and hz: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
       and anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
       and ns: "\<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))"
-      and dz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
+      and dz: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
       by blast
     have s1: "sin (\<omega> $ 1) \<noteq> 0" by (rule bspec[OF pf wD])
     have gd0: "frechet_derivative gdip (at (\<omega> $ 1)) 1 = 0"
@@ -2194,7 +2194,7 @@ section \<open>The per-beam-center-angle slice is nowhere dense (scoped genuine-
 
 text \<open>For a beam-center angle \<open>\<omega>\<close> (\<open>cvec_dip \<omega>0 \<omega>s \<omega> = 0\<close>) with \<open>sin (\<omega>\<^sub>1) \<noteq> 0\<close> and a
   nonsingular steering Jacobian, the configurations \<open>x\<close> carrying a degenerate critical
-  point with nonzero array factor form a nowhere-dense set.  This is the det-Hessian
+  point with nonzero array factor form a nowhere-dense set.  This is the matrix_det-Hessian
   covariance-polynomial payload: with \<open>cvec = 0\<close> the Hessian collapses to
   \<open>N\<^sup>2 gdip''(\<pi>/2) e1 e1\<^sup>T + C\<^sup>T(-2N Cov x) C\<close>, whose vanishing determinant is a
   nontrivial polynomial in the (real) moments of \<open>x\<close> --- nontrivial because
@@ -2208,54 +2208,54 @@ lemma m5_D2_slice_nowhere_dense:
     and cz: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
   shows "nowhere_dense {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
   \<comment> \<open>Ported from the proven D5 covariance core.  \<open>cos \<omega>\<^sub>1 = 0\<close>: the slice is a subset of the
-      nowhere-dense det-Hessian zero set (\<open>gdip''(\<pi>/2) \<noteq> 0\<close>).  \<open>cos \<omega>\<^sub>1 \<noteq> 0\<close>: the slice is
+      nowhere-dense matrix_det-Hessian zero set (\<open>gdip''(\<pi>/2) \<noteq> 0\<close>).  \<open>cos \<omega>\<^sub>1 \<noteq> 0\<close>: the slice is
       empty by criticality (@{thm beamcenter_critical_cos_zero}).\<close>
 proof (cases "cos (\<omega> $ 1) = 0")
   case True
-  have nd: "nowhere_dense {x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+  have nd: "nowhere_dense {x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
   proof -
-    have seq: "{x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
-             = {x \<in> (UNIV::((real^2)^'n) set). det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+    have seq: "{x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
+             = {x \<in> (UNIV::((real^2)^'n) set). matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
       by simp
     show ?thesis
       unfolding seq
     proof (rule lines_entire_slice_nowhere_dense)
-      show "continuous_on UNIV (\<lambda>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
+      show "continuous_on UNIV (\<lambda>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>))"
         by (rule continuous_det_HessU_beamcenter[OF cz])
       show "\<And>a v. \<exists>F. F holomorphic_on UNIV
               \<and> (\<forall>t::real. F (complex_of_real t)
-                          = complex_of_real (det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (a + t *\<^sub>R v) \<omega>)))"
+                          = complex_of_real (matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (a + t *\<^sub>R v) \<omega>)))"
         using rline_entire_det_HessU_beamcenter[OF cz] unfolding rline_entire_def by blast
-      show "\<exists>x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
+      show "\<exists>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
         by (rule det_HessU_beamcenter_witness[OF c6 pfw cz True])
     qed
   qed
   have sub: "{x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}
-        \<subseteq> {x::(real^2)^'n. det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}
+        \<subseteq> {x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
     by blast
   show ?thesis by (rule nowhere_dense_subset[OF sub nd])
 next
   case False
   have empty: "{x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0} = {}"
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0} = {}"
   proof (rule equals0I)
     fix x :: "(real^2)^'n"
     assume "x \<in> {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
     hence g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
     have "cos (\<omega> $ 1) = 0" by (rule beamcenter_critical_cos_zero[OF c6 pfw cz g0])
     with False show False by simp
@@ -2281,10 +2281,10 @@ lemma m5_D2_beamcenter:
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
 proof -
   \<comment> \<open>The finite beam-center witness-angle set (\<open>cos(\<omega>\<^sub>1)=0\<close> from criticality, \<open>cvec=0\<close>).\<close>
@@ -2292,38 +2292,38 @@ proof -
     "K = {\<omega> \<in> OmegaPF ctr \<delta>. cos (\<omega> $ 1) = 0 \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
   have finK: "finite K"
     unfolding K_def by (rule m5_D2_beamcenter_K_finite)
-  \<comment> \<open>The det-Hessian covariance slice at a fixed beam-center angle.\<close>
+  \<comment> \<open>The matrix_det-Hessian covariance slice at a fixed beam-center angle.\<close>
   define slice :: "real^2 \<Rightarrow> ((real^2)^'n) set" where
     "slice \<omega> = {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}" for \<omega> :: "real^2"
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}" for \<omega> :: "real^2"
   \<comment> \<open>Witness confinement: every bad witness angle lies in \<open>K\<close>, and the configuration
        lies in the corresponding slice.  The \<open>\<not> surj\<close> conjunct is dropped (automatic
        at a beam center), and \<open>cos(\<omega>\<^sub>1)=0\<close> comes from criticality.\<close>
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}
              \<subseteq> (\<Union>\<omega>\<in>K. slice \<omega>)"
   proof
     fix x :: "(real^2)^'n"
     assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> = 0}"
     then obtain \<omega> :: "real^2" where wD: "\<omega> \<in> OmegaPF ctr \<delta>"
       and g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
-      and hz: "det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
+      and hz: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
       and anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
-      and dnz: "det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
+      and dnz: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0"
       and cz: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
       by blast
     have s1: "sin (\<omega> $ 1) \<noteq> 0" by (rule bspec[OF pf wD])
@@ -2438,22 +2438,22 @@ lemma m5_D34_subset_mstarg_residual:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
   shows "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}
         \<subseteq> {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-          \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
           \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
   by blast
 
 text \<open>The lemma above is the legacy loose enlargement.  The D34 assembly below
   no longer uses it: the two scoped D34 obligations retain the Case-B
-  conjuncts \<open>det HessU = 0\<close>, \<open>A_cart \<noteq> 0\<close>, and failure of the
+  conjuncts \<open>matrix_det HessU = 0\<close>, \<open>A_cart \<noteq> 0\<close>, and failure of the
   configuration derivative of \<open>gradU\<close> to be surjective.  This is the shape
   needed for the analytic branch certificates to connect to Robust3.\<close>
 
@@ -2487,9 +2487,9 @@ definition analytic_arc :: "(real^2) set \<Rightarrow> bool" where
 definition D3BadXG :: "real^2 \<Rightarrow> real^2 \<Rightarrow> (real^2) set \<Rightarrow> ((real^2)^'n) set" where
   "D3BadXG \<omega>0 \<omega>s \<Gamma> = {x::(real^2)^'n. \<exists>\<omega>\<in>\<Gamma>.
         gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
-      \<and> det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+      \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
       \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-      \<and> det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
+      \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0
       \<and> cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0
       \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
       \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"

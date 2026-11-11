@@ -1,0 +1,8 @@
+session Munkres_Topology_Local = HOL +
+  options [document = false, timeout = 3600]
+  theories
+    Top1_Ch2
+    Top1_Ch3
+    Top1_Ch4
+    Top1_Ch5_8
+    Munkres_Topology

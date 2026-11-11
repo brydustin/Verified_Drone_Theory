@@ -1,35 +1,32 @@
 # New_Applied_Math_Formalization
 
-Streamlined, audited copy of the legacy `Applied_Math_Formalization` tree
-(2026-07-09).  It contains **only** the theories on the import path of the
-capstone theorem, plus the real-analytic bridge stack that is the active plan
-for finishing it.  The legacy directory is kept untouched for history; all
-new work should happen here.
+Isabelle/HOL proof that the robust feasible set `F0` of the paper
+(`../Paper/Geometry_Driven_Optimization_of_Passive_UAV_Relay_Arrays.pdf`,
+Eq. 22; Conjecture 5 there) is nonempty.  Target: Isabelle2026 with AFP
+`afp-2026-10-29`.  The legacy directory `../Applied_Math_Formalization` is kept
+untouched for history.
 
-## Honest status of the capstone
+## Status
 
-The capstone is `F0_dip_nonempty` in `Appendix/Robust4/Nonemptiness_Robust4.thy`
-(session `Applied_Math_Appendix_Frontier`).
+The end-to-end theorem is `F0_dip_nonempty_final` in
+`Residual/Final/Nonemptiness_Final.thy` (session `Applied_Math_Final`), proved
+2026-11-11.  For an odd number `N ≥ 6` of antennas, source overhead and main
+beam horizontal, it states that the robust feasible set `F0` of the paper is
+nonempty for every minimum spacing, every null threshold above zero, every
+minimum main-beam power below the maximum, every null direction other than
+the main beam, the paper's plane coefficients, all large radii, and suitable
+margins.  It has no other hypotheses, every session is built with
+`quick_and_dirty = false`, and `Applied_Math_Oracle_Audit` fails the build if
+the theorem depends on an oracle.  See `END_TO_END_PLAN.md` for the statement,
+its relation to the paper, and the route.
 
-- **Every theory in this tree is free of `sorry`.**  (Verified by audit and by
-  a full clean build; the legacy tree's on-path sorries lived in
-  `Nonemptiness_Capstone.thy`, whose sorried lemmas were *used by nothing* —
-  that file has been dropped and `Nonemptiness_Robust1` now imports
-  `Nonemptiness_Regnonzero_Appendix` directly.)
-- **The theorem is NOT assumption-free.**  `F0_dip_nonempty` carries two
-  explicit analytic hypotheses, threaded honestly through the whole D3/D4
-  reduction chain:
-  1. `d3_detHess_arc_chart_core_all` — the D3 det-HessU/NSx degenerate-critical
-     chart theorem over one C1 arc (degenerate criticality with non-surjective
-     configuration derivative);
-  2. `branchP_indep_closed_cover_core_all` — the Branch-P (D4) countable closed
-     negligible cover of the 2-parameter moment-rank-drop continuum
-     (per-fixed-angle nowhere-density is not enough; a genuine joint
-     codimension-3 argument is needed).
+The earlier conditional theorem `F0_dip_nonempty` and its two assumed chart-core
+predicates were removed from `Appendix/Robust4/Nonemptiness_Robust4.thy` on
+2026-11-11; the tag `pre-isabelle2026` still has them.
 
-  Everything else — feasibility/Slater witness, continuity half, D1/D2/D5
-  strata, the D3 finite C1 arc cover, all reduction plumbing — is proved.
-  Discharging these two hypotheses is the remaining mathematical work.
+Documents: `END_TO_END_PLAN.md` (statement, relation to the paper, route,
+verification protocol), `Sketch.md` §8 (the proof in plain mathematics and the
+table of formal names), `FORMALIZATION_DIARY.md` (log).
 
 ## Directory map (build order)
 
@@ -39,37 +36,52 @@ The capstone is `F0_dip_nonempty` in `Appendix/Robust4/Nonemptiness_Robust4.thy`
 | `Applied_Math_BlockDet` | `BlockDet/` | block determinants, big-J, the moment map `M_paper` |
 | `Applied_Math_MomentJac` | `MomentJac/` | `D_x M_paper = bigJ` Jacobian identification |
 | `Applied_Math_Nonemptiness` | `.` (root) | `Nonemptiness_Paper` + support: `Topology_Bridge`, `Nonemptiness_Scaffold/Array_Factor/Feasibility/Spine`, `Regular_Value_Theorem`, `Parametric_Transversality_Euclidean(_Base)` |
-| `Applied_Math_HigherDiff` | `HigherDiff/` | k-times Fréchet differentiability, Taylor-Peano, Ck1/C1 bridge |
 | `Applied_Math_Appendix_Base` | `Appendix/` | `Nonemptiness_Regnonzero_Appendix` (paper's regnonzero appendix, used by the curve cover) + `Nonemptiness_Robust1` (long stable first half) |
 | `Applied_Math_Appendix` | `Appendix/Robust2/` | `Nonemptiness_Robust2` (Sym² T diagonal moment laws, planar transversality engine) |
 | `Applied_Math_Appendix_Full` | `Appendix/Robust3/` | `Nonemptiness_Robust3` (M5 scaffold through the D3 cover set-algebra bridge) |
 | `Applied_Math_Morse` | `Morse/` | 2D Morse/saddle/Hadamard/arc-clip helpers for the curve cover |
 | `Applied_Math_D3_Curve_Cover` | `Appendix/Robust4Cover/` | `D3_Curve_Cover` (finite C1 arc cover of the phase-collinear locus, proved) |
-| `Applied_Math_Appendix_Frontier` | `Appendix/Robust4/` | `Nonemptiness_Robust4` — **the live frontier + `F0_dip_nonempty`** |
-| `Applied_Math_Analytic` | `Analytic/` | real-analytic (C^ω) function theory + bump functions |
-| `Applied_Math_Analytic_Inverse` | `Analytic/Inverse/` | majorant-method formal-series local inverse |
-| `Applied_Math_Analytic_Complex` | `Analytic/Complex/` | complexification bridge + analytic IFT + nowhere-dense-zeros workhorse |
-| `Applied_Math_D34_Analytic` | `Appendix/AnalyticBridge/` | `D34_Analytic_Bridge` + `D34_H0res_Branch` + `D34_Geodesic_Branch`: verified Case-B/H0/normal-coordinate machinery aimed at the two open hypotheses |
+| `Applied_Math_Appendix_Frontier` | `Appendix/Robust4/` | `Nonemptiness_Robust4`: the retained bad set `BadXGW`, the regular stratum, the lemmas from a regular feasible configuration to a point of `F0` |
+| `Applied_Math_Residual_Analysis` | `Residual/` | `Residual_Measure` (Fubini with countable slices), `Residual_Null_Set` (the phase functions; the zero set of `res_f` is negligible) |
+| `Applied_Math_Residual` | `Residual/Stratum/` | the three equations at a point of `BadXGW`, the design geometry, the charts and their cover, the aligned cover, `residual_meager_design` |
+| `Applied_Math_Final` | `Residual/Final/` | `Nonemptiness_Final`: `F0_dip_nonempty_final`, its explicit form, a numeric example |
+| `Applied_Math_Oracle_Audit` | `Audit/` | fails the build if the final theorem, or a theorem on the way to it, uses an oracle; `Audit/Control` checks that the test detects a `sorry` |
 
-## Building
+`Munkres/` is the vendored Munkres topology library (session
+`Munkres_Topology_Local`, two lemma names updated for Isabelle2026).
+`tools/` holds the build script and the numeric checks of the residual
+equations.
 
-From this directory:
+### Archive (not built)
+
+Superseded work, kept in place for history.  It targets Isabelle2025-2, is
+commented out in `ROOT`, and parts of it contain `sorry` or refer to lemmas
+since removed:
+
+- theories: `HigherDiff/`, `Analytic/`, `Appendix/AnalyticBridge/`,
+  `Appendix/Wiring/`, all `M5_Dev_*`;
+- material of the superseded D3/D4 route: `d4_*.py` and §1–§7 of `Sketch.md`.
+
+The last Isabelle2025-2 state of the tree is the git tag `pre-isabelle2026`.
+
+## Building (Isabelle2026)
+
+Every session is strict (`quick_and_dirty = false`).  From this directory:
 
 ```
-../../Isabelle2025-2/bin/isabelle build -b -d . \
-  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
-  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
-  Applied_Math_Appendix_Frontier Applied_Math_D34_Analytic
+~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -d . \
+  -d ~/Desktop/Isabelle/afp-2026-10-29/thys Applied_Math_Oracle_Audit
 ```
 
-For interactive Robust4 work, load the frontier against the curve-cover heap
-(never bake the buffer you are editing into its own heap):
+This builds the whole chain (about 16 minutes from scratch) and fails if the
+final theorem depends on an oracle.  `tools/build_session.sh SESSION [SECONDS]`
+does the same for one session with a hard time limit.  To read the final
+theory in Isabelle/jEdit:
 
 ```
-../../Isabelle2025-2/bin/isabelle jedit -l Applied_Math_D3_Curve_Cover -d . \
-  -d /home/dusty/Desktop/Isabelle/Vern_Paulsen_QC/Imported_Munkres_Topology \
-  -d /home/dusty/Desktop/Isabelle/afp-2026-04-09/thys \
-  Appendix/Robust4/Nonemptiness_Robust4.thy
+~/Desktop/Isabelle/Isabelle2026/bin/isabelle jedit -d . \
+  -d ~/Desktop/Isabelle/afp-2026-10-29/thys -l Applied_Math_Residual \
+  Residual/Final/Nonemptiness_Final.thy
 ```
 
 ## What was dropped from the legacy tree, and why

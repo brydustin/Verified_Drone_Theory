@@ -582,7 +582,7 @@ qed
 text \<open>\<^bold>\<open>The regular-point graph arc (the analytic heart).\<close>  Where \<open>\<partial>\<^sub>2 d3_crossTheta \<noteq> 0\<close>,
   the locus near \<open>\<omega>'\<close> is the graph of a genuine \<open>C\<^sup>1\<close> function \<open>\<phi>\<close>: invert the graph map
   \<open>H z = (z$1, d3_crossTheta z)\<close> (a local homeomorphism with invertible derivative
-  \<open>[[1,0],[\<partial>\<^sub>1,\<partial>\<^sub>2]]\<close>, \<open>det = \<partial>\<^sub>2 \<noteq> 0\<close>) and restrict the inverse \<open>g\<close> to the slice \<open>{2nd = 0}\<close>.
+  \<open>[[1,0],[\<partial>\<^sub>1,\<partial>\<^sub>2]]\<close>, \<open>matrix_det = \<partial>\<^sub>2 \<noteq> 0\<close>) and restrict the inverse \<open>g\<close> to the slice \<open>{2nd = 0}\<close>.
   The inverse derivative (via @{thm has_derivative_inverse_basic_x}) is the EXPLICIT linear
   map, so \<open>\<phi>' = (1, -\<partial>\<^sub>1/\<partial>\<^sub>2)\<close> is continuous, giving \<open>C\<^sup>1\<close> for free.\<close>
 
@@ -794,7 +794,7 @@ qed
 text \<open>\<^bold>\<open>The regular-point graph arc (the analytic heart).\<close>  Where \<open>\<partial>\<^sub>2 d3_crossTheta \<noteq> 0\<close>,
   the locus near \<open>\<omega>'\<close> is the graph of a genuine \<open>C\<^sup>1\<close> function \<open>\<phi>\<close>: invert the graph map
   \<open>H z = (z$1, d3_crossTheta z)\<close> (a local homeomorphism with invertible derivative
-  \<open>[[1,0],[\<partial>\<^sub>1,\<partial>\<^sub>2]]\<close>, \<open>det = \<partial>\<^sub>2 \<noteq> 0\<close>) and restrict the inverse \<open>g\<close> to the slice \<open>{2nd = 0}\<close>.
+  \<open>[[1,0],[\<partial>\<^sub>1,\<partial>\<^sub>2]]\<close>, \<open>matrix_det = \<partial>\<^sub>2 \<noteq> 0\<close>) and restrict the inverse \<open>g\<close> to the slice \<open>{2nd = 0}\<close>.
   The inverse derivative (via @{thm has_derivative_inverse_basic_x}) is the EXPLICIT linear
   map, so \<open>\<phi>' = (1, -\<partial>\<^sub>1/\<partial>\<^sub>2)\<close> is continuous, giving \<open>C\<^sup>1\<close> for free.\<close>
 
@@ -3004,7 +3004,7 @@ proof -
           coordinate: \<open>\<partial>\<^sub>2\<Theta>\<noteq>0\<close> with \<open>\<omega>\<^sub>2\<close> interior (\<open>\<phi>\<close>-graph + box-clipped cover) and
           \<open>\<partial>\<^sub>1\<Theta>\<noteq>0\<close> with \<open>\<omega>\<^sub>1\<close> interior (\<open>\<chi>\<close>-graph). What remains:
           (a) INTERIOR \<open>\<nabla>\<Theta>=0\<close> singular points: these are ALWAYS transverse self-crossings,
-              NEVER isolated (verified: \<open>det H\<^sub>\<Theta> = -E''/2\<close> on \<open>{E=0,E'=0}\<close> with \<open>E''>0\<close>),
+              NEVER isolated (verified: \<open>matrix_det H\<^sub>\<Theta> = -E''/2\<close> on \<open>{E=0,E'=0}\<close> with \<open>E''>0\<close>),
               so they need the two-branch crossing construction (Morse / rotated-coords chart,
               absent from HOL-Analysis); finitely many, given \<open>g\<^sub>1 = Ac\<cdot>ky\<omega>s - Bc\<cdot>kx\<omega>s \<noteq> 0\<close>
               (@{thm d3_crossTheta_d2zero_sumsq} is the algebraic core; @{thm isolated_locus_singleton_cover}
@@ -3225,7 +3225,7 @@ proof -
               note d1 = this
               \<comment> \<open>\<open>R = 0\<close>, \<open>\<partial>\<^sub>2\<Theta> = 0\<close>, \<open>\<partial>\<^sub>1\<Theta> \<noteq> 0\<close>: the vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> is FLAT.
                   Both horizontal coefficients \<open>d3_crossA, d3_crossB\<close> at \<open>\<omega>'$1\<close> vanish by a \<open>2\<times>2\<close>
-                  rotation (det \<open>= cos\<^sup>2 + sin\<^sup>2 = 1\<close>) from \<open>z0+R0\<close> and \<open>d2z\<close>.\<close>
+                  rotation (matrix_det \<open>= cos\<^sup>2 + sin\<^sup>2 = 1\<close>) from \<open>z0+R0\<close> and \<open>d2z\<close>.\<close>
               have d2z': "- d3_crossA ?Bc \<omega>s (\<omega>'$1) * sin (\<omega>'$2) + d3_crossB ?Ac \<omega>s (\<omega>'$1) * cos (\<omega>'$2) = 0"
                 using d2z by simp
               have crGz: "d3_crossG ?Ac ?Bc \<omega>s (\<omega>'$1) = 0"
@@ -3282,7 +3282,7 @@ proof -
               note d1z = this
               \<comment> \<open>\<^bold>\<open>\<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and> \<partial>\<^sub>1\<Theta> = 0\<close> (singular at the collinear-wavevector
                   degeneracy).\<close>  \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> with \<open>R = 0\<close> AND \<open>\<nabla>\<Theta> = 0\<close>: the flat
-                  vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> plus a transverse saddle branch.  \<open>det H < 0\<close> still
+                  vertical line \<open>\<omega>\<^sub>1 = \<omega>'$1\<close> plus a transverse saddle branch.  \<open>matrix_det H < 0\<close> still
                   holds (STEP-1 below, which never uses \<open>R \<noteq> 0\<close>), so the Morse cover applies.
                   We clip both branches to the box \<^bold>\<open>exactly as B3\<close>
                   (@{thm d3_crossTheta_boundary_singular_cover}), EXCEPT each face's flat branch is
@@ -3498,7 +3498,7 @@ proof -
                 \<comment> \<open>\<^bold>\<open>LABELLED RESIDUAL (the ONLY remaining \<open>proof hole\<close>): \<open>R = 0 \<and> \<partial>\<^sub>2\<Theta> = 0 \<and>
                     \<partial>\<^sub>1\<Theta> = 0\<close> with at least one FLAT box-edge line.\<close>  A super-degenerate
                     codim-2 sub-case: \<open>\<omega>'\<close> on \<open>\<partial>(OmegaPF)\<close> at the collinear-wavevector
-                    degeneracy \<open>R = 0\<close>, at a saddle (\<open>\<nabla>\<Theta> = 0\<close>, \<open>det H < 0\<close>), AND some box
+                    degeneracy \<open>R = 0\<close>, at a saddle (\<open>\<nabla>\<Theta> = 0\<close>, \<open>matrix_det H < 0\<close>), AND some box
                     edge of \<open>OmegaPF\<close> is itself a flat zero-line.  The abstract Morse branches
                     \<open>\<gamma>\<^sub>1,\<gamma>\<^sub>2\<close> may then run along that flat box edge, giving an infinite face, so
                     @{thm arc_inter_cbox_finite_subarcs} (all-four-faces-finite) does not

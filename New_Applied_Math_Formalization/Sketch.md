@@ -4388,6 +4388,16 @@ does not care: it never uses the rank of the big system.
 | `s_m`, `q_m`, `W`, `P`, `f_m` | `res_s m`, `res_q m`, `res_W`, `res_P`, `res_f m` | `Residual_Null_Set.thy` |
 | L4 | `negligible_res_f_zeros` | `Residual_Null_Set.thy` |
 | L5(a) | `negligible_of_countable_line_slices` | `Residual_Measure.thy` |
+| `t`, `u` | `phase_coords c x`, `perp_coords c x` | `Stratum/Residual_Equations.thy` |
+| L1 | `dEjm_slot_value`, `gradU_x_derivative_slot_combination` | `Stratum/Residual_Equations.thy` |
+| L2 (E1)–(E3) | `residual_point_equations`, `BadXGW_point_equations` | `Stratum/Residual_Equations.thy` |
+| L3 | `design_cross2`, `design_radial_equation`, `design_radial_degenerate` | `Stratum/Residual_Design.thy` |
+| (E3) solved for `u_m` | `design_rho`, `design_perp_equation` | `Stratum/Residual_Design.thy` |
+| `Y_{m,κ}` | `chart_map (chart_th m k) (chart_ph m k) m`, `k = 0..5` | `Stratum/Residual_Charts.thy`, `Residual_Chart_Cover.thy` |
+| 8.4 for one chart | `chart_image_cover` | `Stratum/Residual_Charts.thy` |
+| 8.4, non-aligned part | `nonaligned_point_in_chart_image`, `nonaligned_residual_cover` | `Stratum/Residual_Chart_Cover.thy` |
+| 8.4, aligned part | `aligned_bad_closed_cover` | `Stratum/Residual_Aligned.thy` |
+| 8.2 | `BadXGW_design_cover`, `residual_meager_design` | `Stratum/Residual_Meager.thy` |
 
 The formal definitions use single sums, not the double sums above:
 `phase_cos_sum t = Σ cos t_a`, `phase_sin_sum`, `phase_lin_cos_sum t = Σ t_a cos t_a`,
@@ -4400,9 +4410,25 @@ The proof of L4 in the formal text differs from 8.3 in one step: instead of `τ*
 uses `a(τ) + a(τ+π) = 4(s_m² + C²)`, where `a = 2 s_m² + C W` is the bracket in the
 periodicity identity.  This needs no `arg` and no case on `B`.
 
+The formal L2 is stated without the steering formulas.  With
+`cross2 a b = a₁b₂ − a₂b₁`, `γ1`, `γ2` the columns of `Dcvec_dip` and
+`gd = gdip'(θ)`:
+
+    (E1)  gd · s_m · cross2 c γ2 + g · (s_m + q_m) · cross2 γ1 γ2 = 0
+    (E3)  2 g · cross2 γ1 γ2 · Σ_b u_b s_b = gd · cross2 (perp2 c) γ2 · W
+
+The proof takes a cokernel covector `ell` of `D_x gradU` instead of `e_par`:
+the perpendicular slot of the witness gives `L = ell₁γ1 + ell₂γ2 = k c` with
+`k ≠ 0`, the radial slots give `P s_a + g k (s_a + q_a) = 0` for every `a`
+(`P = ell₁ gd`), and `ell · gradU = 0` gives `P W − g k P_sum = 0`; (E2) follows
+by eliminating `P`, (E1) by Cramer's rule `ell₁ cross2 γ1 γ2 = k cross2 c γ2`,
+and (E3) from the covector `(cross2 (perp2 c) γ2, cross2 γ1 (perp2 c))`.
+For the design angles `cross2 γ1 γ2 = sin θ (cos θ − sin θ cos φ)`,
+`cross2 c γ2 = sin θ (sin θ + (cos θ − 1) cos φ)` and
+`cross2 (perp2 c) γ2 = sin θ sin φ (cos θ − 1)`, which give 8.3's forms.
+
 ### 8.7 Not proved here
 
-* Formalized so far (2026-11-10): L4 and L5(a).  L1 exists formally in a scratch
-  session; L2, L3 and the chart maps do not.
+* All of this section is formalized (2026-11-11): 8.2 is `residual_meager_design`.
 * The strata outside the residual (regular part, `c = 0`, `det Dc = 0`,
   `A = 0`) are the existing Isabelle lemmas; this section does not re-examine them.

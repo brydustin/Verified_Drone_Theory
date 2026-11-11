@@ -288,4 +288,29 @@ proof -
     by simp
 qed
 
+lemma continuous_on_res_s: "continuous_on UNIV (res_s m)"
+  unfolding res_s_def[abs_def] phase_cos_sum_def phase_sin_sum_def
+  by (intro continuous_intros)
+
+lemma continuous_on_res_f: "continuous_on UNIV (res_f m)"
+  unfolding res_f_def[abs_def] res_s_def res_q_def res_W_def res_P_def
+    phase_cos_sum_def phase_sin_sum_def phase_lin_cos_sum_def phase_lin_sin_sum_def
+  by (intro continuous_intros)
+
+lemma res_f_zeros_borel: "{t :: real^'n. res_s m t \<noteq> 0 \<and> res_f m t = 0} \<in> sets borel"
+proof -
+  have "open {t. res_s m t \<noteq> 0}"
+    by (rule open_Collect_neq[OF continuous_on_res_s continuous_on_const])
+  then have 1: "{t. res_s m t \<noteq> 0} \<in> sets borel"
+    by (rule borel_open)
+  have "closed {t. res_f m t = 0}"
+    by (rule closed_Collect_eq[OF continuous_on_res_f continuous_on_const])
+  then have 2: "{t. res_f m t = 0} \<in> sets borel"
+    by (rule borel_closed)
+  have eq: "{t. res_s m t \<noteq> 0 \<and> res_f m t = 0} = {t. res_s m t \<noteq> 0} \<inter> {t. res_f m t = 0}"
+    by auto
+  show ?thesis
+    unfolding eq by (rule sets.Int[OF 1 2])
+qed
+
 end

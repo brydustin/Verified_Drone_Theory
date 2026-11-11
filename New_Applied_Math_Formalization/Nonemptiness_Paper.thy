@@ -1479,7 +1479,7 @@ qed
 text \<open>
   Compactness of a critical piece. On a closed ball where \<open>\<phi>\<close> is continuous and lands
   in \<open>W\<close> (where \<open>G'\<close> is continuous), the set of points whose \<open>\<omega>\<close>-partial \<open>b \<mapsto> DG(0,b)\<close>
-  (a self-map of \<open>real^2\<close>) is \<^emph>\<open>not\<close> surjective is the zero set of \<open>x \<mapsto> det\<close> of a
+  (a self-map of \<open>real^2\<close>) is \<^emph>\<open>not\<close> surjective is the zero set of \<open>x \<mapsto> matrix_det\<close> of a
   continuous matrix field, hence closed in the ball, hence compact.
 \<close>
 
@@ -1506,11 +1506,11 @@ proof -
   have mvm: "(\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) = (*v) (M x)" for x
     using lin[of x] by (simp only: M_def matrix_vector_mul(2))
 
-  have surj_iff: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> det (M x) \<noteq> 0" for x
+  have surj_iff: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> matrix_det (M x) \<noteq> 0" for x
   proof -
     have s1: "surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b)) \<longleftrightarrow> rank (M x) = CARD(2)"
       by (metis mvm full_rank_surjective)
-    have s2: "rank (M x) = CARD(2) \<longleftrightarrow> det (M x) \<noteq> 0"
+    have s2: "rank (M x) = CARD(2) \<longleftrightarrow> matrix_det (M x) \<noteq> 0"
       by (metis det_eq_0_rank min.idem nat_less_le rank_bound)
     show ?thesis using s1 s2 by blast
   qed
@@ -1523,12 +1523,12 @@ proof -
           bounded_bilinear.continuous_on
             [OF bounded_bilinear_blinfun_apply contGphi continuous_on_const]])
 
-  have detM: "det (M x) =
+  have detM: "matrix_det (M x) =
         blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 1 * blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 2
       - blinfun_apply (G' (\<phi> x)) (0, axis 2 1) $ 1 * blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 2"
     for x
     by (simp add: det_2 M_def matrix_def)
-  have det_cont: "continuous_on (cball u0 r) (\<lambda>x. det (M x))"
+  have det_cont: "continuous_on (cball u0 r) (\<lambda>x. matrix_det (M x))"
   proof -
     have "continuous_on (cball u0 r)
             (\<lambda>x. blinfun_apply (G' (\<phi> x)) (0, axis 1 1) $ 1
@@ -1540,16 +1540,16 @@ proof -
   qed
 
   have setEq: "{x \<in> cball u0 r. \<not> surj (\<lambda>b. blinfun_apply (G' (\<phi> x)) (0,b))}
-               = {x \<in> cball u0 r. det (M x) = 0}"
+               = {x \<in> cball u0 r. matrix_det (M x) = 0}"
     using surj_iff by auto
-  have "closedin (top_of_set (cball u0 r)) {x \<in> cball u0 r. det (M x) = 0}"
+  have "closedin (top_of_set (cball u0 r)) {x \<in> cball u0 r. matrix_det (M x) = 0}"
     by (rule continuous_closedin_preimage_constant[OF det_cont])
-  hence cl: "closed {x \<in> cball u0 r. det (M x) = 0}"
+  hence cl: "closed {x \<in> cball u0 r. matrix_det (M x) = 0}"
     using closedin_closed_trans closed_cball by blast
-  have sub: "{x \<in> cball u0 r. det (M x) = 0} \<subseteq> cball u0 r" by blast
-  have bd: "bounded {x \<in> cball u0 r. det (M x) = 0}"
+  have sub: "{x \<in> cball u0 r. matrix_det (M x) = 0} \<subseteq> cball u0 r" by blast
+  have bd: "bounded {x \<in> cball u0 r. matrix_det (M x) = 0}"
     using bounded_subset[OF bounded_cball sub] .
-  have cmp: "compact {x \<in> cball u0 r. det (M x) = 0}"
+  have cmp: "compact {x \<in> cball u0 r. matrix_det (M x) = 0}"
     using cl bd by (simp add: compact_eq_bounded_closed)
   show ?thesis unfolding setEq by (rule cmp)
 qed
@@ -1923,7 +1923,7 @@ proof -
   qed
 
   have neg_h: "negligible (h ` (\<Phi> ` S))"
-  proof (rule baby_Sard[where f = h and S = "\<Phi> ` S"
+  proof (rule baby_Sard_cart[where f = h and S = "\<Phi> ` S"
             and f' = "\<lambda>y z. \<Phi> (f' (\<Psi> y) (\<Psi> z))"])
     show "CARD('n bit0) \<le> CARD('n bit0)" by simp
     show "\<And>y. y \<in> \<Phi> ` S \<Longrightarrow>
@@ -2487,8 +2487,8 @@ lemma rline_entire_prod:
 lemma rline_entire_det_fun:
   fixes A :: "'a::euclidean_space \<Rightarrow> real^'n^'n"
   assumes "\<And>i j. rline_entire (\<lambda>x. A x $ i $ j)"
-  shows "rline_entire (\<lambda>x. det (A x))"
-  unfolding det_def
+  shows "rline_entire (\<lambda>x. matrix_det (A x))"
+  unfolding matrix_det_def
   by (auto intro!: rline_entire_sum rline_entire_scale rline_entire_prod assms finite_permutations)
 
 text \<open>
@@ -2886,7 +2886,7 @@ text \<open>
   \<open>e_\<phi>(\<phi>) = (-\<sin>\<phi>, \<cos>\<phi>)\<close> and (ignoring the additive \<open>\<omega>\<^sub>s\<close> constant)
   \<open>cvec(\<theta>,\<phi>) = \<sin>\<theta> e_r(\<phi>) + \<cos>\<theta> D + c\<^sub>0\<close>, the partials are
   \<open>\<partial>\<^sub>\<phi> cvec = \<sin>\<theta> e_\<phi>\<close>, \<open>\<partial>\<^sub>\<theta> cvec = \<cos>\<theta> e_r - \<sin>\<theta> D\<close>, and the Jacobian determinant is
-  \<open>\<det> D\<^sub>\<omega> cvec = h(\<theta>,\<phi>) \<sin>\<theta>\<close> with \<open>h = \<cos>\<theta> - \<sin>\<theta> (D \<cdot> e_r)\<close>. The singular curve
+  \<open>\<matrix_det> D\<^sub>\<omega> cvec = h(\<theta>,\<phi>) \<sin>\<theta>\<close> with \<open>h = \<cos>\<theta> - \<sin>\<theta> (D \<cdot> e_r)\<close>. The singular curve
   \<open>\<Sigma> = {h \<sin>\<theta> = 0}\<close> is where the differential drops rank.
 \<close>
 
@@ -2899,7 +2899,7 @@ definition cvecf :: "real \<times> real \<Rightarrow> real \<times> real \<Right
 text \<open>
   The \<open>2 \<times> 2\<close> Jacobian \<open>D\<^sub>\<omega> cvec\<close> as a Cartesian matrix \<^typ>\<open>real^2^2\<close>, with columns
   the partials \<open>\<partial>\<^sub>\<theta> cvec\<close> (column 1) and \<open>\<partial>\<^sub>\<phi> cvec\<close> (column 2). Its determinant is the
-  standard HOL-Analysis \<^const>\<open>det\<close> (evaluated via @{thm [source] det_2}).
+  standard HOL-Analysis \<^const>\<open>matrix_det\<close> (evaluated via @{thm [source] det_2}).
 \<close>
 
 definition Jcvec :: "real \<times> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real^2^2" where
@@ -2931,9 +2931,9 @@ lemma cvecf_theta_deriv:
   by (auto intro!: derivative_eq_intros)
 
 lemma det_Jcvec:
-  "det (Jcvec D \<theta> \<phi>) = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
+  "matrix_det (Jcvec D \<theta> \<phi>) = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
 proof -
-  have "det (Jcvec D \<theta> \<phi>)
+  have "matrix_det (Jcvec D \<theta> \<phi>)
       = (cos \<theta> * cos \<phi> - sin \<theta> * fst D) * (sin \<theta> * cos \<phi>)
         - (- (sin \<theta> * sin \<phi>)) * (cos \<theta> * sin \<phi> - sin \<theta> * snd D)"
     by (simp add: det_2 Jcvec_def) 
@@ -2964,7 +2964,7 @@ theorem lem_foldfields:
   fixes D c0 :: "real \<times> real" and \<theta> \<phi> :: real
   shows "((\<lambda>\<phi>. cvecf D c0 \<theta> \<phi>) has_vector_derivative (sin \<theta> *\<^sub>R e_p \<phi>)) (at \<phi>)"
     and "((\<lambda>\<theta>. cvecf D c0 \<theta> \<phi>) has_vector_derivative (cos \<theta> *\<^sub>R e_r \<phi> - sin \<theta> *\<^sub>R D)) (at \<theta>)"
-    and "det (Jcvec D \<theta> \<phi>) = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
+    and "matrix_det (Jcvec D \<theta> \<phi>) = (cos \<theta> - sin \<theta> * (D \<bullet> e_r \<phi>)) * sin \<theta>"
   using cvecf_phi_deriv cvecf_theta_deriv det_Jcvec by blast+
 
 
@@ -3629,7 +3629,7 @@ text \<open>
   \<open>of_real\<close>-lifted coordinate polynomials and the phase \<open>cis(-(c0 \<bullet> x$n))\<close> --- all
   \<open>cline_entire\<close>. Hence each transported real Jacobian entry (a \<open>Re\<close>/\<open>Im\<close>) is
   \<open>rline_entire\<close>, and the determinant \<open>m\<^sup>*\<close> is \<open>rline_entire\<close>. Being nontrivial
-  (\<open>m\<^sup>*(x0) = det bigJ \<noteq> 0\<close>), its zero set is nowhere dense, so the surjective
+  (\<open>m\<^sup>*(x0) = matrix_det bigJ \<noteq> 0\<close>), its zero set is nowhere dense, so the surjective
   stratum is dense.
 \<close>
 
