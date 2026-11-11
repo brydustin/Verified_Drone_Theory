@@ -4,8 +4,7 @@
 
      ~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -d . Applied_Math_Oracle_Audit
 
-   README.md has the map of the theories.  The directories Analytic/, Appendix/, HigherDiff/ and M5_Dev_*
-   are an archive of the Isabelle2025-2 state (git tag pre-isabelle2026); they are not built. *)
+   README.md has the map of the theories. *)
 
 (* The Munkres formalization on top of the complex analysis library, in one heap. *)
 session Applied_Math_Base in "Base" = "HOL-Complex_Analysis" +

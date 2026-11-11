@@ -199,19 +199,19 @@ proof -
   obtain r :: "'n \<Rightarrow> real" where r: "\<And>m. x $ m = r m *\<^sub>R v"
     using col by metis
   define S where "S = (\<Sum>n\<in>UNIV. complex_of_real (r n) * cis (- (c \<bullet> (x $ n))))"
-  have Mk: "Mcfun x c k = complex_of_real (v $ k) * S" for k :: 2
+  have Mk: "first_moment x c k = complex_of_real (v $ k) * S" for k :: 2
   proof -
     have t: "complex_of_real ((x $ n) $ k) = complex_of_real (v $ k) * complex_of_real (r n)" for n
       by (subst r[of n]) (simp add: mult.commute)
     show ?thesis
-      unfolding Mcfun_def S_def sum_distrib_left
+      unfolding first_moment_cis S_def sum_distrib_left
       by (rule sum.cong[OF refl]) (simp only: t mult.assoc)
   qed
-  have im0: "Im (cnj (Mcfun x c 1) * Mcfun x c 2) = 0"
+  have im0: "Im (cnj (first_moment x c 1) * first_moment x c 2) = 0"
     unfolding Mk by (simp add: algebra_simps)
   have "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
       = 4 * (gain_dip \<omega>)\<^sup>2 * (matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
-            * Im (cnj (Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 1) * Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 2))\<^sup>2"
+            * Im (cnj (first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 1) * first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 2))\<^sup>2"
     by (rule det_HessU_at_null) (use A0 in \<open>simp add: c_def\<close>)
   also have "\<dots> = 0"
     using im0 by (simp add: c_def)

@@ -1,4 +1,0 @@
-session Applied_Math_M5_H0Counterexample in "." = Applied_Math_M5_ActualD3Xi +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  theories
-    Scratch_H0Counterexample

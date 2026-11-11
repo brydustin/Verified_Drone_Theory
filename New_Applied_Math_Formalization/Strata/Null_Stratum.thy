@@ -12,7 +12,7 @@ subsection \<open>The Hessian at a zero of the array factor\<close>
 lemma Hcmat_at_null:
   fixes x :: "(real^2)^'n" and c :: "real^2"
   assumes null: "A_moment x c = 0"
-  shows "Hcmat x c = (\<chi> k. \<chi> l. 2 * Re (cnj (Mcfun x c l) * Mcfun x c k))"
+  shows "Hcmat x c = (\<chi> k. \<chi> l. 2 * Re (cnj (first_moment x c l) * first_moment x c k))"
   unfolding Hcmat_def using null by simp
 
 lemma gradUc_at_null:
@@ -46,8 +46,8 @@ lemma det_HessU_at_null:
   shows "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>)
        = 4 * (gain_dip \<omega>)\<^sup>2
            * (matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>))
-              * Im (cnj (Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 1)
-                    * Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 2))\<^sup>2"
+              * Im (cnj (first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 1)
+                    * first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 2))\<^sup>2"
 proof -
   have nullM: "moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1 = 0"
     by (simp add: moment_map_proj_A A_cart_eq_A_moment nullA)
@@ -57,8 +57,8 @@ proof -
   define j21 where "j21 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1) $ 2"
   define j12 where "j12 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) $ 1"
   define j22 where "j22 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1) $ 2"
-  define \<mu>1 where "\<mu>1 = Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 1"
-  define \<mu>2 where "\<mu>2 = Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) 2"
+  define \<mu>1 where "\<mu>1 = first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 1"
+  define \<mu>2 where "\<mu>2 = first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 2"
   define n1 where "n1 = Re (cnj \<mu>1 * \<mu>1)"
   define n2 where "n2 = Re (cnj \<mu>2 * \<mu>2)"
   define r12 where "r12 = Re (cnj \<mu>1 * \<mu>2)"
@@ -83,8 +83,8 @@ proof -
   have ReSym: "\<And>a b::complex. Re (cnj a * b) = Re (cnj b * a)" by simp
   \<comment> \<open>the four Hessian entries at the null, in scalar form\<close>
   have HcN: "Hcmat x (cvec_dip \<omega>0 \<omega>s \<omega>)
-           = (\<chi> k. \<chi> l. 2 * Re (cnj (Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) l)
-                              * Mcfun x (cvec_dip \<omega>0 \<omega>s \<omega>) k))"
+           = (\<chi> k. \<chi> l. 2 * Re (cnj (first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) l)
+                              * first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) k))"
     by (rule Hcmat_at_null[OF nullA])
   have entry: "HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ k $ l
       = g * (Dcvec_dip \<omega>0 \<omega>s \<omega> (axis k 1)
@@ -430,11 +430,11 @@ proof
     by (rule has_derivative_unique[OF dD' dT])
   \<comment> \<open>scalarize\<close>
   define c where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
-  define \<mu>1 where "\<mu>1 = Mcfun x c 1"
-  define \<mu>2 where "\<mu>2 = Mcfun x c 2"
+  define \<mu>1 where "\<mu>1 = first_moment x c 1"
+  define \<mu>2 where "\<mu>2 = first_moment x c 2"
   have Sval: "S k = (- \<i>) * (complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) $ 1) * \<mu>1
                   + complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> k) $ 2) * \<mu>2)" for k
-    unfolding S_def \<mu>1_def \<mu>2_def Mcfun_def c_def
+    unfolding S_def \<mu>1_def \<mu>2_def first_moment_cis c_def
     by (simp add: inner_vec_def sum_2 sum.distrib sum_subtractf sum_negf
           sum_distrib_left of_real_add of_real_mult algebra_simps)
   \<comment> \<open>the slice determinant\<close>

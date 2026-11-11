@@ -12,16 +12,16 @@ lemma A_moment_at_zero:
   shows "A_moment x (0::real^2) = of_nat CARD('n)"
   by (simp add: A_moment_cis)
 
-lemma Mcfun_at_zero:
+lemma first_moment_at_zero:
   fixes x :: "(real^2)^'n"
-  shows "Mcfun x (0::real^2) k = complex_of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ k)"
-  by (simp add: Mcfun_def)
+  shows "first_moment x (0::real^2) k = complex_of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ k)"
+  by (simp add: first_moment_cis)
 
-lemma M2cfun_at_zero:
+lemma second_moment_at_zero:
   fixes x :: "(real^2)^'n"
-  shows "M2cfun x (0::real^2) k l
+  shows "second_moment x (0::real^2) k l
      = complex_of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ k * (x $ n) $ l)"
-  by (simp add: M2cfun_def)
+  by (simp add: second_moment_cis)
 
 lemma gradUc_at_zero:
   fixes x :: "(real^2)^'n"
@@ -32,9 +32,9 @@ proof -
     have A0: "moment_map x 0 $ 1 = complex_of_real (real CARD('n))"
       by (simp add: A_moment_def phase_def)
     have M20: "moment_map x 0 $ 2 = complex_of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ 1)"
-      by (simp add: M1_moment_def phase_def)
+      by (simp add: first_moment_def phase_def)
     have M30: "moment_map x 0 $ 3 = complex_of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ 2)"
-      by (simp add: M2_moment_def phase_def)
+      by (simp add: first_moment_def phase_def)
     have Ar: "moment_map x 0 $ 1 = of_real (Re (moment_map x 0 $ 1))" by (subst A0)+ simp
     have M2r: "moment_map x 0 $ 2 = of_real (Re (moment_map x 0 $ 2))" by (subst M20)+ simp
     have M3r: "moment_map x 0 $ 3 = of_real (Re (moment_map x 0 $ 3))" by (subst M30)+ simp
@@ -179,11 +179,11 @@ lemma Hcmat_at_zero_entry:
               - real CARD('n) * (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ k * (x $ n) $ l))"
 proof -
   have "Hcmat x (0::real^2) $ k $ l
-      = 2 * (Re (cnj (Mcfun x 0 l) * Mcfun x 0 k) - Re (cnj (A_moment x 0) * M2cfun x 0 k l))"
+      = 2 * (Re (cnj (first_moment x 0 l) * first_moment x 0 k) - Re (cnj (A_moment x 0) * second_moment x 0 k l))"
     by (simp add: Hcmat_def)
   also have "\<dots> = 2 * ((\<Sum>n\<in>(UNIV::'n set). (x $ n) $ l) * (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ k)
               - real CARD('n) * (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ k * (x $ n) $ l))"
-    by (simp add: Mcfun_at_zero M2cfun_at_zero A_moment_at_zero)
+    by (simp add: first_moment_at_zero second_moment_at_zero A_moment_at_zero)
   finally show ?thesis .
 qed
 
@@ -408,9 +408,9 @@ proof (cases "cos (\<omega> $ 1) = 0")
              + (- \<i>) * complex_of_real ((Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 1 1))$2) * (moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 3))) = 0"
     proof -
       have M1r: "moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 2 = of_real (Re (moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 2))"
-        unfolding c0 by (simp add: M1_moment_def phase_def)
+        unfolding c0 by (simp add: first_moment_def phase_def)
       have M2r: "moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 3 = of_real (Re (moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 3))"
-        unfolding c0 by (simp add: M2_moment_def phase_def)
+        unfolding c0 by (simp add: first_moment_def phase_def)
       have Ar: "moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1 = of_real (Re (moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1))"
         unfolding NA by simp
       have "cnj (moment_map x (cvec_dip \<omega>0 \<omega>s \<omega>) $ 1)
@@ -484,8 +484,8 @@ lemma moment_map_at_zero_M1:
   fixes x :: "(real^2)^'n"
   shows "moment_map x 0 $ 2 = of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ 1)"
 proof -
-  have "M1_moment x 0 = (\<Sum>n\<in>(UNIV::'n set). of_real ((x $ n) $ 1) * cis 0)"
-    by (simp add: M1_moment_def phase_def)
+  have "first_moment x 0 1 = (\<Sum>n\<in>(UNIV::'n set). of_real ((x $ n) $ 1) * cis 0)"
+    by (simp add: first_moment_def phase_def)
   also have "\<dots> = (\<Sum>n\<in>(UNIV::'n set). of_real ((x $ n) $ 1))" by simp
   also have "\<dots> = of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ 1)" by simp
   finally show ?thesis by simp
@@ -495,8 +495,8 @@ lemma moment_map_at_zero_M2:
   fixes x :: "(real^2)^'n"
   shows "moment_map x 0 $ 3 = of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ 2)"
 proof -
-  have "M2_moment x 0 = (\<Sum>n\<in>(UNIV::'n set). of_real ((x $ n) $ 2) * cis 0)"
-    by (simp add: M2_moment_def phase_def)
+  have "first_moment x 0 2 = (\<Sum>n\<in>(UNIV::'n set). of_real ((x $ n) $ 2) * cis 0)"
+    by (simp add: first_moment_def phase_def)
   also have "\<dots> = (\<Sum>n\<in>(UNIV::'n set). of_real ((x $ n) $ 2))" by simp
   also have "\<dots> = of_real (\<Sum>n\<in>(UNIV::'n set). (x $ n) $ 2)" by simp
   finally show ?thesis by simp

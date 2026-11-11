@@ -1,4 +1,0 @@
-session Applied_Math_M5_D3Assembly in "." = Applied_Math_M5_D3Xi +
-  options [document = false, quick_and_dirty = true, timeout = 3600]
-  theories
-    Scratch_D3Assembly

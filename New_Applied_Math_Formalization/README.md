@@ -37,7 +37,7 @@ one of them depends on an oracle.
 |---|---|---|
 | `Applied_Math_Base` | `Base/` | none of its own: the Munkres formalization on top of `HOL-Complex_Analysis` |
 | `Applied_Math_Analysis` | `Analysis/` | `Munkres_Baire_Bridge` (the Baire category theorem), `Meager_Sets`, `Regular_Value_Theorem`, `Parametric_Transversality_Euclidean`, `Parametric_Transversality_Planar`, `Line_Entire_Functions` (functions whose restrictions to lines are entire), `Negligible_Line_Slices` |
-| `Applied_Math_Pattern` | `Pattern/` | `Array_Factor` (array factor `A_cart`, pattern `U_cart`), `Moment_Map`, `Pattern_Derivatives` (gradient `gradU`, Hessian `HessU`), `Feasible_Set`, `Dipole_Pattern` (gain, steering wavevector, smoothness), `Dipole_Gain_Derivatives`, `Dipole_Gain_Analytic`, `Robust_Sets` (`Xrobust`, `X0`, `F0`, the box `OmegaPF`), `Feasibility_Witness`, `Pattern_Moments`, `Gradient_Field_C1` |
+| `Applied_Math_Pattern` | `Pattern/` | `Array_Factor` (array factor `A_cart`, pattern `U_cart`), `Moment_Map` (`A_moment`, `first_moment`, `second_moment`), `Pattern_Derivatives` (gradient `gradU`, Hessian `HessU`), `Feasible_Set`, `Dipole_Pattern` (gain, steering wavevector, smoothness), `Dipole_Gain_Derivatives`, `Dipole_Gain_Analytic`, `Robust_Sets` (`Xrobust`, `X0`, `F0`, the box `OmegaPF`), `Feasibility_Witness`, `Pattern_Moments`, `Gradient_Field_C1` |
 | `Applied_Math_Strata` | `Strata/` | four of the five classes of degenerate configurations are meager: `Null_Stratum`, `Regular_Stratum`, `Critical_Slices`, `Main_Beam_Stratum`, `Steering_Singular_Stratum` |
 | `Applied_Math_Residual` | `Residual/` | the fifth class: `Residual_Phase_Equation`, `Residual_Equations` (the set `residual_set`), `Residual_Design`, `Residual_Charts`, `Residual_Chart_Cover`, `Residual_Aligned`, `Residual_Meager` |
 | `Applied_Math_Main` | `Main/` | `Degenerate_Configurations`, `Poles_And_Fixed_Margins` |
@@ -86,11 +86,10 @@ read the final theory in Isabelle/jEdit:
 - Commit `fd07a54` is the last state before that removal.  It contains the
   theories that the theorems stopped using: the six-moment determinant
   (`BlockDet/`, `MomentJac/`), the curve cover of the phase-collinear locus
-  (`Morse/`, `Appendix/Robust4Cover/`) and others.
+  (`Morse/`, `Appendix/Robust4Cover/`) and others, and the archive of earlier
+  attempts that was never built on Isabelle2026 (`HigherDiff/`, `Analytic/`,
+  `Appendix/`, `M5_Dev_*`, `d4_*.py`; git tag `pre-isabelle2026` has them in
+  their Isabelle2025-2 form).
 - `END_TO_END_PLAN.md` and `Sketch.md` are the plan and the informal proof
   from which the end-to-end theorem was reached; they use the names of that
   state.
-- Not built, kept in place: `HigherDiff/`, `Analytic/`, `Appendix/`, all
-  `M5_Dev_*` and `d4_*.py`.  They target Isabelle2025-2 (git tag
-  `pre-isabelle2026`), and parts of them contain `sorry` or refer to lemmas
-  since removed.

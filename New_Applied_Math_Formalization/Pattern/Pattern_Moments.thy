@@ -7,13 +7,9 @@ begin
 
 subsection \<open>The gradient through the first moments\<close>
 
-definition Mmom :: "(angle \<Rightarrow> planar) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> 2 \<Rightarrow> complex" where
-  \<comment> \<open>the \<open>k\<close>-th first moment of the array, \<open>M\<^sub>k = \<Sum>\<^sub>n (x\<^sub>n)\<^sub>k cis(-c\<bullet>x\<^sub>n)\<close>\<close>
-  "Mmom cvec x \<omega> k = (\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k) * cis (-(cvec \<omega> \<bullet> (x$n))))"
-
 lemma dA_cart_via_moments:
   "dA_cart cvec dc x \<omega> h
-     = (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$k) * Mmom cvec x \<omega> k)"
+     = (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$k) * first_moment x (cvec \<omega>) k)"
 proof -
   have "dA_cart cvec dc x \<omega> h
       = (\<Sum>n\<in>UNIV. \<Sum>k\<in>UNIV.
@@ -26,8 +22,8 @@ proof -
            (- \<i>) * complex_of_real ((dc h)$k) * complex_of_real ((x$n)$k)
              * cis (-(cvec \<omega> \<bullet> (x$n))))"
     by (rule sum.swap)
-  also have "\<dots> = (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$k) * Mmom cvec x \<omega> k)"
-    by (simp add: Mmom_def sum_distrib_left mult.assoc)
+  also have "\<dots> = (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc h)$k) * first_moment x (cvec \<omega>) k)"
+    by (simp add: first_moment_cis sum_distrib_left mult.assoc)
   finally show ?thesis .
 qed
 
@@ -40,7 +36,7 @@ lemma gradU_component_via_moments:
   shows "gradU cvec gain x \<omega> $ j
          = dgain (axis j 1) * (cmod (A_cart cvec x \<omega>))\<^sup>2
            + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
-                  * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+                  * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * first_moment x (cvec \<omega>) k)))"
 proof -
   have comp: "gradU cvec gain x \<omega> $ j = dU_cart cvec dc gain dgain x \<omega> (axis j 1)"
     by (simp add: gradU_explicit[OF dcvec dgn] axis_def if_distrib sum.delta cong: if_cong)
@@ -57,41 +53,35 @@ lemma gradU_component_real_moments:
   shows "gradU cvec gain x \<omega> $ j
          = dgain (axis j 1) * ((Re (A_cart cvec x \<omega>))\<^sup>2 + (Im (A_cart cvec x \<omega>))\<^sup>2)
            + gain \<omega> * (2 * (\<Sum>k\<in>UNIV. (dc (axis j 1))$k
-                  * (Re (A_cart cvec x \<omega>) * Im (Mmom cvec x \<omega> k)
-                     - Im (A_cart cvec x \<omega>) * Re (Mmom cvec x \<omega> k))))"
+                  * (Re (A_cart cvec x \<omega>) * Im (first_moment x (cvec \<omega>) k)
+                     - Im (A_cart cvec x \<omega>) * Re (first_moment x (cvec \<omega>) k))))"
 proof -
   let ?A = "A_cart cvec x \<omega>"
   have cmod2: "(cmod ?A)\<^sup>2 = (Re ?A)\<^sup>2 + (Im ?A)\<^sup>2"
     by (simp add: cmod_power2)
   have reterm:
-    "Re (cnj ?A * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k))
+    "Re (cnj ?A * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * first_moment x (cvec \<omega>) k))
      = (\<Sum>k\<in>UNIV. (dc (axis j 1))$k
-            * (Re ?A * Im (Mmom cvec x \<omega> k) - Im ?A * Re (Mmom cvec x \<omega> k)))"
+            * (Re ?A * Im (first_moment x (cvec \<omega>) k) - Im ?A * Re (first_moment x (cvec \<omega>) k)))"
   proof -
-    have "Re (cnj ?A * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k))
-        = (\<Sum>k\<in>UNIV. Re (cnj ?A * ((- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+    have "Re (cnj ?A * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * first_moment x (cvec \<omega>) k))
+        = (\<Sum>k\<in>UNIV. Re (cnj ?A * ((- \<i>) * complex_of_real ((dc (axis j 1))$k) * first_moment x (cvec \<omega>) k)))"
       by (simp add: sum_distrib_left Re_sum)
     also have "\<dots> = (\<Sum>k\<in>UNIV. (dc (axis j 1))$k
-            * (Re ?A * Im (Mmom cvec x \<omega> k) - Im ?A * Re (Mmom cvec x \<omega> k)))"
+            * (Re ?A * Im (first_moment x (cvec \<omega>) k) - Im ?A * Re (first_moment x (cvec \<omega>) k)))"
       by (simp add: algebra_simps)
     finally show ?thesis .
   qed
   have G: "gradU cvec gain x \<omega> $ j
         = dgain (axis j 1) * (cmod ?A)\<^sup>2
           + gain \<omega> * (2 * Re (cnj ?A
-                * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+                * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * first_moment x (cvec \<omega>) k)))"
     by (rule gradU_component_via_moments[OF dcvec dgn])
   show ?thesis by (simp only: G cmod2 reterm)
 qed
 
 lemma moment_map_proj_A:   "moment_map x (cvec \<omega>) $ 1 = A_cart cvec x \<omega>"
   by (simp add: A_moment_def phase_def A_cart_def)
-
-lemma moment_map_proj_M1:  "moment_map x (cvec \<omega>) $ 2 = Mmom cvec x \<omega> 1"
-  by (simp add: M1_moment_def phase_def Mmom_def)
-
-lemma moment_map_proj_M2:  "moment_map x (cvec \<omega>) $ 3 = Mmom cvec x \<omega> 2"
-  by (simp add: M2_moment_def phase_def Mmom_def)
 
 lemma gradU_component_via_moment_map:
   fixes cvec :: "angle \<Rightarrow> planar" and gain :: "angle \<Rightarrow> real"
@@ -108,30 +98,20 @@ proof -
   have G: "gradU cvec gain x \<omega> $ j
         = dgain (axis j 1) * (cmod (A_cart cvec x \<omega>))\<^sup>2
           + gain \<omega> * (2 * Re (cnj (A_cart cvec x \<omega>)
-                * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)))"
+                * (\<Sum>k\<in>UNIV. (- \<i>) * complex_of_real ((dc (axis j 1))$k) * first_moment x (cvec \<omega>) k)))"
     by (rule gradU_component_via_moments[OF dcvec dgn])
-  have S: "(\<Sum>k\<in>(UNIV::2 set). (- \<i>) * complex_of_real ((dc (axis j 1))$k) * Mmom cvec x \<omega> k)
-        = (- \<i>) * complex_of_real ((dc (axis j 1))$1) * Mmom cvec x \<omega> 1
-        + (- \<i>) * complex_of_real ((dc (axis j 1))$2) * Mmom cvec x \<omega> 2"
+  have S: "(\<Sum>k\<in>(UNIV::2 set). (- \<i>) * complex_of_real ((dc (axis j 1))$k) * first_moment x (cvec \<omega>) k)
+        = (- \<i>) * complex_of_real ((dc (axis j 1))$1) * first_moment x (cvec \<omega>) 1
+        + (- \<i>) * complex_of_real ((dc (axis j 1))$2) * first_moment x (cvec \<omega>) 2"
     by (simp add: sum_2)
   show ?thesis
-    by (simp only: G S moment_map_proj_A moment_map_proj_M1 moment_map_proj_M2)
+    by (simp only: G S moment_map_proj_A moment_map_components(2,3))
 qed
 
 subsection \<open>Derivatives in the wavevector\<close>
 
-definition Mcfun :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> complex" where
-  "Mcfun x c k = (\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k) * cis (-(c \<bullet> (x$n))))"
-
-definition M2cfun :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> 2 \<Rightarrow> 2 \<Rightarrow> complex" where
-  "M2cfun x c k l =
-     (\<Sum>n\<in>UNIV. complex_of_real ((x$n)$k) * complex_of_real ((x$n)$l) * cis (-(c \<bullet> (x$n))))"
-
 lemma A_cart_eq_A_moment: "A_cart cvec x \<omega> = A_moment x (cvec \<omega>)"
   by (simp add: A_cart_def A_moment_cis)
-
-lemma Mmom_eq_Mcfun: "Mmom cvec x \<omega> k = Mcfun x (cvec \<omega>) k"
-  by (simp add: Mmom_def Mcfun_def)
 
 lemma has_derivative_A_moment_c:
   "(A_moment x has_derivative
@@ -175,8 +155,8 @@ proof -
   ultimately show ?thesis by simp
 qed
 
-lemma has_derivative_Mcfun_c:
-  "((\<lambda>c. Mcfun x c k) has_derivative
+lemma has_derivative_first_moment_c:
+  "((\<lambda>c. first_moment x c k) has_derivative
       (\<lambda>h. \<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
                        * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))) (at c)"
 proof -
@@ -198,13 +178,13 @@ proof -
       by (rule ext) (simp add: algebra_simps)
     ultimately show ?thesis by simp
   qed
-  show ?thesis unfolding Mcfun_def
+  show ?thesis unfolding first_moment_cis
     by (rule has_derivative_sum) (rule tderiv)
 qed
 
 lemma gradU_c_field:
   "gradU (\<lambda>c. c) (\<lambda>_. 1) x c $ j
-     = 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j))"
+     = 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j))"
 proof -
   have d1: "((\<lambda>c::real^2. c) has_derivative (\<lambda>h. h)) (at c)"
     by (rule has_derivative_ident)
@@ -214,11 +194,11 @@ proof -
         = (\<lambda>_. 0) (axis j 1)
             * ((Re (A_cart (\<lambda>c. c) x c))\<^sup>2 + (Im (A_cart (\<lambda>c. c) x c))\<^sup>2)
           + (\<lambda>_. 1) c * (2 * (\<Sum>k\<in>UNIV. ((\<lambda>h. h) (axis j 1))$k
-                 * (Re (A_cart (\<lambda>c. c) x c) * Im (Mmom (\<lambda>c. c) x c k)
-                    - Im (A_cart (\<lambda>c. c) x c) * Re (Mmom (\<lambda>c. c) x c k))))"
+                 * (Re (A_cart (\<lambda>c. c) x c) * Im (first_moment x c k)
+                    - Im (A_cart (\<lambda>c. c) x c) * Re (first_moment x c k))))"
     by (rule gradU_component_real_moments[OF d1 d2])
-  also have "\<dots> = 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j))"
-    by (simp add: A_cart_eq_A_moment Mmom_eq_Mcfun axis_def if_distrib sum.delta cong: if_cong,
+  also have "\<dots> = 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j))"
+    by (simp add: A_cart_eq_A_moment axis_def if_distrib sum.delta cong: if_cong,
         smt (verit, ccfv_SIG) exhaust_2 sum_2 zero_neq_one)
   finally show ?thesis .
 qed
@@ -229,48 +209,48 @@ lemma inner_real2_sum: "(h::real^2) \<bullet> (p::real^2) = (\<Sum>l\<in>UNIV. (
 lemma Re_DA_moment:
   fixes x :: "(real^2)^'n" and c h :: "real^2"
   shows "Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
-       = (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))"
+       = (\<Sum>l\<in>UNIV. (h$l) * Im (first_moment x c l))"
 proof -
   have "Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
       = (\<Sum>n\<in>UNIV. \<Sum>l\<in>UNIV. (h$l) * ((x$n)$l * Im (cis (-(c \<bullet> (x$n))))))"
     by (simp add: Re_sum inner_real2_sum sum_distrib_right mult.assoc)
   also have "\<dots> = (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * ((x$n)$l * Im (cis (-(c \<bullet> (x$n))))))"
     by (rule sum.swap)
-  also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))"
-    by (simp add: sum_distrib_left Mcfun_def Im_sum)
+  also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * Im (first_moment x c l))"
+    by (simp add: sum_distrib_left first_moment_cis Im_sum)
   finally show ?thesis .
 qed
 
 lemma Im_DA_moment:
   fixes x :: "(real^2)^'n" and c h :: "real^2"
   shows "Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
-       = - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))"
+       = - (\<Sum>l\<in>UNIV. (h$l) * Re (first_moment x c l))"
 proof -
   have "Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
       = - (\<Sum>n\<in>UNIV. \<Sum>l\<in>UNIV. (h$l) * ((x$n)$l * Re (cis (-(c \<bullet> (x$n))))))"
     by (simp add: Im_sum inner_real2_sum sum_distrib_right mult.assoc sum_negf)
   also have "\<dots> = - (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * ((x$n)$l * Re (cis (-(c \<bullet> (x$n))))))"
     by (rule arg_cong[where f = uminus]) (rule sum.swap)
-  also have "\<dots> = - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))"
-    by (simp add: sum_distrib_left Mcfun_def Re_sum)
+  also have "\<dots> = - (\<Sum>l\<in>UNIV. (h$l) * Re (first_moment x c l))"
+    by (simp add: sum_distrib_left first_moment_cis Re_sum)
   finally show ?thesis .
 qed
 
-lemma Im_M2cfun:
+lemma Im_second_moment:
   fixes x :: "(real^2)^'n"
-  shows "Im (M2cfun x c k l) = (\<Sum>n\<in>UNIV. ((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n)))))"
-  by (simp add: M2cfun_def Im_sum)
+  shows "Im (second_moment x c k l) = (\<Sum>n\<in>UNIV. ((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n)))))"
+  by (simp add: second_moment_cis Im_sum)
 
-lemma Re_M2cfun:
+lemma Re_second_moment:
   fixes x :: "(real^2)^'n"
-  shows "Re (M2cfun x c k l) = (\<Sum>n\<in>UNIV. ((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n)))))"
-  by (simp add: M2cfun_def Re_sum)
+  shows "Re (second_moment x c k l) = (\<Sum>n\<in>UNIV. ((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n)))))"
+  by (simp add: second_moment_cis Re_sum)
 
 lemma ReDMfun:
   fixes x :: "(real^2)^'n" and c h :: "real^2"
   shows "Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
                 * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
-       = (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))"
+       = (\<Sum>l\<in>UNIV. (h$l) * Im (second_moment x c k l))"
 proof -
   have perterm: "((x$n)$k * (h \<bullet> (x$n))) * Im (cis (-(c \<bullet> (x$n))))
        = (\<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n))))))" for n
@@ -292,8 +272,8 @@ proof -
     by (rule sum.cong[OF refl]) (rule perterm)
   also have "\<dots> = (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Im (cis (-(c \<bullet> (x$n))))))"
     by (rule sum.swap)
-  also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))"
-    by (simp add: sum_distrib_left Im_M2cfun)
+  also have "\<dots> = (\<Sum>l\<in>UNIV. (h$l) * Im (second_moment x c k l))"
+    by (simp add: sum_distrib_left Im_second_moment)
   finally show ?thesis .
 qed
 
@@ -301,7 +281,7 @@ lemma ImDMfun:
   fixes x :: "(real^2)^'n" and c h :: "real^2"
   shows "Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
                 * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n))))
-       = - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l))"
+       = - (\<Sum>l\<in>UNIV. (h$l) * Re (second_moment x c k l))"
 proof -
   have perterm: "((x$n)$k * (h \<bullet> (x$n))) * Re (cis (-(c \<bullet> (x$n))))
        = (\<Sum>l\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n))))))" for n
@@ -323,66 +303,66 @@ proof -
     by (rule arg_cong[where f = uminus], rule sum.cong[OF refl], rule perterm)
   also have "\<dots> = - (\<Sum>l\<in>UNIV. \<Sum>n\<in>UNIV. (h$l) * (((x$n)$k * (x$n)$l) * Re (cis (-(c \<bullet> (x$n))))))"
     by (rule arg_cong[where f = uminus]) (rule sum.swap)
-  also have "\<dots> = - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l))"
-    by (simp add: sum_distrib_left Re_M2cfun)
+  also have "\<dots> = - (\<Sum>l\<in>UNIV. (h$l) * Re (second_moment x c k l))"
+    by (simp add: sum_distrib_left Re_second_moment)
   finally show ?thesis .
 qed
 
 definition Hcmat :: "(real^2)^'n \<Rightarrow> real^2 \<Rightarrow> real^2^2" where
-  "Hcmat x c = (\<chi> k. \<chi> l. 2 * (Re (cnj (Mcfun x c l) * Mcfun x c k)
-                               - Re (cnj (A_moment x c) * M2cfun x c k l)))"
+  "Hcmat x c = (\<chi> k. \<chi> l. 2 * (Re (cnj (first_moment x c l) * first_moment x c k)
+                               - Re (cnj (A_moment x c) * second_moment x c k l)))"
 
 lemma dRe_A_moment:
   fixes x :: "(real^2)^'n" and c :: "real^2"
-  shows "((\<lambda>c. Re (A_moment x c)) has_derivative (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))) (at c)"
+  shows "((\<lambda>c. Re (A_moment x c)) has_derivative (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (first_moment x c l))) (at c)"
 proof (rule has_derivative_eq_rhs)
   show "((\<lambda>c. Re (A_moment x c)) has_derivative
           (\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
     by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_A_moment_c])
   show "(\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
-        = (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l))"
+        = (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (first_moment x c l))"
     by (rule ext) (rule Re_DA_moment)
 qed
 
 lemma dIm_A_moment:
   fixes x :: "(real^2)^'n" and c :: "real^2"
-  shows "((\<lambda>c. Im (A_moment x c)) has_derivative (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l)))) (at c)"
+  shows "((\<lambda>c. Im (A_moment x c)) has_derivative (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (first_moment x c l)))) (at c)"
 proof (rule has_derivative_eq_rhs)
   show "((\<lambda>c. Im (A_moment x c)) has_derivative
           (\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
     by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_A_moment_c])
   show "(\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
-        = (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l)))"
+        = (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (first_moment x c l)))"
     by (rule ext) (rule Im_DA_moment)
 qed
 
-lemma dRe_Mcfun:
+lemma dRe_first_moment:
   fixes x :: "(real^2)^'n" and c :: "real^2"
-  shows "((\<lambda>c. Re (Mcfun x c k)) has_derivative
-            (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))) (at c)"
+  shows "((\<lambda>c. Re (first_moment x c k)) has_derivative
+            (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (second_moment x c k l))) (at c)"
 proof (rule has_derivative_eq_rhs)
-  show "((\<lambda>c. Re (Mcfun x c k)) has_derivative
+  show "((\<lambda>c. Re (first_moment x c k)) has_derivative
           (\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
                      * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
-    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_Mcfun_c])
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Re has_derivative_first_moment_c])
   show "(\<lambda>h. Re (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
                      * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
-        = (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c k l))"
+        = (\<lambda>h. \<Sum>l\<in>UNIV. (h$l) * Im (second_moment x c k l))"
     by (rule ext) (rule ReDMfun)
 qed
 
-lemma dIm_Mcfun:
+lemma dIm_first_moment:
   fixes x :: "(real^2)^'n" and c :: "real^2"
-  shows "((\<lambda>c. Im (Mcfun x c k)) has_derivative
-            (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l)))) (at c)"
+  shows "((\<lambda>c. Im (first_moment x c k)) has_derivative
+            (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (second_moment x c k l)))) (at c)"
 proof (rule has_derivative_eq_rhs)
-  show "((\<lambda>c. Im (Mcfun x c k)) has_derivative
+  show "((\<lambda>c. Im (first_moment x c k)) has_derivative
           (\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
                      * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))) (at c)"
-    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_Mcfun_c])
+    by (rule bounded_linear.has_derivative[OF bounded_linear_Im has_derivative_first_moment_c])
   show "(\<lambda>h. Im (\<Sum>n\<in>UNIV. (- \<i>) * complex_of_real ((x$n)$k)
                      * complex_of_real (h \<bullet> (x$n)) * cis (-(c \<bullet> (x$n)))))
-        = (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c k l)))"
+        = (\<lambda>h. - (\<Sum>l\<in>UNIV. (h$l) * Re (second_moment x c k l)))"
     by (rule ext) (rule ImDMfun)
 qed
 
@@ -391,46 +371,46 @@ lemma has_derivative_gradU_c:
   shows "(gradU (\<lambda>c. c) (\<lambda>_. 1) x has_derivative (\<lambda>h. Hcmat x c *v h)) (at c)"
 proof -
   have field_eq: "gradU (\<lambda>c. c) (\<lambda>_. 1) x
-        = (\<lambda>c. \<chi> j. 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j)))"
+        = (\<lambda>c. \<chi> j. 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j)))"
   proof (rule ext)
     fix c :: "real^2"
     have "gradU (\<lambda>c. c) (\<lambda>_. 1) x c $ i
-          = (\<chi> j. 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j))) $ i"
+          = (\<chi> j. 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j))) $ i"
       for i by (simp add: gradU_c_field)
     thus "gradU (\<lambda>c. c) (\<lambda>_. 1) x c
-          = (\<chi> j. 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j)))"
+          = (\<chi> j. 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j)))"
       by (simp add: Finite_Cartesian_Product.vec_eq_iff)
   qed
-  have comp: "((\<lambda>c. 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j)))
+  have comp: "((\<lambda>c. 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j)))
                 has_derivative (\<lambda>h. (Hcmat x c *v h) $ j)) (at c)" for j
   proof (rule has_derivative_eq_rhs)
-    show "((\<lambda>c. 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j)))
+    show "((\<lambda>c. 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j)))
             has_derivative
-            (\<lambda>h. 2 * ((Re (A_moment x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c j l)))
-                       + (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l)) * Im (Mcfun x c j))
-                    - (Im (A_moment x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c j l))
-                       + (- (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))) * Re (Mcfun x c j)))
-                 + 0 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j)))) (at c)"
+            (\<lambda>h. 2 * ((Re (A_moment x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (second_moment x c j l)))
+                       + (\<Sum>l\<in>UNIV. (h$l) * Im (first_moment x c l)) * Im (first_moment x c j))
+                    - (Im (A_moment x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (second_moment x c j l))
+                       + (- (\<Sum>l\<in>UNIV. (h$l) * Re (first_moment x c l))) * Re (first_moment x c j)))
+                 + 0 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j)))) (at c)"
       by (rule has_derivative_mult[OF has_derivative_const
-                has_derivative_diff[OF has_derivative_mult[OF dRe_A_moment dIm_Mcfun]
-                                       has_derivative_mult[OF dIm_A_moment dRe_Mcfun]]])
-    show "(\<lambda>h. 2 * ((Re (A_moment x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c j l)))
-                       + (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l)) * Im (Mcfun x c j))
-                    - (Im (A_moment x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c j l))
-                       + (- (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))) * Re (Mcfun x c j)))
-                 + 0 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j)))
+                has_derivative_diff[OF has_derivative_mult[OF dRe_A_moment dIm_first_moment]
+                                       has_derivative_mult[OF dIm_A_moment dRe_first_moment]]])
+    show "(\<lambda>h. 2 * ((Re (A_moment x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (second_moment x c j l)))
+                       + (\<Sum>l\<in>UNIV. (h$l) * Im (first_moment x c l)) * Im (first_moment x c j))
+                    - (Im (A_moment x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (second_moment x c j l))
+                       + (- (\<Sum>l\<in>UNIV. (h$l) * Re (first_moment x c l))) * Re (first_moment x c j)))
+                 + 0 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j)))
           = (\<lambda>h. (Hcmat x c *v h) $ j)"
     proof (rule ext)
       fix h :: "real^2"
       have "(Hcmat x c *v h) $ j
-          = (\<Sum>l\<in>UNIV. (h$l) * (2 * (Re (Mcfun x c l) * Re (Mcfun x c j) + Im (Mcfun x c l) * Im (Mcfun x c j)
-                  - (Re (A_moment x c) * Re (M2cfun x c j l) + Im (A_moment x c) * Im (M2cfun x c j l)))))"
+          = (\<Sum>l\<in>UNIV. (h$l) * (2 * (Re (first_moment x c l) * Re (first_moment x c j) + Im (first_moment x c l) * Im (first_moment x c j)
+                  - (Re (A_moment x c) * Re (second_moment x c j l) + Im (A_moment x c) * Im (second_moment x c j l)))))"
         by (simp add: matrix_vector_mult_def Hcmat_def mult.commute)
-      thus "2 * ((Re (A_moment x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (M2cfun x c j l)))
-                   + (\<Sum>l\<in>UNIV. (h$l) * Im (Mcfun x c l)) * Im (Mcfun x c j))
-                - (Im (A_moment x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (M2cfun x c j l))
-                   + (- (\<Sum>l\<in>UNIV. (h$l) * Re (Mcfun x c l))) * Re (Mcfun x c j)))
-             + 0 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j))
+      thus "2 * ((Re (A_moment x c) * (- (\<Sum>l\<in>UNIV. (h$l) * Re (second_moment x c j l)))
+                   + (\<Sum>l\<in>UNIV. (h$l) * Im (first_moment x c l)) * Im (first_moment x c j))
+                - (Im (A_moment x c) * (\<Sum>l\<in>UNIV. (h$l) * Im (second_moment x c j l))
+                   + (- (\<Sum>l\<in>UNIV. (h$l) * Re (first_moment x c l))) * Re (first_moment x c j)))
+             + 0 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j))
            = (Hcmat x c *v h) $ j"
         by (simp add: sum_distrib_left sum_distrib_right sum_subtractf sum_negf sum.distrib algebra_simps)
     qed
@@ -440,10 +420,10 @@ proof -
   proof (subst has_derivative_componentwise_within, intro ballI)
     fix b :: "real^2" assume "b \<in> Basis"
     then obtain j where bj: "b = axis j 1" by (auto simp: Basis_vec_def)
-    have "((\<lambda>c. (\<chi> j. 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j))) \<bullet> b)
+    have "((\<lambda>c. (\<chi> j. 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j))) \<bullet> b)
             has_derivative (\<lambda>h. (Hcmat x c *v h) \<bullet> b)) (at c within UNIV)"
       using comp[of j] by (simp add: bj inner_axis)
-    thus "((\<lambda>c. (\<chi> j. 2 * (Re (A_moment x c) * Im (Mcfun x c j) - Im (A_moment x c) * Re (Mcfun x c j))) \<bullet> b)
+    thus "((\<lambda>c. (\<chi> j. 2 * (Re (A_moment x c) * Im (first_moment x c j) - Im (A_moment x c) * Re (first_moment x c j))) \<bullet> b)
             has_derivative (\<lambda>h. ((\<lambda>h. Hcmat x c *v h) h) \<bullet> b)) (at c within UNIV)"
       by simp
   qed
@@ -695,28 +675,16 @@ qed
 
 subsection \<open>Continuity in configuration and angle\<close>
 
-lemma continuous_on_Mcfun_joint:
-  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. Mcfun (fst p) (snd p) k)"
-  unfolding Mcfun_def
+lemma continuous_on_second_moment_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. second_moment (fst p) (snd p) k l)"
+  unfolding second_moment_cis
   by (intro continuous_on_sum continuous_on_cis continuous_intros
             bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
-lemma continuous_on_M2cfun_joint:
-  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. M2cfun (fst p) (snd p) k l)"
-  unfolding M2cfun_def
-  by (intro continuous_on_sum continuous_on_cis continuous_intros
-            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
-
-lemma continuous_on_Mcfun_cvec_dip:
+lemma continuous_on_second_moment_cvec_dip:
   "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
-     (\<lambda>p. Mcfun (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) k)"
-  using continuous_on_compose2[OF continuous_on_Mcfun_joint
-                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
-
-lemma continuous_on_M2cfun_cvec_dip:
-  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
-     (\<lambda>p. M2cfun (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) k l)"
-  using continuous_on_compose2[OF continuous_on_M2cfun_joint
+     (\<lambda>p. second_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) k l)"
+  using continuous_on_compose2[OF continuous_on_second_moment_joint
                                  continuous_on_pair_cvec_dip subset_UNIV] by simp
 
 lemma continuous_on_Hcmat_cvec_dip:
@@ -724,8 +692,8 @@ lemma continuous_on_Hcmat_cvec_dip:
      (\<lambda>p. Hcmat (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
   unfolding Hcmat_def
   by (intro continuous_on_vec_lambda continuous_intros
-            continuous_on_A_moment_cvec_dip continuous_on_Mcfun_cvec_dip
-            continuous_on_M2cfun_cvec_dip)
+            continuous_on_A_moment_cvec_dip continuous_on_first_moment_cvec_dip
+            continuous_on_second_moment_cvec_dip)
 
 lemma continuous_on_gradUc_cvec_dip:
   "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
@@ -739,7 +707,7 @@ proof -
             (\<lambda>p. gradU (\<lambda>c. c) (\<lambda>_. 1) (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) $ j)"
       by (simp only: gradUc_component_moments moment_map_components,
           intro continuous_intros continuous_on_A_moment_cvec_dip
-                continuous_on_M1_moment_cvec_dip continuous_on_M2_moment_cvec_dip)
+                continuous_on_first_moment_cvec_dip)
   qed
   thus ?thesis by (simp add: vec_lambda_eta)
 qed
@@ -823,15 +791,9 @@ lemma continuous_on_DA_moment_joint:
   by (intro continuous_on_sum continuous_on_cis continuous_intros
             bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
-lemma continuous_on_DM1_moment_joint:
-  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. DM1_moment (fst p) (snd p) h)"
-  unfolding DM1_moment_def phase_def d_phase_def
-  by (intro continuous_on_sum continuous_on_cis continuous_intros
-            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
-
-lemma continuous_on_DM2_moment_joint:
-  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. DM2_moment (fst p) (snd p) h)"
-  unfolding DM2_moment_def phase_def d_phase_def
+lemma continuous_on_Dfirst_moment_joint:
+  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set) (\<lambda>p. Dfirst_moment (fst p) (snd p) k h)"
+  unfolding Dfirst_moment_def phase_def d_phase_def
   by (intro continuous_on_sum continuous_on_cis continuous_intros
             bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
@@ -841,16 +803,10 @@ lemma continuous_on_DA_moment_cvec_dip:
   using continuous_on_compose2[OF continuous_on_DA_moment_joint
                                  continuous_on_pair_cvec_dip subset_UNIV] by simp
 
-lemma continuous_on_DM1_moment_cvec_dip:
+lemma continuous_on_Dfirst_moment_cvec_dip:
   "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
-     (\<lambda>p. DM1_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
-  using continuous_on_compose2[OF continuous_on_DM1_moment_joint
-                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
-
-lemma continuous_on_DM2_moment_cvec_dip:
-  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
-     (\<lambda>p. DM2_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) h)"
-  using continuous_on_compose2[OF continuous_on_DM2_moment_joint
+     (\<lambda>p. Dfirst_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) k h)"
+  using continuous_on_compose2[OF continuous_on_Dfirst_moment_joint
                                  continuous_on_pair_cvec_dip subset_UNIV] by simp
 
 subsection \<open>Surjectivity of linear maps\<close>

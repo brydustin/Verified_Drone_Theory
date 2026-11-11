@@ -63,7 +63,7 @@ proof -
 qed
 
 lemma has_derivative_Ej_moment:
-  fixes M0 :: "complex^6" and p g c1 c2 :: real
+  fixes M0 :: "complex^3" and p g c1 c2 :: real
   shows "((\<lambda>M. p * ((Re (M$1))\<^sup>2 + (Im (M$1))\<^sup>2)
               + g * (2 * Re (cnj (M$1) * ((- \<i>) * complex_of_real c1 * (M$2)
                                         + (- \<i>) * complex_of_real c2 * (M$3)))))
@@ -75,7 +75,7 @@ lemma has_derivative_Ej_moment:
                                         + (- \<i>) * complex_of_real c2 * (\<delta>$3))))))
           (at M0)"
 proof -
-  have proj: "((\<lambda>M::complex^6. M $ k) has_derivative (\<lambda>\<delta>. \<delta> $ k)) (at M0)" for k
+  have proj: "((\<lambda>M::complex^3. M $ k) has_derivative (\<lambda>\<delta>. \<delta> $ k)) (at M0)" for k
     by (rule bounded_linear.has_derivative[OF bounded_linear_vec_nth has_derivative_ident])
   show ?thesis
       by (auto intro!: derivative_eq_intros proj bounded_linear.has_derivative[OF bounded_linear_Re]
@@ -84,12 +84,12 @@ proof -
                        simp: algebra_simps)
 qed
 
-definition Ejm :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^6 \<Rightarrow> real" where
+definition Ejm :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^3 \<Rightarrow> real" where
   "Ejm p g c1 c2 = (\<lambda>M. p * ((Re (M$1))\<^sup>2 + (Im (M$1))\<^sup>2)
               + g * (2 * Re (cnj (M$1) * ((- \<i>) * complex_of_real c1 * (M$2)
                                         + (- \<i>) * complex_of_real c2 * (M$3)))))"
 
-definition dEjm :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^6 \<Rightarrow> complex^6 \<Rightarrow> real" where
+definition dEjm :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> complex^3 \<Rightarrow> complex^3 \<Rightarrow> real" where
   "dEjm p g c1 c2 M0 = (\<lambda>\<delta>. p * (2 * Re (M0$1) * Re (\<delta>$1) + 2 * Im (M0$1) * Im (\<delta>$1))
               + g * (2 * Re (cnj (\<delta>$1) * ((- \<i>) * complex_of_real c1 * (M0$2)
                                         + (- \<i>) * complex_of_real c2 * (M0$3))
@@ -97,7 +97,7 @@ definition dEjm :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> rea
                                         + (- \<i>) * complex_of_real c2 * (\<delta>$3)))))"
 
 lemma has_derivative_Ejm:
-  fixes M0 :: "complex^6" and p g c1 c2 :: real
+  fixes M0 :: "complex^3" and p g c1 c2 :: real
   shows "(Ejm p g c1 c2 has_derivative dEjm p g c1 c2 M0) (at M0)"
   unfolding Ejm_def dEjm_def by (rule has_derivative_Ej_moment)
 
@@ -173,10 +173,8 @@ proof (intro continuous_on_vec_lambda)
         intro continuous_intros
               continuous_on_frechet_gdip_proj_snd continuous_on_gain_dip_snd
               continuous_on_Dcvec_dip_snd
-              continuous_on_A_moment_cvec_dip continuous_on_M1_moment_cvec_dip
-              continuous_on_M2_moment_cvec_dip
-              continuous_on_DA_moment_cvec_dip continuous_on_DM1_moment_cvec_dip
-              continuous_on_DM2_moment_cvec_dip)
+              continuous_on_A_moment_cvec_dip continuous_on_first_moment_cvec_dip
+              continuous_on_DA_moment_cvec_dip continuous_on_Dfirst_moment_cvec_dip)
 qed
 
 lemma norm_adjoint_blinfun_le:

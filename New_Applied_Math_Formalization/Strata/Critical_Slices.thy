@@ -32,28 +32,21 @@ lemma continuous_on_A_moment_config:
   by (intro continuous_on_sum continuous_on_cis continuous_intros
         bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
-lemma continuous_on_M1_moment_config:
+lemma continuous_on_first_moment_config:
   fixes c :: "real^2"
-  shows "continuous_on UNIV (\<lambda>y::(real^2)^'n. M1_moment y c)"
-  unfolding M1_moment_def phase_def
-  by (intro continuous_on_sum continuous_on_cis continuous_intros
-        bounded_linear.continuous_on[OF bounded_linear_vec_nth])
-
-lemma continuous_on_M2_moment_config:
-  fixes c :: "real^2"
-  shows "continuous_on UNIV (\<lambda>y::(real^2)^'n. M2_moment y c)"
-  unfolding M2_moment_def phase_def
+  shows "continuous_on UNIV (\<lambda>y::(real^2)^'n. first_moment y c k)"
+  unfolding first_moment_def phase_def
   by (intro continuous_on_sum continuous_on_cis continuous_intros
         bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
 lemma continuous_on_slice_moments:
   fixes c :: "real^2" and q1 q2 :: complex
   shows "continuous_on UNIV (\<lambda>y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
-            * (q1 * M1_moment y c + q2 * M2_moment y c)))"
+            * (q1 * first_moment y c 1 + q2 * first_moment y c 2)))"
   by (intro continuous_on_mult continuous_on_const continuous_on_add
         bounded_linear.continuous_on[OF bounded_linear_Re]
         bounded_linear.continuous_on[OF bounded_linear_cnj]
-        continuous_on_A_moment_config continuous_on_M1_moment_config continuous_on_M2_moment_config)
+        continuous_on_A_moment_config continuous_on_first_moment_config)
 
 lemma cline_entire_A_moment:
   fixes c :: "real^2"
@@ -71,10 +64,10 @@ next
     by (rule cline_entire_cis_linear[OF bl])
 qed
 
-lemma cline_entire_M1_moment:
+lemma cline_entire_first_moment:
   fixes c :: "real^2"
-  shows "cline_entire (\<lambda>y::(real^2)^'n. M1_moment y c)"
-  unfolding M1_moment_def phase_def
+  shows "cline_entire (\<lambda>y::(real^2)^'n. first_moment y c k)"
+  unfolding first_moment_def phase_def
 proof (rule cline_entire_sum)
   show "finite (UNIV :: 'n set)" by simp
 next
@@ -83,28 +76,9 @@ next
   have bl: "bounded_linear (\<lambda>y::(real^2)^'n. - (c \<bullet> (y $ n)))"
     by (rule bounded_linear_minus[OF bounded_linear_compose
           [OF bounded_linear_inner_right bounded_linear_vec_nth]])
-  have blc: "bounded_linear (\<lambda>y::(real^2)^'n. (y $ n) $ 1)"
+  have blc: "bounded_linear (\<lambda>y::(real^2)^'n. (y $ n) $ k)"
     by (rule bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_vec_nth])
-  show "cline_entire (\<lambda>y::(real^2)^'n. complex_of_real ((y $ n) $ 1) * cis (- (c \<bullet> (y $ n))))"
-    by (rule cline_entire_mult[OF cline_entire_of_real_linear[OF blc]
-          cline_entire_cis_linear[OF bl]])
-qed
-
-lemma cline_entire_M2_moment:
-  fixes c :: "real^2"
-  shows "cline_entire (\<lambda>y::(real^2)^'n. M2_moment y c)"
-  unfolding M2_moment_def phase_def
-proof (rule cline_entire_sum)
-  show "finite (UNIV :: 'n set)" by simp
-next
-  fix n :: 'n
-  assume "n \<in> (UNIV :: 'n set)"
-  have bl: "bounded_linear (\<lambda>y::(real^2)^'n. - (c \<bullet> (y $ n)))"
-    by (rule bounded_linear_minus[OF bounded_linear_compose
-          [OF bounded_linear_inner_right bounded_linear_vec_nth]])
-  have blc: "bounded_linear (\<lambda>y::(real^2)^'n. (y $ n) $ 2)"
-    by (rule bounded_linear_compose[OF bounded_linear_vec_nth bounded_linear_vec_nth])
-  show "cline_entire (\<lambda>y::(real^2)^'n. complex_of_real ((y $ n) $ 2) * cis (- (c \<bullet> (y $ n))))"
+  show "cline_entire (\<lambda>y::(real^2)^'n. complex_of_real ((y $ n) $ k) * cis (- (c \<bullet> (y $ n))))"
     by (rule cline_entire_mult[OF cline_entire_of_real_linear[OF blc]
           cline_entire_cis_linear[OF bl]])
 qed
@@ -112,19 +86,19 @@ qed
 lemma rline_entire_slice_moments:
   fixes c :: "real^2" and q1 q2 :: complex
   shows "rline_entire (\<lambda>y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
-            * (q1 * M1_moment y c + q2 * M2_moment y c)))"
+            * (q1 * first_moment y c 1 + q2 * first_moment y c 2)))"
 proof -
-  have m1: "cline_entire (\<lambda>y::(real^2)^'n. q1 * M1_moment y c)"
-    by (rule cline_entire_mult[OF cline_entire_const cline_entire_M1_moment])
-  have m2: "cline_entire (\<lambda>y::(real^2)^'n. q2 * M2_moment y c)"
-    by (rule cline_entire_mult[OF cline_entire_const cline_entire_M2_moment])
-  have z: "cline_entire (\<lambda>y::(real^2)^'n. q1 * M1_moment y c + q2 * M2_moment y c)"
+  have m1: "cline_entire (\<lambda>y::(real^2)^'n. q1 * first_moment y c 1)"
+    by (rule cline_entire_mult[OF cline_entire_const cline_entire_first_moment])
+  have m2: "cline_entire (\<lambda>y::(real^2)^'n. q2 * first_moment y c 2)"
+    by (rule cline_entire_mult[OF cline_entire_const cline_entire_first_moment])
+  have z: "cline_entire (\<lambda>y::(real^2)^'n. q1 * first_moment y c 1 + q2 * first_moment y c 2)"
     by (rule cline_entire_add[OF m1 m2])
   have w: "cline_entire (\<lambda>y::(real^2)^'n.
-             cnj (A_moment y c) * (q1 * M1_moment y c + q2 * M2_moment y c))"
+             cnj (A_moment y c) * (q1 * first_moment y c 1 + q2 * first_moment y c 2))"
     by (rule cline_entire_mult[OF cline_entire_cnj[OF cline_entire_A_moment] z])
   have r: "rline_entire (\<lambda>y::(real^2)^'n.
-             Re (cnj (A_moment y c) * (q1 * M1_moment y c + q2 * M2_moment y c)))"
+             Re (cnj (A_moment y c) * (q1 * first_moment y c 1 + q2 * first_moment y c 2)))"
     by (rule rline_entire_Re[OF w])
   show ?thesis by (rule rline_entire_scale[OF r])
 qed
@@ -133,8 +107,8 @@ lemma slice_moments_witness:
   fixes c col2 :: "real^2"
   assumes cnz: "c \<noteq> 0" and c2nz: "col2 \<noteq> 0" and card2: "2 \<le> CARD('n)"
   shows "\<exists>y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
-       * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
-        + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)) \<noteq> 0"
+       * ((- \<i>) * complex_of_real (col2 $ 1) * first_moment y c 1
+        + (- \<i>) * complex_of_real (col2 $ 2) * first_moment y c 2)) \<noteq> 0"
 proof -
   \<comment> \<open>a direction seen by both \<open>c\<close> and \<open>col2\<close>\<close>
   have qex: "\<exists>q::real^2. c \<bullet> q \<noteq> 0 \<and> col2 \<bullet> q \<noteq> 0"
@@ -181,42 +155,31 @@ proof -
       by (simp add: card_Diff_singleton)
     show ?thesis using 1 2 3 cp xsi by simp
   qed
-  have M1st: "M1_moment xs c = complex_of_real (p $ 1) * (- \<i>)"
+  have Mst: "first_moment xs c k = complex_of_real (p $ k) * (- \<i>)" for k
   proof -
-    have 1: "M1_moment xs c
-        = complex_of_real ((xs $ i0) $ 1) * cis (- (c \<bullet> (xs $ i0)))
-          + (\<Sum>n\<in>UNIV - {i0}. complex_of_real ((xs $ n) $ 1) * cis (- (c \<bullet> (xs $ n))))"
-      unfolding M1_moment_def phase_def by (rule split)
-    have 2: "(\<Sum>n\<in>UNIV - {i0}. complex_of_real ((xs $ n) $ 1) * cis (- (c \<bullet> (xs $ n))))
-        = (\<Sum>n\<in>(UNIV::'n set) - {i0}. 0)"
-      by (rule sum.cong[OF refl]) (simp add: xs_def)
-    show ?thesis using 1 2 cp xsi by simp
-  qed
-  have M2st: "M2_moment xs c = complex_of_real (p $ 2) * (- \<i>)"
-  proof -
-    have 1: "M2_moment xs c
-        = complex_of_real ((xs $ i0) $ 2) * cis (- (c \<bullet> (xs $ i0)))
-          + (\<Sum>n\<in>UNIV - {i0}. complex_of_real ((xs $ n) $ 2) * cis (- (c \<bullet> (xs $ n))))"
-      unfolding M2_moment_def phase_def by (rule split)
-    have 2: "(\<Sum>n\<in>UNIV - {i0}. complex_of_real ((xs $ n) $ 2) * cis (- (c \<bullet> (xs $ n))))
+    have 1: "first_moment xs c k
+        = complex_of_real ((xs $ i0) $ k) * cis (- (c \<bullet> (xs $ i0)))
+          + (\<Sum>n\<in>UNIV - {i0}. complex_of_real ((xs $ n) $ k) * cis (- (c \<bullet> (xs $ n))))"
+      unfolding first_moment_def phase_def by (rule split)
+    have 2: "(\<Sum>n\<in>UNIV - {i0}. complex_of_real ((xs $ n) $ k) * cis (- (c \<bullet> (xs $ n))))
         = (\<Sum>n\<in>(UNIV::'n set) - {i0}. 0)"
       by (rule sum.cong[OF refl]) (simp add: xs_def)
     show ?thesis using 1 2 cp xsi by simp
   qed
   \<comment> \<open>the value of the slice function at the witness\<close>
   have Fval: "2 * Re (cnj (A_moment xs c)
-       * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment xs c
-        + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment xs c))
+       * ((- \<i>) * complex_of_real (col2 $ 1) * first_moment xs c 1
+        + (- \<i>) * complex_of_real (col2 $ 2) * first_moment xs c 2))
       = - (2 * real (CARD('n) - 1) * (col2 $ 1 * p $ 1 + col2 $ 2 * p $ 2))"
-    by (simp add: Ast M1st M2st algebra_simps)
+    by (simp add: Ast Mst algebra_simps)
   have Kc: "col2 $ 1 * p $ 1 + col2 $ 2 * p $ 2 = col2 \<bullet> p"
     by (simp add: inner_vec_def sum_2)
   have r1: "real (CARD('n) - 1) \<noteq> 0" using card2 by simp
   have nz: "- (2 * real (CARD('n) - 1) * (col2 $ 1 * p $ 1 + col2 $ 2 * p $ 2)) \<noteq> 0"
     unfolding Kc using Kp r1 by simp
   have "2 * Re (cnj (A_moment xs c)
-       * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment xs c
-        + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment xs c)) \<noteq> 0"
+       * ((- \<i>) * complex_of_real (col2 $ 1) * first_moment xs c 1
+        + (- \<i>) * complex_of_real (col2 $ 2) * first_moment xs c 2)) \<noteq> 0"
     unfolding Fval by (rule nz)
   thus ?thesis by blast
 qed
@@ -225,13 +188,13 @@ lemma slice_moments_nowhere_dense:
   fixes c col2 :: "real^2"
   assumes cnz: "c \<noteq> 0" and c2nz: "col2 \<noteq> 0" and card2: "2 \<le> CARD('n)"
   shows "nowhere_dense {y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
-       * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
-        + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)) = 0}"
+       * ((- \<i>) * complex_of_real (col2 $ 1) * first_moment y c 1
+        + (- \<i>) * complex_of_real (col2 $ 2) * first_moment y c 2)) = 0}"
 proof -
   define B :: "(real^2)^'n \<Rightarrow> real" where
     "B = (\<lambda>y. 2 * Re (cnj (A_moment y c)
-       * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
-        + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)))"
+       * ((- \<i>) * complex_of_real (col2 $ 1) * first_moment y c 1
+        + (- \<i>) * complex_of_real (col2 $ 2) * first_moment y c 2)))"
   have cont: "continuous_on UNIV B"
     unfolding B_def by (rule continuous_on_slice_moments)
   have rl: "rline_entire B"
@@ -268,8 +231,8 @@ proof -
   have c2nz: "col2 \<noteq> 0" unfolding col2_def by (rule Dcvec_col2_nz[OF pfw])
   have gnz: "gain_dip \<omega> \<noteq> 0" by (rule gain_dip_nonzero_of_sin[OF pfw])
   have Feq: "F = (\<lambda>y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
-       * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
-        + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)))"
+       * ((- \<i>) * complex_of_real (col2 $ 1) * first_moment y c 1
+        + (- \<i>) * complex_of_real (col2 $ 2) * first_moment y c 2)))"
     unfolding F_def by simp
   have ndF: "nowhere_dense {y::(real^2)^'n. F y = 0}"
     unfolding Feq by (rule slice_moments_nowhere_dense[OF cnz c2nz card2])

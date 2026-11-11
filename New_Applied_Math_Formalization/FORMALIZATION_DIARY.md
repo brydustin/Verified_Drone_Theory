@@ -9742,3 +9742,34 @@ Left: WP7 close-out (plan §8).
     (90 s, the Munkres theories).
 - Build: `tools/build_session.sh Applied_Math_Oracle_Audit` → EXIT=0, strict, audit passes;
   about 3 minutes for the whole chain with `Applied_Math_Base` (before: about 15).
+
+## 2026-11-11 — one form of each moment; archive removed
+
+- The first and second moments of a configuration existed in three forms: separate constants
+  `M1_moment`, `M2_moment`, `M11_moment`, `M12_moment`, `M22_moment` (with derivatives
+  `DM1_moment` … `DM22_moment` and weights `w_M12`, `dw_M12`), an indexed family `Mcfun x c k`,
+  `M2cfun x c k l`, and `Mmom cvec x ω k` (= `Mcfun x (cvec ω) k`).  Now there is one of each,
+  in `Pattern/Moment_Map.thy`: `first_moment x c k` and `second_moment x c k l`, with
+  `first_moment_cis`, `second_moment_cis` for the `cis` form and `Dfirst_moment x c k` for the
+  derivative in the configuration.
+- `moment_map` had six components because the six-moment determinant used them.  The gradient
+  uses only `A_moment` and the two first moments, so `moment_map x c :: complex^3` is
+  `vector [A_moment x c, first_moment x c 1, first_moment x c 2]`; the second moments in the
+  configuration and their derivatives are gone.
+- Lemmas stated twice, once per coordinate, are now one lemma in the index:
+  `continuous_on_first_moment_joint`, `continuous_on_first_moment_cvec_dip`,
+  `continuous_on_first_moment_config`, `cline_entire_first_moment`, `Dfirst_moment_slot`,
+  `continuous_on_Dfirst_moment_joint`, `continuous_on_Dfirst_moment_cvec_dip`,
+  `has_derivative_first_moment_x`, `has_derivative_first_moment_term`.  Renamed:
+  `has_derivative_Mcfun_c` → `has_derivative_first_moment_c`, `dRe_Mcfun`/`dIm_Mcfun` →
+  `dRe_first_moment`/`dIm_first_moment`, `Re_M2cfun`/`Im_M2cfun` →
+  `Re_second_moment`/`Im_second_moment`, `continuous_on_M2cfun_*` →
+  `continuous_on_second_moment_*`, `Mcfun_at_zero`/`M2cfun_at_zero` →
+  `first_moment_at_zero`/`second_moment_at_zero`.  Removed as duplicates: `Mmom_eq_Mcfun`,
+  `moment_map_proj_M1`, `moment_map_proj_M2` (now `moment_map_components`),
+  `has_derivative_A_term` (= `has_derivative_phase_x`), `exhaust_6`.
+- The unbuilt archive (`HigherDiff/`, `Analytic/`, `Appendix/`, `M5_Dev_*`, `d4_*.py`) is
+  removed from the tree; it is in commit `fd07a54` and, in its Isabelle2025-2 form, at tag
+  `pre-isabelle2026`.
+- Result: 34 theories, 13 056 lines (before 13 493); `Unused_Facts`: 476 lemmas, 60 roots,
+  unused 0; `Applied_Math_Oracle_Audit` builds strict, audit passes.

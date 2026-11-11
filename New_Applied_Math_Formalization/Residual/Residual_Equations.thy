@@ -152,41 +152,21 @@ proof -
     by (simp add: phase_def)
 qed
 
-lemma DM1_moment_slot:
-  "DM1_moment x c (slot j v)
-     = of_real (vec_nth v 1) * phase c x j
-       + of_real (vec_nth (vec_nth x j) 1) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
+lemma Dfirst_moment_slot:
+  "Dfirst_moment x c k (slot j v)
+     = of_real (vec_nth v k) * phase c x j
+       + of_real (vec_nth (vec_nth x j) k) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
 proof -
-  have "DM1_moment x c (slot j v)
+  have "Dfirst_moment x c k (slot j v)
       = (\<Sum>n\<in>UNIV. if n = j
-          then of_real (vec_nth v 1) * phase c x n
-             + of_real (vec_nth (vec_nth x n) 1)
+          then of_real (vec_nth v k) * phase c x n
+             + of_real (vec_nth (vec_nth x n) k)
                  * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))))
           else 0)"
-    unfolding DM1_moment_def
+    unfolding Dfirst_moment_def
     by (rule sum.cong[OF refl]) (simp add: d_phase_slot slot_nth)
-  also have "\<dots> = of_real (vec_nth v 1) * phase c x j
-       + of_real (vec_nth (vec_nth x j) 1) * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
-    by (simp add: sum.delta')
-  finally show ?thesis
-    by (simp add: phase_def)
-qed
-
-lemma DM2_moment_slot:
-  "DM2_moment x c (slot j v)
-     = of_real (vec_nth v 2) * phase c x j
-       + of_real (vec_nth (vec_nth x j) 2) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x j))"
-proof -
-  have "DM2_moment x c (slot j v)
-      = (\<Sum>n\<in>UNIV. if n = j
-          then of_real (vec_nth v 2) * phase c x n
-             + of_real (vec_nth (vec_nth x n) 2)
-                 * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x n))))
-          else 0)"
-    unfolding DM2_moment_def
-    by (rule sum.cong[OF refl]) (simp add: d_phase_slot slot_nth)
-  also have "\<dots> = of_real (vec_nth v 2) * phase c x j
-       + of_real (vec_nth (vec_nth x j) 2) * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
+  also have "\<dots> = of_real (vec_nth v k) * phase c x j
+       + of_real (vec_nth (vec_nth x j) k) * (-(c \<bullet> v) *\<^sub>R (\<i> * cis (-(c \<bullet> vec_nth x j))))"
     by (simp add: sum.delta')
   finally show ?thesis
     by (simp add: phase_def)
@@ -200,22 +180,22 @@ lemma dEjm_slot_value:
   shows "dEjm p g (vec_nth \<gamma> 1) (vec_nth \<gamma> 2) (moment_map x c) (Dmoment_map x c (slot m v))
        = p * (2 * (c \<bullet> v) * Im (cnj (A_moment x c) * phase c x m))
        + g * (2 * (c \<bullet> v)
-                * (vec_nth \<gamma> 1 * Re (cnj (phase c x m) * M1_moment x c)
-                  + vec_nth \<gamma> 2 * Re (cnj (phase c x m) * M2_moment x c))
+                * (vec_nth \<gamma> 1 * Re (cnj (phase c x m) * first_moment x c 1)
+                  + vec_nth \<gamma> 2 * Re (cnj (phase c x m) * first_moment x c 2))
             + 2 * (\<gamma> \<bullet> v) * Im (cnj (A_moment x c) * phase c x m)
             - 2 * (c \<bullet> v) * (\<gamma> \<bullet> vec_nth x m)
                 * Re (cnj (A_moment x c) * phase c x m))"
 proof -
   have d1: "vec_nth (Dmoment_map x c (slot m v)) 1 = -(c \<bullet> v) *\<^sub>R (\<i> * phase c x m)"
-    by (simp add: Dmoment_map_def DA_moment_slot)
+    by (simp add: Dmoment_map_components DA_moment_slot)
   have d2: "vec_nth (Dmoment_map x c (slot m v)) 2
       = of_real (vec_nth v 1) * phase c x m
         + of_real (vec_nth (vec_nth x m) 1) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x m))"
-    by (simp add: Dmoment_map_def DM1_moment_slot)
+    by (simp add: Dmoment_map_components Dfirst_moment_slot)
   have d3: "vec_nth (Dmoment_map x c (slot m v)) 3
       = of_real (vec_nth v 2) * phase c x m
         + of_real (vec_nth (vec_nth x m) 2) * (-(c \<bullet> v) *\<^sub>R (\<i> * phase c x m))"
-    by (simp add: Dmoment_map_def DM2_moment_slot)
+    by (simp add: Dmoment_map_components Dfirst_moment_slot)
   show ?thesis
     unfolding dEjm_def d1 d2 d3
     by (simp add: inner2 algebra_simps)
@@ -246,27 +226,27 @@ lemma A_moment_parts:
 
 lemma weighted_moment_parts:
   fixes w :: "real^2" and x :: "(real^2)^'n"
-  shows "Re (of_real (vec_nth w 1) * M1_moment x c + of_real (vec_nth w 2) * M2_moment x c)
+  shows "Re (of_real (vec_nth w 1) * first_moment x c 1 + of_real (vec_nth w 2) * first_moment x c 2)
        = (\<Sum>a\<in>UNIV. (w \<bullet> vec_nth x a) * cos (vec_nth (phase_coords c x) a))"
-    and "Im (of_real (vec_nth w 1) * M1_moment x c + of_real (vec_nth w 2) * M2_moment x c)
+    and "Im (of_real (vec_nth w 1) * first_moment x c 1 + of_real (vec_nth w 2) * first_moment x c 2)
        = - (\<Sum>a\<in>UNIV. (w \<bullet> vec_nth x a) * sin (vec_nth (phase_coords c x) a))"
 proof -
-  have "Re (of_real (vec_nth w 1) * M1_moment x c + of_real (vec_nth w 2) * M2_moment x c)
+  have "Re (of_real (vec_nth w 1) * first_moment x c 1 + of_real (vec_nth w 2) * first_moment x c 2)
       = (\<Sum>a\<in>UNIV. vec_nth w 1 * (vec_nth (vec_nth x a) 1 * cos (vec_nth (phase_coords c x) a))
                    + vec_nth w 2 * (vec_nth (vec_nth x a) 2 * cos (vec_nth (phase_coords c x) a)))"
-    by (simp add: M1_moment_def M2_moment_def phase_parts sum.distrib sum_distrib_left)
+    by (simp add: first_moment_def first_moment_def phase_parts sum.distrib sum_distrib_left)
   also have "\<dots> = (\<Sum>a\<in>UNIV. (w \<bullet> vec_nth x a) * cos (vec_nth (phase_coords c x) a))"
     by (rule sum.cong) (simp_all add: inner2 algebra_simps)
-  finally show "Re (of_real (vec_nth w 1) * M1_moment x c + of_real (vec_nth w 2) * M2_moment x c)
+  finally show "Re (of_real (vec_nth w 1) * first_moment x c 1 + of_real (vec_nth w 2) * first_moment x c 2)
        = (\<Sum>a\<in>UNIV. (w \<bullet> vec_nth x a) * cos (vec_nth (phase_coords c x) a))" .
   have split: "(\<Sum>a\<in>UNIV. (w \<bullet> vec_nth x a) * f a)
       = (\<Sum>a\<in>UNIV. vec_nth w 1 * (vec_nth (vec_nth x a) 1 * f a))
         + (\<Sum>a\<in>UNIV. vec_nth w 2 * (vec_nth (vec_nth x a) 2 * f a))" for f :: "'n \<Rightarrow> real"
     unfolding sum.distrib[symmetric] by (rule sum.cong) (simp_all add: inner2 algebra_simps)
-  show "Im (of_real (vec_nth w 1) * M1_moment x c + of_real (vec_nth w 2) * M2_moment x c)
+  show "Im (of_real (vec_nth w 1) * first_moment x c 1 + of_real (vec_nth w 2) * first_moment x c 2)
        = - (\<Sum>a\<in>UNIV. (w \<bullet> vec_nth x a) * sin (vec_nth (phase_coords c x) a))"
     unfolding split
-    by (simp add: M1_moment_def M2_moment_def phase_parts sum_distrib_left sum_negf)
+    by (simp add: first_moment_def first_moment_def phase_parts sum_distrib_left sum_negf)
 qed
 
 text \<open>The quantities that occur in the slot formula and in the gradient, in terms of the
@@ -293,14 +273,14 @@ lemma lin_sums_coords:
   by (simp_all add: phase_lin_cos_sum_def phase_lin_sin_sum_def phase_coords_def)
 
 lemma Re_phase_cmoment:
-  "vec_nth c 1 * Re (cnj (phase c x a) * M1_moment x c)
-     + vec_nth c 2 * Re (cnj (phase c x a) * M2_moment x c)
+  "vec_nth c 1 * Re (cnj (phase c x a) * first_moment x c 1)
+     + vec_nth c 2 * Re (cnj (phase c x a) * first_moment x c 2)
    = cos (vec_nth (phase_coords c x) a) * phase_lin_cos_sum (phase_coords c x)
      + sin (vec_nth (phase_coords c x) a) * phase_lin_sin_sum (phase_coords c x)"
 proof -
-  let ?Z = "of_real (vec_nth c 1) * M1_moment x c + of_real (vec_nth c 2) * M2_moment x c"
-  have "vec_nth c 1 * Re (cnj (phase c x a) * M1_moment x c)
-        + vec_nth c 2 * Re (cnj (phase c x a) * M2_moment x c)
+  let ?Z = "of_real (vec_nth c 1) * first_moment x c 1 + of_real (vec_nth c 2) * first_moment x c 2"
+  have "vec_nth c 1 * Re (cnj (phase c x a) * first_moment x c 1)
+        + vec_nth c 2 * Re (cnj (phase c x a) * first_moment x c 2)
       = Re (phase c x a) * Re ?Z + Im (phase c x a) * Im ?Z"
     by (simp add: algebra_simps)
   then show ?thesis
@@ -309,10 +289,10 @@ qed
 
 lemma Re_A_cmoment:
   "Re (cnj (A_moment x c)
-        * ((- \<i>) * (of_real (vec_nth c 1) * M1_moment x c + of_real (vec_nth c 2) * M2_moment x c)))
+        * ((- \<i>) * (of_real (vec_nth c 1) * first_moment x c 1 + of_real (vec_nth c 2) * first_moment x c 2)))
    = - res_P (phase_coords c x) / 2"
 proof -
-  let ?Z = "of_real (vec_nth c 1) * M1_moment x c + of_real (vec_nth c 2) * M2_moment x c"
+  let ?Z = "of_real (vec_nth c 1) * first_moment x c 1 + of_real (vec_nth c 2) * first_moment x c 2"
   have "Re (cnj (A_moment x c) * ((- \<i>) * ?Z))
       = Re (A_moment x c) * Im ?Z - Im (A_moment x c) * Re ?Z"
     by (simp add: algebra_simps)
@@ -323,13 +303,13 @@ qed
 
 lemma Re_A_perpmoment:
   "Re (cnj (A_moment x c)
-        * ((- \<i>) * (of_real (vec_nth (perp2 c) 1) * M1_moment x c
-                    + of_real (vec_nth (perp2 c) 2) * M2_moment x c)))
+        * ((- \<i>) * (of_real (vec_nth (perp2 c) 1) * first_moment x c 1
+                    + of_real (vec_nth (perp2 c) 2) * first_moment x c 2)))
    = - (\<Sum>b\<in>UNIV. vec_nth (perp_coords c x) b * res_s b (phase_coords c x))"
 proof -
   let ?t = "phase_coords c x" and ?u = "perp_coords c x"
-  let ?Z = "of_real (vec_nth (perp2 c) 1) * M1_moment x c
-            + of_real (vec_nth (perp2 c) 2) * M2_moment x c"
+  let ?Z = "of_real (vec_nth (perp2 c) 1) * first_moment x c 1
+            + of_real (vec_nth (perp2 c) 2) * first_moment x c 2"
   have u: "perp2 c \<bullet> vec_nth x a = vec_nth ?u a" for a
     by (simp add: perp_coords_def)
   have "Re (cnj (A_moment x c) * ((- \<i>) * ?Z))
@@ -364,8 +344,8 @@ lemma gradU_combination:
        = vec_nth e 1 * frechet_derivative gdip (at (vec_nth \<omega> 1)) 1
            * (cmod (A_moment x (cvec_dip \<omega>0 \<omega>s \<omega>)))\<^sup>2
          + gain_dip \<omega> * (2 * Re (cnj (A_moment x (cvec_dip \<omega>0 \<omega>s \<omega>))
-             * ((- \<i>) * (of_real (vec_nth L 1) * M1_moment x (cvec_dip \<omega>0 \<omega>s \<omega>)
-                         + of_real (vec_nth L 2) * M2_moment x (cvec_dip \<omega>0 \<omega>s \<omega>)))))"
+             * ((- \<i>) * (of_real (vec_nth L 1) * first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 1
+                         + of_real (vec_nth L 2) * first_moment x (cvec_dip \<omega>0 \<omega>s \<omega>) 2))))"
   unfolding inner2 L_def
   by (simp add: gradU_dip_component_moments frechet_gdip_axis algebra_simps)
 
@@ -381,8 +361,8 @@ lemma gradU_x_derivative_slot_combination:
        = vec_nth e 1 * frechet_derivative gdip (at (vec_nth \<omega> 1)) 1
            * (2 * (c \<bullet> v) * Im (cnj (A_moment x c) * phase c x a))
          + gain_dip \<omega> * (2 * (c \<bullet> v)
-                * (vec_nth L 1 * Re (cnj (phase c x a) * M1_moment x c)
-                  + vec_nth L 2 * Re (cnj (phase c x a) * M2_moment x c))
+                * (vec_nth L 1 * Re (cnj (phase c x a) * first_moment x c 1)
+                  + vec_nth L 2 * Re (cnj (phase c x a) * first_moment x c 2))
             + 2 * (L \<bullet> v) * Im (cnj (A_moment x c) * phase c x a)
             - 2 * (c \<bullet> v) * (L \<bullet> vec_nth x a)
                 * Re (cnj (A_moment x c) * phase c x a))"
@@ -440,8 +420,8 @@ proof -
   text \<open>The cokernel covector annihilates every slot derivative.\<close>
   have slot0: "P * (2 * (c \<bullet> v) * Im (cnj (A_moment x c) * phase c x a))
          + g * (2 * (c \<bullet> v)
-                * (vec_nth L 1 * Re (cnj (phase c x a) * M1_moment x c)
-                  + vec_nth L 2 * Re (cnj (phase c x a) * M2_moment x c))
+                * (vec_nth L 1 * Re (cnj (phase c x a) * first_moment x c 1)
+                  + vec_nth L 2 * Re (cnj (phase c x a) * first_moment x c 2))
             + 2 * (L \<bullet> v) * Im (cnj (A_moment x c) * phase c x a)
             - 2 * (c \<bullet> v) * (L \<bullet> vec_nth x a)
                 * Re (cnj (A_moment x c) * phase c x a)) = 0" for a v
@@ -500,8 +480,8 @@ proof -
   proof -
     have tc: "c \<bullet> vec_nth x a = vec_nth t a"
       by (simp add: t phase_coords_def)
-    define r1 where "r1 = Re (cnj (phase c x a) * M1_moment x c)"
-    define r2 where "r2 = Re (cnj (phase c x a) * M2_moment x c)"
+    define r1 where "r1 = Re (cnj (phase c x a) * first_moment x c 1)"
+    define r2 where "r2 = Re (cnj (phase c x a) * first_moment x c 2)"
     define lin where "lin = cos (vec_nth t a) * phase_lin_cos_sum t + sin (vec_nth t a) * phase_lin_sin_sum t"
     define amp where "amp = cos (vec_nth t a) * phase_cos_sum t + sin (vec_nth t a) * phase_sin_sum t"
     have r12: "vec_nth c 1 * r1 + vec_nth c 2 * r2 = lin"
@@ -535,14 +515,14 @@ proof -
     by (simp add: algebra_simps)
   have scalar: "P * res_W t - g * k * res_P t = 0"
   proof -
-    define Zc where "Zc = of_real (vec_nth c 1) * M1_moment x c + of_real (vec_nth c 2) * M2_moment x c"
+    define Zc where "Zc = of_real (vec_nth c 1) * first_moment x c 1 + of_real (vec_nth c 2) * first_moment x c 2"
     have "ell \<bullet> gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
       by (simp add: grad0)
     then have F: "P * (cmod (A_moment x c))\<^sup>2
         + g * (2 * Re (cnj (A_moment x c)
-             * ((- \<i>) * (of_real (vec_nth L 1) * M1_moment x c + of_real (vec_nth L 2) * M2_moment x c)))) = 0"
+             * ((- \<i>) * (of_real (vec_nth L 1) * first_moment x c 1 + of_real (vec_nth L 2) * first_moment x c 2)))) = 0"
       unfolding gradU_combination by (simp only: P_def L_def g_def c g1 g2 gd)
-    have Z: "of_real (vec_nth L 1) * M1_moment x c + of_real (vec_nth L 2) * M2_moment x c = of_real k * Zc"
+    have Z: "of_real (vec_nth L 1) * first_moment x c 1 + of_real (vec_nth L 2) * first_moment x c 2 = of_real k * Zc"
       unfolding Zc_def L1 L2 by (simp add: algebra_simps)
     have B2: "Re (cnj (A_moment x c) * ((- \<i>) * Zc)) = - res_P t / 2"
       unfolding Zc_def t by (rule Re_A_cmoment)
@@ -591,8 +571,8 @@ proof -
   proof -
     define e :: "real^2" where "e = vector [cross2 (perp2 c) \<gamma>2, cross2 \<gamma>1 (perp2 c)]"
     define d where "d = cross2 \<gamma>1 \<gamma>2"
-    define Zp where "Zp = of_real (vec_nth (perp2 c) 1) * M1_moment x c
-                         + of_real (vec_nth (perp2 c) 2) * M2_moment x c"
+    define Zp where "Zp = of_real (vec_nth (perp2 c) 1) * first_moment x c 1
+                         + of_real (vec_nth (perp2 c) 2) * first_moment x c 2"
     define S where "S = (\<Sum>b\<in>UNIV. vec_nth u b * res_s b t)"
     have e12: "vec_nth e 1 = cross2 (perp2 c) \<gamma>2" "vec_nth e 2 = cross2 \<gamma>1 (perp2 c)"
       by (simp_all add: e_def)
@@ -603,11 +583,11 @@ proof -
       by (simp add: grad0)
     then have F: "vec_nth e 1 * gd * (cmod (A_moment x c))\<^sup>2
         + g * (2 * Re (cnj (A_moment x c)
-             * ((- \<i>) * (of_real (vec_nth (d *\<^sub>R perp2 c) 1) * M1_moment x c
-                         + of_real (vec_nth (d *\<^sub>R perp2 c) 2) * M2_moment x c)))) = 0"
+             * ((- \<i>) * (of_real (vec_nth (d *\<^sub>R perp2 c) 1) * first_moment x c 1
+                         + of_real (vec_nth (d *\<^sub>R perp2 c) 2) * first_moment x c 2)))) = 0"
       unfolding gradU_combination Le by (simp only: g_def c gd)
-    have Z: "of_real (vec_nth (d *\<^sub>R perp2 c) 1) * M1_moment x c
-           + of_real (vec_nth (d *\<^sub>R perp2 c) 2) * M2_moment x c = of_real d * Zp"
+    have Z: "of_real (vec_nth (d *\<^sub>R perp2 c) 1) * first_moment x c 1
+           + of_real (vec_nth (d *\<^sub>R perp2 c) 2) * first_moment x c 2 = of_real d * Zp"
       unfolding Zp_def by (simp add: algebra_simps)
     have B3: "Re (cnj (A_moment x c) * ((- \<i>) * Zp)) = - S"
       unfolding Zp_def S_def t u by (rule Re_A_perpmoment)

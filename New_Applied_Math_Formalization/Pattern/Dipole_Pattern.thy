@@ -566,17 +566,10 @@ lemma continuous_on_A_moment_joint:
               bounded_linear.continuous_on[OF
   bounded_linear_vec_nth])
 
-lemma continuous_on_M1_moment_joint:
+lemma continuous_on_first_moment_joint:
   "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
-     (\<lambda>p. M1_moment (fst p) (snd p))"
-  unfolding M1_moment_def phase_def
-  by (intro continuous_on_sum continuous_on_cis continuous_intros
-            bounded_linear.continuous_on[OF bounded_linear_vec_nth])
-
-lemma continuous_on_M2_moment_joint:
-  "continuous_on (UNIV :: ((planar^'n) \<times> planar) set)
-     (\<lambda>p. M2_moment (fst p) (snd p))"
-  unfolding M2_moment_def phase_def
+     (\<lambda>p. first_moment (fst p) (snd p) k)"
+  unfolding first_moment_def phase_def
   by (intro continuous_on_sum continuous_on_cis continuous_intros
             bounded_linear.continuous_on[OF bounded_linear_vec_nth])
 
@@ -597,16 +590,10 @@ lemma continuous_on_A_moment_cvec_dip:
   using continuous_on_compose2[OF continuous_on_A_moment_joint
                                  continuous_on_pair_cvec_dip subset_UNIV] by simp
 
-lemma continuous_on_M1_moment_cvec_dip:
+lemma continuous_on_first_moment_cvec_dip:
   "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
-     (\<lambda>p. M1_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
-  using continuous_on_compose2[OF continuous_on_M1_moment_joint
-                                 continuous_on_pair_cvec_dip subset_UNIV] by simp
-
-lemma continuous_on_M2_moment_cvec_dip:
-  "continuous_on (UNIV :: ((planar^'n) \<times> (real^2)) set)
-     (\<lambda>p. M2_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)))"
-  using continuous_on_compose2[OF continuous_on_M2_moment_joint
+     (\<lambda>p. first_moment (fst p) (cvec_dip \<omega>0 \<omega>s (snd p)) k)"
+  using continuous_on_compose2[OF continuous_on_first_moment_joint
                                  continuous_on_pair_cvec_dip subset_UNIV] by simp
 
 lemma continuous_on_gain_dip:
