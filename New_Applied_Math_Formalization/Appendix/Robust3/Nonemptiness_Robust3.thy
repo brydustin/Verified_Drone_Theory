@@ -1550,7 +1550,7 @@ text \<open>\<^bold>\<open>The rank-one curvature witness.\<close>  Put one elem
 
 lemma det_HessU_beamcenter_witness:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
-  assumes c6: "6 \<le> CARD('n)" and pfw: "sin (\<omega> $ 1) \<noteq> 0"
+  assumes card2: "2 \<le> CARD('n)" and pfw: "sin (\<omega> $ 1) \<noteq> 0"
     and c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0" and cz: "cos (\<omega> $ 1) = 0"
   shows "\<exists>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
 proof -
@@ -1624,9 +1624,9 @@ proof -
   qed
   \<comment> \<open>each factor is nonzero\<close>
   have \<gamma>nz: "\<gamma> \<noteq> 0"
-    unfolding \<gamma>_def using gdip_scalar_second_deriv_nonzero[OF pfw cz] c6 by simp
+    unfolding \<gamma>_def using gdip_scalar_second_deriv_nonzero[OF pfw cz] card2 by simp
   have gnz: "g \<noteq> 0" unfolding g_def by (rule gain_dip_nonzero_of_sin[OF pfw])
-  have N1nz: "N1 \<noteq> 0" unfolding N1_def using c6 by simp
+  have N1nz: "N1 \<noteq> 0" unfolding N1_def using card2 by simp
   have vnz: "v \<noteq> 0" using vp unfolding v_def by (simp add: inner_vec_def sum_2 mult.commute)
   have "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip xs \<omega>) \<noteq> 0"
     unfolding detval using \<gamma>nz gnz N1nz vnz by simp
@@ -1649,7 +1649,7 @@ text \<open>The \<open>c = 0\<close> sub-case of a witness angle.  When \<open>c
 
 lemma m5_D5_beamcenter_angle_meager:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
-  assumes c6: "6 \<le> CARD('n)" and pfw: "sin (\<omega> $ 1) \<noteq> 0"
+  assumes card2: "2 \<le> CARD('n)" and pfw: "sin (\<omega> $ 1) \<noteq> 0"
     and c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
   shows "meager {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
@@ -1703,7 +1703,7 @@ proof (cases "cos (\<omega> $ 1) = 0")
     finally have "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 = frechet_derivative gdip (at (\<omega>$1)) 1 * (real CARD('n))\<^sup>2" .
     moreover have "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 = 0" using g0 by simp
     ultimately have "frechet_derivative gdip (at (\<omega>$1)) 1 * (real CARD('n))\<^sup>2 = 0" by simp
-    moreover have "(real CARD('n))\<^sup>2 \<noteq> 0" using c6 by simp
+    moreover have "(real CARD('n))\<^sup>2 \<noteq> 0" using card2 by simp
     ultimately have "frechet_derivative gdip (at (\<omega>$1)) 1 = 0" by simp
     with gd show False by simp
   qed
@@ -1727,7 +1727,7 @@ next
                           = complex_of_real (matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (a + t *\<^sub>R v) \<omega>)))"
         using rline_entire_det_HessU_beamcenter[OF c0] unfolding rline_entire_def by blast
       show "\<exists>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
-        by (rule det_HessU_beamcenter_witness[OF c6 pfw c0 True])
+        by (rule det_HessU_beamcenter_witness[OF card2 pfw c0 True])
     qed
   qed
   have sub: "{x :: (real^2)^'n.
@@ -1770,8 +1770,9 @@ proof (cases "cvec_dip \<omega>0 \<omega>s \<omega> = 0")
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
     using DM_paper_x_null_not_surj[where x = _ and 'n = 'n] by (simp add: True)
+  have card2: "2 \<le> CARD('n)" using c6 by simp
   show ?thesis
-    unfolding e by (rule m5_D5_beamcenter_angle_meager[OF c6 pfw True])
+    unfolding e by (rule m5_D5_beamcenter_angle_meager[OF card2 pfw True])
 next
   case False
   \<comment> \<open>\<open>c \<noteq> 0\<close>: inject into the nowhere-dense moment-map set, then meager.\<close>
@@ -1790,29 +1791,52 @@ next
 qed
 
 
-subsection \<open>D5 assembly: \<open>m5_D5_steersing\<close> (R3 confinement + finite union of slices)\<close>
+subsection \<open>Singular directions of the wavevector map\<close>
 
-text \<open>The exact target statement (verbatim from the M5 skeleton).  Proof is the M6 R3
-  reduction with \<open>surj\<close> dropped: confine every bad witness angle into the finite set \<open>K\<close>
-  (cos zeros \<open>\<times>\<close> phase-lattice zeros) via @{thm M6_witness_gdip_deriv_zero} and
-  @{thm Dcvec_det_eq} --- neither uses surjectivity --- then take the finite union of the
-  per-angle slices, each meager by @{thm m5_D5_slice_meager}.\<close>
+text \<open>At a fixed angle the degenerate critical configurations form a meager set.  For \<open>c \<noteq> 0\<close>
+  criticality alone is a nontrivial equation (@{thm critical_slice_nowhere_dense}); for \<open>c = 0\<close>
+  the Hessian determinant is (@{thm m5_D5_beamcenter_angle_meager}).  The moment map is not used.\<close>
 
-lemma m5_D5_steersing:
+lemma steering_slice_meager:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes card2: "2 \<le> CARD('n)" and pfw: "sin (\<omega> $ 1) \<noteq> 0"
+  shows "meager {x :: (real^2)^'n.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}"
+proof (cases "cvec_dip \<omega>0 \<omega>s \<omega> = 0")
+  case True
+  show ?thesis
+    by (rule m5_D5_beamcenter_angle_meager[OF card2 pfw True])
+next
+  case False
+  have nd: "nowhere_dense {x::(real^2)^'n. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    by (rule critical_slice_nowhere_dense[OF card2 pfw False])
+  have sub: "{x :: (real^2)^'n.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}
+        \<subseteq> {x::(real^2)^'n. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+    by blast
+  show ?thesis
+    by (rule meager_subset[OF sub meager_nowhere_dense[OF nd]])
+qed
+
+text \<open>The witness angles lie in a finite set (@{thm M6_witness_gdip_deriv_zero},
+  @{thm Dcvec_det_eq}); the stratum is the finite union of the slices over them.\<close>
+
+lemma meager_steering_singular:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
-    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+  assumes card2: "2 \<le> CARD('n)"
+    and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
     and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
     and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
 proof -
-  \<comment> \<open>Phase-separation data \<open>hsep\<close>/\<open>kdiff\<close> are now lemma assumptions, supplied by the
-      M5 splice (where they hold for the concrete \<open>\<omega>0 = vector[\<pi>/2,0]\<close>, \<open>\<omega>s = vector[0,0]\<close>).\<close>
   define Ac :: real where "Ac = (kx \<omega>0 - kx \<omega>s) / (kz \<omega>s - kz \<omega>0)"
   define Bc :: real where "Bc = (ky \<omega>0 - ky \<omega>s) / (kz \<omega>s - kz \<omega>0)"
   define K :: "(real^2) set" where
@@ -1822,8 +1846,7 @@ proof -
     "slice \<omega> = {x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}" for \<omega> :: "real^2"
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0}" for \<omega> :: "real^2"
   text \<open>The phase coefficients are not both zero.\<close>
   have D0: "kz \<omega>s - kz \<omega>0 \<noteq> 0" using hsep by simp
   have ABnz: "Ac \<noteq> 0 \<or> Bc \<noteq> 0"
@@ -1857,13 +1880,11 @@ proof -
   have finK: "finite K"
     by (rule finite_subset[OF Ksub
           finite_imageI[OF finite_cartesian_product[OF finS1 finS2]]])
-  text \<open>Witness confinement: every bad witness angle lies in \<open>K\<close>
-    (R3 kernel-direction reduction --- uses NO surjectivity).\<close>
+  text \<open>Every witness angle lies in \<open>K\<close>.\<close>
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}
              \<subseteq> (\<Union>\<omega>\<in>K. slice \<omega>)"
   proof
@@ -1872,13 +1893,11 @@ proof -
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
     then obtain \<omega> :: "real^2" where wD: "\<omega> \<in> OmegaPF ctr \<delta>"
       and g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
       and hz: "matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0"
       and anz: "A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0"
-      and ns: "\<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))"
       and dz: "matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0"
       by blast
     have s1: "sin (\<omega> $ 1) \<noteq> 0" by (rule bspec[OF pf wD])
@@ -1896,15 +1915,14 @@ proof -
     have q0: "Ac * cos (\<omega> $ 2) + Bc * sin (\<omega> $ 2) = 0"
       using mult_eq_0_iff[THEN iffD1, OF e3] s1 by blast
     have wK: "\<omega> \<in> K" using wD cz q0 by (simp add: K_def)
-    have xs: "x \<in> slice \<omega>" using g0 anz hz ns by (simp add: slice_def)
+    have xs: "x \<in> slice \<omega>" using g0 anz hz by (simp add: slice_def)
     show "x \<in> (\<Union>\<omega>\<in>K. slice \<omega>)"
     proof (rule UN_I)
       show "\<omega> \<in> K" by (rule wK)
       show "x \<in> slice \<omega>" by (rule xs)
     qed
   qed
-  text \<open>Each slice over a fixed angle in \<open>K\<close> is meager (mstarg freebie for \<open>c \<noteq> 0\<close>,
-    D2 covariance polynomial for \<open>c = 0\<close>); the finite union is meager.\<close>
+  text \<open>Each slice over a fixed angle in \<open>K\<close> is meager; the finite union is meager.\<close>
   have meagU: "meager (\<Union>\<omega>\<in>K. slice \<omega>)"
   proof (rule meager_Union_finite[OF finK])
     fix \<omega> :: "real^2" assume wK: "\<omega> \<in> K"
@@ -1912,9 +1930,30 @@ proof -
     have s1: "sin (\<omega> $ 1) \<noteq> 0" by (rule bspec[OF pf wD])
     show "meager (slice \<omega>)"
       unfolding slice_def
-      by (rule m5_D5_slice_meager[OF c6 s1])
+      by (rule steering_slice_meager[OF card2 s1])
   qed
   show ?thesis by (rule meager_subset[OF sub meagU])
+qed
+
+
+subsection \<open>The part of the stratum where the moment map is not a submersion\<close>
+
+lemma m5_D5_steersing:
+  fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+    and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
+    and hsep: "kz \<omega>s \<noteq> kz \<omega>0"
+    and kdiff: "kx \<omega>0 \<noteq> kx \<omega>s \<or> ky \<omega>0 \<noteq> ky \<omega>s"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
+            gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
+          \<and> matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
+          \<and> \<not> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))
+          \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) = 0}"
+proof -
+  have card2: "2 \<le> CARD('n)" using c6 by simp
+  show ?thesis
+    by (rule meager_subset[OF _ meager_steering_singular[OF card2 pf hsep kdiff]]) blast
 qed
 
 (* ---- D2: beam-center stratum (consumes D5 machinery above) ---- *)
@@ -2050,13 +2089,12 @@ text \<open>Criticality at a beam center (off the poles) forces \<open>cos(\<ome
 
 lemma beamcenter_critical_cos_zero:
   fixes x :: "(real^2)^'n" and \<omega> \<omega>0 \<omega>s :: "real^2"
-  assumes c6: "6 \<le> CARD('n)"
-    and s1: "sin (\<omega> $ 1) \<noteq> 0"
+  assumes s1: "sin (\<omega> $ 1) \<noteq> 0"
     and c0: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
     and g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0"
   shows "cos (\<omega> $ 1) = 0"
 proof -
-  have Npos: "(0::real) < real CARD('n)" using c6 by simp
+  have Npos: "(0::real) < real CARD('n)" by simp
   have "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 1 = 0" using g0 by simp
   hence "frechet_derivative gdip (at (\<omega>$1)) 1 * (real CARD('n))\<^sup>2 = 0"
     using gradU_at_beamcenter_comp1[OF c0, of x] by simp
@@ -2203,7 +2241,7 @@ text \<open>For a beam-center angle \<open>\<omega>\<close> (\<open>cvec_dip \<o
 
 lemma m5_D2_slice_nowhere_dense:
   fixes \<omega> \<omega>0 \<omega>s :: "real^2"
-  assumes c6: "6 \<le> CARD('n)"
+  assumes card2: "2 \<le> CARD('n)"
     and pfw: "sin (\<omega> $ 1) \<noteq> 0"
     and cz: "cvec_dip \<omega>0 \<omega>s \<omega> = 0"
   shows "nowhere_dense {x :: (real^2)^'n.
@@ -2231,7 +2269,7 @@ proof (cases "cos (\<omega> $ 1) = 0")
                           = complex_of_real (matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip (a + t *\<^sub>R v) \<omega>)))"
         using rline_entire_det_HessU_beamcenter[OF cz] unfolding rline_entire_def by blast
       show "\<exists>x::(real^2)^'n. matrix_det (HessU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega>) \<noteq> 0"
-        by (rule det_HessU_beamcenter_witness[OF c6 pfw cz True])
+        by (rule det_HessU_beamcenter_witness[OF card2 pfw cz True])
     qed
   qed
   have sub: "{x :: (real^2)^'n.
@@ -2257,7 +2295,7 @@ next
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> matrix_det (matrix (Dcvec_dip \<omega>0 \<omega>s \<omega>)) \<noteq> 0}"
     hence g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
-    have "cos (\<omega> $ 1) = 0" by (rule beamcenter_critical_cos_zero[OF c6 pfw cz g0])
+    have "cos (\<omega> $ 1) = 0" by (rule beamcenter_critical_cos_zero[OF pfw cz g0])
     with False show False by simp
   qed
   show ?thesis unfolding empty by simp
@@ -2277,7 +2315,7 @@ text \<open>The exact target statement (verbatim from the M5 skeleton), closed b
 
 lemma m5_D2_beamcenter:
   fixes V :: "((real^2)^'n) set" and ctr :: "real^2" and \<delta> :: real
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and card2: "2 \<le> CARD('n)"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
@@ -2328,7 +2366,7 @@ proof -
       by blast
     have s1: "sin (\<omega> $ 1) \<noteq> 0" by (rule bspec[OF pf wD])
     have cosz: "cos (\<omega> $ 1) = 0"
-      by (rule beamcenter_critical_cos_zero[OF c6 s1 cz g0])
+      by (rule beamcenter_critical_cos_zero[OF s1 cz g0])
     have wK: "\<omega> \<in> K" using wD cosz cz by (simp add: K_def)
     have xs: "x \<in> slice \<omega>"
       using g0 hz anz dnz by (simp add: slice_def)
@@ -2348,7 +2386,7 @@ proof -
     have s1: "sin (\<omega> $ 1) \<noteq> 0" by (rule bspec[OF pf wD])
     show "meager (slice \<omega>)"
       unfolding slice_def
-      by (rule meager_nowhere_dense[OF m5_D2_slice_nowhere_dense[OF c6 s1 cz]])
+      by (rule meager_nowhere_dense[OF m5_D2_slice_nowhere_dense[OF card2 s1 cz]])
   qed
   show ?thesis by (rule meager_subset[OF sub meagU])
 qed

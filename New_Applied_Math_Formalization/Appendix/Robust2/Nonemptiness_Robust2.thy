@@ -1260,7 +1260,7 @@ lemma A_cart_eq_af: "A_cart cvec x \<omega> = af cvec x \<omega>"
 
 lemma meager_Azero_degenerate_stratum:
   fixes V :: "((real^2)^'n) set" and ctr \<omega>0 \<omega>s :: "real^2" and \<delta> :: real
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
+  assumes openV: "open V" and Vne: "V \<noteq> {}"
     and oddN: "odd CARD('n)"
     and d0: "0 < \<delta>" and pf: "\<forall>\<omega>\<in>OmegaPF ctr \<delta>. sin (\<omega> $ 1) \<noteq> 0"
   shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF ctr \<delta>. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
@@ -1832,7 +1832,7 @@ section \<open>The slice function is not identically zero\<close>
 
 lemma F_moments_witness:
   fixes c col2 :: "real^2"
-  assumes cnz: "c \<noteq> 0" and c2nz: "col2 \<noteq> 0" and c6: "6 \<le> CARD('n)"
+  assumes cnz: "c \<noteq> 0" and c2nz: "col2 \<noteq> 0" and card2: "2 \<le> CARD('n)"
   shows "\<exists>y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
        * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
         + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)) \<noteq> 0"
@@ -1912,7 +1912,7 @@ proof -
     by (simp add: Ast M1st M2st algebra_simps)
   have Kc: "col2 $ 1 * p $ 1 + col2 $ 2 * p $ 2 = col2 \<bullet> p"
     by (simp add: inner_vec_def sum_2)
-  have r1: "real (CARD('n) - 1) \<noteq> 0" using c6 by simp
+  have r1: "real (CARD('n) - 1) \<noteq> 0" using card2 by simp
   have nz: "- (2 * real (CARD('n) - 1) * (col2 $ 1 * p $ 1 + col2 $ 2 * p $ 2)) \<noteq> 0"
     unfolding Kc using Kp r1 by simp
   have "2 * Re (cnj (A_moment xs c)
@@ -1926,7 +1926,7 @@ section \<open>The analytic-slice engine applied to \<open>F\<close>\<close>
 
 lemma F_moments_nowhere_dense:
   fixes c col2 :: "real^2"
-  assumes cnz: "c \<noteq> 0" and c2nz: "col2 \<noteq> 0" and c6: "6 \<le> CARD('n)"
+  assumes cnz: "c \<noteq> 0" and c2nz: "col2 \<noteq> 0" and card2: "2 \<le> CARD('n)"
   shows "nowhere_dense {y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
        * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
         + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)) = 0}"
@@ -1940,7 +1940,7 @@ proof -
   have rl: "rline_entire B"
     unfolding B_def by (rule rlineF_moments)
   have ntv: "\<exists>y. B y \<noteq> 0"
-    unfolding B_def by (rule F_moments_witness[OF cnz c2nz c6])
+    unfolding B_def by (rule F_moments_witness[OF cnz c2nz card2])
   have nd: "nowhere_dense {y \<in> (UNIV :: ((real^2)^'n) set). B y = 0}"
   proof (rule lines_entire_slice_nowhere_dense[OF cont _ ntv])
     show "\<And>a v. \<exists>G. G holomorphic_on UNIV
@@ -1987,8 +1987,9 @@ next
        * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
         + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)))"
     unfolding F_def by simp
+  have card2: "2 \<le> CARD('n)" using c6 by simp
   have ndF: "nowhere_dense {y::(real^2)^'n. F y = 0}"
-    unfolding Feq by (rule F_moments_nowhere_dense[OF cnz c2nz c6])
+    unfolding Feq by (rule F_moments_nowhere_dense[OF cnz c2nz card2])
   have sub: "{x :: (real^2)^'n.
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
@@ -1999,6 +2000,49 @@ next
             gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0
           \<and> A_cart (cvec_dip \<omega>0 \<omega>s) x \<omega> \<noteq> 0
           \<and> surj (DM_paper_x x (cvec_dip \<omega>0 \<omega>s \<omega>))}"
+    hence g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
+    have comp2: "gain_dip \<omega> * F x = gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2"
+      unfolding F_def c_def col2_def
+      using frechet_gdip_zero_arg[of "\<omega>$1"]
+      by (simp add: gradU_dip_component_moments axis_def)
+    have "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2 = 0" using g0 by simp
+    hence "gain_dip \<omega> * F x = 0" using comp2 by simp
+    hence "F x = 0" using gnz by simp
+    thus "x \<in> {y::(real^2)^'n. F y = 0}" by simp
+  qed
+  show ?thesis by (rule nowhere_dense_subset[OF sub ndF])
+qed
+
+text \<open>For a fixed angle with nonzero wavevector, criticality alone confines the configuration to a
+  nowhere dense set: the second component of the gradient is a nontrivial function of the moments.\<close>
+
+lemma critical_slice_nowhere_dense:
+  fixes \<omega> \<omega>0 \<omega>s :: "real^2"
+  assumes card2: "2 \<le> CARD('n)"
+    and pfw: "sin (\<omega> $ 1) \<noteq> 0"
+    and cnz0: "cvec_dip \<omega>0 \<omega>s \<omega> \<noteq> 0"
+  shows "nowhere_dense {x :: (real^2)^'n. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
+proof -
+  define c :: "real^2" where "c = cvec_dip \<omega>0 \<omega>s \<omega>"
+  define col2 :: "real^2" where "col2 = Dcvec_dip \<omega>0 \<omega>s \<omega> (axis 2 1)"
+  define F :: "(real^2)^'n \<Rightarrow> real" where
+    "F = (\<lambda>y. 2 * Re (cnj (M_paper y c $ 1)
+       * ((- \<i>) * complex_of_real (col2 $ 1) * (M_paper y c $ 2)
+        + (- \<i>) * complex_of_real (col2 $ 2) * (M_paper y c $ 3))))"
+  have cnz: "c \<noteq> 0" using cnz0 by (simp add: c_def)
+  have c2nz: "col2 \<noteq> 0" unfolding col2_def by (rule Dcvec_col2_nz[OF pfw])
+  have gnz: "gain_dip \<omega> \<noteq> 0" by (rule gain_dip_nonzero_of_sin[OF pfw])
+  have Feq: "F = (\<lambda>y::(real^2)^'n. 2 * Re (cnj (A_moment y c)
+       * ((- \<i>) * complex_of_real (col2 $ 1) * M1_moment y c
+        + (- \<i>) * complex_of_real (col2 $ 2) * M2_moment y c)))"
+    unfolding F_def by simp
+  have ndF: "nowhere_dense {y::(real^2)^'n. F y = 0}"
+    unfolding Feq by (rule F_moments_nowhere_dense[OF cnz c2nz card2])
+  have sub: "{x :: (real^2)^'n. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}
+      \<subseteq> {y::(real^2)^'n. F y = 0}"
+  proof
+    fix x :: "(real^2)^'n"
+    assume "x \<in> {x :: (real^2)^'n. gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0}"
     hence g0: "gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> = 0" by blast
     have comp2: "gain_dip \<omega> * F x = gradU (cvec_dip \<omega>0 \<omega>s) gain_dip x \<omega> $ 2"
       unfolding F_def c_def col2_def

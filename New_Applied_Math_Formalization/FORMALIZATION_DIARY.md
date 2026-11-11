@@ -9487,3 +9487,36 @@ Left: WP7 close-out (plan §8).
   of the per-package working branch (`isabelle2026-full`, local); its content
   is the same.
 - WP0–WP7 are done.
+
+### 2026-11-11 — the bound on `N` lowered from 6 to 5
+
+- Where `6 ≤ N` entered: only `m5_D5_slice_meager`, through
+  `fixed_c_nonsurj_nowhere_dense` (six moments need `2N ≥ 12`).  Every other
+  stratum needs at most `4 ≤ N` (`residual_meager_design`) and odd `N`
+  (`meager_Azero_degenerate_stratum`).
+- `Nonemptiness_Robust2.thy`: new `critical_slice_nowhere_dense` (`2 ≤ N`,
+  `sin θ ≠ 0`, `c ≠ 0`: the configurations critical at a fixed angle are
+  nowhere dense; the second gradient component is `gain_dip ω * F x`).
+  `F_moments_witness`, `F_moments_nowhere_dense`: `6 ≤ N` → `2 ≤ N`.
+  `meager_Azero_degenerate_stratum`: unused `6 ≤ N` dropped.
+- `Nonemptiness_Robust3.thy`: new `steering_slice_meager`,
+  `meager_steering_singular` (`2 ≤ N`; no moment-map conjunct in the set);
+  `m5_D5_steersing` is now a corollary.  Beam-centre lemmas
+  (`det_HessU_beamcenter_witness`, `m5_D5_beamcenter_angle_meager`,
+  `m5_D2_slice_nowhere_dense`, `m5_D2_beamcenter`): `6 ≤ N` → `2 ≤ N`.
+- `Nonemptiness_Final.thy`: `Phi_bad_meager_design` proved from five strata
+  (null, steering-singular, beam centre, regular, residual);
+  `meager_rank_deficient_stratum_design` removed.  The non-surjectivity of the
+  moment-map derivative, which the beam-centre and residual sets carry, is
+  derived (`DM_paper_x_null_not_surj`, `gradU_dip_x_partial_surj`).  All final
+  theorems: `5 ≤ CARD('n)`, `odd CARD('n)`.
+- Kept, `6 ≤ N`: the six-moment theorems (`fixed_c_nonsurj_nowhere_dense`,
+  `DM_paper_x_open_dense_surjective_gen`, `bigJ_det`, `m5_D5_slice_meager`,
+  `M6_slice_nowhere_dense`).
+- Build: `tools/build_session.sh Applied_Math_Oracle_Audit` → EXIT=0, strict,
+  7 sessions rebuilt (`Applied_Math_Appendix` … `Applied_Math_Oracle_Audit`),
+  audit passes.
+- `tools/final_deps/Final_Deps.thy` (run with `isabelle process_theories`):
+  17349 facts in the dependency closure of the final theorems; none of the
+  six-moment theorems is among them, nor any fact of
+  `Block_Determinants_BigJ`, `Moment_Jacobian`, `D3_Curve_Cover` or `Morse/`.

@@ -10,8 +10,7 @@ text \<open>The end-to-end theorem.  Steering: source overhead, main beam horizo
   threshold above zero, every minimum main-beam power below the maximum and every null direction
   other than the main beam; the plane coefficients are those of Eqs. (12)--(14).
 
-  The rank-deficient stratum is meager by @{thm residual_meager_design}; the other strata and the
-  Baire argument follow.\<close>
+  The only hypotheses on the number \<open>N\<close> of relays are that it is odd and at least \<open>5\<close>.\<close>
 
 subsection \<open>The steering geometry\<close>
 
@@ -41,41 +40,42 @@ lemma design_plane_coefficients:
 
 subsection \<open>Degenerate critical points are exceptional\<close>
 
-lemma meager_rank_deficient_stratum_design:
+text \<open>A degenerate critical point is of one of five kinds: a null of the array factor, a direction
+  at which the wavevector map is singular, the main beam, a point at which the gradient is a
+  submersion in the configuration, or a point of the retained bad set.  Each kind projects to a
+  meager set of configurations.\<close>
+
+lemma Phi_bad_meager_design:
   fixes V :: "((real^2)^'n) set"
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-                  \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-                  \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-                  \<and> \<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))}"
+  assumes openV: "open V" and Vne: "V \<noteq> {}" and c5: "5 \<le> CARD('n)"
+    and oddN: "odd CARD('n)"
+  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0}"
 proof -
   have d0: "(0::real) < pi / 4"
     by simp
   note pf = design_pole_free and hsep = design_hsep and kdiff = design_kdiff
-  have card4: "4 \<le> CARD('n)"
-    using c6 by simp
-  let ?D1 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
+  have card2: "2 \<le> CARD('n)" and card4: "4 \<le> CARD('n)"
+    using c5 by simp_all
+  let ?null = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
+            gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
+          \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
+          \<and> A_cart (cvec_dip design_beam design_source) x \<omega> = 0}"
+  let ?sing = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
-          \<and> cvec_dip design_beam design_source \<omega> \<noteq> 0
-          \<and> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
-  let ?D2 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
+          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) = 0}"
+  let ?beam = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
           \<and> \<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))
           \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
           \<and> cvec_dip design_beam design_source \<omega> = 0}"
-  let ?D5 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
-            gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-          \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-          \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-          \<and> \<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))
-          \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) = 0}"
-  let ?D34 = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
+  let ?reg = "{x \<in> V. \<exists>\<omega> :: real^2. gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
+            \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
+            \<and> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
+  let ?res = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4).
             gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
           \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
           \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
@@ -83,86 +83,72 @@ proof -
           \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0
           \<and> cvec_dip design_beam design_source \<omega> \<noteq> 0
           \<and> \<not> (\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)}"
-  have meag: "meager (?D1 \<union> ?D2 \<union> ?D5 \<union> ?D34)"
+  have meag: "meager (?null \<union> ?sing \<union> ?beam \<union> ?reg \<union> ?res)"
     by (intro meager_Un
-          m5_D1_regular[OF openV Vne]
-          m5_D2_beamcenter[OF openV Vne c6 d0 pf]
-          m5_D5_steersing[OF openV Vne c6 d0 pf hsep kdiff]
+          meager_Azero_degenerate_stratum[OF openV Vne oddN d0 pf]
+          meager_steering_singular[OF card2 pf hsep kdiff]
+          m5_D2_beamcenter[OF openV Vne card2 d0 pf]
+          meager_grad_x_regular_part[OF openV Vne]
           residual_meager_design[OF card4])
-  have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-                  \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-                  \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-                  \<and> \<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))}
-             \<subseteq> ?D1 \<union> ?D2 \<union> ?D5 \<union> ?D34"
-  proof (rule subsetI)
-    fix x assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-                  \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-                  \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-                  \<and> \<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))}"
-    then obtain \<omega> where xV: "x \<in> V" and wD: "\<omega> \<in> OmegaPF design_beam (pi / 4)"
-      and g0: "gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0"
-      and h0: "matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0"
-      and a0: "A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0"
-      and ns: "\<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))"
-      by blast
-    show "x \<in> ?D1 \<union> ?D2 \<union> ?D5 \<union> ?D34"
-      using xV wD g0 h0 a0 ns by blast
-  qed
-  show ?thesis by (rule meager_subset[OF sub meag])
-qed
-
-lemma Phi_bad_meager_design:
-  fixes V :: "((real^2)^'n) set"
-  assumes openV: "open V" and Vne: "V \<noteq> {}" and c6: "6 \<le> CARD('n)"
-    and oddN: "odd CARD('n)"
-  shows "meager {x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0}"
-proof -
-  have d0: "(0::real) < pi / 4"
-    by simp
-  note pf = design_pole_free and hsep = design_hsep and kdiff = design_kdiff
-  have card4: "4 \<le> CARD('n)"
-    using c6 by simp
-  let ?reg = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-              \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-              \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-              \<and> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))
-              \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) \<noteq> 0}"
-  let ?def = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-              \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-              \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-              \<and> \<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))}"
-  let ?steer = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-              \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-              \<and> A_cart (cvec_dip design_beam design_source) x \<omega> \<noteq> 0
-              \<and> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))
-              \<and> matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) = 0}"
-  let ?null = "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0
-              \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0
-              \<and> A_cart (cvec_dip design_beam design_source) x \<omega> = 0}"
-  have meag4: "meager (?reg \<union> ?def \<union> ?steer \<union> ?null)"
-    by (intro meager_Un meager_bad_regular_stratum_on[OF openV Vne c6]
-              meager_rank_deficient_stratum_design[OF openV Vne c6]
-              meager_steering_singular_stratum[OF openV Vne c6 d0 pf hsep kdiff]
-              meager_Azero_degenerate_stratum[OF openV Vne c6 oddN d0 pf])
   have sub: "{x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0}
-             \<subseteq> ?reg \<union> ?def \<union> ?steer \<union> ?null"
+             \<subseteq> ?null \<union> ?sing \<union> ?beam \<union> ?reg \<union> ?res"
   proof (rule subsetI)
     fix x assume "x \<in> {x \<in> V. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0}"
     then obtain \<omega> where xV: "x \<in> V" and wD: "\<omega> \<in> OmegaPF design_beam (pi / 4)"
       and pb: "Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0" by blast
     from Phibad_dip_imp_detHess0[OF pb]
     have g0: "gradU (cvec_dip design_beam design_source) gain_dip x \<omega> = 0"
-      and d0: "matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0" by blast+
-    show "x \<in> ?reg \<union> ?def \<union> ?steer \<union> ?null"
-      using xV wD g0 d0
-      by fastforce
+      and h0: "matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x \<omega>) = 0" by blast+
+    show "x \<in> ?null \<union> ?sing \<union> ?beam \<union> ?reg \<union> ?res"
+    proof (cases "A_cart (cvec_dip design_beam design_source) x \<omega> = 0")
+      case True
+      then have "x \<in> ?null"
+        using xV wD g0 h0 by blast
+      then show ?thesis by blast
+    next
+      case a0: False
+      show ?thesis
+      proof (cases "matrix_det (matrix (Dcvec_dip design_beam design_source \<omega>)) = 0")
+        case True
+        then have "x \<in> ?sing"
+          using xV wD g0 h0 a0 by blast
+        then show ?thesis by blast
+      next
+        case dnz: False
+        show ?thesis
+        proof (cases "cvec_dip design_beam design_source \<omega> = 0")
+          case cz: True
+          have ns: "\<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))"
+            unfolding cz by (rule DM_paper_x_null_not_surj)
+          have "x \<in> ?beam"
+            using xV wD g0 h0 a0 ns dnz cz by blast
+          then show ?thesis by blast
+        next
+          case cnz: False
+          show ?thesis
+          proof (cases "(\<exists>Dx. ((\<lambda>y. gradU (cvec_dip design_beam design_source) gain_dip y \<omega>) has_derivative Dx) (at x) \<and> surj Dx)")
+            case True
+            then have "x \<in> ?reg"
+              using xV g0 h0 by blast
+            then show ?thesis by blast
+          next
+            case nreg: False
+            have ns: "\<not> surj (DM_paper_x x (cvec_dip design_beam design_source \<omega>))"
+              using gradU_dip_x_partial_surj[OF a0 _ dnz] nreg by blast
+            have "x \<in> ?res"
+              using xV wD g0 h0 a0 ns dnz cnz nreg by blast
+            then show ?thesis by blast
+          qed
+        qed
+      qed
+    qed
   qed
-  show ?thesis by (rule meager_subset[OF sub meag4])
+  show ?thesis by (rule meager_subset[OF sub meag])
 qed
 
 lemma regular_config_exists_design:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null :: "real^2"
-  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+  assumes c5: "5 \<le> CARD('n)" and oddN: "odd CARD('n)"
     and int_ne: "interior (Ffeas (cvec_dip design_beam design_source) gain_dip R dmin A B D \<omega>null design_beam \<delta>null pmin
                     :: ((real^2)^'n) set) \<noteq> {}"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip design_beam design_source) gain_dip R dmin A B D \<omega>null design_beam \<delta>null pmin
@@ -174,7 +160,7 @@ proof -
   have openI: "open I" unfolding I_def by (rule open_interior)
   have Ine: "I \<noteq> {}" unfolding I_def by (rule int_ne)
   have meagB: "meager {x \<in> I. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0}"
-    by (rule Phi_bad_meager_design[OF openI Ine c6 oddN])
+    by (rule Phi_bad_meager_design[OF openI Ine c5 oddN])
   have "\<not> I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0}"
   proof
     assume sub: "I \<subseteq> {x \<in> I. \<exists>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x \<omega> = 0}"
@@ -191,11 +177,6 @@ proof -
   from x0Iexp reg
   have conjx0: "x0 \<in> interior (Ffeas (cvec_dip design_beam design_source) gain_dip R dmin A B D \<omega>null design_beam \<delta>null pmin)
         \<and> (\<forall>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x0 \<omega> \<noteq> 0)" by (rule conjI)
-  \<comment> \<open>Composition fully established: \<open>x0Iexp\<close> (\<open>x0 \<in> interior\<close>) and \<open>reg\<close> (\<open>\<forall>\<omega>. \<Phi> \<noteq> 0\<close>) are the
-      witness data.  Only the final \<^emph>\<open>bounded-existential introduction\<close> \<open>\<exists>x0\<in>interior. \<dots>\<close> with
-      witness \<open>x0\<close> is left open --- a witness-instantiation tactic step (\<open>bexI\<close>/\<open>rule_tac x=x0\<close>)
-      that needs live goal/type inspection to dispatch against the large \<open>interior (Ffeas \<dots>)\<close>
-      term; it is mathematically immediate from \<open>x0Iexp\<close> and \<open>reg\<close>.\<close>
   show ?thesis
   proof (rule bexI[where x = x0])
     show "\<forall>\<omega>\<in>OmegaPF design_beam (pi / 4). Phibad (cvec_dip design_beam design_source) gain_dip x0 \<omega> \<noteq> 0" by (rule reg)
@@ -409,7 +390,7 @@ text \<open>The statement without margins: some feasible configuration has no de
 
 theorem regular_feasible_configuration_exists:
   fixes R dmin A B D \<delta>null pmin :: real and \<omega>null :: "real^2"
-  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+  assumes c5: "5 \<le> CARD('n)" and oddN: "odd CARD('n)"
     and int_ne: "interior (Ffeas (cvec_dip design_beam design_source) gain_dip R dmin A B D
             \<omega>null design_beam \<delta>null pmin :: ((real^2)^'n) set) \<noteq> {}"
   shows "\<exists>x0 \<in> interior (Ffeas (cvec_dip design_beam design_source) gain_dip R dmin A B D
@@ -423,7 +404,7 @@ proof -
             \<omega>null design_beam \<delta>null pmin)"
       and x0reg: "\<forall>\<omega>\<in>OmegaPF design_beam (pi / 4).
             Phibad (cvec_dip design_beam design_source) gain_dip x0 \<omega> \<noteq> 0"
-    using regular_config_exists_design[OF c6 oddN int_ne] by blast
+    using regular_config_exists_design[OF c5 oddN int_ne] by blast
   have "\<not> (gradU (cvec_dip design_beam design_source) gain_dip x0 \<omega> = 0
            \<and> matrix_det (HessU (cvec_dip design_beam design_source) gain_dip x0 \<omega>) = 0)"
     if box: "\<omega> \<in> OmegaPF design_beam (pi / 4)" for \<omega>
@@ -456,7 +437,7 @@ subsection \<open>The theorem\<close>
 
 theorem F0_dip_nonempty_final:
   fixes dmin \<delta>null pmin :: real and \<omega>null :: "real^2"
-  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+  assumes c5: "5 \<le> CARD('n)" and oddN: "odd CARD('n)"
     and null_pos: "0 < \<delta>null"
     and power: "pmin < gain_dip design_beam * (real CARD('n))\<^sup>2"
     and null_dir: "cvec_dip design_beam design_source \<omega>null \<noteq> 0"
@@ -471,7 +452,7 @@ proof -
     and ?D = "kz design_beam - kz design_source"
   let ?c = "cvec_dip design_beam design_source"
   have N1: "1 < CARD('n)"
-    using c6 by simp
+    using c5 by simp
   obtain R0 where R0: "\<And>R. R0 \<le> R \<Longrightarrow>
       interior (Ffeas ?c gain_dip R dmin ?A ?B ?D \<omega>null design_beam \<delta>null pmin :: ((real^2)^'n) set) \<noteq> {}"
     using design_feasible_interior[OF N1 null_pos power null_dir, of dmin ?A ?B ?D] by blast
@@ -482,7 +463,7 @@ proof -
       where x0I: "x0 \<in> interior (Ffeas ?c gain_dip R dmin ?A ?B ?D \<omega>null design_beam \<delta>null pmin)"
         and nondeg: "\<forall>\<omega>\<in>OmegaPF design_beam (pi / 4).
             \<not> (gradU ?c gain_dip x0 \<omega> = 0 \<and> matrix_det (HessU ?c gain_dip x0 \<omega>) = 0)"
-      using regular_feasible_configuration_exists[OF c6 oddN R0[OF R]] by blast
+      using regular_feasible_configuration_exists[OF c5 oddN R0[OF R]] by blast
     have feas: "x0 \<in> Ffeas ?c gain_dip R dmin ?A ?B ?D \<omega>null design_beam \<delta>null pmin"
       using x0I interior_subset by blast
     have d0: "(0::real) < pi / 4" and dpi: "pi / 4 \<le> (pi::real)"
@@ -513,7 +494,7 @@ text \<open>The same with the constants written out: \<open>\<omega>\<^sub>0 = (
 
 corollary F0_dip_nonempty_final_explicit:
   fixes dmin \<delta>null pmin :: real and \<omega>null :: "real^2"
-  assumes "6 \<le> CARD('n)" and "odd CARD('n)"
+  assumes "5 \<le> CARD('n)" and "odd CARD('n)"
     and "0 < \<delta>null"
     and "pmin < gain_dip (vector [pi / 2, 0]) * (real CARD('n))\<^sup>2"
     and "cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) \<omega>null \<noteq> 0"
@@ -538,17 +519,17 @@ lemma gain_dip_at_height_pi_half: "gain_dip (vector [pi / 2, \<phi>]) = 1"
   by (simp add: gain_dip_def gdip_pi_half)
 
 corollary F0_dip_nonempty_example:
-  assumes c6: "6 \<le> CARD('n)" and oddN: "odd CARD('n)"
+  assumes c5: "5 \<le> CARD('n)" and oddN: "odd CARD('n)"
   shows "\<exists>R0. \<forall>R\<ge>R0. \<exists>\<xi> \<kappa> \<epsilon>. 0 < \<xi> \<and> 0 < \<kappa> \<and> 0 < \<epsilon> \<and> \<epsilon> \<le> pi / 4
           \<and> F0 (cvec_dip (vector [pi / 2, 0]) (vector [0, 0])) gain_dip R (1 / 4) (- 1) 0 (- 1)
                (vector [pi / 2, pi / 2]) (vector [pi / 2, 0])
                (OmegaPF (vector [pi / 2, 0]) (pi / 4)) (1 / 100) 1 \<xi> \<kappa> \<epsilon>
               \<noteq> ({} :: ((real^2)^'n) set)"
-proof (rule F0_dip_nonempty_final_explicit[OF c6 oddN])
+proof (rule F0_dip_nonempty_final_explicit[OF c5 oddN])
   show "(0::real) < 1 / 100"
     by simp
-  have "(6::real)\<^sup>2 \<le> (real CARD('n))\<^sup>2"
-    by (rule power_mono) (use c6 in simp_all)
+  have "(5::real)\<^sup>2 \<le> (real CARD('n))\<^sup>2"
+    by (rule power_mono) (use c5 in simp_all)
   then show "1 < gain_dip (vector [pi / 2, 0]) * (real CARD('n))\<^sup>2"
     by (simp add: gain_dip_at_height_pi_half)
   have "vec_nth (cvec_dip (vector [pi / 2, 0]) (vector [0, 0]) (vector [pi / 2, pi / 2])) 2 = 1"

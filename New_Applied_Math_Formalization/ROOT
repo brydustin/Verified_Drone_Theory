@@ -114,7 +114,7 @@ session Applied_Math_Residual in "Residual/Stratum" = Applied_Math_Appendix_Fron
     Residual_Aligned
     Residual_Meager
 
-(* The end-to-end theorem F0_dip_nonempty_final: no hypothesis beyond 6 <= N, N odd and the
+(* The end-to-end theorem F0_dip_nonempty_final: no hypothesis beyond 5 <= N, N odd and the
    paper's conditions on its parameters. *)
 session Applied_Math_Final in "Residual/Final" = Applied_Math_Residual +
   options [document = false, quick_and_dirty = false, timeout = 1800]

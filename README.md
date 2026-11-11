@@ -8,7 +8,7 @@ applied-mathematics results.
 `F0_dip_nonempty_final` in
 `New_Applied_Math_Formalization/Residual/Final/Nonemptiness_Final.thy`: the
 robust feasible set `F0` of the paper (`Paper/`, Eq. 22; Conjecture 5 there) is
-nonempty.  It holds for an odd number `N ≥ 6` of antennas, source overhead and
+nonempty.  It holds for an odd number `N ≥ 5` of antennas, source overhead and
 main beam horizontal, every minimum spacing, every null threshold above zero,
 every minimum main-beam power below the maximum, every null direction other
 than the main beam, the paper's plane coefficients, all large radii, and

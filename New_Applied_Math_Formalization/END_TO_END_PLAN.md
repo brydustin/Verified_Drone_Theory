@@ -1,7 +1,7 @@
 # End-to-end plan for `F0_dip_nonempty`
 
 Written 2026-11-10.  Scope: finish the proof that the robust feasible set is
-nonempty, with no hypotheses beyond `6 ≤ N`, `N` odd, no oracles, and a
+nonempty, with no hypotheses beyond `5 ≤ N` (`6 ≤ N` until 2026-11-11, see §8), `N` odd, no oracles, and a
 concretely defined set.
 
 ## 1. The theorem to end on
@@ -19,7 +19,7 @@ paper's parameters under the paper's conditions:
 ```isabelle
 theorem F0_dip_nonempty_final:      (* Residual/Final/Nonemptiness_Final.thy, PROVED 2026-11-11 *)
   fixes dmin δnull pmin :: real and ωnull :: "real^2"
-  assumes "6 ≤ CARD('n)" and "odd CARD('n)"
+  assumes "5 ≤ CARD('n)" and "odd CARD('n)"
     and "0 < δnull"
     and "pmin < gain_dip design_beam * (real CARD('n))²"
     and "cvec_dip design_beam design_source ωnull ≠ 0"
@@ -82,7 +82,7 @@ core predicates for every `V ctr δ ω0 ωs`, where they may be false.  So:
 
    ```isabelle
    theorem regular_feasible_configuration_exists:
-     assumes "6 ≤ CARD('n)" and "odd CARD('n)"
+     assumes "5 ≤ CARD('n)" and "odd CARD('n)"
      shows "∃x ∈ interior (Ffeas …concrete constants…).
               ∀ω ∈ OmegaPF (vector [pi/2, 0]) (pi/4).
                 ¬ (gradU … x ω = 0 ∧ matrix_det (HessU … x ω) = 0)"
@@ -235,8 +235,8 @@ Status (2026-11-10), all on Isabelle2026 in `Residual/` (session
   nonempty interior for every `dmin`, every `δnull > 0`, every
   `pmin < gain_dip design_beam · N²`, every null direction with `cvec ≠ 0`,
   arbitrary `A B D`, all large `R`); the re-threaded lemmas
-  `meager_rank_deficient_stratum_design`, `Phi_bad_meager_design`,
-  `regular_config_exists_design`, `no_degenerate_to_sphere_annulus_bounded`
+  `Phi_bad_meager_design` (assembled from five strata since the change
+  recorded in §8), `regular_config_exists_design`, `no_degenerate_to_sphere_annulus_bounded`
   (exports `ε ≤ δ`), `F0_nonempty_of_witness_radius` (keeps `ε`);
   `regular_feasible_configuration_exists`; `F0_dip_nonempty_final`,
   `F0_dip_nonempty_final_explicit`, `F0_dip_nonempty_example`.
@@ -307,7 +307,19 @@ exit 0; details in the diary entry of that date).
 
 ## 8. Next step
 
-None for the theorem: WP0–WP7 are done.  Possible extensions, not needed for
+None for the theorem: WP0–WP7 are done.
+
+2026-11-11, after WP7: the hypothesis `6 ≤ N` was lowered to `5 ≤ N`.  It had
+entered through one stratum only, the steering-singular one (`det Dc = 0`),
+which used the six-moment submersion `fixed_c_nonsurj_nowhere_dense`.  That
+stratum is now `meager_steering_singular` (`Nonemptiness_Robust3.thy`): at a
+fixed angle with `c ≠ 0`, criticality alone is a nowhere dense condition
+(`critical_slice_nowhere_dense`, `Nonemptiness_Robust2.thy`, `2 ≤ N`).
+`Phi_bad_meager_design` now splits the degenerate set into five strata (array
+null, steering-singular, beam centre, regular, residual).  The bound 5 is
+`4 ≤ N` of `residual_meager_design` together with oddness.  The six-moment
+theorems are kept; the final theorem does not depend on them
+(`tools/final_deps/Final_Deps.thy`).  Possible extensions, not needed for
 it: other steering angles (the residual equations of WP3 already hold for all
 angles; the charts and the other strata would need the design facts for them),
 and an explicit `R0`.

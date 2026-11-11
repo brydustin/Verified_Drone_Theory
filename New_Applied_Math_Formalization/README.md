@@ -10,7 +10,7 @@ untouched for history.
 
 The end-to-end theorem is `F0_dip_nonempty_final` in
 `Residual/Final/Nonemptiness_Final.thy` (session `Applied_Math_Final`), proved
-2026-11-11.  For an odd number `N ≥ 6` of antennas, source overhead and main
+2026-11-11.  For an odd number `N ≥ 5` of antennas, source overhead and main
 beam horizontal, it states that the robust feasible set `F0` of the paper is
 nonempty for every minimum spacing, every null threshold above zero, every
 minimum main-beam power below the maximum, every null direction other than
@@ -23,6 +23,11 @@ its relation to the paper, and the route.
 The earlier conditional theorem `F0_dip_nonempty` and its two assumed chart-core
 predicates were removed from `Appendix/Robust4/Nonemptiness_Robust4.thy` on
 2026-11-11; the tag `pre-isabelle2026` still has them.
+
+The theorems on the six-moment map `M_paper` need `N ≥ 6`:
+`fixed_c_nonsurj_nowhere_dense` (`Appendix/Robust3`), `bigJ_det` (`BlockDet/`)
+and `MomentJac/`.  The final theorem does not use them;
+`tools/final_deps/Final_Deps.thy` prints the facts it depends on.
 
 Documents: `END_TO_END_PLAN.md` (statement, relation to the paper, route,
 verification protocol), `Sketch.md` §8 (the proof in plain mathematics and the
@@ -49,8 +54,8 @@ table of formal names), `FORMALIZATION_DIARY.md` (log).
 
 `Munkres/` is the vendored Munkres topology library (session
 `Munkres_Topology_Local`, two lemma names updated for Isabelle2026).
-`tools/` holds the build script and the numeric checks of the residual
-equations.
+`tools/` holds the build script, the numeric checks of the residual
+equations and the dependency scan `final_deps/`.
 
 ### Archive (not built)
 
