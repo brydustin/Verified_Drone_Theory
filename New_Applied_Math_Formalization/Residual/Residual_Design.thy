@@ -9,11 +9,9 @@ text \<open>Source overhead and main beam horizontal: \<open>\<omega>\<^sub>0 = 
   the determinants in @{thm residual_set_point_equations} are explicit and the radial equation is linear
   in \<open>cos \<phi>\<close>.\<close>
 
-definition design_beam :: "real^2" where
-  "design_beam = vector [pi / 2, 0]"
+definition design_beam :: "real^2" where "design_beam = vector [pi / 2, 0]"
 
-definition design_source :: "real^2" where
-  "design_source = vector [0, 0]"
+definition design_source :: "real^2" where "design_source = vector [0, 0]"
 
 lemma design_cvec:
   "vec_nth (cvec_dip design_beam design_source \<omega>) 1

@@ -330,14 +330,12 @@ qed
 
 subsection \<open>Gradient and Hessian in the angle\<close>
 
-definition gradU ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> planar"
-  where \<comment> \<open>\<open>\<nabla>\<^sub>\<omega> U_cart\<close> from Higher_Differentiability_Multi\<close>
+text \<open>Gradient and Hessian of the pattern in the angle: the operators \<open>\<nabla>\<close> and \<open>\<nabla>\<^sup>2\<close> of the analysis library.\<close>
+
+definition gradU :: "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> planar^'n \<Rightarrow> angle \<Rightarrow> planar" where
   "gradU cvec gain x \<omega> = \<nabla> (U_cart cvec gain x) \<omega>"
 
-definition HessU ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> (planar^'n) \<Rightarrow> angle \<Rightarrow> real^2^2"
-  where \<comment> \<open>\<open>\<nabla>\<^sup>2\<^sub>\<omega> U_cart\<close> (\<open>hess_fun\<close>) from Higher_Differentiability_Multi\<close>
+definition HessU :: "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> planar^'n \<Rightarrow> angle \<Rightarrow> real^2^2" where
   "HessU cvec gain x \<omega> = \<nabla>\<^sup>2 (U_cart cvec gain x) \<omega>"
 
 lemma gradU_explicit:

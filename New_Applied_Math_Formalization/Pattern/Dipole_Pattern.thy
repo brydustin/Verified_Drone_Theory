@@ -111,8 +111,7 @@ qed
 
 subsection \<open>The dipole gain\<close>
 
-definition gsinc :: "real \<Rightarrow> real" where
-  "gsinc x = (if x = 0 then 1 else sin x / x)"
+definition gsinc :: "real \<Rightarrow> real" where "gsinc x = (if x = 0 then 1 else sin x / x)"
 
 definition Jsinc :: "nat \<Rightarrow> real \<Rightarrow> real" where
   "Jsinc k x = integral (cbox 0 1) (\<lambda>t. t^k * cos (x*t + real k * (pi/2)))"
@@ -188,8 +187,7 @@ qed
 lemma gsinc_Ck_on: "Ck_on n gsinc UNIV"
   using Jsinc_Ck_on[where k = 0] by (simp add: Jsinc_0)
 
-definition edip :: "real \<Rightarrow> real" where
-  "edip \<theta> = cos (pi/2 * cos \<theta>) / sin \<theta>"
+definition edip :: "real \<Rightarrow> real" where "edip \<theta> = cos (pi/2 * cos \<theta>) / sin \<theta>"
 
 definition gdip :: "real \<Rightarrow> real" where
   "gdip \<theta> = (pi^2/4) * (gsinc ((pi/2)*(1 - cos \<theta>)) * gsinc ((pi/2)*(1 + cos \<theta>)))"
@@ -296,8 +294,7 @@ next
   finally show ?thesis .
 qed
 
-definition gain_dip :: "real^2 \<Rightarrow> real" where
-  "gain_dip \<omega> = gdip (\<omega> $ 1)"
+definition gain_dip :: "angle \<Rightarrow> real" where "gain_dip \<omega> = gdip (\<omega> $ 1)"
 
 lemma gain_dip_Ck_on: "Ck_on n gain_dip UNIV"
 proof -

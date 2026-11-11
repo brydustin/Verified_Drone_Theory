@@ -17,14 +17,15 @@ lemma continuous_on_U_cart_config:
   unfolding U_cart_def
   by (intro continuous_intros continuous_on_A_cart_config)
 
-definition spdist :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real" where
-  \<comment> \<open>\<open>\<bar>r'\<^sub>n - r'\<^sub>m\<bar>\<close> with \<open>z = (Ax + By)/D\<close>\<close>
+text \<open>The distance of two relays in space, where the height of a relay is \<open>z = (A x + B y) / D\<close>, and the
+  spacing penalty.\<close>
+
+definition spdist :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> planar \<Rightarrow> planar \<Rightarrow> real" where
   "spdist A B D p q =
      sqrt ((p $ 1 - q $ 1)\<^sup>2 + (p $ 2 - q $ 2)\<^sup>2
-            + ((A * (p $ 1 - q $ 1) + B * (p $ 2 - q $ 2)) / D)\<^sup>2)"
+           + ((A * (p $ 1 - q $ 1) + B * (p $ 2 - q $ 2)) / D)\<^sup>2)"
 
-definition cpen :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> (real^2)^'n \<Rightarrow> real" where
-  \<comment> \<open>the spacing penalty \<open>c\<close>\<close>
+definition cpen :: "real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> planar^'n \<Rightarrow> real" where
   "cpen dmin A B D x =
      (\<Sum>p \<in> {p. fst p \<noteq> snd p}. max 0 (dmin - spdist A B D (x $ fst p) (x $ snd p)))"
 
@@ -34,10 +35,8 @@ lemma continuous_on_spdist_config:
   \<comment> \<open>\<open>/D\<close> rewritten as \<open>\<cdot> inverse D\<close>, so no \<open>D \<noteq> 0\<close> side-condition arises\<close>
   unfolding spdist_def divide_inverse by (intro continuous_intros)
 
-definition Ffeas ::
-  "(real^2 \<Rightarrow> real^2) \<Rightarrow> (real^2 \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
-     \<Rightarrow> real^2 \<Rightarrow> real^2 \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((real^2)^'n) set"
-  where
+definition Ffeas :: "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> real \<Rightarrow> real \<Rightarrow> (planar^'n) set" where
   "Ffeas cvec g R dmin A B D \<omega>null \<omega>0 \<delta>null pmin =
        (cpen dmin A B D) -` {0}
      \<inter> (\<lambda>x. U_cart cvec g x \<omega>null) -` {0 .. \<delta>null}

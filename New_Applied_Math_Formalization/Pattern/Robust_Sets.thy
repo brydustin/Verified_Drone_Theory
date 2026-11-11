@@ -8,9 +8,9 @@ begin
 
 subsection \<open>The smallest singular value\<close>
 
-definition sigma_min :: "real^2^2 \<Rightarrow> real" where
-  \<comment> \<open>smallest singular value: \<open>\<sigma>\<^sub>m\<^sub>i\<^sub>n(H) = inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close> (the operator-norm characterisation)\<close>
-  "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
+text \<open>The smallest singular value of a matrix, \<open>inf\<^bsub>\<parallel>v\<parallel>=1\<^esub> \<parallel>H v\<parallel>\<close>.\<close>
+
+definition sigma_min :: "real^2^2 \<Rightarrow> real" where "sigma_min H = (INF v \<in> sphere 0 1. norm (H *v v))"
 
 lemma sphere01_ne: "sphere (0::real^2) 1 \<noteq> {}"
   by simp
@@ -172,32 +172,23 @@ qed
 
 subsection \<open>The sets\<close>
 
-definition Xrobust ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> planar \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((planar)^'n) set"
-  where
-  "Xrobust cvec g ctr \<epsilon> \<kappa> =
-     {x. \<forall>\<omega>\<in>sphere ctr \<epsilon>. \<kappa> \<le> norm (gradU cvec g x \<omega>)}"
+definition Xrobust :: "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> angle \<Rightarrow> real \<Rightarrow> real \<Rightarrow> (planar^'n) set"
+  where "Xrobust cvec g ctr \<epsilon> \<kappa> = {x. \<forall>\<omega>\<in>sphere ctr \<epsilon>. \<kappa> \<le> norm (gradU cvec g x \<omega>)}"
 
-definition X0 ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> planar \<Rightarrow> (planar) set
-     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((planar)^'n) set"
-  where
+definition X0 :: "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> angle \<Rightarrow> angle set \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> (planar^'n) set" where
   "X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon> =
      {x \<in> Xrobust cvec g ctr \<epsilon> \<kappa>.
         \<forall>y \<in> \<Omega> - ball ctr \<epsilon>. \<xi> \<le> norm (gradU cvec g x y) + sigma_min (HessU cvec g x y)}"
 
-definition F0 ::
-  "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
-     \<Rightarrow> planar \<Rightarrow> planar \<Rightarrow> (planar) set \<Rightarrow> real \<Rightarrow> real
-     \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> ((planar)^'n) set"
-  where
+definition F0 :: "(angle \<Rightarrow> planar) \<Rightarrow> (angle \<Rightarrow> real) \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real
+     \<Rightarrow> angle \<Rightarrow> angle \<Rightarrow> angle set \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> real \<Rightarrow> (planar^'n) set" where
   "F0 cvec g R dmin A B D \<omega>null ctr \<Omega> \<delta>null pmin \<xi> \<kappa> \<epsilon> =
-     Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin
-     \<inter> X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon>"
+     Ffeas cvec g R dmin A B D \<omega>null ctr \<delta>null pmin \<inter> X0 cvec g ctr \<Omega> \<xi> \<kappa> \<epsilon>"
 
 subsection \<open>The angular box without poles\<close>
 
-definition OmegaPF :: "planar \<Rightarrow> real \<Rightarrow> planar set" where
+definition OmegaPF :: "angle \<Rightarrow> real \<Rightarrow> angle set" where
   "OmegaPF ctr \<delta> = cbox (ctr - vector [\<delta>, pi]) (ctr + vector [\<delta>, pi])"
 
 lemma OmegaPF_compact: "compact (OmegaPF ctr \<delta>)"
