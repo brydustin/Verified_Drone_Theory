@@ -6,9 +6,9 @@ applied-mathematics results.
 ## Main result
 
 `F0_dip_nonempty_final` in
-`New_Applied_Math_Formalization/Residual/Final/Nonemptiness_Final.thy`: the
+`New_Applied_Math_Formalization/Main/Degenerate_Configurations.thy`: the
 robust feasible set `F0` of the paper (`Paper/`, Eq. 22; Conjecture 5 there) is
-nonempty.  It holds for an odd number `N ≥ 5` of antennas, source overhead and
+nonempty.  It holds for an odd number `N ≥ 5` of relays, source overhead and
 main beam horizontal, every minimum spacing, every null threshold above zero,
 every minimum main-beam power below the maximum, every null direction other
 than the main beam, the paper's plane coefficients, all large radii, and
@@ -23,8 +23,9 @@ robust for suitable margins (`nondegenerate_in_X0`), and for suitable margins
 ## Contents
 
 - **`New_Applied_Math_Formalization/`** — the proof of the main result, for
-  **Isabelle2026**.  Its `README.md` has the directory map and the build
-  command; `END_TO_END_PLAN.md` relates the theorem to the paper.
+  **Isabelle2026**.  It contains only what the theorems use and needs nothing
+  beyond the Isabelle distribution.  Its `README.md` has the map of the
+  theories and the build command.
 - **`Paper/`** — the paper.
 - **`Applied_Math_Formalization/`** — the legacy tree (Isabelle2025-2), kept
   for history: the Euclidean "parametric transversality" pipeline and the
@@ -39,12 +40,11 @@ robust for suitable margins (`nondegenerate_in_X0`), and for suitable margins
 
 ## Building
 
-The main result (Isabelle2026, AFP `afp-2026-10-29`; about 16 minutes from
-scratch):
+The main result (Isabelle2026):
 
 ```
 cd New_Applied_Math_Formalization
-isabelle build -b -d . -d <AFP>/thys Applied_Math_Oracle_Audit
+isabelle build -b -d . Applied_Math_Oracle_Audit
 ```
 
 The legacy tree is built with **Isabelle2025-2**.  Its session definitions live in

@@ -1,5 +1,8 @@
 # D3 closure: mathematical sketch (semi-formal, Isabelle-free)
 
+> The names of theories and lemmas in this document are those of the tree at commit `fd07a54`;
+> `FORMALIZATION_DIARY.md` (2026-11-11, "only what the theorems use") lists the current names.
+
 Written 2026-07-12 after a full survey of the current tree, in response to
 losing track of "today's dead end" when context was cleared. Purpose: pin
 down the *actual* remaining mathematics before writing one more line of

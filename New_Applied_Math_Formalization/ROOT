@@ -1,109 +1,64 @@
-(* ==========================================================================
-   New_Applied_Math_Formalization: the proof chain for F0_dip_nonempty_final
-   (Residual/Final/Nonemptiness_Final.thy), for Isabelle2026.
+(* The proof chain for the theorems of Main/Degenerate_Configurations.thy, for Isabelle2026.
 
-   Every session is strict (quick_and_dirty = false).  Build from this
-   directory (ROOTS adds Munkres/ and Residual/):
+   Every session is strict (quick_and_dirty = false).  Build from this directory (ROOTS adds Munkres/):
 
-     ~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -d . \
-       -d ~/Desktop/Isabelle/afp-2026-10-29/thys Applied_Math_Oracle_Audit
+     ~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -d . Applied_Math_Oracle_Audit
 
-   The Isabelle2025-2 state is the git tag pre-isabelle2026.  See
-   END_TO_END_PLAN.md for the plan and README.md for the map.
-   ========================================================================== *)
+   README.md has the map of the theories.  The directories Analytic/, Appendix/, HigherDiff/ and M5_Dev_*
+   are an archive of the Isabelle2025-2 state (git tag pre-isabelle2026); they are not built. *)
 
+(* The Munkres formalization on top of the complex analysis library, in one heap. *)
 session Applied_Math_Base in "Base" = "HOL-Complex_Analysis" +
   options [document = false, quick_and_dirty = false, timeout = 3600]
   sessions
     Munkres_Topology_Local
-    Jordan_Normal_Form
-    Perron_Frobenius
-    "HOL-Types_To_Sets"
   theories
     Munkres_Topology_Local.Munkres_Topology
-    "HOL-Complex_Analysis.Conformal_Mappings"
-    "Perron_Frobenius.HMA_Connect"
 
-session Applied_Math_BlockDet in "BlockDet" = Applied_Math_Base +
+(* General analysis: meager sets, the regular value theorem, parametric transversality, functions whose
+   restrictions to lines are entire, sets with countable line slices. *)
+session Applied_Math_Analysis in "Analysis" = Applied_Math_Base +
   options [document = false, quick_and_dirty = false, timeout = 3600]
   theories
-    Block_Determinants
-    Block_Determinants_BigJ
+    Munkres_Baire_Bridge
+    Meager_Sets
+    Regular_Value_Theorem
+    Parametric_Transversality_Euclidean
+    Parametric_Transversality_Planar
+    Line_Entire_Functions
+    Negligible_Line_Slices
+
+(* The model: array factor, pattern, dipole gain, steering wavevector, feasible and robust sets. *)
+session Applied_Math_Pattern in "Pattern" = Applied_Math_Analysis +
+  options [document = false, quick_and_dirty = false, timeout = 3600]
+  theories
+    Array_Factor
     Moment_Map
+    Pattern_Derivatives
+    Feasible_Set
+    Dipole_Pattern
+    Dipole_Gain_Derivatives
+    Dipole_Gain_Analytic
+    Robust_Sets
+    Feasibility_Witness
+    Pattern_Moments
+    Gradient_Field_C1
 
-(* Moment_Jacobian (transports + the D_x M_paper = bigJ Jacobian identification)
-   lives in its OWN session/dir, parented on Applied_Math_BlockDet, so it can be edited
-   interactively with -l Applied_Math_BlockDet. *)
-session Applied_Math_MomentJac in "MomentJac" = Applied_Math_BlockDet +
+(* Four of the five classes of degenerate configurations are meager. *)
+session Applied_Math_Strata in "Strata" = Applied_Math_Pattern +
   options [document = false, quick_and_dirty = false, timeout = 3600]
   theories
-    Moment_Jacobian
+    Null_Stratum
+    Regular_Stratum
+    Critical_Slices
+    Main_Beam_Stratum
+    Steering_Singular_Stratum
 
-session Applied_Math_Nonemptiness in "." = Applied_Math_MomentJac +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    Applied_Math_BlockDet
-    Applied_Math_MomentJac
-  theories
-    Nonemptiness_Paper
-
-(* The robust-feasible-set development, split for build granularity:
-   Nonemptiness_Robust1 (the long, stable first half) bakes into the
-   Applied_Math_Appendix_Base heap; Nonemptiness_Robust2 sits alone in the
-   Applied_Math_Appendix leaf so it can be rebuilt/iterated in minutes;
-   Nonemptiness_Robust3 is the stable M5 scaffold heap; and
-   Nonemptiness_Robust4 is the live F0 frontier theory. *)
-session Applied_Math_Appendix_Base in "Appendix" = Applied_Math_Nonemptiness +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  theories
-    Nonemptiness_Regnonzero_Appendix
-    Nonemptiness_Robust1
-
-session Applied_Math_Appendix in "Appendix/Robust2" = Applied_Math_Appendix_Base +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  theories
-    Nonemptiness_Robust2
-
-(* M5 consolidation stable heap: Nonemptiness_Robust3 contains the checked
-   upstream scaffold through the D3 cover set-algebra bridge.  The active F0
-   frontier lives in the child sessions below. *)
-session Applied_Math_Appendix_Full in "Appendix/Robust3" = Applied_Math_Appendix +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  theories
-    Nonemptiness_Robust3
-
-(* 2D Morse/saddle helper stack used by the D3 curve-cover port. *)
-session Applied_Math_Morse in "Morse" = "HOL-Analysis" +
+(* The fifth class, the residual. *)
+session Applied_Math_Residual in "Residual" = Applied_Math_Strata +
   options [document = false, quick_and_dirty = false, timeout = 1800]
   theories
-    Morse_Saddle_2D
-    Hadamard_2D
-    Arc_Clip
-    Trig_SMOOTH3
-    Saddle_Cover
-    Disc_Pos
-
-session Applied_Math_D3_Curve_Cover in "Appendix/Robust4Cover" = Applied_Math_Appendix_Full +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    Applied_Math_Morse
-  theories
-    D3_Curve_Cover
-
-(* The retained bad set BadXGW, the regular stratum, and the general lemmas
-   from a regular feasible configuration to a point of F0. *)
-session Applied_Math_Appendix_Frontier in "Appendix/Robust4" = Applied_Math_D3_Curve_Cover +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  theories
-    Nonemptiness_Robust4
-
-(* The residual stratum (END_TO_END_PLAN.md, WP3 onwards): the retained bad set of the capstone
-   is tied to the phase functions of Residual/Residual_Null_Set. *)
-session Applied_Math_Residual in "Residual/Stratum" = Applied_Math_Appendix_Frontier +
-  options [document = false, quick_and_dirty = false, timeout = 1800]
-  sessions
-    Applied_Math_Residual_Analysis
-  theories
+    Residual_Phase_Equation
     Residual_Equations
     Residual_Design
     Residual_Charts
@@ -111,19 +66,17 @@ session Applied_Math_Residual in "Residual/Stratum" = Applied_Math_Appendix_Fron
     Residual_Aligned
     Residual_Meager
 
-(* The end-to-end theorems (degenerate_configurations_nowhere_dense, F0_dip_interior_nonempty,
-   F0_dip_nonempty_final): no hypothesis beyond 5 <= N, N odd and the paper's conditions on its
-   parameters.  Poles_And_Fixed_Margins: why the box avoids the poles and the margins depend on the
-   configuration. *)
-session Applied_Math_Final in "Residual/Final" = Applied_Math_Residual +
+(* The theorems: the degenerate configurations are closed and nowhere dense; the robust feasible set
+   contains a ball.  Poles_And_Fixed_Margins: why the box avoids the poles and the margins depend on
+   the configuration. *)
+session Applied_Math_Main in "Main" = Applied_Math_Residual +
   options [document = false, quick_and_dirty = false, timeout = 1800]
   theories
-    Nonemptiness_Final
+    Degenerate_Configurations
     Poles_And_Fixed_Margins
 
-(* Oracle audit of F0_dip_nonempty_final and of the theorems on the way to it: fails if any oracle is used.
-   The control session checks that the test detects a sorry. *)
-session Applied_Math_Oracle_Audit in "Audit" = Applied_Math_Final +
+(* Fails if one of the theorems depends on an oracle.  The control session checks that the test detects a sorry. *)
+session Applied_Math_Oracle_Audit in "Audit" = Applied_Math_Main +
   options [document = false, quick_and_dirty = false, timeout = 600]
   sessions
     Applied_Math_Oracle_Audit_Control
@@ -134,82 +87,3 @@ session Applied_Math_Oracle_Audit_Control in "Audit/Control" = HOL +
   options [document = false, quick_and_dirty = true, timeout = 600]
   theories
     Oracle_Audit_Control
-
-(* ---------------------------------------------------------------------------
-   Isabelle2025-2 only: not ported, not on the capstone path.  HOL-Analysis of
-   Isabelle2026 ships its own Higher_Differentiability_Multi, Real_Analytic and
-   Real_Analytic_Inverse, so these theories cannot be loaded next to it.  They,
-   and the M5_Dev_* scratch sessions built on them, are kept as an archive of
-   the state at the git tag pre-isabelle2026 (some refer to the conditional
-   lemmas since removed from Nonemptiness_Robust4).
-
-(- Higher-order (k-times Fréchet) differentiability, ported from the
-   Verified_Numerical_Algorithms project.  Parented directly on HOL-Analysis +
-   the AFP's Smooth_Manifolds; deliberately independent of the Munkres/Jordan
-   stack above, since these theories only need real-analysis. -)
-session Applied_Math_HigherDiff in "HigherDiff" = "HOL-Analysis" +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    Smooth_Manifolds
-  theories
-    Limits_Higher_Order_Derivatives
-    Auxiliary_Facts
-    Higher_Differentiability
-    Higher_Differentiability_Multi
-    Taylor_Peano
-    Ck1_C1_Bridge
-
-(- Standalone real-analytic (C^omega) function theory + analytic IFT.  Foundational
-   and reusable: parented only on the higher-derivative/Taylor stack,
-   independent of the dipole/Robust development. -)
-session Applied_Math_Analytic in "Analytic" = Applied_Math_HigherDiff +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    Smooth_Manifolds
-  theories
-    Real_Analytic
-    Real_Analytic_Bump
-
-(- The formal-series local inverse of a real-analytic map (majorant method). -)
-session Applied_Math_Analytic_Inverse in "Analytic/Inverse" = Applied_Math_Analytic +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  theories
-    Real_Analytic_Inverse
-
-(- Complexification bridge: several-variable Cauchy-Riemann criterion,
-   holomorphic => real C^infinity, real-analytic <=> local holomorphic
-   extension, and the analytic IFT. -)
-session Applied_Math_Analytic_Complex in "Analytic/Complex" = Applied_Math_Analytic_Inverse +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    "HOL-Complex_Analysis"
-  theories
-    Real_Analytic_Complex
-    Real_Analytic_IFT
-
-(- The D34 analytic-bridge platform: ONE heap containing BOTH the robust
-   nonemptiness development (through Nonemptiness_Robust2) AND the
-   real-analytic stack (through the analytic IFT + the nowhere-dense-zeros
-   workhorse).  This is the machinery intended to eventually discharge the two
-   analytic hypotheses of F0_dip_nonempty (d3_detHess_arc_chart_core_all and
-   branchP_indep_closed_cover_core_all). -)
-session Applied_Math_D34_Analytic in "Appendix/AnalyticBridge" = Applied_Math_Appendix +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    Applied_Math_Analytic_Complex
-  theories
-    D34_Analytic_Bridge
-    D34_H0res_Branch
-    D34_Geodesic_Branch
-
-(- The wiring layer: the first theory that imports BOTH the Robust4 frontier heap
-   (the honest D3/D4 boundary predicates consumed by F0_dip_nonempty) and the
-   D34 geodesic-branch heap (the rank-3 criteria with generic satisfaction).
-   Assembles the branch criteria toward d3_detHess_arc_chart_core_all. -)
-session Applied_Math_D3_Wiring in "Appendix/Wiring" = Applied_Math_Appendix_Frontier +
-  options [document = false, quick_and_dirty = false, timeout = 3600]
-  sessions
-    Applied_Math_D34_Analytic
-  theories
-    D3_Chart_Wiring
-   --------------------------------------------------------------------------- *)

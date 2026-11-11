@@ -1,5 +1,5 @@
 theory Oracle_Audit
-  imports "Applied_Math_Final.Poles_And_Fixed_Margins"
+  imports "Applied_Math_Main.Poles_And_Fixed_Margins" "Applied_Math_Pattern.Dipole_Gain_Analytic"
 begin
 
 text \<open>The session fails if one of the final theorems, or a theorem on the way to them, depends on an oracle.  Only
@@ -27,7 +27,7 @@ ML \<open>
   val _ = audit "negligible_of_countable_line_slices" [@{thm negligible_of_countable_line_slices}];
   val _ = audit "negligible_res_f_zeros" [@{thm negligible_res_f_zeros}];
   val _ = audit "residual_point_equations" @{thms residual_point_equations};
-  val _ = audit "BadXGW_point_equations" @{thms BadXGW_point_equations};
+  val _ = audit "residual_set_point_equations" @{thms residual_set_point_equations};
   val _ = audit "design_radial_equation" [@{thm design_radial_equation}];
   val _ = audit "design_radial_degenerate" [@{thm design_radial_degenerate}];
   val _ = audit "design_perp_equation" [@{thm design_perp_equation}];
@@ -35,8 +35,10 @@ ML \<open>
   val _ = audit "nonaligned_point_in_chart_image" [@{thm nonaligned_point_in_chart_image}];
   val _ = audit "nonaligned_residual_cover" [@{thm nonaligned_residual_cover}];
   val _ = audit "aligned_bad_closed_cover" [@{thm aligned_bad_closed_cover}];
-  val _ = audit "BadXGW_design_cover" [@{thm BadXGW_design_cover}];
+  val _ = audit "residual_set_design_cover" [@{thm residual_set_design_cover}];
   val _ = audit "residual_meager_design" [@{thm residual_meager_design}];
+  val _ = audit "gdip_real_analytic" [@{thm gdip_real_analytic}];
+  val _ = audit "gain_dip_real_analytic" [@{thm gain_dip_real_analytic}];
 \<close>
 
 end

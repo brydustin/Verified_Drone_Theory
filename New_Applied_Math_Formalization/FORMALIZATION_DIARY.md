@@ -9580,3 +9580,165 @@ Left: WP7 close-out (plan §8).
 - Sources named in the READMEs: the Munkres library (Bryant, Huerta y Munive,
   Kaliszyk, Urban; LNCS 16870, arXiv:2604.07455) and the higher-differentiation
   library (Bryant, Huerta y Munive, Foster; SEFM 2026, arXiv:2511.20550).
+
+### 2026-11-11 — only what the theorems use; theories named by content
+
+- Finding: of 1068 named lemmas in the proof chain the final theorems used 496; twelve of the 35
+  theories contributed nothing (10364 of 33694 lines).  Decision of the user: remove the unused
+  material and name what remains by content.  Also from the user: one name per object (`A_cart`,
+  `U_cart`), and no theory names such as `Nonemptiness_Paper`.
+- Method: the dependency records of the proofs (`Thm_Deps.thm_deps`) give, from the audited
+  theorems and the statements cited in the write-up, the lemmas that are used; a lemma or
+  definition that a kept command still names is kept as well.  A script rebuilt the tree from the
+  state `fd07a54` (local tag `before-unused-removal`): it removes the other commands, distributes
+  the kept ones over the new theories, applies the renames, and checks before the build that every
+  kept command sees what it uses.  The script is kept locally in `../local_tools/` (not in the
+  repository).
+- Result: 32 theories, about 13 400 lines, 497 lemmas; `tools/unused_facts/Unused_Facts.thy` reports
+  no unused lemma (it fails if there is one).  Sessions: `Applied_Math_Base`,
+  `Applied_Math_Analysis` (`Analysis/`), `Applied_Math_Pattern` (`Pattern/`),
+  `Applied_Math_Strata` (`Strata/`), `Applied_Math_Residual` (`Residual/`), `Applied_Math_Main`
+  (`Main/`), `Applied_Math_Oracle_Audit`.  The stand-alone session `Applied_Math_Residual_Analysis`
+  is gone; its two theories are in `Analysis/` and `Residual/`.
+- No AFP entry is needed any more: `Applied_Math_Base` is `HOL-Complex_Analysis` with the Munkres
+  theories.  The last uses of `Jordan_Normal_Form` and `Perron_Frobenius` were simp rules that
+  happened to fire (`sum.distrib` in disguise) and the index notation `$h`.
+- Removed with the unused material: the six-moment determinant (`Block_Determinants`,
+  `Block_Determinants_BigJ`, `Moment_Jacobian`), the curve cover of the phase-collinear locus
+  (`Morse/`, `D3_Curve_Cover`), `Nonemptiness_Regnonzero_Appendix`, `Nonemptiness_Feasibility`,
+  the list version `array_factor`/`power_pattern`, the closeout layer (`Fzero`, `bad_union`,
+  `thm_final`), `cvec0`.
+- One name per object: `af`, `Afun` → `A_cart`, `A_moment`; `pw`, `Upow` → `U_cart`; the two
+  families of derivatives of the moments (`d_A_moment_x`, … and `DA_paper_x`, …) are one family
+  `DA_moment`, …; the two definitions of `DM_paper_x` are one, `Dmoment_map`.  Lemmas that existed
+  twice are kept once (`meager_nowhere_dense`, `nowhere_dense_closed_negligible`,
+  `meager_negligible_closed_cover`, `nowhere_dense_mono` = `nowhere_dense_subset`,
+  `continuous_on_A_moment_joint`, `continuous_on_A_moment_cvec_dip`); the bridge lemmas
+  `af_eq_Afun`, `Afun_eq_A_moment`, `A_cart_eq_af` are gone.
+- New: `Pattern/Dipole_Gain_Analytic.thy`: `gdip_real_analytic`, `gdip_Cinfinity`,
+  `gain_dip_real_analytic`, `gain_dip_Cinfinity` (the gain is the restriction of an entire
+  function); the audit checks them.
+- Old theory → new theories:
+
+| old | new |
+|---|---|
+| `Block_Determinants` | `Moment_Map` |
+| `Block_Determinants_BigJ` | removed |
+| `Moment_Map` | `Moment_Map`, `Array_Factor` |
+| `Moment_Jacobian` | removed |
+| `Topology_Bridge` | `Munkres_Baire_Bridge` |
+| `Nonemptiness_Array_Factor` | `Array_Factor` |
+| `Nonemptiness_Feasibility` | removed |
+| `Nonemptiness_Scaffold` | `Meager_Sets` |
+| `Nonemptiness_Spine` | `Array_Factor` |
+| `Regular_Value_Theorem` | `Regular_Value_Theorem` |
+| `Parametric_Transversality_Euclidean_Base` | `Parametric_Transversality_Euclidean`, `Meager_Sets` |
+| `Parametric_Transversality_Euclidean` | removed |
+| `Nonemptiness_Paper` | `Line_Entire_Functions`, `Moment_Map`, `Pattern_Derivatives`, `Dipole_Pattern`, `Meager_Sets`, `Parametric_Transversality_Planar`, `Array_Factor` |
+| `Nonemptiness_Regnonzero_Appendix` | removed |
+| `Nonemptiness_Robust1` | `Pattern_Moments`, `Dipole_Pattern`, `Gradient_Field_C1`, `Feasibility_Witness`, `Robust_Sets`, `Feasible_Set`, `Pattern_Derivatives`, `Meager_Sets` |
+| `Nonemptiness_Robust2` | `Critical_Slices`, `Null_Stratum`, `Dipole_Gain_Derivatives`, `Robust_Sets`, `Parametric_Transversality_Planar`, `Regular_Stratum`, `Meager_Sets` |
+| `Nonemptiness_Robust3` | `Main_Beam_Stratum`, `Dipole_Gain_Derivatives`, `Steering_Singular_Stratum` |
+| `Morse_Saddle_2D` | removed |
+| `Hadamard_2D` | removed |
+| `Arc_Clip` | removed |
+| `Trig_SMOOTH3` | removed |
+| `Saddle_Cover` | removed |
+| `Disc_Pos` | removed |
+| `D3_Curve_Cover` | removed |
+| `Nonemptiness_Robust4` | `Degenerate_Configurations`, `Robust_Sets`, `Residual_Equations` |
+| `Residual_Measure` | `Negligible_Line_Slices` |
+| `Residual_Null_Set` | `Residual_Phase_Equation` |
+| `Residual_Equations` | `Residual_Equations` |
+| `Residual_Design` | `Residual_Design` |
+| `Residual_Charts` | `Residual_Charts` |
+| `Residual_Chart_Cover` | `Residual_Chart_Cover` |
+| `Residual_Aligned` | `Residual_Aligned` |
+| `Residual_Meager` | `Residual_Meager` |
+| `Nonemptiness_Final` | `Degenerate_Configurations` |
+| `Poles_And_Fixed_Margins` | `Poles_And_Fixed_Margins` |
+
+- Renamed definitions and lemmas (old → new):
+  `af` → `A_cart`, `afR2` → `A_cart_R2`,
+  `afR2_joint_C1` → `A_cart_R2_joint_C1`,
+  `afR2_omega_partial` → `A_cart_R2_omega_partial`,
+  `afR2_regular_value` → `A_cart_R2_regular_value`,
+  `afR2_regular_value_UNIV` → `A_cart_R2_regular_value_UNIV`,
+  `af_at_main` → `A_cart_at_main`, `A_cart_eq_Afun` → `A_cart_eq_A_moment`,
+  `af_null_zero` → `A_cart_null_zero`,
+  `af_zero_odd_indep_pair` → `A_cart_zero_odd_indep_pair`,
+  `af_zero_odd_not_collinear` → `A_cart_zero_odd_not_collinear`,
+  `Afun` → `A_moment`, `Afun_at_zero` → `A_moment_at_zero`,
+  `d_A_moment_x` → `DA_moment`, `DA_paper_x` → `DA_moment`,
+  `DA_paper_x_slot` → `DA_moment_slot`, `d_M11_moment_x` → `DM11_moment`,
+  `DM11_paper_x` → `DM11_moment`, `d_M12_moment_x` → `DM12_moment`,
+  `DM12_paper_x` → `DM12_moment`, `d_M1_moment_x` → `DM1_moment`,
+  `DM1_paper_x` → `DM1_moment`, `DM1_paper_x_slot` → `DM1_moment_slot`,
+  `d_M22_moment_x` → `DM22_moment`, `DM22_paper_x` → `DM22_moment`,
+  `d_M2_moment_x` → `DM2_moment`, `DM2_paper_x` → `DM2_moment`,
+  `DM2_paper_x_slot` → `DM2_moment_slot`, `DM_paper_x` → `Dmoment_map`,
+  `DM_paper_x_components` → `Dmoment_map_components`,
+  `ImDAfun` → `Im_DA_moment`, `ReDAfun` → `Re_DA_moment`, `pw` → `U_cart`,
+  `Upow` → `U_cart`, `Upow_at_main` → `U_cart_at_main`,
+  `Upow_le_max` → `U_cart_le_max`,
+  `m5_D2_beamcenter_K_finite` → `beamcenter_K_finite`,
+  `m5_D5_beamcenter_angle_meager` → `beamcenter_angle_meager`,
+  `m5_D2_slice_nowhere_dense` → `beamcenter_slice_nowhere_dense`,
+  `crit0_sigma_compact_helper` → `chart_critical_set_sigma_compact`,
+  `clA_moment` → `cline_entire_A_moment`,
+  `clM1_moment` → `cline_entire_M1_moment`,
+  `clM2_moment` → `cline_entire_M2_moment`,
+  `cmod_af_le_card` → `cmod_A_cart_le_card`,
+  `continuous_on_af_config` → `continuous_on_A_cart_config`,
+  `contA_moment` → `continuous_on_A_moment_config`,
+  `continuous_on_DA_paper_x_cvec_dip` → `continuous_on_DA_moment_cvec_dip`,
+  `continuous_on_DA_paper_x_joint` → `continuous_on_DA_moment_joint`,
+  `continuous_on_DM1_paper_x_cvec_dip` → `continuous_on_DM1_moment_cvec_dip`,
+  `continuous_on_DM1_paper_x_joint` → `continuous_on_DM1_moment_joint`,
+  `continuous_on_DM2_paper_x_cvec_dip` → `continuous_on_DM2_moment_cvec_dip`,
+  `continuous_on_DM2_paper_x_joint` → `continuous_on_DM2_moment_joint`,
+  `contM1_moment` → `continuous_on_M1_moment_config`,
+  `contM2_moment` → `continuous_on_M2_moment_config`,
+  `continuous_on_Upow_config` → `continuous_on_U_cart_config`,
+  `contF_moments` → `continuous_on_slice_moments`,
+  `g1_cos_lt` → `cos_strict_bounds_of_sin_nonzero`,
+  `g1_hderiv_neg` → `cot_minus_inverse_deriv_neg`,
+  `g1_h_deriv` → `cot_minus_inverse_has_real_derivative`,
+  `dIm_Afun` → `dIm_A_moment`, `dRe_Afun` → `dRe_A_moment`,
+  `core_2d_strong` → `degenerate_zeros_chart_cover`,
+  `g1_frechet_eval` → `frechet_derivative_real_at_one`,
+  `g1_gdip_has_deriv` → `gdip_has_real_derivative`,
+  `gradU_component_via_M_paper` → `gradU_component_via_moment_map`,
+  `g1_gsinc_has_deriv` → `gsinc_has_real_derivative`,
+  `g1_gsinc_pos` → `gsinc_pos`, `g1_bracket_pos` → `gsinc_wronskian_pos`,
+  `has_derivative_Afun_c` → `has_derivative_A_moment_c`,
+  `has_derivative_M_paper_x` → `has_derivative_moment_map`,
+  `M_paper` → `moment_map`, `M_paper_at_zero_A` → `moment_map_at_zero_A`,
+  `M_paper_at_zero_M1` → `moment_map_at_zero_M1`,
+  `M_paper_at_zero_M2` → `moment_map_at_zero_M2`,
+  `M_paper_at_zero_real123` → `moment_map_at_zero_real123`,
+  `M_paper_components` → `moment_map_components`,
+  `M_paper_proj_A` → `moment_map_proj_A`,
+  `M_paper_proj_M1` → `moment_map_proj_M1`,
+  `M_paper_proj_M2` → `moment_map_proj_M2`,
+  `parametric_transversality_meager_euclidean_stub` → `parametric_transversality_meager_euclidean`,
+  `BadXGW` → `residual_set`,
+  `BadXGW_design_cover` → `residual_set_design_cover`,
+  `BadXGW_design_nondegenerate` → `residual_set_design_nondegenerate`,
+  `BadXGW_point_equations` → `residual_set_point_equations`,
+  `rlineF_moments` → `rline_entire_slice_moments`,
+  `g1_sin_lt` → `sin_less_self`,
+  `F_moments_nowhere_dense` → `slice_moments_nowhere_dense`,
+  `F_moments_witness` → `slice_moments_witness`,
+  `M6_witness_gdip_deriv_zero` → `steering_singular_gdip_deriv_zero`.
+- Traps met:
+  - after two names of one object are merged, a local fact `have e: "t = t"` used as a simp rule
+    makes `simp` loop; such steps have to go, not be kept as trivial facts;
+  - `(∑a. f a)` is `suminf`, not the sum over `UNIV`;
+  - `$` is the index of a vector and of a formal power series, so every occurrence doubles the
+    number of parses: a statement with thirty of them does not come back.  Write `vec_nth` there;
+  - a method `(simp add: …, simp add: …)` fails when the first `simp` already closes the goal;
+  - `isabelle build` with a changed list of imported sessions rebuilds `Applied_Math_Base`
+    (90 s, the Munkres theories).
+- Build: `tools/build_session.sh Applied_Math_Oracle_Audit` → EXIT=0, strict, audit passes;
+  about 3 minutes for the whole chain with `Applied_Math_Base` (before: about 15).

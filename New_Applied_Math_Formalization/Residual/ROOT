@@ -1,9 +1,0 @@
-(* The residual-stratum development of END_TO_END_PLAN.md (WP1 onwards), for Isabelle2026.
-   Build from this directory:
-     ~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -d . Applied_Math_Residual_Analysis *)
-
-session Applied_Math_Residual_Analysis in "." = "HOL-Complex_Analysis" +
-  options [document = false, quick_and_dirty = false, timeout = 600]
-  theories
-    Residual_Measure
-    Residual_Null_Set

@@ -1,5 +1,9 @@
 # End-to-end plan for `F0_dip_nonempty`
 
+> The plan is complete.  The theory and lemma names in this document are those of the tree at
+> commit `fd07a54`; `FORMALIZATION_DIARY.md` (2026-11-11, "only what the theorems use") lists the
+> current names.
+
 Written 2026-11-10.  Scope: finish the proof that the robust feasible set is
 nonempty, with no hypotheses beyond `5 ≤ N` (`6 ≤ N` until 2026-11-11, see §8), `N` odd, no oracles, and a
 concretely defined set.

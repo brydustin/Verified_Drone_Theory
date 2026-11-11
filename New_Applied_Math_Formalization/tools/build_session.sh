@@ -5,8 +5,7 @@
 # its own process session, so a plain `timeout` would leave it behind).
 cd "$(dirname "$0")/.." || exit 2
 S="${1:?session}"; T="${2:-240}"; L="${3:-/tmp/isabelle_${S}.log}"
-~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -v -d . \
-  -d ~/Desktop/Isabelle/afp-2026-10-29/thys "$S" > "$L" 2>&1 &
+~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -v -d . "$S" > "$L" 2>&1 &
 PID=$!
 tree() { local p; for p in $(pgrep -P "$1"); do tree "$p"; done; echo "$1"; }
 SECS=0

@@ -2,140 +2,95 @@
 
 Isabelle/HOL proof that the robust feasible set `F0` of the paper
 (`../Paper/Geometry_Driven_Optimization_of_Passive_UAV_Relay_Arrays.pdf`,
-Eq. 22; Conjecture 5 there) is nonempty.  Target: Isabelle2026 with AFP
-`afp-2026-10-29`.  The legacy directory `../Applied_Math_Formalization` is kept
-untouched for history.
+Eq. 22; Conjecture 5 there) is nonempty.  Target: Isabelle2026; nothing beyond
+its distribution is needed.  The legacy directory `../Applied_Math_Formalization`
+is kept untouched for history.
 
-## Status
+## The theorems
 
-The end-to-end theorem is `F0_dip_nonempty_final` in
-`Residual/Final/Nonemptiness_Final.thy` (session `Applied_Math_Final`), proved
-2026-11-11.  For an odd number `N ≥ 5` of antennas, source overhead and main
-beam horizontal, it states that the robust feasible set `F0` of the paper is
-nonempty for every minimum spacing, every null threshold above zero, every
-minimum main-beam power below the maximum, every null direction other than
-the main beam, the paper's plane coefficients, all large radii, and suitable
-margins.  It has no other hypotheses, every session is built with
+`Main/Degenerate_Configurations.thy` (session `Applied_Math_Main`), for an odd
+number `N ≥ 5` of relays, source overhead and main beam horizontal:
+
+- `degenerate_configurations_nowhere_dense`: the configurations whose pattern
+  has a degenerate critical point in the angular box form a closed nowhere
+  dense set;
+- `nondegenerate_in_X0`: every other configuration is robust for suitable
+  margins;
+- `F0_dip_interior_nonempty`: for suitable margins the robust feasible set `F0`
+  contains a ball;
+- `F0_dip_nonempty_final`: `F0` is nonempty for every minimum spacing, every
+  null threshold above zero, every minimum main-beam power below the maximum,
+  every null direction other than the main beam, the paper's plane
+  coefficients, all large radii, and suitable margins.
+
+`Main/Poles_And_Fixed_Margins.thy` has two facts behind the form of these
+statements: at a pole of the dipole pattern every configuration has a
+degenerate critical point, and the margins have to depend on the configuration.
+
+The theorems have no other hypotheses.  Every session is built with
 `quick_and_dirty = false`, and `Applied_Math_Oracle_Audit` fails the build if
-the theorem depends on an oracle.  See `END_TO_END_PLAN.md` for the statement,
-its relation to the paper, and the route.
+one of them depends on an oracle.
 
-The same theory states the result in three parts:
-`degenerate_configurations_nowhere_dense` (the configurations with a degenerate
-critical point in the box form a closed nowhere dense set),
-`nondegenerate_in_X0` (every other configuration is robust for suitable
-margins) and `F0_dip_interior_nonempty` (for suitable margins `F0` contains a
-ball).  `Poles_And_Fixed_Margins.thy` has two facts behind the form of the
-theorem: at a pole of the dipole pattern every configuration has a degenerate
-critical point, and the margins have to depend on the configuration.
+## Theories (build order)
 
-The earlier conditional theorem `F0_dip_nonempty` and its two assumed chart-core
-predicates were removed from `Appendix/Robust4/Nonemptiness_Robust4.thy` on
-2026-11-11; the tag `pre-isabelle2026` still has them.
-
-The theorems on the six-moment map `M_paper` need `N ≥ 6`:
-`fixed_c_nonsurj_nowhere_dense` (`Appendix/Robust3`), `bigJ_det` (`BlockDet/`)
-and `MomentJac/`.  The final theorem does not use them;
-`tools/final_deps/Final_Deps.thy` prints the facts it depends on.
-
-Documents: `END_TO_END_PLAN.md` (statement, relation to the paper, route,
-verification protocol), `Sketch.md` §8 (the proof in plain mathematics and the
-table of formal names), `FORMALIZATION_DIARY.md` (log).
-
-## Directory map (build order)
-
-| Session | Dir | Contents |
+| Session | Dir | Theories |
 |---|---|---|
-| `Applied_Math_Base` | `Base/` | external platform (Munkres, Jordan, Perron-Frobenius, HOL-Complex_Analysis) |
-| `Applied_Math_BlockDet` | `BlockDet/` | block determinants, big-J, the moment map `M_paper` |
-| `Applied_Math_MomentJac` | `MomentJac/` | `D_x M_paper = bigJ` Jacobian identification |
-| `Applied_Math_Nonemptiness` | `.` (root) | `Nonemptiness_Paper` + support: `Topology_Bridge`, `Nonemptiness_Scaffold/Array_Factor/Feasibility/Spine`, `Regular_Value_Theorem`, `Parametric_Transversality_Euclidean(_Base)` |
-| `Applied_Math_Appendix_Base` | `Appendix/` | `Nonemptiness_Regnonzero_Appendix` (paper's regnonzero appendix, used by the curve cover) + `Nonemptiness_Robust1` (long stable first half) |
-| `Applied_Math_Appendix` | `Appendix/Robust2/` | `Nonemptiness_Robust2` (Sym² T diagonal moment laws, planar transversality engine) |
-| `Applied_Math_Appendix_Full` | `Appendix/Robust3/` | `Nonemptiness_Robust3` (M5 scaffold through the D3 cover set-algebra bridge) |
-| `Applied_Math_Morse` | `Morse/` | 2D Morse/saddle/Hadamard/arc-clip helpers for the curve cover |
-| `Applied_Math_D3_Curve_Cover` | `Appendix/Robust4Cover/` | `D3_Curve_Cover` (finite C1 arc cover of the phase-collinear locus, proved) |
-| `Applied_Math_Appendix_Frontier` | `Appendix/Robust4/` | `Nonemptiness_Robust4`: the retained bad set `BadXGW`, the lemmas from a regular feasible configuration to a point of `F0` |
-| `Applied_Math_Residual_Analysis` | `Residual/` | `Residual_Measure` (Fubini with countable slices), `Residual_Null_Set` (the phase functions; the zero set of `res_f` is negligible) |
-| `Applied_Math_Residual` | `Residual/Stratum/` | the three equations at a point of `BadXGW`, the design geometry, the charts and their cover, the aligned cover, `residual_meager_design` |
-| `Applied_Math_Final` | `Residual/Final/` | `Nonemptiness_Final`: the degenerate set is closed and nowhere dense, margins, `F0_dip_interior_nonempty`, `F0_dip_nonempty_final`, its explicit form, a numeric example; `Poles_And_Fixed_Margins`: poles, fixed margins, the zero set of the wavevector |
-| `Applied_Math_Oracle_Audit` | `Audit/` | fails the build if the final theorem, or a theorem on the way to it, uses an oracle; `Audit/Control` checks that the test detects a `sorry` |
+| `Applied_Math_Base` | `Base/` | none of its own: the Munkres formalization on top of `HOL-Complex_Analysis` |
+| `Applied_Math_Analysis` | `Analysis/` | `Munkres_Baire_Bridge` (the Baire category theorem), `Meager_Sets`, `Regular_Value_Theorem`, `Parametric_Transversality_Euclidean`, `Parametric_Transversality_Planar`, `Line_Entire_Functions` (functions whose restrictions to lines are entire), `Negligible_Line_Slices` |
+| `Applied_Math_Pattern` | `Pattern/` | `Array_Factor` (array factor `A_cart`, pattern `U_cart`), `Moment_Map`, `Pattern_Derivatives` (gradient `gradU`, Hessian `HessU`), `Feasible_Set`, `Dipole_Pattern` (gain, steering wavevector, smoothness), `Dipole_Gain_Derivatives`, `Dipole_Gain_Analytic`, `Robust_Sets` (`Xrobust`, `X0`, `F0`, the box `OmegaPF`), `Feasibility_Witness`, `Pattern_Moments`, `Gradient_Field_C1` |
+| `Applied_Math_Strata` | `Strata/` | four of the five classes of degenerate configurations are meager: `Null_Stratum`, `Regular_Stratum`, `Critical_Slices`, `Main_Beam_Stratum`, `Steering_Singular_Stratum` |
+| `Applied_Math_Residual` | `Residual/` | the fifth class: `Residual_Phase_Equation`, `Residual_Equations` (the set `residual_set`), `Residual_Design`, `Residual_Charts`, `Residual_Chart_Cover`, `Residual_Aligned`, `Residual_Meager` |
+| `Applied_Math_Main` | `Main/` | `Degenerate_Configurations`, `Poles_And_Fixed_Margins` |
+| `Applied_Math_Oracle_Audit` | `Audit/` | fails the build if one of the theorems uses an oracle; `Audit/Control` checks that the test detects a `sorry` |
 
-`Munkres/` is the vendored Munkres topology library (session
-`Munkres_Topology_Local`, two lemma names updated for Isabelle2026); it is the
+`Munkres/` is a copy of the Munkres topology library (session
+`Munkres_Topology_Local`, two lemma names updated for Isabelle2026): the
 formalization of Bryant, Huerta y Munive, Kaliszyk and Urban (LNCS 16870,
-arXiv:2604.07455), and the Baire category theorem is taken from it.
+arXiv:2604.07455).  The Baire category theorem is taken from it.
 
 Derivatives are those of HOL-Analysis in Isabelle2026: the gradient and the
 Hessian of the pattern are `∇` and `∇²` of `Higher_Differentiability_Multi`,
 the Jacobian of the wavevector map is `jacobian`, smoothness is `Ck_on`
 (library of Bryant, Huerta y Munive and Foster, *Verifying Numerical Methods
-with Isabelle/HOL*, SEFM 2026, arXiv:2511.20550).  From the AFP the chain
-needs only `Jordan_Normal_Form` and `Perron_Frobenius` with their dependencies.
-`tools/` holds the build script, the numeric checks of the residual
-equations and the dependency scan `final_deps/`.
+with Isabelle/HOL*, SEFM 2026, arXiv:2511.20550).  Matrices and determinants
+are those of HOL-Analysis as well.  No entry of the Archive of Formal Proofs is
+used.
 
-### Archive (not built)
-
-Superseded work, kept in place for history.  It targets Isabelle2025-2, is
-commented out in `ROOT`, and parts of it contain `sorry` or refer to lemmas
-since removed:
-
-- theories: `HigherDiff/`, `Analytic/`, `Appendix/AnalyticBridge/`,
-  `Appendix/Wiring/`, all `M5_Dev_*`;
-- material of the superseded D3/D4 route: `d4_*.py` and §1–§7 of `Sketch.md`.
-
-The last Isabelle2025-2 state of the tree is the git tag `pre-isabelle2026`.
+The tree contains only what the theorems use.
+`tools/unused_facts/Unused_Facts.thy` lists the named lemmas on which none of
+them depends and fails if there is one; `tools/build_session.sh` builds one
+session with a hard time limit; the two Python scripts in `tools/` are numeric
+checks of the residual equations.
 
 ## Building (Isabelle2026)
 
-Every session is strict (`quick_and_dirty = false`).  From this directory:
+From this directory:
 
 ```
-~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -d . \
-  -d ~/Desktop/Isabelle/afp-2026-10-29/thys Applied_Math_Oracle_Audit
+~/Desktop/Isabelle/Isabelle2026/bin/isabelle build -b -d . Applied_Math_Oracle_Audit
 ```
 
-This builds the whole chain (about 16 minutes from scratch) and fails if the
-final theorem depends on an oracle.  `tools/build_session.sh SESSION [SECONDS]`
-does the same for one session with a hard time limit.  To read the final
-theory in Isabelle/jEdit:
+This builds the whole chain and fails if a theorem depends on an oracle.  To
+read the final theory in Isabelle/jEdit:
 
 ```
-~/Desktop/Isabelle/Isabelle2026/bin/isabelle jedit -d . \
-  -d ~/Desktop/Isabelle/afp-2026-10-29/thys -l Applied_Math_Residual \
-  Residual/Final/Nonemptiness_Final.thy
+~/Desktop/Isabelle/Isabelle2026/bin/isabelle jedit -d . -l Applied_Math_Residual \
+  Main/Degenerate_Configurations.thy
 ```
 
-## What was dropped from the legacy tree, and why
+## History
 
-- **All 55 `M5_Dev_*` scratch sessions** and the 18 `Appendix/Scratch_*.thy`
-  files: dev-scratch history, already spliced or superseded.  (The six Morse
-  helper theories were rescued from `M5_Dev_Morse/` into `Morse/` — they are a
-  real dependency of `D3_Curve_Cover`.)
-- **`Nonemptiness_Capstone.thy`** (6 active sorries): its sorried lemmas and
-  flagship `odd_N_nonemptiness` were cited by nothing downstream; it only sat
-  in the import chain.  Removing it makes the whole tree sorry-free.
-- (`Nonemptiness_Regnonzero_Appendix.thy` was initially slated for removal but
-  is **kept**: the full build revealed `D3_Curve_Cover` genuinely uses its
-  `lem_h0res_Bcuts`.  It is sorry-free, so the zero-sorry guarantee stands.)
-- **`D34_UPhi_Branch.thy`** (1 sorry): the remaining sorry
-  (`Phi_par_parallel_slot_F_eta_identification`) was found by Codex to be
-  **unsound as stated** (the `F_eta` target matches the real-part moment
-  derivative, not the imaginary-part one the repo's phase convention
-  produces).  Its proven Tier 1 pieces live on in legacy for salvage after a
-  restatement.
-- **`Analytic/Real_Analytic_Complex.thy`** (root-level copy, 7 sorries): dead
-  duplicate; the live, sorry-free version is `Analytic/Complex/Real_Analytic_Complex.thy`.
-- **`SardNegligible/`**, `Nonemptiness_Work_Session.thy`: standalone/unused.
-- Coordination docs (`PARALLEL_WITH_CODEX.md`, `INSTRUCTIONS_FOR_CODEX.md`,
-  `NOTES_FOR_CLAUDE.md`, plans): legacy history; `FORMALIZATION_DIARY.md` was
-  copied here and remains the append-only log going forward.
-
-## Known dead ends (do not retry)
-
-- The `H_par` / `e_par` double-contraction approach to the H12=0 branch:
-  its load-bearing hypothesis `h_par_vslot_zero` was machine-verified **false**
-  (exact witness, interval arithmetic).  A geodesic/normal-coordinate approach
-  would be needed instead.
-- Proving `Phi_par_parallel_slot_F_eta_identification` as stated (see above).
+- `FORMALIZATION_DIARY.md` is the log; its entry of 2026-11-11 on the removal
+  of unused material lists the old and new names of theories, definitions and
+  lemmas.
+- Commit `fd07a54` is the last state before that removal.  It contains the
+  theories that the theorems stopped using: the six-moment determinant
+  (`BlockDet/`, `MomentJac/`), the curve cover of the phase-collinear locus
+  (`Morse/`, `Appendix/Robust4Cover/`) and others.
+- `END_TO_END_PLAN.md` and `Sketch.md` are the plan and the informal proof
+  from which the end-to-end theorem was reached; they use the names of that
+  state.
+- Not built, kept in place: `HigherDiff/`, `Analytic/`, `Appendix/`, all
+  `M5_Dev_*` and `d4_*.py`.  They target Isabelle2025-2 (git tag
+  `pre-isabelle2026`), and parts of them contain `sorry` or refer to lemmas
+  since removed.
